@@ -114,7 +114,7 @@ function CategoryCard({
           <span className="text-primary-foreground/80 mb-1 text-[10px] font-bold tracking-widest uppercase">
             {count}
           </span>
-          <h3 className="group-hover:text-primary mb-2 text-lg font-bold tracking-tight transition-colors">
+          <h3 className="mb-2 text-lg font-bold tracking-tight transition-colors group-hover:text-white">
             {title}
           </h3>
           <span className="flex items-center gap-1 text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100">

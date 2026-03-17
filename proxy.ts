@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
   const url = request.nextUrl;
-  const hostname = request.headers.get("host") || "";
+  const hostname = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
   console.log("Proxy Request:", { url: url.pathname, hostname });
 
   // Check if we are on the admin subdomain
@@ -13,22 +13,20 @@ export function proxy(request: NextRequest) {
   if (isAdminSubdomain) {
     // Rewrite requests to /admin folder
     // But preserve API routes if they are global
-    if (!url.pathname.startsWith("/api") && !url.pathname.startsWith("/_next")) {
+    if (
+      !url.pathname.startsWith("/api") &&
+      !url.pathname.startsWith("/_next") &&
+      !url.pathname.startsWith("/admin")
+    ) {
       const newUrl = new URL(url);
       newUrl.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
       console.log(`[Proxy] Rewriting ${url.pathname} to ${newUrl.pathname}`);
 
       return NextResponse.rewrite(newUrl);
     }
-  } else {
-    // Optional: Redirect /admin on main domain to subdomain
-    if (url.pathname.startsWith("/admin")) {
-      const newUrl = new URL(url);
-      newUrl.hostname = `admin.${newUrl.hostname}`;
-      newUrl.pathname = url.pathname.replace(/^\/admin/, "") || "/";
-      return NextResponse.redirect(newUrl);
-    }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
