@@ -1,0 +1,88 @@
+export const K_ORDERS = [
+  {
+    id: "ORD-7294",
+    customer: {
+      name: "Nguyễn Văn A",
+      email: "vana@gmail.com",
+      avatar: "https://i.pravatar.cc/150?u=vana",
+    },
+    date: "2023-12-28T14:30:00Z",
+    amount: 1250000,
+    status: "Delivered",
+    paymentStatus: "Paid",
+    items: 3,
+    method: "Credit Card",
+  },
+  {
+    id: "ORD-8102",
+    customer: {
+      name: "Trần Thị B",
+      email: "thib@yahoo.com",
+      avatar: "https://i.pravatar.cc/150?u=thib",
+    },
+    date: "2023-12-29T09:15:00Z",
+    amount: 380000,
+    status: "Processing",
+    paymentStatus: "Paid",
+    items: 1,
+    method: "Momo",
+  },
+  {
+    id: "ORD-1923",
+    customer: {
+      name: "Lê Minh C",
+      email: "minhc@outlook.com",
+      avatar: "https://i.pravatar.cc/150?u=minhc",
+    },
+    date: "2023-12-29T16:45:00Z",
+    amount: 2450000,
+    status: "Pending",
+    paymentStatus: "Unpaid",
+    items: 5,
+    method: "COD",
+  },
+  {
+    id: "ORD-5541",
+    customer: {
+      name: "Phạm Thanh D",
+      email: "thanhd@gmail.com",
+      avatar: "https://i.pravatar.cc/150?u=thanhd",
+    },
+    date: "2023-12-30T10:20:00Z",
+    amount: 8500000,
+    status: "Shipped",
+    paymentStatus: "Paid",
+    items: 1,
+    method: "Bank Transfer",
+  },
+  {
+    id: "ORD-3321",
+    customer: {
+      name: "Hoàng Gia E",
+      email: "giae@gmail.com",
+      avatar: "https://i.pravatar.cc/150?u=giae",
+    },
+    date: "2023-12-30T11:05:00Z",
+    amount: 720000,
+    status: "Cancelled",
+    paymentStatus: "Refunded",
+    items: 2,
+    method: "Credit Card",
+  },
+  {
+    id: "ORD-9910",
+    customer: {
+      name: "Đỗ Bảo F",
+      email: "baof@gmail.com",
+      avatar: "https://i.pravatar.cc/150?u=baof",
+    },
+    date: "2023-12-30T12:40:00Z",
+    amount: 1560000,
+    status: "Pending",
+    paymentStatus: "Unpaid",
+    items: 4,
+    method: "Momo",
+  },
+];
+
+export type Order = (typeof K_ORDERS)[0];

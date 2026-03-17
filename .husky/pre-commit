@@ -1,0 +1,38 @@
+#!/bin/sh
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Format codebase
+echo "✨ Formatting code..."
+npm run format
+
+# 2. Lint check (whole app)
+echo "📋 Linting..."
+npm run lint
+
+# 3. Lint-staged (lint and format staged files)
+STAGED_SOURCE=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx)$' || true)
+if [ -n "$STAGED_SOURCE" ]; then
+  echo "📝 Checking staged files with lint-staged..."
+  npx lint-staged
+else
+  echo "📝 No staged .ts/.tsx/.js/.jsx files, skipping lint-staged"
+fi
+
+# 4. React Doctor check
+echo "🏥 Running React Doctor..."
+npx react-doctor@latest . --verbose
+
+# 5. TypeScript type check
+echo "🔧 Running TypeScript type check..."
+npm run typecheck
+
+# 6. Run all tests (unit + security)
+echo "🧪 Running all tests..."
+npm test -- --run
+
+# 7. Build
+echo "🏗️ Building..."
+npm run build
+
+echo "✅ All checks passed! Proceeding with commit..."

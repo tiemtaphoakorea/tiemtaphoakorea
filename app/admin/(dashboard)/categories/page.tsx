@@ -1,0 +1,564 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ChevronDown,
+  ChevronRight,
+  Edit2,
+  FolderOpen,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { type CategoryFormValues, categorySchema } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+import { adminClient } from "@/services/admin.client";
+import type { CategoryWithChildren } from "@/types/admin";
+
+// Recursive row component
+const CategoryRow = ({
+  category,
+  level = 0,
+  expandedMap,
+  toggleExpand,
+  onEdit,
+  onDelete,
+}: {
+  category: CategoryWithChildren;
+  level: number;
+  expandedMap: Record<string, boolean>;
+  toggleExpand: (id: string) => void;
+  onEdit: (cat: CategoryWithChildren) => void;
+  onDelete: (cat: CategoryWithChildren) => void;
+}) => {
+  const hasChildren = category.children && category.children.length > 0;
+  const isExpanded = expandedMap[category.id];
+
+  return (
+    <>
+      <TableRow className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
+        <TableCell className="w-[400px]">
+          <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 24}px` }}>
+            {hasChildren ? (
+              <button
+                onClick={() => toggleExpand(category.id)}
+                className="rounded p-1 transition-colors hover:bg-slate-200 dark:hover:bg-slate-800"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-slate-500" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-slate-500" />
+                )}
+              </button>
+            ) : (
+              <div className="w-6" /> // Spacer
+            )}
+
+            <FolderOpen
+              className={cn(
+                "h-4 w-4",
+                level === 0 ? "text-primary fill-primary/20" : "text-slate-400",
+              )}
+            />
+
+            <div className="flex flex-col">
+              <span
+                className={cn(
+                  "font-bold text-slate-700 dark:text-slate-200",
+                  level === 0 && "text-base",
+                )}
+              >
+                {category.name}
+              </span>
+              {category.description && (
+                <span className="max-w-[200px] truncate text-xs font-medium text-slate-400">
+                  {category.description}
+                </span>
+              )}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell>
+          <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500 dark:bg-slate-800">
+            /{category.slug}
+          </code>
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500">#{category.displayOrder}</span>
+          </div>
+        </TableCell>
+        <TableCell>
+          <Badge variant={category.isActive ? "outline" : "secondary"} className="text-[10px]">
+            {category.isActive ? "Hiển thị" : "Đã ẩn"}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-right">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 rounded-lg p-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 font-bold">
+              <DropdownMenuItem onClick={() => onEdit(category)} className="gap-2">
+                <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onDelete(category)}
+                className="gap-2 text-red-500 focus:bg-red-50 focus:text-red-500"
+              >
+                <Trash2 className="h-4 w-4 shrink-0 text-red-500" /> Xóa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+
+      {isExpanded &&
+        category.children?.map((child) => (
+          <CategoryRow
+            key={child.id}
+            category={child}
+            level={level + 1}
+            expandedMap={expandedMap}
+            toggleExpand={toggleExpand}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+    </>
+  );
+};
+
+export default function AdminCategories() {
+  const [categories, setCategories] = useState<CategoryWithChildren[]>([]);
+  const [flatCategories, setFlatCategories] = useState<CategoryWithChildren[]>([]);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryWithChildren | null>(null);
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      parentId: null,
+      description: "",
+      displayOrder: 0,
+      isActive: true,
+    },
+  });
+
+  useEffect(() => {
+    if (editingCategory) {
+      form.reset({
+        name: editingCategory.name,
+        parentId: editingCategory.parentId || "root_none_value",
+        description: editingCategory.description ?? "",
+        displayOrder: editingCategory.displayOrder ?? 0,
+        isActive: editingCategory.isActive !== false,
+      });
+    } else {
+      form.reset({
+        name: "",
+        parentId: "root_none_value",
+        description: "",
+        displayOrder: 0,
+        isActive: true,
+      });
+    }
+  }, [editingCategory, form]);
+
+  const fetchCategories = useCallback(async () => {
+    setLoading(true);
+    try {
+      const search = searchParams.get("search") || "";
+      const data = await adminClient.getCategories({ search });
+      setCategories(data.categories || []);
+      setFlatCategories(data.flatCategories || []);
+    } catch (error) {
+      console.error("Failed to load categories", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Auto-expand all if searching or initially
+  useEffect(() => {
+    const allIds: Record<string, boolean> = {};
+    const traverse = (cats: CategoryWithChildren[]) => {
+      cats.forEach((c) => {
+        allIds[c.id] = true;
+        if (c.children) traverse(c.children);
+      });
+    };
+    if (categories.length > 0) {
+      traverse(categories);
+      setExpandedMap(allIds);
+    }
+  }, [categories]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSearch = (val: string) => {
+    setSearchTerm(val);
+    const params = new URLSearchParams(searchParams.toString());
+    if (val) params.set("search", val);
+    else params.delete("search");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const openAdd = () => {
+    setFormMode("add");
+    setEditingCategory(null);
+    setIsSheetOpen(true);
+  };
+
+  const openEdit = (cat: CategoryWithChildren) => {
+    setFormMode("edit");
+    setEditingCategory(cat);
+    setIsSheetOpen(true);
+  };
+
+  const handleDelete = async (cat: CategoryWithChildren) => {
+    if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
+      try {
+        await adminClient.deleteCategory(cat.id);
+        fetchCategories();
+      } catch (error: any) {
+        alert(error.message || "Failed to delete");
+      }
+    }
+  };
+
+  const handleSubmit = async (data: CategoryFormValues) => {
+    setIsSubmitting(true);
+    const parentId = data.parentId === "root_none_value" || !data.parentId ? null : data.parentId;
+    const payload = {
+      name: data.name,
+      parentId,
+      description: data.description ?? "",
+      displayOrder: data.displayOrder ?? 0,
+      isActive: data.isActive ?? true,
+    };
+    try {
+      if (formMode === "add") {
+        await adminClient.createCategory(payload);
+      } else {
+        if (!editingCategory) return;
+        await adminClient.updateCategory(editingCategory.id, payload);
+      }
+      setIsSheetOpen(false);
+      fetchCategories();
+    } catch (error: any) {
+      alert(error.message || "Action failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Danh mục
+          </h1>
+          <p className="mt-1 font-medium text-slate-500 dark:text-slate-400">
+            Quản lý cây danh mục sản phẩm của hệ thống.
+          </p>
+        </div>
+        <Button
+          onClick={openAdd}
+          className="shadow-primary/20 h-11 gap-2 rounded-xl px-6 font-black shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Plus className="h-5 w-5" />
+          Thêm danh mục
+        </Button>
+      </div>
+
+      <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+        <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+          <div className="relative">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="h-10 border-none bg-slate-50/50 pl-10 ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="pl-6 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                  Tên danh mục
+                </TableHead>
+                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                  Slug
+                </TableHead>
+                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                  Thứ tự
+                </TableHead>
+                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                  Trạng thái
+                </TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-6 w-6 rounded" />
+                        <div className="flex flex-col gap-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="ml-auto h-8 w-8 rounded-lg" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : categories.length > 0 ? (
+                categories.map((cat) => (
+                  <CategoryRow
+                    key={cat.id}
+                    category={cat}
+                    level={0}
+                    expandedMap={expandedMap}
+                    toggleExpand={toggleExpand}
+                    onEdit={openEdit}
+                    onDelete={handleDelete}
+                  />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-40 text-center font-medium text-slate-500">
+                    Chưa có danh mục nào. Hãy tạo danh mục đầu tiên!
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Sheet */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+          <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+            <SheetTitle className="text-2xl font-black">
+              {formMode === "add" ? "Thêm danh mục" : "Chỉnh sửa danh mục"}
+            </SheetTitle>
+            <SheetDescription className="font-medium text-slate-500">
+              {formMode === "add"
+                ? "Tạo danh mục sản phẩm mới."
+                : `Cập nhật thông tin cho "${editingCategory?.name}".`}
+            </SheetDescription>
+          </SheetHeader>
+
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6 py-8">
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                  Tên danh mục <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  {...form.register("name")}
+                  placeholder="Ví dụ: Áo Thun, Quần Jean..."
+                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  aria-invalid={!!form.formState.errors.name}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                  Danh mục cha
+                </label>
+                <Controller
+                  name="parentId"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select value={field.value ?? "root_none_value"} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-11 bg-slate-50/50 dark:bg-slate-900/50">
+                        <SelectValue placeholder="--- Không (Danh mục gốc) ---" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="root_none_value">
+                          --- Không (Danh mục gốc) ---
+                        </SelectItem>
+                        {flatCategories.map((cat) => (
+                          <SelectItem
+                            key={cat.id}
+                            value={cat.id}
+                            disabled={editingCategory?.id === cat.id}
+                          >
+                            {Array(cat.depth || 0)
+                              .fill("— ")
+                              .join("") + cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                  Mô tả
+                </label>
+                <Input
+                  {...form.register("description")}
+                  placeholder="Mô tả ngắn về danh mục..."
+                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                    Thứ tự hiển thị
+                  </label>
+                  <Controller
+                    name="displayOrder"
+                    control={form.control}
+                    render={({ field }) => (
+                      <NumberInput
+                        decimalScale={0}
+                        value={field.value}
+                        onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                        className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                        aria-invalid={!!form.formState.errors.displayOrder}
+                      />
+                    )}
+                  />
+                  {form.formState.errors.displayOrder && (
+                    <p className="text-destructive text-sm">
+                      {form.formState.errors.displayOrder.message}
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                    Trạng thái
+                  </label>
+                  <Controller
+                    name="isActive"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ? "true" : "false"}
+                        onValueChange={(v) => field.onChange(v === "true")}
+                      >
+                        <SelectTrigger className="h-11 bg-slate-50/50 dark:bg-slate-900/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Hiển thị</SelectItem>
+                          <SelectItem value="false">Ẩn</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="shadow-primary/20 h-11 w-full rounded-xl font-black shadow-lg"
+              >
+                {isSubmitting
+                  ? "Đang lưu..."
+                  : formMode === "add"
+                    ? "Tạo danh mục"
+                    : "Lưu thay đổi"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}

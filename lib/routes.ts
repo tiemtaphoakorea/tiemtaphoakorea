@@ -1,0 +1,93 @@
+/**
+ * Centralized route paths for the application.
+ * Use these constants instead of hardcoding route strings.
+ */
+
+// ============================================================================
+// PUBLIC ROUTES
+// ============================================================================
+export const PUBLIC_ROUTES = {
+  HOME: "/",
+  PRODUCTS: "/products",
+  PRODUCTS_BY_CATEGORY: (category: string) => `/products?category=${encodeURIComponent(category)}`,
+  PRODUCTS_BY_SORT: (sort: string) => `/products?sort=${sort}`,
+  PRODUCT_DETAIL: (id: string | number) => `/products/${id}`,
+} as const;
+
+// ============================================================================
+// ADMIN ROUTES
+// ============================================================================
+export const ADMIN_ROUTES = {
+  ROOT: "/",
+  LOGIN: "/login",
+  DASHBOARD: "/",
+
+  // Products
+  PRODUCTS: "/products",
+  PRODUCTS_ADD: "/products?add=true",
+
+  // Categories
+  CATEGORIES: "/categories",
+
+  // Orders
+  ORDERS: "/orders",
+  ORDERS_NEW: "/orders/new",
+  ORDER_DETAIL: (id: string | number) => `/orders/${id}`,
+
+  // Supplier Orders
+  SUPPLIER_ORDERS: "/supplier-orders",
+  SUPPLIER_ORDERS_NEW: "/supplier-orders-new",
+
+  // Suppliers
+  SUPPLIERS: "/suppliers",
+
+  // Customers
+  CUSTOMERS: "/customers",
+  CUSTOMER_DETAIL: (id: string | number) => `/customers/${id}`,
+
+  // Chat
+  CHAT: "/chat",
+  CHAT_ROOM: (roomId: string) => `/chat/${roomId}`,
+
+  // Analytics
+  ANALYTICS: "/analytics",
+
+  // Finance
+  EXPENSES: "/expenses",
+  FINANCE: "/finance",
+
+  // Users (Staff Management)
+  USERS: "/users",
+} as const;
+
+// ============================================================================
+// ACCOUNT ROUTES (Customer Account)
+// ============================================================================
+export const ACCOUNT_ROUTES = {
+  ROOT: "/account",
+  OVERVIEW: "/account",
+  ORDERS: "/account/orders",
+  ORDER_DETAIL: (id: string | number) => `/account/orders/${id}`,
+  CHAT: "/account/chat",
+} as const;
+
+// ============================================================================
+// API ROUTES
+// ============================================================================
+export const API_ROUTES = {
+  CHAT_SEND: "/api/chat/send",
+  CHAT_UPLOAD: "/api/chat/upload",
+} as const;
+
+// ============================================================================
+// COMBINED ROUTES (for convenience)
+// ============================================================================
+export const ROUTES = {
+  PUBLIC: PUBLIC_ROUTES,
+  ADMIN: ADMIN_ROUTES,
+  ACCOUNT: ACCOUNT_ROUTES,
+  API: API_ROUTES,
+} as const;
+
+// Default export for simpler imports
+export default ROUTES;

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.ts",
+    "hooks/**/*.ts",
+    "services/**/*.ts",
+    "db/**/*.ts",
+    "types/**/*.ts",
+    "utils/**/*.ts"
+  ],
+  "ignore": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+  "ignoreDependencies": [
+    "@types/node",
+    "@types/pg",
+    "@types/bcryptjs",
+    "@types/react",
+    "@types/react-dom"
+  ],
+  "ignoreExportsUsedInFile": true
+}
