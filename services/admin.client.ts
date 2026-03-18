@@ -276,6 +276,16 @@ export const adminClient = {
     ) as unknown as Promise<{ success: boolean }>;
   },
 
+  /**
+   * Delete multiple products in bulk.
+   */
+  async bulkDeleteProducts(ids: string[]) {
+    return axios.delete<{ deleted: number; failed: string[] }>(
+      API_ENDPOINTS.ADMIN.PRODUCTS,
+      { data: { ids } },
+    ) as unknown as Promise<{ deleted: number; failed: string[] }>;
+  },
+
   // Customer Management
   async getCustomers(params?: { search?: string; status?: string; page?: number; limit?: number }) {
     return axios.get<PaginatedResponse<CustomerStatsItem>>(API_ENDPOINTS.ADMIN.CUSTOMERS, {
