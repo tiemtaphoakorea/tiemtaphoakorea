@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "@/lib/http-status";
 import {
   type CreateProductData,
   createProduct,
+  deleteProduct,
   generateProductSlug,
   getProducts,
   getProductsWithVariants,
@@ -99,4 +100,49 @@ export async function POST(request: Request) {
       },
     );
   }
+}
+
+export async function DELETE(request: Request) {
+  const user = await getInternalUser(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: HTTP_STATUS.BAD_REQUEST });
+  }
+
+  const { ids } = (body as { ids?: unknown }) ?? {};
+
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.some((id) => typeof id !== "string")
+  ) {
+    return NextResponse.json(
+      { error: "ids must be a non-empty array of strings" },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
+  }
+
+  const deleted: string[] = [];
+  const failed: string[] = [];
+
+  for (const id of ids as string[]) {
+    try {
+      await deleteProduct(id);
+      deleted.push(id);
+    } catch (error) {
+      console.error(`Failed to delete product ${id}:`, error);
+      failed.push(id);
+    }
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+
+  return NextResponse.json({ deleted: deleted.length, failed });
 }
