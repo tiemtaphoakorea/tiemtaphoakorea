@@ -6,13 +6,19 @@ import { calculateMetadata, getPaginationParams } from "@/lib/pagination";
 import { createExpense, getExpenses } from "@/services/finance.server";
 
 export async function GET(request: NextRequest) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
 
   // Expenses are Owner-only
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: HTTP_STATUS.UNAUTHORIZED },
+    );
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json(
+      { success: false, error: "Forbidden" },
+      { status: HTTP_STATUS.FORBIDDEN },
     );
   }
 
@@ -49,13 +55,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
 
   // Expenses are Owner-only
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: HTTP_STATUS.UNAUTHORIZED },
+    );
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json(
+      { success: false, error: "Forbidden" },
+      { status: HTTP_STATUS.FORBIDDEN },
     );
   }
 

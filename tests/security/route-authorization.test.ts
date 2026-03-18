@@ -215,3 +215,49 @@ describe("DELETE /api/admin/suppliers/[id]", () => {
     expect(response.status).toBe(403);
   });
 });
+
+describe("Expenses and Finance 401/403 split", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("GET /expenses returns 403 for authenticated manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { GET } = await import("@/app/api/admin/expenses/route");
+    const request = createMockRequest({ url: "http://localhost/api/admin/expenses" });
+    const response = await GET(request);
+
+    expect(response.status).toBe(403);
+  });
+
+  it("POST /expenses returns 403 for authenticated manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { POST } = await import("@/app/api/admin/expenses/route");
+    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/expenses", body: { amount: 100, date: new Date().toISOString(), type: "fixed" } });
+    const response = await POST(request);
+
+    expect(response.status).toBe(403);
+  });
+
+  it("DELETE /expenses/[id] returns 403 for authenticated manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { DELETE } = await import("@/app/api/admin/expenses/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/expenses/e1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "e1" }) });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("GET /finance returns 403 for authenticated manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { GET } = await import("@/app/api/admin/finance/route");
+    const request = createMockRequest({ url: "http://localhost/api/admin/finance?month=1&year=2026" });
+    const response = await GET(request);
+
+    expect(response.status).toBe(403);
+  });
+});
