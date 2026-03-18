@@ -14,7 +14,7 @@ import { ensureGuestProfile } from "@/services/guest.server";
 import type { ChatMessage } from "@/types/admin";
 
 export async function GET(request: NextRequest) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
   const { searchParams } = new URL(request.url);
   const guestId = searchParams.get("guestId");
 
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
   const contentType = request.headers.get("content-type") || "";
 
   try {

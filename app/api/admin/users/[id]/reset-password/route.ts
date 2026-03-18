@@ -7,8 +7,11 @@ import type { IdRouteParams } from "@/types/api";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {
   const user = await getInternalUser(request);
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   try {

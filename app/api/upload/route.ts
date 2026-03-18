@@ -5,11 +5,14 @@ import { HTTP_STATUS } from "@/lib/http-status";
 import { uploadImage } from "@/services/storage.server";
 
 export async function POST(request: Request) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
 
   // Only owner and manager can upload files
-  if (!user || ![ROLE.OWNER, ROLE.MANAGER].includes(user.profile.role as any)) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (![ROLE.OWNER, ROLE.MANAGER].includes(user.profile.role as any)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   try {

@@ -7,8 +7,11 @@ import { createUser, getUsersPaginated } from "@/services/user.server";
 
 export async function GET(request: NextRequest) {
   const user = await getInternalUser(request);
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   try {
@@ -32,8 +35,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getInternalUser(request);
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   try {

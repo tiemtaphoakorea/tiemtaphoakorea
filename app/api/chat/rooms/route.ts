@@ -4,7 +4,7 @@ import { HTTP_STATUS } from "@/lib/http-status";
 import { getOrCreateChatRoom } from "@/services/chat.server";
 
 export async function POST(request: NextRequest) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });

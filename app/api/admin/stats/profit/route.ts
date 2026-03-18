@@ -8,8 +8,11 @@ export async function GET(request: NextRequest) {
   const user = await getInternalUser(request);
 
   // Detailed profit stats are Owner-only
-  if (!user || user.profile.role !== ROLE.OWNER) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   const { searchParams } = new URL(request.url);

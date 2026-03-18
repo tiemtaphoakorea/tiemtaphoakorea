@@ -4,7 +4,7 @@ import { HTTP_STATUS } from "@/lib/http-status";
 import { markMessagesAsRead } from "@/services/chat.server";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
