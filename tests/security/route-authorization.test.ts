@@ -261,3 +261,19 @@ describe("Expenses and Finance 401/403 split", () => {
     expect(response.status).toBe(403);
   });
 });
+
+describe("GET /api/admin/analytics", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 403 (not 401) when authenticated as staff", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(staffInternalUser);
+
+    const { GET } = await import("@/app/api/admin/analytics/route");
+    const request = createMockRequest({ url: "http://localhost/api/admin/analytics" });
+    const response = await GET(request);
+
+    expect(response.status).toBe(403);
+  });
+});
