@@ -9,7 +9,7 @@ import {
 } from "@/services/dashboard.server";
 
 export async function GET(request: Request) {
-  const user = await getInternalUser();
+  const user = await getInternalUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
   }
