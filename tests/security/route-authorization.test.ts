@@ -100,4 +100,20 @@ const staffInternalUser = {
   profile: { ...MOCK_PROFILES.staff } as any,
 };
 
-// Tests are added in subsequent tasks below
+describe("GET /api/admin/products/variants/[variantId]/cost-history", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(null);
+
+    const { GET } = await import(
+      "@/app/api/admin/products/variants/[variantId]/cost-history/route"
+    );
+    const request = createMockRequest({ url: "http://localhost/api/admin/products/variants/v1/cost-history" });
+    const response = await GET(request, { params: Promise.resolve({ variantId: "v1" }) });
+
+    expect(response.status).toBe(401);
+  });
+});
