@@ -8,6 +8,7 @@
  */
 
 import { vi } from "vitest";
+import type { NextRequest } from "next/server";
 
 // ============================================================================
 // SENSITIVE KEYS - Should NEVER be exposed to client
@@ -98,7 +99,7 @@ export function createMockRequest(
     body?: unknown;
     cookies?: Record<string, string>;
   } = {},
-): Request {
+): NextRequest {
   const {
     method = "GET",
     url = "http://localhost:3000",
@@ -126,7 +127,7 @@ export function createMockRequest(
     requestHeaders.set("Content-Type", "application/json");
   }
 
-  return new Request(url, requestInit);
+  return new Request(url, requestInit) as unknown as NextRequest;
 }
 
 export function createAuthenticatedRequest(
@@ -137,7 +138,7 @@ export function createAuthenticatedRequest(
     url?: string;
     body?: unknown;
   } = {},
-): Request {
+): NextRequest {
   const {
     userId = "test-user-id",
     role = "customer",
@@ -164,7 +165,7 @@ export function createGuestRequest(
     url?: string;
     body?: unknown;
   } = {},
-): Request {
+): NextRequest {
   const { method = "GET", url = "http://localhost:3000", body } = options;
 
   return createMockRequest({
