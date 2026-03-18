@@ -8,4 +8,8 @@ describe("http-status", () => {
     expect(HTTP_STATUS.UNAUTHORIZED).toBe(401);
     expect(HTTP_STATUS.INTERNAL_SERVER_ERROR).toBe(500);
   });
+
+  it("should expose FORBIDDEN status code", () => {
+    expect(HTTP_STATUS.FORBIDDEN).toBe(403);
+  });
 });
