@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/db.server";
 import { costPriceHistory, productVariants } from "@/db/schema/products";
 import { getInternalUser } from "@/lib/auth.server";
+import { ROLE } from "@/lib/constants";
 import { HTTP_STATUS } from "@/lib/http-status";
 import type { IdRouteParams } from "@/types/api";
 
 export async function POST(request: Request, { params }: IdRouteParams) {
   const user = await getInternalUser(request);
-  if (!user || !["owner", "admin"].includes(user.profile.role)) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
+  }
+  if (user.profile.role !== ROLE.OWNER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
   }
 
   const { id: productId } = await params;

@@ -117,3 +117,29 @@ describe("GET /api/admin/products/variants/[variantId]/cost-history", () => {
     expect(response.status).toBe(401);
   });
 });
+
+describe("POST /api/admin/products/[id]/variants", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(null);
+
+    const { POST } = await import("@/app/api/admin/products/[id]/variants/route");
+    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/products/p1/variants" });
+    const response = await POST(request, { params: Promise.resolve({ id: "p1" }) });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when authenticated as manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { POST } = await import("@/app/api/admin/products/[id]/variants/route");
+    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/products/p1/variants" });
+    const response = await POST(request, { params: Promise.resolve({ id: "p1" }) });
+
+    expect(response.status).toBe(403);
+  });
+});
