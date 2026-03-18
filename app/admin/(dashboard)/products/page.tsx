@@ -438,7 +438,13 @@ export default function AdminProducts() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => !isDeleting && setBulkDeleteConfirm(false)}
+            >
+              Hủy
+            </Button>
             {/* Plain Button (not AlertDialogAction) keeps dialog open during async delete */}
             <Button
               variant="destructive"
@@ -513,9 +519,9 @@ export default function AdminProducts() {
             <div className="flex items-center gap-2">
               {selectMode ? (
                 <>
-                  <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                  <Badge variant="secondary" className="font-bold">
                     {selectedIds.size} đã chọn
-                  </span>
+                  </Badge>
                   <Button
                     variant="destructive"
                     size="sm"
