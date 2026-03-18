@@ -76,7 +76,7 @@ export default function AdminProducts() {
   useEffect(() => {
     if (!selectMode) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") exitSelectMode();
+      if (e.key === "Escape" && !isDeleting) exitSelectMode();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -429,7 +429,7 @@ export default function AdminProducts() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={bulkDeleteConfirm} onOpenChange={(open) => !open && setBulkDeleteConfirm(false)}>
+      <AlertDialog open={bulkDeleteConfirm} onOpenChange={(open) => !open && !isDeleting && setBulkDeleteConfirm(false)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa sản phẩm</AlertDialogTitle>
@@ -558,7 +558,7 @@ export default function AdminProducts() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectMode(true)}
+                    onClick={() => { setSelectMode(true); setBulkError(null); }}
                     className="gap-2 font-bold"
                   >
                     <CheckSquare className="h-4 w-4" />
