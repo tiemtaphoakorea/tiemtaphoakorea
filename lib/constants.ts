@@ -1,5 +1,8 @@
-export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://admin.localhost:3000";
-export const STOREFRONT_BASE_URL = process.env.STOREFRONT_BASE_URL || "http://localhost:3000";
+export const ADMIN_BASE_URL =
+  process.env.ADMIN_BASE_URL || "http://admin.localhost:3000";
+export const STOREFRONT_BASE_URL =
+  process.env.STOREFRONT_BASE_URL || "http://localhost:3000";
+export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
 
 export const ROLE = {
   CUSTOMER: "customer",
@@ -9,7 +12,10 @@ export const ROLE = {
 } as const;
 
 /** User status → label + Tailwind classes for badge (admin users page) */
-export const USER_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+export const USER_STATUS_CONFIG: Record<
+  string,
+  { label: string; color: string }
+> = {
   Active: {
     label: "Hoạt động",
     color: "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -21,7 +27,10 @@ export const USER_STATUS_CONFIG: Record<string, { label: string; color: string }
 };
 
 /** User role → label + Tailwind classes for badge (admin users page) */
-export const USER_ROLE_CONFIG: Record<string, { label: string; color: string }> = {
+export const USER_ROLE_CONFIG: Record<
+  string,
+  { label: string; color: string }
+> = {
   owner: {
     label: "Owner",
     color: "bg-purple-50 text-purple-600 border-purple-100",
@@ -107,7 +116,11 @@ export const CHAT_MESSAGE_TYPE = {
 
 export const CHAT_TEXT_MAX_LENGTH = 2000;
 export const CHAT_BUCKET_NAME = "chat-images";
-export const CHAT_IMAGE_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const CHAT_IMAGE_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 export const CHAT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const CHAT_MESSAGES_PAGE_LIMIT_DEFAULT = 50;
 

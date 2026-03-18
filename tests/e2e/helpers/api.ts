@@ -1,5 +1,4 @@
 import type { Page } from "@playwright/test";
-import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 
 export async function apiGet<T>(page: Page, url: string) {
   const response = await page.request.get(url);
@@ -22,7 +21,11 @@ export async function apiGet<T>(page: Page, url: string) {
   };
 }
 
-export async function apiPost<T>(page: Page, url: string, body: Record<string, any>) {
+export async function apiPost<T>(
+  page: Page,
+  url: string,
+  body: Record<string, any>,
+) {
   const response = await page.request.post(url, { data: body });
 
   // Check content type before parsing
@@ -45,16 +48,22 @@ export async function apiPost<T>(page: Page, url: string, body: Record<string, a
   }
 
   // Add delay after variant creation so variant is visible to order API (avoids "valid variantId" / "Variants not found")
-  if (url.includes("/api/admin/products/") && url.endsWith("/variants") && response.ok()) {
+  if (
+    url.includes("/api/admin/products/") &&
+    url.endsWith("/variants") &&
+    response.ok()
+  ) {
     await page.waitForTimeout(800);
   }
 
   if (url === "/api/admin/products" && response.ok()) {
     const product = (data as any)?.product;
-    const sentVariants = Array.isArray(body.variants) && body.variants.length > 0;
+    const sentVariants =
+      Array.isArray(body.variants) && body.variants.length > 0;
     // Only hydrate when we sent variants but response has none (e.g. eventual consistency)
     const needsHydration =
-      sentVariants && (!product || !product.variants || product.variants.length === 0);
+      sentVariants &&
+      (!product || !product.variants || product.variants.length === 0);
     if (needsHydration) {
       const variantSkus = Array.isArray(body.variants)
         ? body.variants.map((v: any) => v.sku).filter(Boolean)
@@ -86,7 +95,11 @@ export async function apiPost<T>(page: Page, url: string, body: Record<string, a
   };
 }
 
-export async function apiPut<T>(page: Page, url: string, body: Record<string, any>) {
+export async function apiPut<T>(
+  page: Page,
+  url: string,
+  body: Record<string, any>,
+) {
   const response = await page.request.put(url, { data: body });
 
   // Check content type before parsing
@@ -107,7 +120,11 @@ export async function apiPut<T>(page: Page, url: string, body: Record<string, an
   };
 }
 
-export async function apiPatch<T>(page: Page, url: string, body: Record<string, any> = {}) {
+export async function apiPatch<T>(
+  page: Page,
+  url: string,
+  body: Record<string, any> = {},
+) {
   const response = await page.request.patch(url, { data: body });
 
   // Check content type before parsing
@@ -157,7 +174,10 @@ export async function getCustomerByPhone(page: Page, phone: string) {
 }
 
 export async function getProductsWithVariants(page: Page) {
-  const { data } = await apiGet<{ products: any[] }>(page, "/api/admin/products?include=variants");
+  const { data } = await apiGet<{ products: any[] }>(
+    page,
+    "/api/admin/products?include=variants",
+  );
   return data.products || [];
 }
 
@@ -176,7 +196,9 @@ export async function waitForProductVisible(
     if (response.ok()) return;
     await page.waitForTimeout(delayMs);
   }
-  throw new Error(`Product ${productId} not visible after ${maxAttempts} attempts`);
+  throw new Error(
+    `Product ${productId} not visible after ${maxAttempts} attempts`,
+  );
 }
 
 /**
@@ -203,25 +225,33 @@ export async function createProductWithVariants(
     }>;
   },
 ) {
-  const slug = params.slug || `${params.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+  const slug =
+    params.slug ||
+    `${params.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
 
-  const { data } = await apiPost<{ success: boolean; product: any }>(page, "/api/admin/products", {
-    name: params.name,
-    slug,
-    description: params.description || "",
-    categoryId: params.categoryId || null,
-    basePrice: params.basePrice || 0,
-    isActive: params.isActive !== false,
-    variants: params.variants.map((v, index) => ({
-      name: v.attributes ? JSON.stringify(v.attributes) : `Variant ${index + 1}`,
-      sku: v.sku,
-      attributes: v.attributes || {},
-      stockQuantity: v.stockQuantity || 0,
-      lowStockThreshold: v.lowStockThreshold,
-      price: v.price || v.retailPrice || 0,
-      costPrice: v.costPrice || 0,
-    })),
-  });
+  const { data } = await apiPost<{ success: boolean; product: any }>(
+    page,
+    "/api/admin/products",
+    {
+      name: params.name,
+      slug,
+      description: params.description || "",
+      categoryId: params.categoryId || null,
+      basePrice: params.basePrice || 0,
+      isActive: params.isActive !== false,
+      variants: params.variants.map((v, index) => ({
+        name: v.attributes
+          ? JSON.stringify(v.attributes)
+          : `Variant ${index + 1}`,
+        sku: v.sku,
+        attributes: v.attributes || {},
+        stockQuantity: v.stockQuantity || 0,
+        lowStockThreshold: v.lowStockThreshold,
+        price: v.price || v.retailPrice || 0,
+        costPrice: v.costPrice || 0,
+      })),
+    },
+  );
   return data;
 }
 
@@ -257,7 +287,9 @@ export async function createOrder(
       // Verify order exists by trying to fetch it
       try {
         await page.waitForTimeout(200);
-        const verification = await page.request.get(`/api/admin/orders/${data.order.id}`);
+        const verification = await page.request.get(
+          `/api/admin/orders/${data.order.id}`,
+        );
         if (!verification.ok()) {
           const _verifyText = await verification.text();
           // If verification fails, retry creating the order
@@ -304,7 +336,11 @@ export async function createOrder(
   return { success: false, order: null };
 }
 
-export async function updateOrderStatus(page: Page, orderId: string, status: string) {
+export async function updateOrderStatus(
+  page: Page,
+  orderId: string,
+  status: string,
+) {
   const { response } = await apiPatch<{ success: boolean }>(
     page,
     `/api/admin/orders/${orderId}/status`,
@@ -313,13 +349,24 @@ export async function updateOrderStatus(page: Page, orderId: string, status: str
   return response;
 }
 
-export async function updateOrder(page: Page, orderId: string, payload: Record<string, any>) {
-  const { response, data } = await apiPut<any>(page, `/api/admin/orders/${orderId}`, payload);
+export async function updateOrder(
+  page: Page,
+  orderId: string,
+  payload: Record<string, any>,
+) {
+  const { response, data } = await apiPut<any>(
+    page,
+    `/api/admin/orders/${orderId}`,
+    payload,
+  );
   return { response, data };
 }
 
 export async function deleteOrder(page: Page, orderId: string) {
-  const { response } = await apiDelete<{ success?: boolean }>(page, `/api/admin/orders/${orderId}`);
+  const { response } = await apiDelete<{ success?: boolean }>(
+    page,
+    `/api/admin/orders/${orderId}`,
+  );
   return response;
 }
 
@@ -369,7 +416,10 @@ export async function getOrderDetails(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const { data, response } = await apiGet<{ order: any }>(page, `/api/admin/orders/${orderId}`);
+      const { data, response } = await apiGet<{ order: any }>(
+        page,
+        `/api/admin/orders/${orderId}`,
+      );
 
       if (response.ok() && data.order) {
         // If we're checking for a specific paidAmount, verify it matches
@@ -392,7 +442,9 @@ export async function getOrderDetails(
       }
 
       // If it's a different error, throw immediately
-      throw new Error(`Failed to get order details: ${response.status()} - ${errorText}`);
+      throw new Error(
+        `Failed to get order details: ${response.status()} - ${errorText}`,
+      );
     } catch (error: any) {
       if (attempt < maxRetries) {
         await page.waitForTimeout(retryDelay);
@@ -402,7 +454,9 @@ export async function getOrderDetails(
     }
   }
 
-  throw new Error(`Failed to get order details after ${maxRetries} retries for order ${orderId}`);
+  throw new Error(
+    `Failed to get order details after ${maxRetries} retries for order ${orderId}`,
+  );
 }
 
 export async function getOrders(
@@ -415,21 +469,33 @@ export async function getOrders(
   if (params?.page) query.set("page", String(params.page));
   if (params?.limit) query.set("limit", String(params.limit));
   const qs = query.toString();
-  const { data } = await apiGet<any>(page, `/api/admin/orders${qs ? `?${qs}` : ""}`);
+  const { data } = await apiGet<any>(
+    page,
+    `/api/admin/orders${qs ? `?${qs}` : ""}`,
+  );
   return data;
 }
 
-export async function getSupplierOrders(page: Page, params?: { search?: string; status?: string }) {
+export async function getSupplierOrders(
+  page: Page,
+  params?: { search?: string; status?: string },
+) {
   const query = new URLSearchParams();
   if (params?.search) query.set("search", params.search);
   if (params?.status) query.set("status", params.status);
   const qs = query.toString();
-  const { data } = await apiGet<any[]>(page, `/api/admin/supplier-orders${qs ? `?${qs}` : ""}`);
+  const { data } = await apiGet<any[]>(
+    page,
+    `/api/admin/supplier-orders${qs ? `?${qs}` : ""}`,
+  );
   return data;
 }
 
 export async function getSupplierOrderDetails(page: Page, id: string) {
-  const { data } = await apiGet<{ supplierOrder: any }>(page, `/api/admin/supplier-orders/${id}`);
+  const { data } = await apiGet<{ supplierOrder: any }>(
+    page,
+    `/api/admin/supplier-orders/${id}`,
+  );
   return data.supplierOrder;
 }
 
@@ -439,12 +505,15 @@ export async function updateSupplierOrderStatus(
   status: string,
   params?: { note?: string; actualCostPrice?: string; expectedDate?: string },
 ) {
-  const response = await page.request.patch(`/api/admin/supplier-orders/${id}`, {
-    data: {
-      status,
-      ...params,
+  const response = await page.request.patch(
+    `/api/admin/supplier-orders/${id}`,
+    {
+      data: {
+        status,
+        ...params,
+      },
     },
-  });
+  );
   return response;
 }
 
@@ -475,12 +544,18 @@ export async function createSupplierOrder(
 
 export async function getCustomers(page: Page, search?: string) {
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
-  const { data } = await apiGet<{ data: any[] }>(page, `/api/admin/customers${query}`);
+  const { data } = await apiGet<{ data: any[] }>(
+    page,
+    `/api/admin/customers${query}`,
+  );
   return data.data || [];
 }
 
 export async function getCustomerDetails(page: Page, customerId: string) {
-  const { data } = await apiGet<{ customer: any }>(page, `/api/admin/customers/${customerId}`);
+  const { data } = await apiGet<{ customer: any }>(
+    page,
+    `/api/admin/customers/${customerId}`,
+  );
   return data.customer;
 }
 
@@ -493,25 +568,31 @@ export async function createExpense(
 }
 
 export async function deleteExpense(page: Page, expenseId: string) {
-  const { response } = await apiDelete<any>(page, `/api/admin/expenses/${expenseId}`);
+  const { response } = await apiDelete<any>(
+    page,
+    `/api/admin/expenses/${expenseId}`,
+  );
   return response;
 }
 
 export async function listExpenses(page: Page, limit = 1000) {
-  const { data } = await apiGet<{ data: any[] }>(page, `/api/admin/expenses?limit=${limit}`);
+  const { data } = await apiGet<{ data: any[] }>(
+    page,
+    `/api/admin/expenses?limit=${limit}`,
+  );
   return data.data || [];
 }
 
-export async function getFinanceSummary(page: Page, params: { month: number; year: number }) {
+export async function getFinanceSummary(
+  page: Page,
+  params: { month: number; year: number },
+) {
   const { data } = await apiGet<{ stats: any }>(
     page,
     `/api/admin/finance?month=${params.month}&year=${params.year}`,
   );
   return data.stats;
 }
-
-/** Storefront base URL (no admin subdomain). Use for guest/chat widget tests. */
-export { STOREFRONT_BASE_URL };
 
 export async function getChatRooms(page: Page) {
   const { data } = await apiGet<{ rooms: any[] }>(page, "/api/admin/chat");
@@ -538,8 +619,15 @@ export async function uploadChatAttachment(
   return response;
 }
 
-export async function loginAdmin(page: Page, credentials: { username: string; password: string }) {
-  const { response, data } = await apiPost<any>(page, "/api/admin/login", credentials);
+export async function loginAdmin(
+  page: Page,
+  credentials: { username: string; password: string },
+) {
+  const { response, data } = await apiPost<any>(
+    page,
+    "/api/admin/login",
+    credentials,
+  );
   return { response, data };
 }
 
@@ -558,7 +646,10 @@ export async function getAdminFinance(page: Page) {
   return data;
 }
 
-export async function getProfitReport(page: Page, params: { month: number; year: number }) {
+export async function getProfitReport(
+  page: Page,
+  params: { month: number; year: number },
+) {
   const { data } = await apiGet<{ stats: any }>(
     page,
     `/api/admin/stats/profit?month=${params.month}&year=${params.year}`,
@@ -574,7 +665,10 @@ export async function recordExpense(
 }
 
 export async function getOrderHistory(page: Page, orderId: string) {
-  const { data } = await apiGet<{ history: any[] }>(page, `/api/admin/orders/${orderId}/history`);
+  const { data } = await apiGet<{ history: any[] }>(
+    page,
+    `/api/admin/orders/${orderId}/history`,
+  );
   return data.history || [];
 }
 
@@ -588,7 +682,10 @@ export async function getSupplierStats(page: Page, supplierId: string) {
 
 export async function getCategories(page: Page, search?: string) {
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
-  const { data } = await apiGet<{ categories: any[] }>(page, `/api/admin/categories${query}`);
+  const { data } = await apiGet<{ categories: any[] }>(
+    page,
+    `/api/admin/categories${query}`,
+  );
   return data.categories || [];
 }
 
@@ -640,11 +737,15 @@ export async function deleteSupplier(page: Page, supplierId: string) {
 /**
  * Clean up test expenses whose description contains the given pattern.
  */
-export async function cleanupTestExpenses(page: Page, descriptionPattern: string) {
+export async function cleanupTestExpenses(
+  page: Page,
+  descriptionPattern: string,
+) {
   try {
     const expenses = await listExpenses(page);
     const toDelete = expenses.filter(
-      (e: any) => e.description && String(e.description).includes(descriptionPattern),
+      (e: any) =>
+        e.description && String(e.description).includes(descriptionPattern),
     );
     for (const e of toDelete) {
       await deleteExpense(page, e.id);
@@ -661,7 +762,9 @@ export async function cleanupTestExpenses(page: Page, descriptionPattern: string
 export async function cleanupTestCategories(page: Page, namePattern: string) {
   try {
     const categories = await getCategories(page);
-    const toDelete = categories.filter((c: any) => c.name && String(c.name).includes(namePattern));
+    const toDelete = categories.filter(
+      (c: any) => c.name && String(c.name).includes(namePattern),
+    );
     for (const c of toDelete) {
       // Handle nested categories or constraints if necessary, currently just delete
       await deleteCategory(page, c.id);
@@ -678,7 +781,9 @@ export async function cleanupTestCategories(page: Page, namePattern: string) {
 export async function cleanupTestSuppliers(page: Page, namePattern: string) {
   try {
     const suppliers = await getSuppliers(page);
-    const toDelete = suppliers.filter((s: any) => s.name && String(s.name).includes(namePattern));
+    const toDelete = suppliers.filter(
+      (s: any) => s.name && String(s.name).includes(namePattern),
+    );
     for (const s of toDelete) {
       await deleteSupplier(page, s.id);
     }
@@ -691,11 +796,16 @@ export async function cleanupTestSuppliers(page: Page, namePattern: string) {
 /**
  * Clean up test supplier orders whose note contains the given pattern.
  */
-export async function cleanupTestSupplierOrders(page: Page, notePattern: string) {
+export async function cleanupTestSupplierOrders(
+  page: Page,
+  notePattern: string,
+) {
   try {
     const orders = await getSupplierOrders(page);
     const list = Array.isArray(orders) ? orders : [];
-    const toDelete = list.filter((o: any) => o.note && String(o.note).includes(notePattern));
+    const toDelete = list.filter(
+      (o: any) => o.note && String(o.note).includes(notePattern),
+    );
     for (const o of toDelete) {
       await deleteSupplierOrder(page, o.id);
     }
