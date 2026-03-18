@@ -143,3 +143,75 @@ describe("POST /api/admin/products/[id]/variants", () => {
     expect(response.status).toBe(403);
   });
 });
+
+describe("DELETE /api/admin/customers/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(null);
+
+    const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when authenticated as manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 403 when authenticated as staff", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(staffInternalUser);
+
+    const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
+
+    expect(response.status).toBe(403);
+  });
+});
+
+describe("DELETE /api/admin/suppliers/[id]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(null);
+
+    const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 when authenticated as manager", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
+
+    const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 403 when authenticated as staff", async () => {
+    vi.mocked(getInternalUser).mockResolvedValue(staffInternalUser);
+
+    const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
+    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
+
+    expect(response.status).toBe(403);
+  });
+});
