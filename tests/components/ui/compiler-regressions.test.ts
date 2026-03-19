@@ -22,5 +22,6 @@ describe("tooling regression guards", () => {
 
     expect(source).not.toContain('from "recharts"');
     expect(source).not.toContain("dangerouslySetInnerHTML");
+    expect(source).toContain('import("recharts")');
   });
 });

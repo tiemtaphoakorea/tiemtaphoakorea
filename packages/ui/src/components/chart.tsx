@@ -6,20 +6,22 @@ import * as React from "react";
 const THEMES = { light: "", dark: ".dark" } as const;
 
 const LazyResponsiveContainer = React.lazy(() =>
-  import("./chart-primitives").then((module) => ({
-    default: module.ChartResponsiveContainer,
+  import("recharts").then((module) => ({
+    default: ({ children }: { children: React.ReactNode }) => (
+      <module.ResponsiveContainer>{children as React.ReactElement}</module.ResponsiveContainer>
+    ),
   })),
 );
 
 const LazyTooltip = React.lazy(() =>
-  import("./chart-primitives").then((module) => ({
-    default: module.ChartTooltipPrimitive,
+  import("recharts").then((module) => ({
+    default: (props: Record<string, unknown>) => <module.Tooltip {...props} />,
   })),
 );
 
 const LazyLegend = React.lazy(() =>
-  import("./chart-primitives").then((module) => ({
-    default: module.ChartLegendPrimitive,
+  import("recharts").then((module) => ({
+    default: (props: Record<string, unknown>) => <module.Legend {...props} />,
   })),
 );
 
