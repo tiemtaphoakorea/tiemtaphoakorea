@@ -2,9 +2,9 @@ import "dotenv/config";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "../db/schema";
-import { ROLE } from "../lib/constants";
-import { hashPassword } from "../lib/security.server";
+import { hashPassword } from "../packages/database/src/lib/security";
+import * as schema from "../packages/database/src/schema";
+import { ROLE } from "../packages/shared/src/constants";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");

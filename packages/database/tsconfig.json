@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "target": "ES2017",
+    "baseUrl": ".",
+    "paths": {
+      "@repo/shared": ["../shared/src/index.ts"],
+      "@repo/shared/*": ["../shared/src/*"],
+      "@/db/db.server": ["./src/db"],
+      "@/db/*": ["./src/*"],
+      "@/lib/security.server": ["./src/lib/security"],
+      "@/lib/db-locking": ["./src/lib/db-locking"],
+      "@/lib/supabase/admin": ["./src/lib/supabase/admin"],
+      "@/lib/supabase/server": ["./src/lib/supabase/server"],
+      "@/lib/constants": ["../shared/src/constants"],
+      "@/lib/http-status": ["../shared/src/http-status"],
+      "@/lib/pagination": ["../shared/src/pagination"],
+      "@/types/*": ["../shared/src/types/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "drizzle"]
+}

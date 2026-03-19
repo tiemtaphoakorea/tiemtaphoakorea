@@ -1,8 +1,8 @@
 import "dotenv/config";
-import { db } from "../db/db.server";
-import { profiles } from "../db/schema/profiles";
-import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
+import { db } from "../packages/database/src/db";
+import { profiles } from "../packages/database/src/schema/profiles";
 
 const SALT_ROUNDS = 10;
 
@@ -14,9 +14,7 @@ async function updateAdminPassword() {
     console.error(
       "Usage: npx tsx scripts/update-admin-password.ts <username-or-email> <new-password>",
     );
-    console.error(
-      "Example: npx tsx scripts/update-admin-password.ts admin newpassword123",
-    );
+    console.error("Example: npx tsx scripts/update-admin-password.ts admin newpassword123");
     process.exit(1);
   }
 

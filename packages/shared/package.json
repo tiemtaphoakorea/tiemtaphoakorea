@@ -1,0 +1,31 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts",
+    "./routes": "./src/routes.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./types/*": "./src/types/*.ts",
+    "./utils": "./src/utils.ts",
+    "./http-status": "./src/http-status.ts",
+    "./pagination": "./src/pagination.ts",
+    "./api-endpoints": "./src/api-endpoints.ts",
+    "./analytics": "./src/analytics.ts",
+    "./api-client": "./src/api-client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.19",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

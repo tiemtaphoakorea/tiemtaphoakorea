@@ -111,7 +111,9 @@ describe("GET /api/admin/products/variants/[variantId]/cost-history", () => {
     const { GET } = await import(
       "@/app/api/admin/products/variants/[variantId]/cost-history/route"
     );
-    const request = createMockRequest({ url: "http://localhost/api/admin/products/variants/v1/cost-history" });
+    const request = createMockRequest({
+      url: "http://localhost/api/admin/products/variants/v1/cost-history",
+    });
     const response = await GET(request, { params: Promise.resolve({ variantId: "v1" }) });
 
     expect(response.status).toBe(401);
@@ -127,7 +129,10 @@ describe("POST /api/admin/products/[id]/variants", () => {
     vi.mocked(getInternalUser).mockResolvedValue(null);
 
     const { POST } = await import("@/app/api/admin/products/[id]/variants/route");
-    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/products/p1/variants" });
+    const request = createMockRequest({
+      method: "POST",
+      url: "http://localhost/api/admin/products/p1/variants",
+    });
     const response = await POST(request, { params: Promise.resolve({ id: "p1" }) });
 
     expect(response.status).toBe(401);
@@ -137,7 +142,10 @@ describe("POST /api/admin/products/[id]/variants", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { POST } = await import("@/app/api/admin/products/[id]/variants/route");
-    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/products/p1/variants" });
+    const request = createMockRequest({
+      method: "POST",
+      url: "http://localhost/api/admin/products/p1/variants",
+    });
     const response = await POST(request, { params: Promise.resolve({ id: "p1" }) });
 
     expect(response.status).toBe(403);
@@ -153,7 +161,10 @@ describe("DELETE /api/admin/customers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(null);
 
     const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/customers/c1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
 
     expect(response.status).toBe(401);
@@ -163,7 +174,10 @@ describe("DELETE /api/admin/customers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/customers/c1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
 
     expect(response.status).toBe(403);
@@ -173,7 +187,10 @@ describe("DELETE /api/admin/customers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(staffInternalUser);
 
     const { DELETE } = await import("@/app/api/admin/customers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/customers/c1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/customers/c1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "c1" }) });
 
     expect(response.status).toBe(403);
@@ -189,7 +206,10 @@ describe("DELETE /api/admin/suppliers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(null);
 
     const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/suppliers/s1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
 
     expect(response.status).toBe(401);
@@ -199,7 +219,10 @@ describe("DELETE /api/admin/suppliers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/suppliers/s1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
 
     expect(response.status).toBe(403);
@@ -209,7 +232,10 @@ describe("DELETE /api/admin/suppliers/[id]", () => {
     vi.mocked(getInternalUser).mockResolvedValue(staffInternalUser);
 
     const { DELETE } = await import("@/app/api/admin/suppliers/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/suppliers/s1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/suppliers/s1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "s1" }) });
 
     expect(response.status).toBe(403);
@@ -235,7 +261,11 @@ describe("Expenses and Finance 401/403 split", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { POST } = await import("@/app/api/admin/expenses/route");
-    const request = createMockRequest({ method: "POST", url: "http://localhost/api/admin/expenses", body: { amount: 100, date: new Date().toISOString(), type: "fixed" } });
+    const request = createMockRequest({
+      method: "POST",
+      url: "http://localhost/api/admin/expenses",
+      body: { amount: 100, date: new Date().toISOString(), type: "fixed" },
+    });
     const response = await POST(request);
 
     expect(response.status).toBe(403);
@@ -245,7 +275,10 @@ describe("Expenses and Finance 401/403 split", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { DELETE } = await import("@/app/api/admin/expenses/[id]/route");
-    const request = createMockRequest({ method: "DELETE", url: "http://localhost/api/admin/expenses/e1" });
+    const request = createMockRequest({
+      method: "DELETE",
+      url: "http://localhost/api/admin/expenses/e1",
+    });
     const response = await DELETE(request, { params: Promise.resolve({ id: "e1" }) });
 
     expect(response.status).toBe(403);
@@ -255,7 +288,9 @@ describe("Expenses and Finance 401/403 split", () => {
     vi.mocked(getInternalUser).mockResolvedValue(managerInternalUser);
 
     const { GET } = await import("@/app/api/admin/finance/route");
-    const request = createMockRequest({ url: "http://localhost/api/admin/finance?month=1&year=2026" });
+    const request = createMockRequest({
+      url: "http://localhost/api/admin/finance?month=1&year=2026",
+    });
     const response = await GET(request);
 
     expect(response.status).toBe(403);

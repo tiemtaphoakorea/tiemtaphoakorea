@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 
@@ -9,7 +9,7 @@
 /test-results
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -46,3 +46,4 @@ next-env.d.ts
 .__pycache__
 .obsidian
 .claude
+.turbo

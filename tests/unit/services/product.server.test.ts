@@ -2,7 +2,10 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { categories } from "@/db/schema/categories";
+import { orderItems, orders } from "@/db/schema/orders";
 import { products, productVariants } from "@/db/schema/products";
+import { profiles } from "@/db/schema/profiles";
+import { BusinessError } from "@/lib/http-status";
 import {
   createProduct,
   deleteProduct,
@@ -198,6 +201,72 @@ describe("Product Service", () => {
         where: eq(productVariants.productId, created.id),
       });
       expect(variantsCheck).toBeUndefined();
+    });
+
+    it("should throw and leave product intact when a variant is referenced by order history", async () => {
+      const timestamp = Date.now();
+
+      // Create product with one variant
+      const created = await createProduct({
+        name: "Ordered Product",
+        slug: `ordered-product-${timestamp}`,
+        categoryId: TEST_CAT_ID,
+        variants: [{ name: "OV", sku: `OV-${timestamp}`, price: 50 }],
+      } as any);
+
+      const variantId = created.variants[0].id;
+
+      // Seed a customer profile
+      const [customer] = await db
+        .insert(profiles)
+        .values({
+          username: `test-customer-${timestamp}`,
+          fullName: "Test Customer",
+          role: "customer",
+        })
+        .returning({ id: profiles.id });
+
+      // Seed an order for that customer
+      const [order] = await db
+        .insert(orders)
+        .values({
+          orderNumber: `ORD-TEST-${timestamp}`,
+          customerId: customer.id,
+          subtotal: "50",
+          total: "50",
+        })
+        .returning({ id: orders.id });
+
+      // Seed an order item linking the order to the variant
+      await db.insert(orderItems).values({
+        orderId: order.id,
+        variantId,
+        productName: "Ordered Product",
+        variantName: "OV",
+        sku: `OV-${timestamp}`,
+        quantity: 1,
+        unitPrice: "50",
+        lineTotal: "50",
+      });
+
+      try {
+        await expect(deleteProduct(created.id)).rejects.toThrow(BusinessError);
+        await expect(deleteProduct(created.id)).rejects.toThrow(
+          "Không thể xóa sản phẩm đã có trong lịch sử đơn hàng",
+        );
+
+        // Product must still exist
+        const check = await db.query.products.findFirst({
+          where: eq(products.id, created.id),
+        });
+        expect(check).toBeDefined();
+      } finally {
+        // Clean up in FK-safe order
+        await db.delete(orderItems).where(eq(orderItems.orderId, order.id));
+        await db.delete(orders).where(eq(orders.id, order.id));
+        await db.delete(profiles).where(eq(profiles.id, customer.id));
+        await db.delete(products).where(eq(products.id, created.id));
+      }
     });
   });
   describe("getProductById / getProductBySlug", () => {

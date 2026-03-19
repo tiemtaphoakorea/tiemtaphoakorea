@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
-import { db } from "../db/db.server";
-import { profiles } from "../db/schema/profiles";
-import { hashPassword } from "../lib/security.server";
+import { db } from "../packages/database/src/db";
+import { hashPassword } from "../packages/database/src/lib/security";
+import { profiles } from "../packages/database/src/schema/profiles";
 
 // Manually verify env vars if needed, though dotenv handles it
 if (!process.env.DATABASE_URL) {
