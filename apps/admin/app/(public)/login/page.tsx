@@ -66,13 +66,10 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-50/50 p-4 duration-700 dark:bg-slate-950">
-      <div className="bg-primary/10 absolute top-[-10%] left-[-10%] h-[40%] w-[40%] rounded-full blur-[100px]" />
-      <div className="absolute right-[-10%] bottom-[-10%] h-[40%] w-[40%] rounded-full bg-orange-500/10 blur-[100px]" />
-
-      <Card className="shadow-primary/5 relative z-10 w-full max-w-md rounded-[2.5rem] border-none bg-white/80 shadow-2xl backdrop-blur-xl">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+      <Card className="w-full max-w-md rounded-2xl border border-border bg-card shadow-sm">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <CardHeader className="space-y-4 px-10 py-6 pt-10">
+          <CardHeader className="space-y-4 px-8 py-6 pt-8">
             <div className="flex justify-center">
               <Link href={PUBLIC_ROUTES.HOME} className="group flex shrink-0 items-center gap-2">
                 <div className="bg-primary flex h-12 w-12 rotate-6 items-center justify-center rounded-2xl transition-transform group-hover:rotate-0">
@@ -95,7 +92,7 @@ export default function AdminLoginPage() {
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6 px-10">
+          <CardContent className="space-y-6 px-8">
             {error && (
               <div className="bg-destructive/10 border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-2 flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold">
                 <AlertCircle className="h-4 w-4 shrink-0" />
@@ -106,7 +103,7 @@ export default function AdminLoginPage() {
               <div className="space-y-2">
                 <label
                   htmlFor="username"
-                  className="text-muted-foreground ml-1 text-xs font-black tracking-widest uppercase"
+                  className="text-sm font-medium text-foreground"
                 >
                   Tên đăng nhập
                 </label>
@@ -119,7 +116,7 @@ export default function AdminLoginPage() {
                     {...register("username")}
                     type="text"
                     placeholder="admin"
-                    className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 pl-12 text-base transition-all focus:bg-white"
+                    className="h-12 rounded-lg border-border bg-background pl-12 text-sm transition-all focus:ring-1 focus:ring-ring"
                     aria-invalid={!!errors.username}
                   />
                 </div>
@@ -133,7 +130,7 @@ export default function AdminLoginPage() {
                 <div className="ml-1 flex items-center justify-between">
                   <label
                     htmlFor="password"
-                    className="text-muted-foreground text-xs font-black tracking-widest uppercase"
+                    className="text-sm font-medium text-foreground"
                   >
                     Mật khẩu
                   </label>
@@ -147,7 +144,7 @@ export default function AdminLoginPage() {
                     {...register("password")}
                     type="password"
                     placeholder="••••••••"
-                    className="h-14 rounded-2xl border-gray-100 bg-gray-50/50 pl-12 text-base transition-all focus:bg-white"
+                    className="h-12 rounded-lg border-border bg-background pl-12 text-sm transition-all focus:ring-1 focus:ring-ring"
                     aria-invalid={!!errors.password}
                   />
                 </div>
@@ -159,18 +156,28 @@ export default function AdminLoginPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4 px-10 pt-6 pb-10">
+          <CardFooter className="flex flex-col gap-4 px-8 pt-4 pb-8">
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="shadow-primary/20 bg-primary hover:bg-primary/90 group h-14 w-full rounded-full text-lg font-black shadow-xl transition-all active:scale-[0.98]"
+              className="h-11 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-70"
             >
-              <span className="flex items-center justify-center gap-2">
-                {isSubmitting ? "Đang xử lý..." : "Đăng nhập ngay"}
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </span>
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Đang xử lý...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Đăng nhập
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
             </Button>
-            <p className="text-muted-foreground text-center text-[10px] font-medium tracking-widest uppercase">
+            <p className="text-xs text-muted-foreground text-center">
               &copy; 2026 K-SMART Pure Beauty. All rights reserved.
             </p>
           </CardFooter>
