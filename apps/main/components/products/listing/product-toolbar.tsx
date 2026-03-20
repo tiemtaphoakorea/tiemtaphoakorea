@@ -1,12 +1,21 @@
-import { Button } from "@repo/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
 import { Input } from "@repo/ui/components/input";
-import { ArrowUpDown, ChevronDown, LayoutGrid, List, Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
+import { LayoutGrid, List, Search } from "lucide-react";
+
+const PAGE_SIZE_OPTIONS = [4, 12, 24, 48];
+
+const SORT_OPTIONS = [
+  { value: "latest", label: "Mới nhất" },
+  { value: "price-asc", label: "Giá thấp đến cao" },
+  { value: "price-desc", label: "Giá cao đến thấp" },
+  { value: "rating", label: "Đánh giá tốt nhất" },
+];
 
 interface ProductToolbarProps {
   searchQuery: string;
@@ -16,6 +25,8 @@ interface ProductToolbarProps {
   productsCount: number;
   activeSort: string;
   onSortChange: (sort: string) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
 }
 
 export function ProductToolbar({
@@ -26,25 +37,36 @@ export function ProductToolbar({
   productsCount,
   activeSort,
   onSortChange,
+  pageSize,
+  onPageSizeChange,
 }: ProductToolbarProps) {
   return (
-    <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50/50 p-4 sm:flex-row dark:border-slate-800 dark:bg-slate-900/50">
-      <div className="flex w-full items-center gap-4 sm:w-auto">
-        <div className="relative flex-1 sm:w-64">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+      {/* Left: Search + count */}
+      <div className="flex items-center gap-3">
+        <div className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
-            placeholder="Tìm kiếm trong danh mục..."
-            className="h-10 rounded-xl border-none bg-white pl-9 text-sm"
+            placeholder="Tìm trong danh mục..."
+            className="h-9 w-52 rounded-full border-border bg-muted pl-9 text-sm focus:bg-background"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        <div className="hidden items-center gap-1 rounded-xl border border-gray-100 bg-white p-1 sm:flex">
+        <span className="text-sm text-muted-foreground">
+          <span className="font-semibold text-primary">{productsCount}</span> sản phẩm
+        </span>
+      </div>
+
+      {/* Right: View toggle + sort + page size */}
+      <div className="flex items-center gap-2">
+        {/* Segmented view toggle */}
+        <div className="flex items-center rounded-lg border border-border bg-muted p-0.5">
           <button
             type="button"
             aria-label="Hiển thị dạng lưới"
             onClick={() => onViewModeChange("grid")}
-            className={`rounded-lg p-1.5 transition-all ${viewMode === "grid" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-gray-50"}`}
+            className={`rounded-md p-1.5 transition-all ${viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
             <LayoutGrid className="h-4 w-4" />
           </button>
@@ -52,63 +74,39 @@ export function ProductToolbar({
             type="button"
             aria-label="Hiển thị dạng danh sách"
             onClick={() => onViewModeChange("list")}
-            className={`rounded-lg p-1.5 transition-all ${viewMode === "list" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-gray-50"}`}
+            className={`rounded-md p-1.5 transition-all ${viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
             <List className="h-4 w-4" />
           </button>
         </div>
-      </div>
 
-      <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
-        <span className="text-muted-foreground text-sm font-bold">
-          <span className="text-primary">{productsCount}</span> sản phẩm
-        </span>
+        {/* Sort Select */}
+        <Select value={activeSort} onValueChange={onSortChange}>
+          <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-background text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-xl border-gray-100 bg-white font-bold shadow-sm"
-            >
-              <ArrowUpDown className="h-4 w-4" />
-              {activeSort === "price-asc"
-                ? "Giá thấp đến cao"
-                : activeSort === "price-desc"
-                  ? "Giá cao đến thấp"
-                  : activeSort === "rating"
-                    ? "Đánh giá tốt nhất"
-                    : "Mới nhất"}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl p-2">
-            <DropdownMenuItem
-              onClick={() => onSortChange("latest")}
-              className="rounded-lg font-medium"
-            >
-              Mới nhất
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onSortChange("price-asc")}
-              className="rounded-lg font-medium"
-            >
-              Giá thấp đến cao
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onSortChange("price-desc")}
-              className="rounded-lg font-medium"
-            >
-              Giá cao đến thấp
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onSortChange("rating")}
-              className="rounded-lg font-medium"
-            >
-              Đánh giá tốt nhất
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Page size Select */}
+        <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+          <SelectTrigger className="h-9 w-28 rounded-lg border-border bg-background text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size} / trang
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

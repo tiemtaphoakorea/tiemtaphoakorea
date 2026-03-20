@@ -80,6 +80,14 @@ export function ProductListingContainer({
     router.push(PUBLIC_ROUTES.PRODUCTS);
   };
 
+  const handlePageSizeChange = (size: number) => {
+    const params = buildParams();
+    params.set("pageSize", String(size));
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${PUBLIC_ROUTES.PRODUCTS}?${query}` : PUBLIC_ROUTES.PRODUCTS);
+  };
+
   return (
     <div className="flex-1">
       <div className="mb-6 space-y-3">
@@ -91,6 +99,8 @@ export function ProductListingContainer({
           productsCount={productsCount}
           activeSort={resolvedActiveSort}
           onSortChange={handleSortChange}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
         />
 
         {productsCount > 0 && (
