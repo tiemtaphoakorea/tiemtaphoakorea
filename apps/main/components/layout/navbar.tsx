@@ -2,7 +2,7 @@
 
 import { ACCOUNT_ROUTES, PUBLIC_ROUTES } from "@repo/shared/routes";
 import { Input } from "@repo/ui/components/input";
-import { Menu, Search, UserCircle2 } from "lucide-react";
+import { Search, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,16 +30,16 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
       {/* Top Header */}
-      <div className="container mx-auto flex h-20 items-center justify-between gap-4 px-4 lg:gap-8">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4 lg:gap-8">
         {/* Logo */}
         <Link href={PUBLIC_ROUTES.HOME} className="group flex shrink-0 items-center gap-2">
           <div className="bg-primary flex h-10 w-10 rotate-3 items-center justify-center rounded-xl transition-transform group-hover:rotate-0">
             <span className="text-2xl leading-none font-bold text-white">K</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-primary text-xl leading-none font-bold tracking-tight">
+            <span className="text-primary text-2xl leading-none font-serif font-bold tracking-tight">
               K-SMART
             </span>
             <span className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
@@ -60,7 +60,7 @@ export function Navbar() {
             aria-label="Tìm kiếm sản phẩm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="focus:border-primary/30 h-11 w-full rounded-full border-gray-100 bg-gray-50 pr-4 pl-12 transition-all focus:bg-white"
+            className="focus:border-primary/30 h-11 w-full rounded-full border-border bg-muted pr-4 pl-12 transition-all focus:bg-background"
           />
           <Search className="group-focus-within:text-primary absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors" />
         </form>
@@ -80,15 +80,8 @@ export function Navbar() {
       </div>
 
       {/* Navigation Links */}
-      <div className="no-scrollbar flex items-center overflow-x-auto border-t border-gray-100 bg-gray-50/50 py-2 dark:border-slate-800 dark:bg-slate-900/50">
-        <div className="container mx-auto flex items-center gap-8 px-4 text-sm font-medium whitespace-nowrap">
-          <Link
-            href={PUBLIC_ROUTES.PRODUCTS}
-            className="text-primary group flex items-center gap-2 font-bold"
-          >
-            <Menu className="h-5 w-5 transition-transform duration-500 group-hover:rotate-180" />{" "}
-            DANH MỤC
-          </Link>
+      <div className="no-scrollbar flex items-center overflow-x-auto border-t border-border bg-background py-3 dark:border-slate-800 dark:bg-slate-950">
+        <div className="container mx-auto flex items-center gap-2 px-4 text-sm font-medium whitespace-nowrap">
           <CategoryLink
             label="Chăm sóc da"
             to={PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY("Chăm sóc da")}
@@ -113,7 +106,7 @@ function CategoryLink({ label, to = PUBLIC_ROUTES.PRODUCTS }: { label: string; t
   return (
     <Link
       href={to}
-      className="hover:text-primary after:bg-primary relative font-semibold text-gray-600 transition-colors after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:transition-all hover:after:w-full"
+      className="rounded-full border border-border bg-background px-4 py-1.5 text-sm font-medium text-foreground/70 transition-all hover:border-primary/30 hover:text-primary hover:bg-secondary"
     >
       {label}
     </Link>
