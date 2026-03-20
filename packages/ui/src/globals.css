@@ -4,14 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-background;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
@@ -57,41 +56,39 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: var(--font-display);
 }
 
 :root {
-  --radius: 0.625rem;
+  /* K-Beauty Rose/Cream Palette */
 
-  /* Slate 50-900 Based Palette for "Clean Minimal" Look */
+  --background: hsl(0 0% 100%);         /* Pure white */
+  --foreground: hsl(220 20% 12%);       /* Near-black with warmth */
 
-  /* Light Mode */
-  --background: hsl(210 40% 98%); /* Slate 50 */
-  --foreground: hsl(222 47% 11%); /* Slate 900 */
-
-  --card: hsl(0 0% 100%); /* White */
-  --card-foreground: hsl(222 47% 11%); /* Slate 900 */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 20% 12%);
 
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
+  --popover-foreground: hsl(220 20% 12%);
 
-  --primary: hsl(222 47% 11%); /* Slate 900 */
-  --primary-foreground: hsl(210 40% 98%); /* Slate 50 */
+  --primary: hsl(338 62% 38%);          /* Deep Rose */
+  --primary-foreground: hsl(0 0% 100%); /* White */
 
-  --secondary: hsl(0 0% 100%); /* White */
-  --secondary-foreground: hsl(215 16% 47%); /* Slate 600 */
+  --secondary: hsl(338 50% 96%);        /* Blush pink */
+  --secondary-foreground: hsl(338 62% 38%);
 
-  --muted: hsl(210 40% 96.1%); /* Slate 100 */
-  --muted-foreground: hsl(215 16% 47%); /* Slate 600 */
+  --muted: hsl(220 14% 96%);            /* Cool gray-white */
+  --muted-foreground: hsl(220 10% 50%); /* Mid gray */
 
-  --accent: hsl(210 40% 96.1%); /* Slate 100 */
-  --accent-foreground: hsl(222 47% 11%); /* Slate 900 */
+  --accent: hsl(38 50% 94%);            /* Warm cream accent */
+  --accent-foreground: hsl(220 20% 12%);
 
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(210 40% 98%);
 
-  --border: hsl(214.3 31.8% 91.4%); /* Slate 200 */
-  --input: hsl(214.3 31.8% 91.4%); /* Slate 200 */
-  --ring: hsl(222 47% 11%); /* Slate 900 */
+  --border: hsl(220 14% 90%);
+  --input: hsl(220 14% 90%);
+  --ring: hsl(338 62% 38%);
 
   --radius: 0.5rem;
 
@@ -160,6 +157,6 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground selection:bg-primary/20 bg-slate-50 antialiased dark:bg-slate-950;
+    @apply text-foreground selection:bg-primary/20 bg-background antialiased;
   }
 }
