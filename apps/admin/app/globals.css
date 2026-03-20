@@ -142,15 +142,15 @@ body {
 
 @layer utilities {
   .glass {
-    @apply border border-white/20 bg-white/70 shadow-sm backdrop-blur-md dark:border-slate-700/30 dark:bg-slate-900/70;
+    @apply border border-white/20 bg-white/70 shadow-sm backdrop-blur-md dark:border-border/30 dark:bg-card/70;
   }
 
   .glass-card {
-    @apply border border-slate-200/60 bg-white shadow-sm transition-all duration-300 dark:border-slate-800 dark:bg-slate-950;
+    @apply border border-border/60 bg-card shadow-sm transition-all duration-300 dark:border-border dark:bg-card;
   }
 
   .glass-header {
-    @apply border-sidebar-border dark:border-sidebar-border sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-950/80;
+    @apply border-sidebar-border dark:border-sidebar-border sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-card/80;
   }
 }
 
