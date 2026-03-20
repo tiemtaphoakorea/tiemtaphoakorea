@@ -3,10 +3,10 @@
 import type { CustomerDetail } from "@repo/database/types/admin";
 import { formatDate } from "@repo/shared/utils";
 import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { CustomerFinancialStats } from "@/components/admin/customer-detail/customer-financial-stats";
 import { CustomerLocationCard } from "@/components/admin/customer-detail/customer-location-card";
 import { CustomerOrderHistoryTable } from "@/components/admin/customer-detail/customer-order-history-table";
@@ -19,36 +19,14 @@ export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [customer, setCustomer] = useState<CustomerDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { data, isLoading, isError } = useQuery<{ customer?: CustomerDetail }>({
+    queryKey: ["customer", id],
+    queryFn: () => adminClient.getCustomer(id),
+    enabled: Boolean(id),
+  });
+  const customer = data?.customer ?? null;
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    async function fetchCustomer() {
-      try {
-        const data = await adminClient.getCustomer(id);
-        if (!cancelled) {
-          if (data.customer) {
-            setCustomer(data.customer);
-          } else {
-            setNotFound(true);
-          }
-        }
-      } catch {
-        if (!cancelled) setNotFound(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchCustomer();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">
@@ -70,7 +48,7 @@ export default function CustomerDetailPage() {
     );
   }
 
-  if (notFound || !customer) {
+  if (isError || !customer) {
     return (
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">

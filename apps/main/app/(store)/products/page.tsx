@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getCategories } from "@repo/database/services/category.server";
+import { getProductsForListing } from "@repo/database/services/product.server";
 import { PRODUCT_SORT } from "@repo/shared/constants";
 import { PUBLIC_ROUTES } from "@repo/shared/routes";
 import { Skeleton } from "@repo/ui/components/skeleton";
@@ -71,7 +72,16 @@ async function ProductListingContent({
   const page = Math.max(1, Number.parseInt((resolvedSearchParams.page as string) || "1", 10));
   const pageSize = 4;
 
-  const categories = await getCategories();
+  const [categories, listing] = await Promise.all([
+    getCategories(),
+    getProductsForListing({
+      search,
+      categorySlug,
+      sort,
+      page,
+      limit: pageSize,
+    }),
+  ]);
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row">
@@ -79,9 +89,12 @@ async function ProductListingContent({
 
       <ProductListingContainer
         pageSize={pageSize}
-        initialCurrentPage={page}
-        initialActiveSort={sort}
-        initialSearchQuery={search}
+        currentPage={page}
+        activeSort={sort}
+        searchQuery={search}
+        activeCategorySlug={categorySlug}
+        products={listing.products}
+        productsCount={listing.total}
       />
     </div>
   );

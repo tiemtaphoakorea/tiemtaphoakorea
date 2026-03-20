@@ -30,9 +30,10 @@ import {
   TableRow,
 } from "@repo/ui/components/table";
 import { Textarea } from "@repo/ui/components/textarea";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { adminClient } from "@/services/admin.client";
 
@@ -46,16 +47,15 @@ export default function AdminSuppliers() {
 
 function AdminSuppliersContent() {
   "use no memo";
-  const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const searchTerm = searchParams.get("search") || "";
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any | null>(null);
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<SupplierFormValues>({
@@ -70,25 +70,13 @@ function AdminSuppliersContent() {
     },
   });
 
-  const fetchSuppliers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const search = searchParams.get("search") || "";
-      const data = await adminClient.getSuppliers({ search });
-      setSuppliers(data.suppliers || []);
-    } catch (error) {
-      console.error("Failed to load suppliers", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchSuppliers();
-  }, [fetchSuppliers]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["suppliers", searchTerm],
+    queryFn: () => adminClient.getSuppliers({ search: searchTerm }),
+  });
+  const suppliers = data?.suppliers || [];
 
   const handleSearch = (val: string) => {
-    setSearchTerm(val);
     const params = new URLSearchParams(searchParams.toString());
     if (val) params.set("search", val);
     else params.delete("search");
@@ -120,7 +108,7 @@ function AdminSuppliersContent() {
     if (confirm(`Bạn có chắc muốn xóa nhà cung cấp "${supplier.name}"?`)) {
       try {
         await adminClient.deleteSupplier(supplier.id);
-        fetchSuppliers();
+        await queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       } catch (error: any) {
         alert(error.message || "Failed to delete");
       }
@@ -146,10 +134,10 @@ function AdminSuppliersContent() {
         await adminClient.updateSupplier(editingSupplier.id, payload);
       }
       setIsSheetOpen(false);
-      fetchSuppliers();
+      await queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      setIsSubmitting(false);
     } catch (error: any) {
       alert(error.message || "Action failed");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -210,7 +198,7 @@ function AdminSuppliersContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-40 text-center font-medium text-slate-500">
                     Đang tải danh sách...

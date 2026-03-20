@@ -36,23 +36,33 @@ export default function AdminLoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setError("");
+    let responseData:
+      | {
+          success?: boolean;
+          error?: string;
+          access_token?: string;
+        }
+      | undefined;
+
     try {
-      const responseData = await adminClient.login(data);
-
-      if (!responseData.success) {
-        setError(responseData.error || "Đăng nhập thất bại");
-        return;
-      }
-
-      if (responseData.access_token) {
-        localStorage.setItem("sb-access-token", responseData.access_token);
-      }
-      router.push("/");
-      router.refresh();
+      responseData = await adminClient.login(data);
     } catch (err) {
       console.error(err);
       setError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+      return;
     }
+
+    if (!responseData?.success) {
+      setError(responseData?.error || "Đăng nhập thất bại");
+      return;
+    }
+
+    if (responseData.access_token) {
+      localStorage.setItem("sb-access-token", responseData.access_token);
+    }
+
+    router.push("/");
+    router.refresh();
   }
 
   return (

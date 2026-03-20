@@ -30,35 +30,49 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
     }
 
     setIsUploading(true);
-    const newUrls: string[] = [];
+    const uploadRequests = Array.from(files).map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    // Process uploads sequentially or parallel
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const data = (await axios.post(API_ENDPOINTS.COMMON.UPLOAD, formData)) as {
+      return {
+        fileName: file.name,
+        response: (await axios.post(API_ENDPOINTS.COMMON.UPLOAD, formData)) as {
           url: string;
           error?: string;
-        };
-        if (data.url) {
-          newUrls.push(data.url);
-        } else {
-          console.error("Upload failed for file:", file.name, data.error);
-        }
-      }
+        },
+      };
+    });
 
-      onChange([...value, ...newUrls]);
-    } catch (err) {
-      console.error("Upload error:", err);
-      alert("Có lỗi xảy ra khi tải ảnh. Vui lòng thử lại.");
-    } finally {
-      setIsUploading(false);
-      // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    const results = await Promise.allSettled(uploadRequests);
+    const newUrls: string[] = [];
+
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        if (result.value.response.url) {
+          newUrls.push(result.value.response.url);
+        } else {
+          console.error(
+            "Upload failed for file:",
+            result.value.fileName,
+            result.value.response.error,
+          );
+        }
+      } else {
+        console.error("Upload error:", result.reason);
+      }
     }
+
+    if (newUrls.length > 0) {
+      onChange([...value, ...newUrls]);
+    }
+
+    if (newUrls.length !== files.length) {
+      alert("Một số ảnh tải lên thất bại. Vui lòng kiểm tra lại.");
+    }
+
+    setIsUploading(false);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeImage = (index: number) => {

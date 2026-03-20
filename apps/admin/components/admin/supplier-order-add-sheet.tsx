@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@repo/ui/components/textarea";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 const EMPTY_PRODUCTS: any[] = [];
 const EMPTY_SUPPLIERS: SupplierLookupItem[] = [];
@@ -64,7 +64,6 @@ export function SupplierOrderAddSheet({
     register,
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<SupplierOrderAddFormValues>({
     resolver: zodResolver(supplierOrderAddSchema),
@@ -80,8 +79,8 @@ export function SupplierOrderAddSheet({
   const [variantOpen, setVariantOpen] = useState(false);
   const [supplierOpen, setSupplierOpen] = useState(false);
 
-  const variantId = watch("variantId");
-  const supplierId = watch("supplierId");
+  const variantId = useWatch({ control, name: "variantId" });
+  const supplierId = useWatch({ control, name: "supplierId" });
   const selectedVariant = variants.find((v) => v.id === variantId);
   const selectedSupplier = suppliers.find((s) => s.id === supplierId);
 

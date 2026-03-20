@@ -5,8 +5,8 @@ import type {
   ProductFormCategory,
   ProductFormInitialData,
 } from "@repo/shared/types/product";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ProductForm } from "@/components/admin/products/product-form";
 import { adminClient } from "@/services/admin.client";
 
@@ -14,33 +14,17 @@ export default function EditProductPage() {
   "use no memo";
   const params = useParams();
   const id = params.id as string;
-  const [categories, setCategories] = useState<ProductFormCategory[]>([]);
-  const [initialData, setInitialData] = useState<ProductFormInitialData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["product-edit", id],
+    queryFn: async () => {
+      const [catData, productData] = await Promise.all([
+        adminClient.getCategories(),
+        adminClient.getProduct(id),
+      ]);
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    async function fetchData() {
-      try {
-        const [catData, productData] = await Promise.all([
-          adminClient.getCategories(),
-          adminClient.getProduct(id),
-        ]);
-
-        if (catData.flatCategories && !cancelled) {
-          setCategories(catData.flatCategories);
-        }
-
-        const product = productData.product as AdminProductDetail;
-        if (!product) {
-          if (!cancelled) setNotFound(true);
-          return;
-        }
-
-        if (!cancelled) {
-          setInitialData({
+      const product = productData.product as AdminProductDetail | undefined;
+      const initialData: ProductFormInitialData | null = product
+        ? {
             id: product.id,
             slug: product.slug,
             name: product.name,
@@ -57,21 +41,20 @@ export default function EditProductPage() {
               stockQuantity: v.stockQuantity ?? 0,
               images: v.images?.map((img) => img.imageUrl) ?? [],
             })),
-          });
-        }
-      } catch {
-        if (!cancelled) setNotFound(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+          }
+        : null;
 
-  if (loading) {
+      return {
+        categories: (catData.flatCategories || []) as ProductFormCategory[],
+        initialData,
+      };
+    },
+    enabled: Boolean(id),
+  });
+  const categories = data?.categories || [];
+  const initialData = data?.initialData ?? null;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
         Đang tải...
@@ -79,7 +62,7 @@ export default function EditProductPage() {
     );
   }
 
-  if (notFound || !initialData) {
+  if (isError || !initialData) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-muted-foreground">
         <p>Không tìm thấy sản phẩm.</p>

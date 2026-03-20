@@ -1,6 +1,7 @@
 import type {
   AdminOrderDetails,
   AdminProfile,
+  AnalyticsData,
   Category,
   CategoryWithChildren,
   ChatRoomWithDetails,
@@ -89,6 +90,12 @@ export const adminClient = {
     return axios.get<{ topProducts: DashboardTopProduct[] }>(API_ENDPOINTS.ADMIN.STATS, {
       params: { section: ADMIN_STATS_SECTION.TOP_PRODUCTS },
     }) as unknown as Promise<{ topProducts: DashboardTopProduct[] }>;
+  },
+
+  async getAnalytics() {
+    return axios.get<AnalyticsData>(
+      API_ENDPOINTS.ADMIN.ANALYTICS,
+    ) as unknown as Promise<AnalyticsData>;
   },
 
   /**

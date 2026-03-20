@@ -99,13 +99,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     setIsLoggingOut(true);
     try {
       await adminClient.logout();
+      setIsLoggingOut(false);
       router.push("/login");
       router.refresh();
     } catch (error) {
+      setIsLoggingOut(false);
       console.error("Logout failed:", error);
       window.location.href = "/login";
-    } finally {
-      setIsLoggingOut(false);
     }
   };
   return (

@@ -163,62 +163,71 @@ function AdminUsersPageContent() {
 
   const handleAddUser = async (data: UserFormValues) => {
     setIsLoadingAction(true);
+    const payload = {
+      username: data.username,
+      fullName: data.fullName,
+      role: data.role,
+      phone: data.phone || undefined,
+    };
+    let res;
+
     try {
-      const res = await adminClient.createUser({
-        username: data.username,
-        fullName: data.fullName,
-        role: data.role,
-        phone: data.phone || undefined,
-      });
-      toast({ title: "Thành công", description: "Đã tạo nhân viên mới" });
-      setIsAddSheetOpen(false);
-      setShowCredentials({
-        username: res.profile?.username,
-        password: res.password,
-        role: res.profile?.role,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      res = await adminClient.createUser(payload);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
+      return;
     }
+
+    toast({ title: "Thành công", description: "Đã tạo nhân viên mới" });
+    setIsAddSheetOpen(false);
+    setShowCredentials({
+      username: res.profile?.username,
+      password: res.password,
+      role: res.profile?.role,
+    });
+    await queryClient.invalidateQueries({ queryKey: ["users"] });
+    setIsLoadingAction(false);
   };
 
   const handleEditUser = async (data: UserEditFormValues) => {
     const id = editingUser?.userId;
     if (!id) return;
     setIsLoadingAction(true);
+    const payload = {
+      fullName: data.fullName,
+      phone: data.phone || undefined,
+      role: data.role,
+    };
+
     try {
-      await adminClient.updateUser(id, {
-        fullName: data.fullName,
-        phone: data.phone || undefined,
-        role: data.role,
-      });
+      await adminClient.updateUser(id, payload);
       toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
       setIsEditSheetOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setIsLoadingAction(false);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
     }
   };
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    const successDescription = currentStatus ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản";
+
     try {
       await adminClient.toggleUserStatus(id, !currentStatus);
       toast({
         title: "Thành công",
-        description: currentStatus ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản",
+        description: successDescription,
       });
       await queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (err: any) {
@@ -239,13 +248,13 @@ function AdminUsersPageContent() {
       toast({ title: "Thành công", description: "Đã xóa nhân viên" });
       setDeletingUser(null);
       await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setIsLoadingAction(false);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
     }
   };

@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/ui/components/table";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
@@ -51,7 +52,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { adminClient } from "@/services/admin.client";
 
@@ -185,18 +186,16 @@ export default function AdminCategories() {
 
 function AdminCategoriesContent() {
   "use no memo";
-  const [categories, setCategories] = useState<CategoryWithChildren[]>([]);
-  const [flatCategories, setFlatCategories] = useState<CategoryWithChildren[]>([]);
-  const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const searchTerm = searchParams.get("search") || "";
 
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryWithChildren | null>(null);
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CategoryFormValues>({
@@ -210,26 +209,15 @@ function AdminCategoriesContent() {
     },
   });
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    try {
-      const search = searchParams.get("search") || "";
-      const data = await adminClient.getCategories({ search });
-      setCategories(data.categories || []);
-      setFlatCategories(data.flatCategories || []);
-    } catch (error) {
-      console.error("Failed to load categories", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["categories", searchTerm],
+    queryFn: () => adminClient.getCategories({ search: searchTerm }),
+  });
+  const categories = data?.categories || [];
+  const flatCategories = data?.flatCategories || [];
 
   // Auto-expand all if searching or initially
-  useEffect(() => {
+  const autoExpandedMap = useMemo(() => {
     const allIds: Record<string, boolean> = {};
     const traverse = (cats: CategoryWithChildren[]) => {
       cats.forEach((c) => {
@@ -239,16 +227,20 @@ function AdminCategoriesContent() {
     };
     if (categories.length > 0) {
       traverse(categories);
-      setExpandedMap(allIds);
     }
+    return allIds;
   }, [categories]);
+  const displayExpandedMap =
+    Object.keys(expandedMap).length > 0 ? { ...autoExpandedMap, ...expandedMap } : autoExpandedMap;
 
   const toggleExpand = (id: string) => {
-    setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedMap((prev) => ({
+      ...prev,
+      [id]: !(id in prev ? prev[id] : autoExpandedMap[id]),
+    }));
   };
 
   const handleSearch = (val: string) => {
-    setSearchTerm(val);
     const params = new URLSearchParams(searchParams.toString());
     if (val) params.set("search", val);
     else params.delete("search");
@@ -285,7 +277,7 @@ function AdminCategoriesContent() {
     if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
       try {
         await adminClient.deleteCategory(cat.id);
-        fetchCategories();
+        await queryClient.invalidateQueries({ queryKey: ["categories"] });
       } catch (error: any) {
         alert(error.message || "Failed to delete");
       }
@@ -310,10 +302,10 @@ function AdminCategoriesContent() {
         await adminClient.updateCategory(editingCategory.id, payload);
       }
       setIsSheetOpen(false);
-      fetchCategories();
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setIsSubmitting(false);
     } catch (error: any) {
       alert(error.message || "Action failed");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -371,7 +363,7 @@ function AdminCategoriesContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell>
@@ -403,7 +395,7 @@ function AdminCategoriesContent() {
                     key={cat.id}
                     category={cat}
                     level={0}
-                    expandedMap={expandedMap}
+                    expandedMap={displayExpandedMap}
                     toggleExpand={toggleExpand}
                     onEdit={openEdit}
                     onDelete={handleDelete}

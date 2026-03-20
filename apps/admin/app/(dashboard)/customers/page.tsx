@@ -150,24 +150,26 @@ function AdminCustomersPageContent() {
 
   const handleAddCustomer = async (formData: FormData) => {
     setIsLoadingAction(true);
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? "",
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? "retail",
+    };
+
     try {
-      const res = await adminClient.createCustomer({
-        fullName: (formData.get("fullName") as string) ?? "",
-        phone: (formData.get("phone") as string) ?? undefined,
-        address: (formData.get("address") as string) ?? undefined,
-        customerType: (formData.get("customerType") as string) ?? "retail",
-      });
+      const res = await adminClient.createCustomer(payload);
       toast({ title: "Thành công", description: "Đã tạo khách hàng mới" });
       setIsAddSheetOpen(false);
       setShowCredentials({ customerCode: res.profile.customerCode });
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setIsLoadingAction(false);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
     }
   };
@@ -176,33 +178,37 @@ function AdminCustomersPageContent() {
     const id = formData.get("id") as string;
     if (!id) return;
     setIsLoadingAction(true);
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? undefined,
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? undefined,
+    };
+
     try {
-      await adminClient.updateCustomer(id, {
-        fullName: (formData.get("fullName") as string) ?? undefined,
-        phone: (formData.get("phone") as string) ?? undefined,
-        address: (formData.get("address") as string) ?? undefined,
-        customerType: (formData.get("customerType") as string) ?? undefined,
-      });
+      await adminClient.updateCustomer(id, payload);
       toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
       setIsEditSheetOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setIsLoadingAction(false);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
     }
   };
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    const successDescription = currentStatus ? "Đã chặn khách hàng" : "Đã mở chặn";
+
     try {
       await adminClient.toggleCustomerStatus(id, !currentStatus);
       toast({
         title: "Thành công",
-        description: currentStatus ? "Đã chặn khách hàng" : "Đã mở chặn",
+        description: successDescription,
       });
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
     } catch (err: any) {
@@ -223,13 +229,13 @@ function AdminCustomersPageContent() {
       toast({ title: "Thành công", description: "Đã xóa khách hàng" });
       setDeletingCustomer(null);
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setIsLoadingAction(false);
     } catch (err: any) {
       toast({
         title: "Lỗi",
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
         variant: "destructive",
       });
-    } finally {
       setIsLoadingAction(false);
     }
   };

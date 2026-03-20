@@ -45,13 +45,8 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     retry: 1,
   });
 
-  // Auth check must stay client-side: the profile is fetched via an HTTP-only cookie
-  // session that only resolves after hydration. A server-side redirect is not possible
-  // here because this is a "use client" layout and the auth state is not available at
-  // request time. Using router.replace (not push) avoids leaving the protected page in
-  // the browser history.
   useEffect(() => {
-    if (isError || (!isLoading && !user)) {
+    if (!isLoading && (isError || !user)) {
       router.replace("/login");
     }
   }, [isError, isLoading, user, router]);

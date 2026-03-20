@@ -157,11 +157,11 @@ function AdminProductsContent() {
       // Ensure the products table refetches and the deleted item disappears
       await queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
       router.refresh(); // safe no-op for server parts; invalidate handles client data
+      setDeleteTarget(null);
     } catch (error: any) {
       console.error(error);
       const message = error?.response?.data?.error ?? "Đã có lỗi xảy ra khi xóa sản phẩm.";
       toast({ title: "Không thể xóa", description: message, variant: "destructive" });
-    } finally {
       setDeleteTarget(null);
     }
   };
@@ -179,11 +179,11 @@ function AdminProductsContent() {
           `Xóa thành công ${result.deleted} sản phẩm. Không thể xóa ${result.failed.length} sản phẩm.`,
         );
       }
+      setIsDeleting(false);
     } catch (error) {
       console.error(error);
       setBulkDeleteConfirm(false);
       setBulkError("Đã có lỗi xảy ra khi xóa sản phẩm.");
-    } finally {
       setIsDeleting(false);
     }
   };

@@ -37,8 +37,8 @@ import axios from "axios";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { ImageUploader } from "@/components/image-uploader";
 
 // Submit Button Component
@@ -80,7 +80,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     },
   });
 
-  const basePrice = form.watch("basePrice");
+  const basePrice = useWatch({ control: form.control, name: "basePrice" });
 
   // Custom Attribute Generator State
   const [attributes, setAttributes] = useState([
@@ -103,17 +103,14 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     ],
   );
 
-  const [selectedMediaVariantId, setSelectedMediaVariantId] = useState<string>(
+  const [selectedMediaVariantIdState, setSelectedMediaVariantId] = useState<string>(
     initialData?.variants?.[0]?.id || "default",
   );
-
-  useEffect(() => {
-    if (variants.length === 0) return;
-    const exists = variants.some((v) => v.id === selectedMediaVariantId);
-    if (!exists) {
-      setSelectedMediaVariantId(variants[0].id);
-    }
-  }, [variants, selectedMediaVariantId]);
+  const selectedMediaVariantId = variants.some(
+    (variant) => variant.id === selectedMediaVariantIdState,
+  )
+    ? selectedMediaVariantIdState
+    : (variants[0]?.id ?? "default");
 
   const updateAttributeValue = (index: number, valString: string) => {
     const newAttrs = [...attributes];
@@ -189,56 +186,46 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     }
     setApiError(null);
     setApiPending(true);
+    const createPayload = {
+      name: data.name,
+      description: data.description ?? "",
+      categoryId: data.categoryId || null,
+      basePrice: Number(data.basePrice ?? 0),
+      isActive: data.isActive !== false,
+      variants: finalVariants.map((v) => ({
+        name: v.name,
+        sku: v.sku,
+        price: Number(v.price),
+        costPrice: Number(v.costPrice ?? 0),
+        stockQuantity: Number(v.stockQuantity ?? 0),
+        images: v.images ?? [],
+      })),
+    };
+    const productId = initialData?.id;
+    const updatePayload = {
+      ...createPayload,
+      slug: initialData?.slug ?? "",
+      variants: finalVariants.map((v) => ({
+        id: v.id,
+        name: v.name,
+        sku: v.sku,
+        price: Number(v.price),
+        costPrice: Number(v.costPrice ?? 0),
+        stockQuantity: Number(v.stockQuantity ?? 0),
+        images: v.images ?? [],
+      })),
+    };
+    let res;
     try {
       if (mode === "create") {
-        const res = await axios.post("/api/admin/products", {
-          name: data.name,
-          description: data.description ?? "",
-          categoryId: data.categoryId || null,
-          basePrice: Number(data.basePrice ?? 0),
-          isActive: data.isActive !== false,
-          variants: finalVariants.map((v) => ({
-            name: v.name,
-            sku: v.sku,
-            price: Number(v.price),
-            costPrice: Number(v.costPrice ?? 0),
-            stockQuantity: Number(v.stockQuantity ?? 0),
-            images: v.images ?? [],
-          })),
-        });
-        if (res.data?.success) {
-          router.push("/products");
-          return;
-        }
-        setApiError(res.data?.error || "Không thể tạo sản phẩm");
+        res = await axios.post("/api/admin/products", createPayload);
       } else {
-        const productId = initialData?.id;
         if (!productId) {
           setApiError("Thiếu ID sản phẩm");
+          setApiPending(false);
           return;
         }
-        const res = await axios.put(`/api/admin/products/${productId}`, {
-          name: data.name,
-          slug: initialData?.slug ?? "",
-          description: data.description ?? "",
-          categoryId: data.categoryId || null,
-          basePrice: Number(data.basePrice ?? 0),
-          isActive: data.isActive !== false,
-          variants: finalVariants.map((v) => ({
-            id: v.id,
-            name: v.name,
-            sku: v.sku,
-            price: Number(v.price),
-            costPrice: Number(v.costPrice ?? 0),
-            stockQuantity: Number(v.stockQuantity ?? 0),
-            images: v.images ?? [],
-          })),
-        });
-        if (res.data?.success) {
-          router.push("/products");
-          return;
-        }
-        setApiError(res.data?.error || "Không thể cập nhật sản phẩm");
+        res = await axios.put(`/api/admin/products/${productId}`, updatePayload);
       }
     } catch (err: any) {
       const message =
@@ -246,9 +233,21 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         err?.message ??
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm");
       setApiError(message);
-    } finally {
       setApiPending(false);
+      return;
     }
+
+    if (res?.data?.success) {
+      setApiPending(false);
+      router.push("/products");
+      return;
+    }
+
+    setApiError(
+      res?.data?.error ||
+        (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm"),
+    );
+    setApiPending(false);
   };
 
   const displayError = apiError;
