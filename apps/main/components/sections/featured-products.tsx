@@ -3,7 +3,6 @@
 import { PUBLIC_ROUTES } from "@repo/shared/routes";
 import { Button } from "@repo/ui/components/button";
 import { Card, CardContent, CardFooter } from "@repo/ui/components/card";
-import { Eye, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -27,16 +26,14 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
     <section
       id="featured-products"
       data-testid="featured-products"
-      className="bg-gray-50/30 py-12 dark:bg-slate-900/10"
+      className="bg-background py-12"
     >
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="mb-8 flex items-center justify-between">
-          <div className="space-y-1">
-            <h2 className="text-primary text-3xl font-bold tracking-tight">Sản phẩm nổi bật</h2>
-            <p className="text-muted-foreground text-sm font-medium">
-              Những sản phẩm K-Beauty được tin dùng tại Việt Nam
-            </p>
+          <div className="space-y-2">
+            <h2 className="font-serif text-4xl font-semibold tracking-tight text-foreground">Sản phẩm nổi bật</h2>
+            <p className="text-sm text-muted-foreground">Những sản phẩm K-Beauty được tin dùng tại Việt Nam</p>
           </div>
           <Link
             href={PUBLIC_ROUTES.PRODUCTS}
@@ -68,11 +65,11 @@ function ProductCard({ product }: { product: FeaturedProduct }) {
   return (
     <Card
       data-testid="product-card"
-      className="py-0 group hover:shadow-primary/10 hover:border-primary/20 flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-none border-transparent bg-white transition-all duration-500 hover:shadow-2xl dark:bg-slate-900"
+      className="py-0 group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:shadow-md hover:shadow-primary/10 hover:border-primary/20 dark:bg-card"
     >
       <Link
         href={PUBLIC_ROUTES.PRODUCT_DETAIL(product.slug)}
-        className="relative aspect-[4/5] overflow-hidden rounded-t-[1.5rem] bg-gray-50"
+        className="relative aspect-[4/5] overflow-hidden rounded-t-2xl bg-gray-50"
       >
         <Image
           src={product.image}
@@ -81,35 +78,12 @@ function ProductCard({ product }: { product: FeaturedProduct }) {
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
-        {/* Quick Actions */}
-        <div className="absolute top-4 right-4 flex translate-x-12 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-          <button
-            type="button"
-            aria-label={`Yêu thích ${product.name}`}
-            className="hover:text-primary flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-xl transition-colors"
-            onClick={(e) => {
-              e.preventDefault(); /* Handle heart */
-            }}
-          >
-            <Heart className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Xem nhanh ${product.name}`}
-            className="hover:text-primary flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-xl transition-colors"
-            onClick={(e) => {
-              e.preventDefault(); /* Handle eye */
-            }}
-          >
-            <Eye className="h-5 w-5" />
-          </button>
-        </div>
       </Link>
 
       <CardContent className="flex flex-1 flex-col gap-2 p-5">
-        <div className="text-primary bg-primary/5 w-fit rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">
           {product.category}
-        </div>
+        </span>
         <Link href={PUBLIC_ROUTES.PRODUCT_DETAIL(product.slug)}>
           <h3 className="group-hover:text-primary line-clamp-2 min-h-[2.5rem] cursor-pointer text-base leading-tight font-bold transition-colors">
             {product.name}
@@ -127,32 +101,23 @@ function ProductCard({ product }: { product: FeaturedProduct }) {
           )}
         </div>
 
-        {/* Stock Level */}
-        <div className="mt-2 flex items-center gap-2">
-          <div className={`h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100`}>
-            <div
-              className={`h-full rounded-full ${
-                product.stock > 10
-                  ? "bg-green-500"
-                  : product.stock > 0
-                    ? "bg-orange-500"
-                    : "bg-red-500"
-              }`}
-              style={{
-                width: `${Math.min((product.stock / 100) * 100, 100)}%`,
-              }}
-            />
-          </div>
-          <span className="text-muted-foreground text-[10px] font-bold whitespace-nowrap uppercase">
-            {product.stock > 0 ? `Tồn: ${product.stock}` : "Hết hàng"}
-          </span>
+        {/* Stock Badge */}
+        <div className="mt-2">
+          {product.stock > 0 ? (
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${product.stock > 10 ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>
+              {product.stock > 10 ? "Còn hàng" : `Còn ${product.stock}`}
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">Hết hàng</span>
+          )}
         </div>
       </CardContent>
 
       <CardFooter className="p-5 pt-0">
         <Button
           asChild
-          className="bg-primary hover:bg-primary/90 shadow-primary/20 group/btn h-11 w-full rounded-full text-sm font-bold shadow-lg transition-all active:scale-95"
+          variant="outline"
+          className="h-10 w-full rounded-full border-primary/30 text-sm font-semibold text-primary hover:bg-primary hover:text-white transition-all"
         >
           <Link href={PUBLIC_ROUTES.PRODUCT_DETAIL(product.slug)}>Xem chi tiết</Link>
         </Button>
