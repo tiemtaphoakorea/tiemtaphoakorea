@@ -1,7 +1,7 @@
 import type { ProductListItem } from "@repo/database/services/product.server";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,13 +14,13 @@ interface ProductListingProps {
 export function ProductListing({ products, viewMode, onResetFilters }: ProductListingProps) {
   if (products.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <div className="text-muted-foreground mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50">
-          <Search className="h-10 w-10" />
+      <div className="py-24 text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+          <Search className="h-8 w-8 text-primary/50" />
         </div>
-        <h3 className="mb-2 text-xl font-bold">Không tìm thấy sản phẩm</h3>
-        <p className="text-muted-foreground">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
-        <Button variant="link" className="text-primary mt-4 font-bold" onClick={onResetFilters}>
+        <h3 className="mb-2 text-xl font-semibold text-foreground">Không tìm thấy sản phẩm</h3>
+        <p className="text-sm text-muted-foreground">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
+        <Button variant="outline" size="sm" className="mt-6 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={onResetFilters}>
           Xóa tất cả bộ lọc
         </Button>
       </div>
@@ -62,9 +62,9 @@ function ProductItem({
       <Link
         href={`/products/${product.slug}`}
         data-testid={`product-card-${product.slug}`}
-        className="group flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-3 transition-all hover:shadow-xl md:flex-row dark:border-slate-800 dark:bg-slate-900/50"
+        className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-3 transition-all hover:shadow-md hover:border-primary/20 md:flex-row"
       >
-        <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden rounded-xl md:w-44">
+        <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl md:w-40">
           <Image
             src={product.thumbnail}
             alt={product.name}
@@ -105,7 +105,7 @@ function ProductItem({
       data-testid={`product-card-${product.slug}`}
       className="group flex h-full flex-col"
     >
-      <div className="hover:border-primary/20 relative flex h-full flex-col overflow-hidden rounded-2xl border border-transparent bg-white transition-all duration-500 hover:shadow-[0_20px_50px_rgba(235,46,92,0.1)] dark:bg-slate-900">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-md dark:bg-card">
         <div className="relative aspect-[4/5] overflow-hidden rounded-t-2xl">
           <Image
             src={product.thumbnail}
@@ -114,21 +114,16 @@ function ProductItem({
             className="object-cover transition-transform duration-700 group-hover:scale-110"
             sizes="(max-width: 768px) 50vw, 33vw"
           />
-          <div className="absolute right-3 bottom-3 flex translate-y-12 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-            <div className="text-primary flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-xl backdrop-blur-sm">
-              <SlidersHorizontal className="h-4 w-4" />
-            </div>
-          </div>
         </div>
 
         <div className="flex flex-1 flex-col gap-1 p-4">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-primary text-[10px] font-black tracking-widest uppercase">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">
               {product.categoryName}
             </span>
           </div>
 
-          <h3 className="group-hover:text-primary mb-2 line-clamp-2 flex-1 text-sm leading-tight font-bold transition-colors">
+          <h3 className="mb-2 line-clamp-2 flex-1 text-sm leading-tight font-bold group-hover:text-primary transition-colors">
             {product.name}
           </h3>
 
@@ -139,7 +134,7 @@ function ProductItem({
               </span>
               {/* Original Price removed */}
             </div>
-            <div className="bg-primary shadow-primary/20 flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-lg transition-transform group-hover:scale-110">
+            <div className="bg-secondary text-primary shadow-none flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:bg-primary group-hover:text-white group-hover:scale-110">
               <Search className="h-4 w-4" />
             </div>
           </div>
