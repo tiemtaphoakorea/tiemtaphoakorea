@@ -43,18 +43,19 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
       {/* Sidebar Filters - Desktop */}
       <aside className="sticky top-32 hidden h-fit w-64 space-y-8 lg:block">
         <div>
-          <h3 className="mb-4 text-sm font-bold tracking-wider uppercase">Danh mục</h3>
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Danh mục</h3>
           <div className="space-y-2">
             {categoryList.map((cat) => (
               <button
                 key={cat.slug}
                 onClick={() => handleCategoryChange(cat.slug)}
-                className={`w-full rounded-xl px-3 py-2 text-left text-sm font-bold transition-all ${
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${
                   activeCategorySlug === cat.slug
-                    ? "bg-primary shadow-primary/20 text-white shadow-lg"
-                    : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                    ? "font-semibold text-primary"
+                    : "font-medium text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeCategorySlug === cat.slug ? "bg-primary" : "bg-transparent"}`} />
                 {cat.name}
               </button>
             ))}
@@ -63,14 +64,14 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
 
         <Separator className="bg-border/50" />
 
-        <div className="bg-primary/5 border-primary/10 rounded-2xl border p-4">
-          <h4 className="text-primary mb-2 text-sm font-bold">Cần tư vấn?</h4>
-          <p className="text-muted-foreground mb-4 text-xs font-medium">
+        <div className="rounded-2xl bg-secondary p-4">
+          <h4 className="mb-2 text-sm font-semibold text-primary">Cần tư vấn?</h4>
+          <p className="mb-4 text-xs text-muted-foreground">
             Đội ngũ chuyên gia của K-SMART luôn sẵn sàng hỗ trợ bạn chọn sản phẩm phù hợp.
           </p>
           <Button
             variant="outline"
-            className="border-primary/20 hover:bg-primary w-full rounded-full text-xs font-bold hover:text-white"
+            className="w-full rounded-full border-primary/30 text-xs font-semibold text-primary hover:bg-primary hover:text-white"
             onClick={scrollToChat}
           >
             Chat với chúng tôi
@@ -83,7 +84,7 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
         <Button
           variant="outline"
           size="sm"
-          className="border-primary/20 flex-shrink-0 gap-2 rounded-full"
+          className="flex-shrink-0 gap-2 rounded-full border-border"
           onClick={() => setIsMobileSidebarOpen(true)}
         >
           <Filter className="h-4 w-4" /> Bộ lọc
@@ -92,10 +93,10 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
           <button
             key={cat.slug}
             onClick={() => handleCategoryChange(cat.slug)}
-            className={`rounded-full border px-4 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
+            className={`rounded-full border px-4 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
               activeCategorySlug === cat.slug
-                ? "bg-primary border-primary shadow-primary/20 text-white shadow-md"
-                : "text-muted-foreground hover:border-primary/50 border-gray-100 bg-white"
+                ? "border-primary bg-primary text-white"
+                : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-primary"
             }`}
           >
             {cat.name}
@@ -121,18 +122,18 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
         className={`fixed inset-y-0 left-0 z-[70] w-[80%] max-w-sm transform bg-white transition-transform duration-300 lg:hidden ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-full flex-col p-6">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-xl font-black">Bộ lọc</h2>
+          <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+            <h2 className="text-base font-semibold">Bộ lọc</h2>
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="rounded-full p-2 hover:bg-gray-100"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
           <div className="no-scrollbar flex-1 space-y-8 overflow-y-auto">
             <div>
-              <h3 className="text-primary mb-4 text-sm font-bold tracking-wider uppercase">
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Danh mục
               </h3>
               <div className="grid grid-cols-1 gap-2">
