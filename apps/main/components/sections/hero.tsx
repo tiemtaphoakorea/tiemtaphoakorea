@@ -1,13 +1,13 @@
 import { PUBLIC_ROUTES } from "@repo/shared/routes";
 import { Button } from "@repo/ui/components/button";
 import { Card } from "@repo/ui/components/card";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="bg-white pt-6 pb-12 dark:bg-slate-950">
+    <section className="bg-white pt-6 pb-12 dark:bg-background">
       <div className="container mx-auto px-4">
         {/* Main Banner */}
         <div className="shadow-primary/10 relative h-[300px] overflow-hidden rounded-[2rem] shadow-2xl md:h-[450px] lg:h-[550px]">
@@ -19,18 +19,13 @@ export function Hero() {
             sizes="100vw"
             priority
           />
-          {/* Soft Gradient Overlay */}
-          <div className="from-primary/40 absolute inset-0 bg-gradient-to-tr via-transparent to-transparent" />
+          {/* Editorial Dark Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
           <div className="absolute inset-0 flex items-center">
-            <div className="max-w-2xl transform space-y-4 px-8 transition-transform duration-700 hover:translate-x-2 md:space-y-6 md:px-16">
-              <div className="flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 backdrop-blur-md">
-                <Sparkles className="h-4 w-4 fill-white text-white" />
-                <span className="text-xs font-bold tracking-widest text-white uppercase">
-                  Siêu sale tháng 12
-                </span>
-              </div>
-              <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight text-white drop-shadow-lg md:text-6xl lg:text-7xl">
+            <div className="max-w-2xl space-y-4 px-8 md:space-y-6 md:px-16">
+              <div className="mb-4 h-px w-16 bg-white/60" />
+              <h1 className="text-4xl leading-[1.1] font-serif font-extrabold tracking-tight text-white drop-shadow-lg md:text-6xl lg:text-7xl">
                 NÂNG TẦM <br /> VẺ ĐẸP HÀN
               </h1>
               <p className="text-base font-medium text-white/90 drop-shadow-md md:text-xl">
@@ -102,7 +97,7 @@ function CategoryCard({
 }) {
   return (
     <Link href={to} className="block">
-      <Card className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-[1.5rem] border-none shadow-sm transition-all duration-500 hover:shadow-xl">
+      <Card className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-[1.5rem] border-none shadow-sm transition-all duration-500 hover:shadow-lg hover:shadow-primary/20">
         <Image
           src={image}
           alt={title}
