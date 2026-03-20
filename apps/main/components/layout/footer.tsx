@@ -1,7 +1,7 @@
 "use client";
 
 import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import { CircleDollarSign, Facebook, Globe, Instagram, Send, Youtube } from "lucide-react";
+import { CircleDollarSign, Facebook, Globe, Instagram, Youtube } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FooterLink } from "@/components/layout/footer-link";
@@ -26,28 +26,28 @@ export function Footer() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <footer className="border-t border-gray-100 bg-white pt-16 dark:border-slate-900 dark:bg-slate-950">
+    <footer className="border-t border-border bg-white pt-16 dark:border-slate-900 dark:bg-slate-950">
       {/* Newsletter / Upper Footer */}
       <div className="container mx-auto px-4 pb-16">
-        <div className="bg-primary/5 flex flex-col items-center justify-between gap-8 rounded-[3rem] p-8 md:p-12 lg:flex-row">
+        <div className="flex flex-col items-center justify-between gap-8 rounded-2xl bg-secondary p-8 md:p-10 lg:flex-row">
           <div className="space-y-2 text-center lg:text-left">
-            <h3 className="text-primary text-2xl font-black md:text-3xl">Đăng ký nhận ưu đãi</h3>
+            <h3 className="text-2xl font-semibold text-foreground md:text-3xl">Đăng ký nhận ưu đãi</h3>
             <p className="text-muted-foreground font-medium">
               Nhận ngay voucher 50k cho đơn hàng đầu tiên của bạn
             </p>
           </div>
-          <div className="shadow-primary/5 flex w-full rounded-full bg-white p-2 shadow-xl lg:w-fit">
+          <div className="flex w-full overflow-hidden rounded-full border border-border bg-background lg:w-auto">
             <input
               type="email"
               placeholder="Email của bạn..."
-              className="flex-1 border-none bg-transparent px-6 text-sm font-medium focus:ring-0"
+              className="min-w-0 flex-1 bg-transparent px-5 py-3 text-sm outline-none placeholder:text-muted-foreground"
             />
             <button
               type="button"
               aria-label="Đăng ký nhận ưu đãi"
-              className="bg-primary hover:bg-primary/90 rounded-full p-3 text-white transition-all"
+              className="bg-primary hover:bg-primary/90 rounded-full m-1 px-5 py-2 text-sm font-medium text-white transition-all"
             >
-              <Send className="h-5 w-5" />
+              Đăng ký
             </button>
           </div>
         </div>
@@ -69,15 +69,15 @@ export function Footer() {
             K-SMART là nền tảng thương mại điện tử chuyên cung cấp mỹ phẩm và đồ gia dụng chính hãng
             từ Hàn Quốc tại Việt Nam.
           </p>
-          <div className="flex justify-center gap-4 md:justify-start">
-            <SocialIcon icon={<Instagram className="h-5 w-5" />} />
-            <SocialIcon icon={<Facebook className="h-5 w-5" />} />
-            <SocialIcon icon={<Youtube className="h-5 w-5" />} />
+          <div className="flex justify-center gap-3 md:justify-start">
+            <SocialIcon icon={<Instagram className="h-4 w-4" />} />
+            <SocialIcon icon={<Facebook className="h-4 w-4" />} />
+            <SocialIcon icon={<Youtube className="h-4 w-4" />} />
           </div>
         </div>
 
         <div>
-          <h4 className="text-primary mb-6 text-base font-black tracking-wider uppercase">
+          <h4 className="mb-5 text-sm font-semibold text-foreground">
             Về chúng tôi
           </h4>
           <ul className="space-y-3">
@@ -90,7 +90,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-primary mb-6 text-base font-black tracking-wider uppercase">
+          <h4 className="mb-5 text-sm font-semibold text-foreground">
             Hỗ trợ khách hàng
           </h4>
           <ul className="space-y-3">
@@ -103,7 +103,7 @@ export function Footer() {
         </div>
 
         <div className="col-span-2 md:col-span-1">
-          <h4 className="text-primary mb-6 text-base font-black tracking-wider uppercase">
+          <h4 className="mb-5 text-sm font-semibold text-foreground">
             Văn phòng
           </h4>
           <div className="space-y-4 pt-1">
@@ -125,9 +125,9 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-50 bg-gray-50/30 py-8 dark:border-slate-900 dark:bg-slate-900/10">
+      <div className="border-t border-border/50 bg-gray-50/30 py-8 dark:border-slate-900 dark:bg-slate-900/10">
         <div className="container mx-auto flex flex-col items-center justify-between gap-6 px-4 md:flex-row">
-          <div className="text-muted-foreground flex flex-wrap justify-center gap-x-8 gap-y-2 text-[10px] font-bold tracking-widest uppercase md:justify-start">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground md:justify-start">
             <Link href={PUBLIC_ROUTES.HOME} className="hover:text-primary transition-colors">
               Điều khoản sử dụng
             </Link>
@@ -140,23 +140,23 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="text-muted-foreground flex items-center gap-4 text-[10px] font-bold tracking-widest">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <button
                 type="button"
                 aria-label="Chọn ngôn ngữ"
                 className="hover:text-primary flex items-center gap-1 transition-colors"
               >
-                <Globe className="h-3 w-3" /> TIẾNG VIỆT
+                <Globe className="h-3 w-3" /> Tiếng Việt
               </button>
               <button
                 type="button"
                 aria-label="Chọn tiền tệ"
                 className="hover:text-primary flex items-center gap-1 transition-colors"
               >
-                <CircleDollarSign className="h-3 w-3" /> VND - ĐỒNG
+                <CircleDollarSign className="h-3 w-3" /> VND
               </button>
             </div>
-            <p className="text-muted-foreground text-[10px] font-bold tracking-widest">
+            <p className="text-xs text-muted-foreground">
               © 2024 K-SMART VN
             </p>
           </div>
@@ -167,14 +167,14 @@ export function Footer() {
       <button
         type="button"
         onClick={scrollToTop}
-        className={`bg-primary group fixed right-5 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
+        className={`bg-primary group fixed right-5 bottom-24 z-40 flex h-10 w-10 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 active:scale-95 ${
           isVisible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
         <span className="sr-only">Lên đầu trang</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 transition-transform group-hover:-translate-y-1"
+          className="h-5 w-5 transition-transform group-hover:-translate-y-1"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
