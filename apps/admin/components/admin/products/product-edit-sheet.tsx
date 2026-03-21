@@ -1,14 +1,14 @@
-import { formatCurrency } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import { NumberInput } from "@repo/ui/components/number-input";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Image as ImageIcon } from "lucide-react";
 
 interface ProductEditSheetProps {
@@ -170,22 +170,16 @@ export function ProductEditSheet({
                     </label>
                     <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
                       <Table id="cost-history-table">
-                        <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                        <TableHeader>
                           <TableRow>
-                            <TableHead className="h-10 text-xs font-black text-slate-500 uppercase">
-                              Ngày
-                            </TableHead>
-                            <TableHead className="h-10 text-xs font-black text-slate-500 uppercase">
-                              Giá vốn
-                            </TableHead>
-                            <TableHead className="h-10 text-xs font-black text-slate-500 uppercase">
-                              Ghi chú
-                            </TableHead>
+                            <TableHead>Ngày</TableHead>
+                            <TableHead>Giá vốn</TableHead>
+                            <TableHead>Ghi chú</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {editingProduct.variants[0].costHistory.map((history: any) => (
-                            <TableRow key={history.id} className="hover:bg-transparent">
+                            <TableRow key={history.id}>
                               <TableCell className="py-3 text-xs font-medium">
                                 {new Date(history.effectiveDate).toLocaleDateString("vi-VN")}
                               </TableCell>

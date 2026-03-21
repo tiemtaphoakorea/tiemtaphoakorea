@@ -1,28 +1,31 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { CategoryWithChildren } from "@repo/database/types/admin";
-import { type CategoryFormValues, categorySchema } from "@repo/shared/schemas";
-import { cn } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
+import { zodResolver } from "@hookform/resolvers/zod"
+import type { CategoryWithChildren } from "@workspace/database/types/admin"
+import {
+  type CategoryFormValues,
+  categorySchema,
+} from "@workspace/shared/schemas"
+import { cn } from "@workspace/ui/lib/utils"
+import { Badge } from "@workspace/ui/components/badge"
+import { Button } from "@workspace/ui/components/button"
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Input } from "@repo/ui/components/input";
-import { NumberInput } from "@repo/ui/components/number-input";
+} from "@workspace/ui/components/dropdown-menu"
+import { Input } from "@workspace/ui/components/input"
+import { NumberInput } from "@workspace/ui/components/number-input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select"
 import {
   Sheet,
   SheetContent,
@@ -30,8 +33,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
-import { Skeleton } from "@repo/ui/components/skeleton";
+} from "@workspace/ui/components/sheet"
+import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   Table,
   TableBody,
@@ -39,8 +42,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+} from "@workspace/ui/components/table"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ChevronDown,
   ChevronRight,
@@ -50,11 +53,11 @@ import {
   Plus,
   Search,
   Trash2,
-} from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { adminClient } from "@/services/admin.client";
+} from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useMemo, useState } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { adminClient } from "@/services/admin.client"
 
 // Recursive row component
 const CategoryRow = ({
@@ -65,21 +68,24 @@ const CategoryRow = ({
   onEdit,
   onDelete,
 }: {
-  category: CategoryWithChildren;
-  level: number;
-  expandedMap: Record<string, boolean>;
-  toggleExpand: (id: string) => void;
-  onEdit: (cat: CategoryWithChildren) => void;
-  onDelete: (cat: CategoryWithChildren) => void;
+  category: CategoryWithChildren
+  level: number
+  expandedMap: Record<string, boolean>
+  toggleExpand: (id: string) => void
+  onEdit: (cat: CategoryWithChildren) => void
+  onDelete: (cat: CategoryWithChildren) => void
 }) => {
-  const hasChildren = category.children && category.children.length > 0;
-  const isExpanded = expandedMap[category.id];
+  const hasChildren = category.children && category.children.length > 0
+  const isExpanded = expandedMap[category.id]
 
   return (
     <>
       <TableRow className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
         <TableCell className="w-[400px]">
-          <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 24}px` }}>
+          <div
+            className="flex items-center gap-2"
+            style={{ paddingLeft: `${level * 24}px` }}
+          >
             {hasChildren ? (
               <button
                 onClick={() => toggleExpand(category.id)}
@@ -98,7 +104,7 @@ const CategoryRow = ({
             <FolderOpen
               className={cn(
                 "h-4 w-4",
-                level === 0 ? "text-primary fill-primary/20" : "text-slate-400",
+                level === 0 ? "fill-primary/20 text-primary" : "text-slate-400"
               )}
             />
 
@@ -106,7 +112,7 @@ const CategoryRow = ({
               <span
                 className={cn(
                   "font-bold text-slate-700 dark:text-slate-200",
-                  level === 0 && "text-base",
+                  level === 0 && "text-base"
                 )}
               >
                 {category.name}
@@ -126,11 +132,16 @@ const CategoryRow = ({
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">#{category.displayOrder}</span>
+            <span className="text-xs font-bold text-slate-500">
+              #{category.displayOrder}
+            </span>
           </div>
         </TableCell>
         <TableCell>
-          <Badge variant={category.isActive ? "outline" : "secondary"} className="text-[10px]">
+          <Badge
+            variant={category.isActive ? "outline" : "secondary"}
+            className="text-[10px]"
+          >
             {category.isActive ? "Hiển thị" : "Đã ẩn"}
           </Badge>
         </TableCell>
@@ -145,7 +156,10 @@ const CategoryRow = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 font-bold">
-              <DropdownMenuItem onClick={() => onEdit(category)} className="gap-2">
+              <DropdownMenuItem
+                onClick={() => onEdit(category)}
+                className="gap-2"
+              >
                 <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -173,30 +187,31 @@ const CategoryRow = ({
           />
         ))}
     </>
-  );
-};
+  )
+}
 
 export default function AdminCategories() {
   return (
     <Suspense fallback={<div />}>
       <AdminCategoriesContent />
     </Suspense>
-  );
+  )
 }
 
 function AdminCategoriesContent() {
-  "use no memo";
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const searchTerm = searchParams.get("search") || "";
+  "use no memo"
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const searchTerm = searchParams.get("search") || ""
 
-  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryWithChildren | null>(null);
-  const [formMode, setFormMode] = useState<"add" | "edit">("add");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({})
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [editingCategory, setEditingCategory] =
+    useState<CategoryWithChildren | null>(null)
+  const [formMode, setFormMode] = useState<"add" | "edit">("add")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -207,108 +222,117 @@ function AdminCategoriesContent() {
       displayOrder: 0,
       isActive: true,
     },
-  });
+  })
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories", searchTerm],
     queryFn: () => adminClient.getCategories({ search: searchTerm }),
-  });
-  const categories = data?.categories || [];
-  const flatCategories = data?.flatCategories || [];
+  })
+  const categories = data?.categories || []
+  const flatCategories = data?.flatCategories || []
 
   // Auto-expand all if searching or initially
   const autoExpandedMap = useMemo(() => {
-    const allIds: Record<string, boolean> = {};
+    const allIds: Record<string, boolean> = {}
     const traverse = (cats: CategoryWithChildren[]) => {
       cats.forEach((c) => {
-        allIds[c.id] = true;
-        if (c.children) traverse(c.children);
-      });
-    };
-    if (categories.length > 0) {
-      traverse(categories);
+        allIds[c.id] = true
+        if (c.children) traverse(c.children)
+      })
     }
-    return allIds;
-  }, [categories]);
+    if (categories.length > 0) {
+      traverse(categories)
+    }
+    return allIds
+  }, [categories])
   const displayExpandedMap =
-    Object.keys(expandedMap).length > 0 ? { ...autoExpandedMap, ...expandedMap } : autoExpandedMap;
+    Object.keys(expandedMap).length > 0
+      ? { ...autoExpandedMap, ...expandedMap }
+      : autoExpandedMap
 
   const toggleExpand = (id: string) => {
     setExpandedMap((prev) => ({
       ...prev,
       [id]: !(id in prev ? prev[id] : autoExpandedMap[id]),
-    }));
-  };
+    }))
+  }
 
   const handleSearch = (val: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (val) params.set("search", val);
-    else params.delete("search");
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    const params = new URLSearchParams(searchParams.toString())
+    if (val) params.set("search", val)
+    else params.delete("search")
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   const openAdd = () => {
-    setFormMode("add");
-    setEditingCategory(null);
+    setFormMode("add")
+    setEditingCategory(null)
     form.reset({
       name: "",
       parentId: "root_none_value",
       description: "",
       displayOrder: 0,
       isActive: true,
-    });
-    setIsSheetOpen(true);
-  };
+    })
+    setIsSheetOpen(true)
+  }
 
   const openEdit = (cat: CategoryWithChildren) => {
-    setFormMode("edit");
-    setEditingCategory(cat);
+    setFormMode("edit")
+    setEditingCategory(cat)
     form.reset({
       name: cat.name,
       parentId: cat.parentId || "root_none_value",
       description: cat.description ?? "",
       displayOrder: cat.displayOrder ?? 0,
       isActive: cat.isActive !== false,
-    });
-    setIsSheetOpen(true);
-  };
+    })
+    setIsSheetOpen(true)
+  }
 
   const handleDelete = async (cat: CategoryWithChildren) => {
-    if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
+    if (
+      confirm(
+        `Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`
+      )
+    ) {
       try {
-        await adminClient.deleteCategory(cat.id);
-        await queryClient.invalidateQueries({ queryKey: ["categories"] });
+        await adminClient.deleteCategory(cat.id)
+        await queryClient.invalidateQueries({ queryKey: ["categories"] })
       } catch (error: any) {
-        alert(error.message || "Failed to delete");
+        alert(error.message || "Failed to delete")
       }
     }
-  };
+  }
 
   const handleSubmit = async (data: CategoryFormValues) => {
-    setIsSubmitting(true);
-    const parentId = data.parentId === "root_none_value" || !data.parentId ? null : data.parentId;
+    setIsSubmitting(true)
+    const parentId =
+      data.parentId === "root_none_value" || !data.parentId
+        ? null
+        : data.parentId
     const payload = {
       name: data.name,
       parentId,
       description: data.description ?? "",
       displayOrder: data.displayOrder ?? 0,
       isActive: data.isActive ?? true,
-    };
+    }
     try {
       if (formMode === "add") {
-        await adminClient.createCategory(payload);
+        await adminClient.createCategory(payload)
       } else {
-        if (!editingCategory) return;
-        await adminClient.updateCategory(editingCategory.id, payload);
+        if (!editingCategory) return
+        await adminClient.updateCategory(editingCategory.id, payload)
       }
-      setIsSheetOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      setIsSubmitting(false);
+      setIsSheetOpen(false)
+      await queryClient.invalidateQueries({ queryKey: ["categories"] })
+      setIsSubmitting(false)
     } catch (error: any) {
-      alert(error.message || "Action failed");
-      setIsSubmitting(false);
+      alert(error.message || "Action failed")
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-8">
@@ -324,14 +348,14 @@ function AdminCategoriesContent() {
         </div>
         <Button
           onClick={openAdd}
-          className="shadow-primary/20 h-11 gap-2 rounded-xl px-6 font-black shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="h-11 gap-2 rounded-xl px-6 font-black shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Plus className="h-5 w-5" />
           Thêm danh mục
         </Button>
       </div>
 
-      <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+      <Card className="gap-0 overflow-hidden border-none py-0 shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
         <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <div className="relative">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -345,20 +369,12 @@ function AdminCategoriesContent() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Tên danh mục
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Slug
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Thứ tự
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Trạng thái
-                </TableHead>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Tên danh mục</TableHead>
+                <TableHead>Slug</TableHead>
+                <TableHead>Thứ tự</TableHead>
+                <TableHead>Trạng thái</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -403,7 +419,10 @@ function AdminCategoriesContent() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-40 text-center font-medium text-slate-500">
+                  <TableCell
+                    colSpan={5}
+                    className="h-40 text-center font-medium text-slate-500"
+                  >
                     Chưa có danh mục nào. Hãy tạo danh mục đầu tiên!
                   </TableCell>
                 </TableRow>
@@ -427,7 +446,10 @@ function AdminCategoriesContent() {
             </SheetDescription>
           </SheetHeader>
 
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6 py-8">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col gap-6 py-8"
+          >
             <div className="space-y-4">
               <div className="grid gap-2">
                 <label
@@ -444,7 +466,9 @@ function AdminCategoriesContent() {
                   aria-invalid={!!form.formState.errors.name}
                 />
                 {form.formState.errors.name && (
-                  <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -459,7 +483,10 @@ function AdminCategoriesContent() {
                   name="parentId"
                   control={form.control}
                   render={({ field }) => (
-                    <Select value={field.value ?? "root_none_value"} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? "root_none_value"}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger
                         id="category-parent"
                         className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
@@ -518,14 +545,16 @@ function AdminCategoriesContent() {
                         id="category-display-order"
                         decimalScale={0}
                         value={field.value}
-                        onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                        onValueChange={(values) =>
+                          field.onChange(values.floatValue ?? 0)
+                        }
                         className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                         aria-invalid={!!form.formState.errors.displayOrder}
                       />
                     )}
                   />
                   {form.formState.errors.displayOrder && (
-                    <p className="text-destructive text-sm">
+                    <p className="text-sm text-destructive">
                       {form.formState.errors.displayOrder.message}
                     </p>
                   )}
@@ -566,7 +595,7 @@ function AdminCategoriesContent() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="shadow-primary/20 h-11 w-full rounded-xl font-black shadow-lg"
+                className="h-11 w-full rounded-xl font-black shadow-lg shadow-primary/20"
               >
                 {isSubmitting
                   ? "Đang lưu..."
@@ -579,5 +608,5 @@ function AdminCategoriesContent() {
         </SheetContent>
       </Sheet>
     </div>
-  );
+  )
 }

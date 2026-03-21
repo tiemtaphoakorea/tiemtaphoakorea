@@ -1,18 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type SupplierFormValues, supplierSchema } from "@repo/shared/schemas";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
+import { type SupplierFormValues, supplierSchema } from "@workspace/shared/schemas";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Input } from "@repo/ui/components/input";
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -20,7 +20,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import {
   Table,
   TableBody,
@@ -28,8 +28,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
-import { Textarea } from "@repo/ui/components/textarea";
+} from "@workspace/ui/components/table";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -177,23 +177,13 @@ function AdminSuppliersContent() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Tên nhà cung cấp
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Liên hệ
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Địa chỉ
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Đơn hàng
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Trạng thái
-                </TableHead>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Tên nhà cung cấp</TableHead>
+                <TableHead>Liên hệ</TableHead>
+                <TableHead>Địa chỉ</TableHead>
+                <TableHead>Đơn hàng</TableHead>
+                <TableHead>Trạng thái</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>

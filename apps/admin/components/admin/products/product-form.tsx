@@ -1,28 +1,28 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ProductFormValues, productSchema } from "@repo/shared/schemas";
-import type { ProductFormProps, ProductFormVariant } from "@repo/shared/types/product";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
+import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@repo/ui/components/card";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { NumberInput } from "@repo/ui/components/number-input";
+} from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
-import { Switch } from "@repo/ui/components/switch";
+} from "@workspace/ui/components/select";
+import { Switch } from "@workspace/ui/components/switch";
 import {
   Table,
   TableBody,
@@ -30,9 +30,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/components/tabs";
-import { Textarea } from "@repo/ui/components/textarea";
+} from "@workspace/ui/components/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import { Textarea } from "@workspace/ui/components/textarea";
 import axios from "axios";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import Link from "next/link";
@@ -384,24 +384,20 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 </CardHeader>
                 <CardContent className="max-h-[500px] overflow-auto p-0">
                   <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
+                    <TableHeader className="sticky top-0 z-10">
                       <TableRow>
                         <TableHead className="w-[40px]"></TableHead>
-                        <TableHead className="min-w-[150px] font-bold">Tên biến thể</TableHead>
-                        <TableHead className="min-w-[120px] font-bold text-blue-600">
-                          Mã SKU
-                        </TableHead>
-                        <TableHead className="min-w-[100px] font-bold">Giá bán</TableHead>
-                        <TableHead className="min-w-[100px] font-bold text-slate-500">
-                          Giá vốn
-                        </TableHead>
-                        <TableHead className="min-w-[80px] font-bold">Tồn kho</TableHead>
+                        <TableHead className="min-w-[150px]">Tên biến thể</TableHead>
+                        <TableHead className="min-w-[120px] text-blue-600">Mã SKU</TableHead>
+                        <TableHead className="min-w-[100px]">Giá bán</TableHead>
+                        <TableHead className="min-w-[100px]">Giá vốn</TableHead>
+                        <TableHead className="min-w-[80px]">Tồn kho</TableHead>
                         <TableHead className="w-[40px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {variants.map((variant, idx) => (
-                        <TableRow key={variant.id} className="hover:bg-slate-50/50">
+                        <TableRow key={variant.id}>
                           <TableCell className="font-mono text-xs text-slate-400">
                             {idx + 1}
                           </TableCell>

@@ -1,10 +1,10 @@
 "use client";
 
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, Eye } from "lucide-react";
 import Link from "next/link";
@@ -74,23 +74,17 @@ export function DashboardRecentOrders() {
         {recentOrders.length > 0 ? (
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-100 hover:bg-transparent dark:border-slate-800">
-                <TableHead className="font-bold text-slate-900 dark:text-white">Mã đơn</TableHead>
-                <TableHead className="font-bold text-slate-900 dark:text-white">
-                  Khách hàng
-                </TableHead>
-                <TableHead className="text-right font-bold text-slate-900 dark:text-white">
-                  Tổng tiền
-                </TableHead>
-                <TableHead className="text-center font-bold text-slate-900 dark:text-white">
-                  Trạng thái
-                </TableHead>
+              <TableRow>
+                <TableHead>Mã đơn</TableHead>
+                <TableHead>Khách hàng</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
+                <TableHead className="text-center">Trạng thái</TableHead>
                 <TableHead className="w-[140px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentOrders.map((order) => (
-                <TableRow key={order.id} className="border-slate-100 dark:border-slate-800">
+                <TableRow key={order.id}>
                   <TableCell className="text-primary font-black">
                     <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>{order.orderNumber}</Link>
                   </TableCell>

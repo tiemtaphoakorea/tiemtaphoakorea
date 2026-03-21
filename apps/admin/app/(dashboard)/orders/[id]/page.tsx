@@ -1,11 +1,11 @@
 "use client";
 
-import { ORDER_STATUS } from "@repo/shared/constants";
-import { formatCurrency, formatDate, formatVariantDisplayName } from "@repo/shared/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { ORDER_STATUS } from "@workspace/shared/constants";
+import { formatCurrency, formatDate, formatVariantDisplayName } from "@workspace/shared/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -14,12 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@repo/ui/components/dialog";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { NumberInput } from "@repo/ui/components/number-input";
-import { RadioGroup, RadioGroupItem } from "@repo/ui/components/radio-group";
-import { Separator } from "@repo/ui/components/separator";
+} from "@workspace/ui/components/dialog";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
+import { Separator } from "@workspace/ui/components/separator";
 import {
   Table,
   TableBody,
@@ -27,9 +27,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
-import { Textarea } from "@repo/ui/components/textarea";
-import { useToast } from "@repo/ui/components/use-toast";
+} from "@workspace/ui/components/table";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { useToast } from "@workspace/ui/components/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -508,19 +508,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/50 hover:bg-transparent dark:bg-slate-900">
-                    <TableHead className="w-[50%] text-[10px] font-black uppercase">
-                      Sản phẩm
-                    </TableHead>
-                    <TableHead className="text-center text-[10px] font-black uppercase">
-                      SL
-                    </TableHead>
-                    <TableHead className="text-right text-[10px] font-black uppercase">
-                      Đơn giá
-                    </TableHead>
-                    <TableHead className="text-right text-[10px] font-black uppercase">
-                      Tổng
-                    </TableHead>
+                  <TableRow>
+                    <TableHead className="w-[50%]">Sản phẩm</TableHead>
+                    <TableHead className="text-center">SL</TableHead>
+                    <TableHead className="text-right">Đơn giá</TableHead>
+                    <TableHead className="text-right">Tổng</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -604,18 +596,12 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50 hover:bg-transparent dark:bg-slate-900">
-                      <TableHead className="text-[10px] font-black uppercase">Thời gian</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase">
-                        Phương thức
-                      </TableHead>
-                      <TableHead className="text-[10px] font-black uppercase">Ghi chú/Mã</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase">
-                        Số tiền
-                      </TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase">
-                        Người thu
-                      </TableHead>
+                    <TableRow>
+                      <TableHead>Thời gian</TableHead>
+                      <TableHead>Phương thức</TableHead>
+                      <TableHead>Ghi chú/Mã</TableHead>
+                      <TableHead className="text-right">Số tiền</TableHead>
+                      <TableHead className="text-right">Người thu</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

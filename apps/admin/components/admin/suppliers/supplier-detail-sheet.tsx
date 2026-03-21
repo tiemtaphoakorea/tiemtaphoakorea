@@ -1,14 +1,14 @@
-import type { Supplier, SupplierStats } from "@repo/database/types/admin";
-import { formatCurrency, formatDateShort } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import type { Supplier, SupplierStats } from "@workspace/database/types/admin";
+import { formatCurrency, formatDateShort } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import {
   CheckCircle,
   Clock,
@@ -178,20 +178,12 @@ export function SupplierDetailSheet({
               </h3>
               <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
                 <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                  <TableHeader>
                     <TableRow>
-                      <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        Ngày tạo
-                      </TableHead>
-                      <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        SL
-                      </TableHead>
-                      <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        Giá nhập
-                      </TableHead>
-                      <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        Trạng thái
-                      </TableHead>
+                      <TableHead>Ngày tạo</TableHead>
+                      <TableHead>SL</TableHead>
+                      <TableHead>Giá nhập</TableHead>
+                      <TableHead>Trạng thái</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
