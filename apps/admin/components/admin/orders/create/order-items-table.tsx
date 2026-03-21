@@ -1,9 +1,9 @@
 "use client";
 
-import type { OrderBuilderItem } from "@repo/database/types/order";
-import { formatCurrency } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import type { OrderBuilderItem } from "@workspace/database/types/order";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
 interface OrderItemsTableProps {
@@ -39,7 +39,7 @@ export function OrderItemsTable({ items, onUpdateQuantity, onRemoveItem }: Order
     <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
+          <TableRow>
             <TableHead className="w-[35%]">Sản phẩm</TableHead>
             <TableHead className="text-right">Đơn giá</TableHead>
             <TableHead className="text-center w-[80px]">Tồn kho</TableHead>
