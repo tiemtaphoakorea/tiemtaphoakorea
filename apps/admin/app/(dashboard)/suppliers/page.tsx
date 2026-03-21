@@ -179,7 +179,7 @@ function AdminSuppliersContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-6">Tên nhà cung cấp</TableHead>
+                <TableHead>Tên nhà cung cấp</TableHead>
                 <TableHead>Liên hệ</TableHead>
                 <TableHead>Địa chỉ</TableHead>
                 <TableHead>Đơn hàng</TableHead>
@@ -198,9 +198,9 @@ function AdminSuppliersContent() {
                 suppliers.map((supplier) => (
                   <TableRow
                     key={supplier.id}
-                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                    className="group"
                   >
-                    <TableCell className="py-3 pl-6">
+                    <TableCell className="py-3">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-700 dark:text-slate-200">
                           {supplier.name}

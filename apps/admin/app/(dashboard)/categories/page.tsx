@@ -371,7 +371,7 @@ function AdminCategoriesContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-6">Tên danh mục</TableHead>
+                <TableHead>Tên danh mục</TableHead>
                 <TableHead>Slug</TableHead>
                 <TableHead>Thứ tự</TableHead>
                 <TableHead>Trạng thái</TableHead>

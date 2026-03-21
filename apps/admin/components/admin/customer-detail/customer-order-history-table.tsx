@@ -46,10 +46,10 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="px-8">Mã đơn</TableHead>
+                <TableHead>Mã đơn</TableHead>
                 <TableHead>Ngày đặt</TableHead>
                 <TableHead>Trạng thái</TableHead>
-                <TableHead className="px-8 text-right">Tổng tiền</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
                 <TableHead className="w-[150px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -60,7 +60,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                     key={order.id}
                     className="group transition-colors"
                   >
-                    <TableCell className="px-8 py-4">
+                    <TableCell className="py-4">
                       <Link
                         href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}
                         className="text-primary font-black underline-offset-4 hover:underline"
@@ -83,7 +83,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                         {order.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="px-8 text-right">
+                    <TableCell className="text-right">
                       <span className="font-black text-slate-900 dark:text-white">
                         {formatCurrency(Number(order.total))}
                       </span>
