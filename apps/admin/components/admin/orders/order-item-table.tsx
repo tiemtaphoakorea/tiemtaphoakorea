@@ -1,6 +1,6 @@
-import type { OrderItemTableItem } from "@repo/database/types/order";
-import { formatCurrency } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
+import type { OrderItemTableItem } from "@workspace/database/types/order";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Button } from "@workspace/ui/components/button";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Minus, Package, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -22,11 +22,11 @@ export function OrderItemTable({ items, onUpdateQuantity, onRemoveItem }: OrderI
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-slate-50/50 hover:bg-transparent dark:bg-slate-900">
-          <TableHead className="w-[40%] text-[10px] font-black uppercase">Sản phẩm</TableHead>
-          <TableHead className="text-center text-[10px] font-black uppercase">Số lượng</TableHead>
-          <TableHead className="text-right text-[10px] font-black uppercase">Đơn giá</TableHead>
-          <TableHead className="text-right text-[10px] font-black uppercase">Thành tiền</TableHead>
+        <TableRow>
+          <TableHead className="w-[40%]">Sản phẩm</TableHead>
+          <TableHead className="text-center">Số lượng</TableHead>
+          <TableHead className="text-right">Đơn giá</TableHead>
+          <TableHead className="text-right">Thành tiền</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
