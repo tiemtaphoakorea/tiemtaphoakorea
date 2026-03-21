@@ -52,6 +52,10 @@ export function ProductListingContainer({
       params.set("sort", resolvedActiveSort);
     }
 
+    if (pageSize !== 12) {
+      params.set("limit", String(pageSize));
+    }
+
     if (currentPage > 1) {
       params.set("page", String(currentPage));
     }
@@ -62,6 +66,14 @@ export function ProductListingContainer({
   const handleSortChange = (sort: string) => {
     const params = buildParams();
     params.set("sort", sort);
+    params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${PUBLIC_ROUTES.PRODUCTS}?${query}` : PUBLIC_ROUTES.PRODUCTS);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    const params = buildParams();
+    params.set("limit", String(size));
     params.delete("page");
     const query = params.toString();
     router.push(query ? `${PUBLIC_ROUTES.PRODUCTS}?${query}` : PUBLIC_ROUTES.PRODUCTS);

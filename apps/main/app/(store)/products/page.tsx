@@ -70,7 +70,8 @@ async function ProductListingContent({
     (resolvedSearchParams.sort as (typeof PRODUCT_SORT)[keyof typeof PRODUCT_SORT]) ||
     PRODUCT_SORT.LATEST;
   const page = Math.max(1, Number.parseInt((resolvedSearchParams.page as string) || "1", 10));
-  const pageSize = 4;
+  const parsedLimit = Number.parseInt((resolvedSearchParams.limit as string) || "12", 10);
+  const pageSize = [4, 12, 24, 48].includes(parsedLimit) ? parsedLimit : 12;
 
   const [categories, listing] = await Promise.all([
     getCategories(),

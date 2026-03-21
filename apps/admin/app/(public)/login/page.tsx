@@ -62,7 +62,6 @@ export default function AdminLoginPage() {
     }
 
     router.push("/");
-    router.refresh();
   }
 
   return (

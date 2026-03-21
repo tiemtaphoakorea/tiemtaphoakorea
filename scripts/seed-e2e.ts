@@ -25,37 +25,6 @@ const USERS = [
     isActive: true,
     phone: "0900000001",
   },
-  {
-    username: "staff",
-    fullName: "Staff User",
-    role: ROLE.STAFF,
-    isActive: true,
-    phone: "0900000002",
-  },
-  {
-    username: "manager",
-    fullName: "Manager User",
-    role: ROLE.MANAGER,
-    isActive: true,
-    phone: "0900000003",
-  },
-  {
-    username: "disabled_admin",
-    fullName: "Disabled Admin",
-    role: ROLE.OWNER,
-    isActive: false,
-    phone: "0900000004",
-  },
-  {
-    username: "customer_login",
-    fullName: "Customer Login",
-    role: ROLE.CUSTOMER,
-    isActive: true,
-    phone: "0900000005",
-    customerType: "retail" as const,
-    customerCode: "CUST0001",
-    address: "123 Le Loi, District 1, HCMC",
-  },
 ];
 
 const AGENT_PROFILE_SEED = {
@@ -627,8 +596,8 @@ async function seedE2E() {
   const adminProfile = seededProfiles.get("admin");
   const customerProfile = seededProfiles.get("customer_login");
 
-  if (!adminProfile || !customerProfile) {
-    throw new Error("Missing required profiles for seed data.");
+  if (!adminProfile) {
+    throw new Error("Missing required admin profile for seed data.");
   }
 
   console.log("  → Categories");
@@ -769,6 +738,7 @@ async function seedE2E() {
     throw new Error("Missing primary product/variant for seed data.");
   }
 
+  if (customerProfile) {
   console.log("  → Orders");
   const order = await upsertById(
     schema.orders,
@@ -993,53 +963,7 @@ async function seedE2E() {
     });
   }
 
-  console.log("  → Chat");
-  const chatRoom = await upsertById(
-    schema.chatRooms,
-    schema.chatRooms.id,
-    () =>
-      db.query.chatRooms.findFirst({
-        where: eq(schema.chatRooms.customerId, customerProfile.id),
-      }),
-    {
-      customerId: customerProfile.id,
-      lastMessageAt: new Date(),
-      unreadCountAdmin: 1,
-      unreadCountCustomer: 0,
-    },
-    {
-      lastMessageAt: new Date(),
-      unreadCountAdmin: 1,
-      unreadCountCustomer: 0,
-      updatedAt: new Date(),
-    },
-  );
-
-  const existingChatMessage = await db.query.chatMessages.findFirst({
-    where: and(
-      eq(schema.chatMessages.roomId, chatRoom.id),
-      eq(schema.chatMessages.senderId, customerProfile.id),
-    ),
-  });
-
-  if (!existingChatMessage) {
-    await db.insert(schema.chatMessages).values([
-      {
-        roomId: chatRoom.id,
-        senderId: customerProfile.id,
-        content: "Hello, I need help with my order.",
-        messageType: "text",
-        isRead: true,
-      },
-      {
-        roomId: chatRoom.id,
-        senderId: adminProfile.id,
-        content: "Sure, we are here to help!",
-        messageType: "text",
-        isRead: false,
-      },
-    ]);
-  }
+  } // end if (customerProfile)
 
   console.log("  → Reports");
   const reportDate = new Date();

@@ -1,6 +1,5 @@
 export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://admin.localhost:3000";
 export const STOREFRONT_BASE_URL = process.env.STOREFRONT_BASE_URL || "http://localhost:3000";
-export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
 
 export const ROLE = {
   CUSTOMER: "customer",

@@ -401,11 +401,39 @@ export async function getProductsForListing(params: {
 }) {
   const { search, categorySlug, sort = PRODUCT_SORT.LATEST, page = 1, limit = 12 } = params;
 
+  // Resolve category filter: include the matched category AND all its descendants
+  let categoryIdFilter: ReturnType<typeof inArray> | undefined;
+  if (categorySlug) {
+    const allCats = await db
+      .select({ id: categories.id, slug: categories.slug, parentId: categories.parentId })
+      .from(categories);
+    const root = allCats.find((c) => c.slug === categorySlug);
+    console.log(
+      "[getProductsForListing] categorySlug:",
+      categorySlug,
+      "root:",
+      root?.id,
+      "allCats slugs:",
+      allCats.map((c) => c.slug),
+    );
+    if (!root) {
+      return { products: [], total: 0 };
+    }
+    const ids: string[] = [];
+    const queue = [root.id];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      ids.push(id);
+      for (const c of allCats) {
+        if (c.parentId === id) queue.push(c.id);
+      }
+    }
+    console.log("[getProductsForListing] resolved category ids:", ids);
+    categoryIdFilter = inArray(products.categoryId, ids);
+  }
+
   let orderBy: SQL | ReturnType<typeof desc> = desc(products.createdAt);
 
-  // Note: Sorting by computed aggregates (minPrice) requires wrapping or repeating logic.
-  // For simplicity & performance on small datasets, strict SQL might be complex in ORM.
-  // However, `sql` helpers can be used in orderBy.
   if (sort === PRODUCT_SORT.PRICE_ASC) {
     orderBy = sql`min(${productVariants.price}) asc`;
   } else if (sort === PRODUCT_SORT.PRICE_DESC) {
@@ -417,7 +445,7 @@ export async function getProductsForListing(params: {
     search
       ? or(ilike(products.name, `%${search}%`), ilike(products.slug, `%${search}%`))
       : undefined,
-    categorySlug ? eq(categories.slug, categorySlug) : undefined,
+    categoryIdFilter,
   );
 
   const query = db
