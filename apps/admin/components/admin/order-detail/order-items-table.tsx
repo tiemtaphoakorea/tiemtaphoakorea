@@ -1,5 +1,5 @@
-import { formatCurrency, formatVariantDisplayName } from "@repo/shared/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { formatCurrency, formatVariantDisplayName } from "@workspace/shared/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Package, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 
@@ -28,11 +28,11 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50/50 hover:bg-transparent dark:bg-slate-900">
-              <TableHead className="w-[50%] text-[10px] font-black uppercase">Sản phẩm</TableHead>
-              <TableHead className="text-center text-[10px] font-black uppercase">SL</TableHead>
-              <TableHead className="text-right text-[10px] font-black uppercase">Đơn giá</TableHead>
-              <TableHead className="text-right text-[10px] font-black uppercase">Tổng</TableHead>
+            <TableRow>
+              <TableHead className="w-[50%]">Sản phẩm</TableHead>
+              <TableHead className="text-center">SL</TableHead>
+              <TableHead className="text-right">Đơn giá</TableHead>
+              <TableHead className="text-right">Tổng</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
