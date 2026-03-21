@@ -1,6 +1,6 @@
-import type { Supplier } from "@repo/database/types/admin";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import type { Supplier } from "@workspace/database/types/admin";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
+} from "@workspace/ui/components/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import {
   Edit2,
   Eye,
@@ -51,26 +51,14 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Mã NCC
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Nhà cung cấp
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Liên hệ
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Điều khoản thanh toán
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Số đơn hàng
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Trạng thái
-            </TableHead>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Mã NCC</TableHead>
+            <TableHead>Nhà cung cấp</TableHead>
+            <TableHead>Liên hệ</TableHead>
+            <TableHead>Điều khoản thanh toán</TableHead>
+            <TableHead>Số đơn hàng</TableHead>
+            <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -79,7 +67,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
             suppliers.map((supplier) => (
               <TableRow
                 key={supplier.id}
-                className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                className="group transition-colors"
               >
                 <TableCell className="py-4">
                   <Badge variant="outline" className="text-xs font-black uppercase">
