@@ -3,7 +3,7 @@ import {
   LOW_STOCK_DEFAULT_THRESHOLD,
   ORDER_STATUS,
   ROLE,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { orderItems, orderStatusHistory, orders } from "../schema/orders";

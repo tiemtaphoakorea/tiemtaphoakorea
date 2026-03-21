@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { adminClient } from "@/services/admin.client";
 
 export function DashboardTopProducts() {

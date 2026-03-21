@@ -8,7 +8,7 @@ import {
   ERROR_MESSAGE,
   INTERNAL_CHAT_ROLES,
   STORAGE_CACHE_CONTROL,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { createAdminClient } from "../lib/supabase/admin";

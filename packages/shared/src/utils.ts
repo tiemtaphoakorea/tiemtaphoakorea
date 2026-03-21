@@ -1,6 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
 import dayjs from "dayjs";
-import { twMerge } from "tailwind-merge";
 import "dayjs/locale/vi";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -13,10 +11,6 @@ dayjs.extend(isSameOrAfter);
 
 // Set default locale to Vietnamese
 dayjs.locale("vi");
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export const formatCurrency = (val: number | string | null | undefined) => {
   const amount = typeof val === "string" ? parseFloat(val) : Number(val || 0);

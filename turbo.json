@@ -21,6 +21,9 @@
     "test:run": {
       "dependsOn": ["^build"]
     },
+    "format": {
+      "cache": false
+    },
     "db:generate": {
       "cache": false
     },

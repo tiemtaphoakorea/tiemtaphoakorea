@@ -1,15 +1,15 @@
 "use client";
 
-import { createClient } from "@repo/database/lib/supabase/client";
-import type { ChatMessage as AdminChatMessage } from "@repo/database/services/chat.server";
-import type { ChatRoomWithDetails } from "@repo/database/types/admin";
-import { CHAT_MESSAGE_TYPE } from "@repo/shared/constants";
-import { cn } from "@repo/shared/utils";
-import { Avatar, AvatarFallback } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Input } from "@repo/ui/components/input";
-import { ScrollArea } from "@repo/ui/components/scroll-area";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@workspace/database/lib/supabase/client";
+import type { ChatMessage as AdminChatMessage } from "@workspace/database/services/chat.server";
+import type { ChatRoomWithDetails } from "@workspace/database/types/admin";
+import { CHAT_MESSAGE_TYPE } from "@workspace/shared/constants";
+import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Input } from "@workspace/ui/components/input";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import { cn } from "@workspace/ui/lib/utils";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChatHeader } from "@/components/admin/chat-room/chat-header";
@@ -281,7 +281,7 @@ export default function ChatPage() {
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <div className="text-center">
-                <p className="text-muted-foreground text-sm">
+                <p className="text-sm text-muted-foreground">
                   Select a chat room to view conversation
                 </p>
               </div>
@@ -313,7 +313,7 @@ function ChatSidebar({
     <div className="flex w-80 flex-col border-r border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
       <div className="border-b border-slate-200 p-4 dark:border-slate-800">
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Tìm kiếm..."
             value={searchTerm}
@@ -336,7 +336,7 @@ function ChatSidebar({
               )}
             >
               <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-800">
-                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                <AvatarFallback className="bg-primary/10 font-bold text-primary">
                   {room.customer.fullName?.charAt(0) || "K"}
                 </AvatarFallback>
               </Avatar>
@@ -347,7 +347,7 @@ function ChatSidebar({
                   </span>
                   <div className="ml-2 flex shrink-0 flex-col items-end gap-1">
                     {room.lastMessageAt && (
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      <span className="text-[10px] whitespace-nowrap text-muted-foreground">
                         {new Date(room.lastMessageAt).toLocaleDateString()}
                       </span>
                     )}
@@ -360,7 +360,7 @@ function ChatSidebar({
                   {room.unreadCountAdmin > 0 && (
                     <Badge
                       variant="destructive"
-                      className="flex h-5 min-w-5 items-center justify-center p-0 text-[10px] rounded-full shrink-0"
+                      className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full p-0 text-[10px]"
                     >
                       {room.unreadCountAdmin}
                     </Badge>
@@ -370,7 +370,7 @@ function ChatSidebar({
             </button>
           ))}
           {rooms.length === 0 && (
-            <div className="text-muted-foreground p-8 text-center text-sm">
+            <div className="p-8 text-center text-sm text-muted-foreground">
               Không tìm thấy hội thoại nào
             </div>
           )}

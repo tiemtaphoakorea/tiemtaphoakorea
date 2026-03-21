@@ -1,14 +1,14 @@
-import type { UserRole } from "@repo/database/schema/enums";
-import { ROLE } from "@repo/shared/constants";
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
+import type { UserRole } from "@workspace/database/schema/enums";
+import { ROLE } from "@workspace/shared/constants";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Separator } from "@repo/ui/components/separator";
+} from "@workspace/ui/components/dropdown-menu";
+import { Separator } from "@workspace/ui/components/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/ui/components/sidebar";
+} from "@workspace/ui/components/sidebar";
 import {
   BarChart3,
   Building2,

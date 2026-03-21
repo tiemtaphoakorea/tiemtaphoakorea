@@ -1,11 +1,11 @@
-import { Input } from "@repo/ui/components/input";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import { LayoutGrid, List, Search } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [4, 12, 24, 48];
@@ -85,7 +85,7 @@ export function ProductToolbar({
           <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-background text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent align="end">
+          <SelectContent position="popper" align="end">
             {SORT_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
@@ -99,7 +99,7 @@ export function ProductToolbar({
           <SelectTrigger className="h-9 w-28 rounded-lg border-border bg-background text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent align="end">
+          <SelectContent position="popper" align="end">
             {PAGE_SIZE_OPTIONS.map((size) => (
               <SelectItem key={size} value={String(size)}>
                 {size} / trang

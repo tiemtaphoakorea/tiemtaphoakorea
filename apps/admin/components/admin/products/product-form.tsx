@@ -37,16 +37,283 @@ import axios from "axios";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useReducer } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ImageUploader } from "@/components/image-uploader";
+
+// ---------------------------------------------------------------------------
+// Reducer
+// ---------------------------------------------------------------------------
+
+type Attribute = { name: string; values: string[] };
+
+type FormState = {
+  apiError: string | null;
+  apiPending: boolean;
+  attributes: Attribute[];
+  variants: ProductFormVariant[];
+  selectedMediaVariantId: string;
+};
+
+type FormAction =
+  | { type: "SET_API_ERROR"; payload: string | null }
+  | { type: "SET_API_PENDING"; payload: boolean }
+  | { type: "SET_VARIANTS"; payload: ProductFormVariant[] }
+  | { type: "SET_ATTRIBUTES"; payload: Attribute[] }
+  | { type: "UPDATE_ATTRIBUTE_VALUE"; index: number; valString: string }
+  | { type: "SET_SELECTED_MEDIA_VARIANT"; payload: string };
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case "SET_API_ERROR":
+      return { ...state, apiError: action.payload };
+    case "SET_API_PENDING":
+      return { ...state, apiPending: action.payload };
+    case "SET_VARIANTS":
+      return { ...state, variants: action.payload };
+    case "SET_ATTRIBUTES":
+      return { ...state, attributes: action.payload };
+    case "UPDATE_ATTRIBUTE_VALUE": {
+      const newAttrs = [...state.attributes];
+      newAttrs[action.index] = {
+        ...newAttrs[action.index],
+        values: action.valString
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
+      return { ...state, attributes: newAttrs };
+    }
+    case "SET_SELECTED_MEDIA_VARIANT":
+      return { ...state, selectedMediaVariantId: action.payload };
+    default:
+      return state;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+type VariantGeneratorProps = {
+  attributes: Attribute[];
+  dispatch: React.Dispatch<FormAction>;
+  onGenerate: () => void;
+};
+
+function VariantGenerator({ attributes, dispatch, onGenerate }: VariantGeneratorProps) {
+  return (
+    <Card className="border-none shadow-inner ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Wand2 className="h-5 w-5 text-purple-500" />
+          Bộ tạo biến thể tự động
+        </CardTitle>
+        <CardDescription>Nhập các thuộc tính để tạo nhanh biến thể.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase">
+              Thuộc tính 1: {attributes[0].name}
+            </Label>
+            <Input
+              placeholder="Ví dụ: Đỏ, Xanh..."
+              onChange={(e) =>
+                dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 0, valString: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase">
+              Thuộc tính 2: {attributes[1].name}
+            </Label>
+            <Input
+              placeholder="Ví dụ: S, M..."
+              onChange={(e) =>
+                dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 1, valString: e.target.value })
+              }
+            />
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={onGenerate}
+          className="mt-2 w-full gap-2 border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+        >
+          <RefreshCw className="h-4 w-4" /> Tạo danh sách biến thể
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+type VariantsTableProps = {
+  variants: ProductFormVariant[];
+  basePrice: number;
+  dispatch: React.Dispatch<FormAction>;
+};
+
+function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
+  return (
+    <Card className="gap-0 overflow-hidden border-none py-0 shadow-lg ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 bg-white py-4 dark:border-slate-800 dark:bg-slate-950">
+        <CardTitle className="text-lg">Danh sách biến thể ({variants.length})</CardTitle>
+        <Button
+          size="sm"
+          variant="ghost"
+          type="button"
+          onClick={() =>
+            dispatch({
+              type: "SET_VARIANTS",
+              payload: [
+                ...variants,
+                {
+                  id: `temp-${Date.now()}`,
+                  name: "Mới",
+                  sku: "",
+                  price: basePrice,
+                  costPrice: 0,
+                  stockQuantity: 0,
+                  images: [],
+                },
+              ],
+            })
+          }
+        >
+          <Plus className="mr-2 h-4 w-4" /> Thêm thủ công
+        </Button>
+      </CardHeader>
+      <CardContent className="max-h-[500px] overflow-auto p-0">
+        <Table>
+          <TableHeader className="sticky top-0 z-10">
+            <TableRow>
+              <TableHead className="w-[40px]"></TableHead>
+              <TableHead className="min-w-[150px]">Tên biến thể</TableHead>
+              <TableHead className="min-w-[120px] text-blue-600">Mã SKU</TableHead>
+              <TableHead className="min-w-[100px]">Giá bán</TableHead>
+              <TableHead className="min-w-[100px]">Giá vốn</TableHead>
+              <TableHead className="min-w-[80px]">Tồn kho</TableHead>
+              <TableHead className="w-[40px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {variants.map((variant, idx) => (
+              <TableRow key={variant.id}>
+                <TableCell className="font-mono text-xs text-slate-400">{idx + 1}</TableCell>
+                <TableCell>
+                  <Input
+                    value={variant.name}
+                    onChange={(e) => {
+                      const newV = [...variants];
+                      newV[idx] = { ...newV[idx], name: e.target.value };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    className="h-8 border-transparent bg-transparent px-2 font-medium hover:border-slate-200 focus:border-slate-200"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    value={variant.sku}
+                    placeholder="SKU-..."
+                    onChange={(e) => {
+                      const newV = [...variants];
+                      newV[idx] = { ...newV[idx], sku: e.target.value };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    className="h-8 border-transparent bg-blue-50/50 px-2 font-mono text-blue-700 hover:border-blue-200 focus:border-blue-200"
+                  />
+                </TableCell>
+                <TableCell>
+                  <NumberInput
+                    name={`variants.${idx}.price`}
+                    data-testid={`variant-price-${idx}`}
+                    aria-label="Giá bán biến thể"
+                    value={variant.price}
+                    onValueChange={(values) => {
+                      const newV = [...variants];
+                      newV[idx] = { ...newV[idx], price: Math.max(0, values.floatValue ?? 0) };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    className="h-8 border-transparent bg-transparent px-2 text-right font-mono hover:border-slate-200 focus:border-slate-200"
+                  />
+                </TableCell>
+                <TableCell>
+                  <NumberInput
+                    name={`variants.${idx}.costPrice`}
+                    data-testid={`variant-cost-${idx}`}
+                    aria-label="Giá vốn biến thể"
+                    value={variant.costPrice}
+                    onValueChange={(values) => {
+                      const newV = [...variants];
+                      newV[idx] = {
+                        ...newV[idx],
+                        costPrice: Math.max(0, values.floatValue ?? 0),
+                      };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    className="h-8 border-transparent bg-transparent px-2 text-right font-mono text-slate-500 hover:border-slate-200 focus:border-slate-200"
+                  />
+                </TableCell>
+                <TableCell>
+                  <NumberInput
+                    name={`variants.${idx}.stockQuantity`}
+                    data-testid={`variant-stock-${idx}`}
+                    aria-label="Tồn kho biến thể"
+                    decimalScale={0}
+                    value={variant.stockQuantity}
+                    onValueChange={(values) => {
+                      const newV = [...variants];
+                      newV[idx] = {
+                        ...newV[idx],
+                        stockQuantity: Math.max(0, values.floatValue ?? 0),
+                      };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    onBlur={(e) => {
+                      const raw = (e.target as HTMLInputElement).value ?? "";
+                      const normalized = raw.replace(/\./g, "").replace(",", ".");
+                      const parsed = Number.parseFloat(normalized) || 0;
+                      if (parsed < 0) {
+                        const newV = [...variants];
+                        newV[idx] = { ...newV[idx], stockQuantity: 0 };
+                        dispatch({ type: "SET_VARIANTS", payload: newV });
+                      }
+                    }}
+                    className="h-8 border-transparent bg-transparent px-2 text-center font-mono font-bold hover:border-slate-200 focus:border-slate-200"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-red-400 hover:bg-red-50 hover:text-red-500"
+                    onClick={() => {
+                      dispatch({
+                        type: "SET_VARIANTS",
+                        payload: variants.filter((_, i) => i !== idx),
+                      });
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
 
 // Submit Button Component
 function SubmitButton({ mode, pending }: { mode: "create" | "edit"; pending: boolean }) {
   return (
     <Button
       type="submit"
-      className="shadow-primary/20 h-12 w-full text-lg font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+      className="h-12 w-full text-lg font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
       disabled={pending}
     >
       {pending ? (
@@ -63,11 +330,43 @@ function SubmitButton({ mode, pending }: { mode: "create" | "edit"; pending: boo
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function ProductForm({ initialData, categories, mode }: ProductFormProps) {
   "use no memo";
   const router = useRouter();
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [apiPending, setApiPending] = useState(false);
+
+  const [formState, dispatch] = useReducer(formReducer, {
+    apiError: null,
+    apiPending: false,
+    attributes: [
+      { name: "Color", values: [] as string[] },
+      { name: "Size", values: [] as string[] },
+    ],
+    variants: initialData?.variants || [
+      {
+        id: "default",
+        name: "Default Variant",
+        sku: "",
+        price: 0,
+        costPrice: 0,
+        stockQuantity: 0,
+        images: [],
+      },
+    ],
+    selectedMediaVariantId: initialData?.variants?.[0]?.id || "default",
+  } satisfies FormState);
+
+  const { apiError, apiPending, attributes, variants } = formState;
+
+  // Derive the resolved selected media variant id (guard against stale id)
+  const selectedMediaVariantId = variants.some(
+    (variant) => variant.id === formState.selectedMediaVariantId,
+  )
+    ? formState.selectedMediaVariantId
+    : (variants[0]?.id ?? "default");
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -81,45 +380,6 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
   });
 
   const basePrice = useWatch({ control: form.control, name: "basePrice" });
-
-  // Custom Attribute Generator State
-  const [attributes, setAttributes] = useState([
-    { name: "Color", values: [] as string[] },
-    { name: "Size", values: [] as string[] },
-  ]);
-
-  // Variants State
-  const [variants, setVariants] = useState<ProductFormVariant[]>(
-    initialData?.variants || [
-      {
-        id: "default",
-        name: "Default Variant",
-        sku: "",
-        price: 0,
-        costPrice: 0,
-        stockQuantity: 0,
-        images: [],
-      },
-    ],
-  );
-
-  const [selectedMediaVariantIdState, setSelectedMediaVariantId] = useState<string>(
-    initialData?.variants?.[0]?.id || "default",
-  );
-  const selectedMediaVariantId = variants.some(
-    (variant) => variant.id === selectedMediaVariantIdState,
-  )
-    ? selectedMediaVariantIdState
-    : (variants[0]?.id ?? "default");
-
-  const updateAttributeValue = (index: number, valString: string) => {
-    const newAttrs = [...attributes];
-    newAttrs[index].values = valString
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    setAttributes(newAttrs);
-  };
 
   const handleGenerateVariants = () => {
     const activeAttrs = attributes.filter((a) => a.values.length > 0 && a.name.trim() !== "");
@@ -151,41 +411,49 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       };
     });
 
-    setVariants((prev) => {
-      // If we only have the initial default variant (from create mode), replace it
-      if (prev.length === 1 && prev[0].name === "Default Variant" && !prev[0].sku) {
-        return newVariants;
-      }
-      return [...prev, ...newVariants];
-    });
+    // If we only have the initial default variant (from create mode), replace it
+    if (variants.length === 1 && variants[0].name === "Default Variant" && !variants[0].sku) {
+      dispatch({ type: "SET_VARIANTS", payload: newVariants });
+    } else {
+      dispatch({ type: "SET_VARIANTS", payload: [...variants, ...newVariants] });
+    }
   };
 
   const onValidSubmit = async (data: ProductFormValues) => {
     const finalVariants = [...variants];
     if (finalVariants.length === 0) {
-      setApiError("Cần ít nhất một biến thể.");
+      dispatch({ type: "SET_API_ERROR", payload: "Cần ít nhất một biến thể." });
       return;
     }
     for (let i = 0; i < finalVariants.length; i++) {
       const v = finalVariants[i];
       if (!v.name?.trim()) {
-        setApiError(`Biến thể ${i + 1}: Vui lòng nhập tên biến thể.`);
+        dispatch({
+          type: "SET_API_ERROR",
+          payload: `Biến thể ${i + 1}: Vui lòng nhập tên biến thể.`,
+        });
         return;
       }
       if (!v.sku?.trim()) {
-        setApiError(`Biến thể ${i + 1}: Vui lòng nhập SKU.`);
+        dispatch({
+          type: "SET_API_ERROR",
+          payload: `Biến thể ${i + 1}: Vui lòng nhập SKU.`,
+        });
         return;
       }
       const price = Number(v.price);
       const costPrice = Number(v.costPrice ?? 0);
       const stock = Number(v.stockQuantity ?? 0);
       if (price < 0 || costPrice < 0 || stock < 0) {
-        setApiError(`Biến thể ${i + 1}: Giá, giá vốn và tồn kho phải >= 0.`);
+        dispatch({
+          type: "SET_API_ERROR",
+          payload: `Biến thể ${i + 1}: Giá, giá vốn và tồn kho phải >= 0.`,
+        });
         return;
       }
     }
-    setApiError(null);
-    setApiPending(true);
+    dispatch({ type: "SET_API_ERROR", payload: null });
+    dispatch({ type: "SET_API_PENDING", payload: true });
     const createPayload = {
       name: data.name,
       description: data.description ?? "",
@@ -221,8 +489,8 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         res = await axios.post("/api/admin/products", createPayload);
       } else {
         if (!productId) {
-          setApiError("Thiếu ID sản phẩm");
-          setApiPending(false);
+          dispatch({ type: "SET_API_ERROR", payload: "Thiếu ID sản phẩm" });
+          dispatch({ type: "SET_API_PENDING", payload: false });
           return;
         }
         res = await axios.put(`/api/admin/products/${productId}`, updatePayload);
@@ -232,36 +500,36 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         err.response?.data?.error ??
         err?.message ??
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm");
-      setApiError(message);
-      setApiPending(false);
+      dispatch({ type: "SET_API_ERROR", payload: message });
+      dispatch({ type: "SET_API_PENDING", payload: false });
       return;
     }
 
     if (res?.data?.success) {
-      setApiPending(false);
+      dispatch({ type: "SET_API_PENDING", payload: false });
       router.push("/products");
       return;
     }
 
-    setApiError(
-      res?.data?.error ||
+    dispatch({
+      type: "SET_API_ERROR",
+      payload:
+        res?.data?.error ||
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm"),
-    );
-    setApiPending(false);
+    });
+    dispatch({ type: "SET_API_PENDING", payload: false });
   };
 
-  const displayError = apiError;
-  const displayPending = apiPending;
   const selectedMediaVariant = variants.find((v) => v.id === selectedMediaVariantId) || null;
 
   return (
     <div className="flex w-full flex-col gap-8 pb-20">
-      {displayError && (
+      {apiError && (
         <div
           role="alert"
           className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-bold text-red-700"
         >
-          {displayError}
+          {apiError}
         </div>
       )}
       {/* Header */}
@@ -293,22 +561,22 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       <form onSubmit={form.handleSubmit(onValidSubmit)} className="flex items-start gap-8">
         <div className="w-full flex-1 space-y-8">
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="mb-6 h-12 w-full justify-start gap-2 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-950">
+            <TabsList className="mb-6 w-full justify-start gap-1 rounded-lg border border-border p-1">
               <TabsTrigger
                 value="info"
-                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800"
+                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 Thông tin chung
               </TabsTrigger>
               <TabsTrigger
                 value="variants"
-                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800"
+                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 Biến thể & Giá
               </TabsTrigger>
               <TabsTrigger
                 value="media"
-                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800"
+                className="h-full flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 Hình ảnh
               </TabsTrigger>
@@ -317,186 +585,14 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
             {/* Tab 2: Variants */}
             <TabsContent value="variants" className="space-y-6">
               {/* Generator Section */}
-              <Card className="border-none shadow-inner ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Wand2 className="h-5 w-5 text-purple-500" />
-                    Bộ tạo biến thể tự động
-                  </CardTitle>
-                  <CardDescription>Nhập các thuộc tính để tạo nhanh biến thể.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase">
-                        Thuộc tính 1: {attributes[0].name}
-                      </Label>
-                      <Input
-                        placeholder="Ví dụ: Đỏ, Xanh..."
-                        onChange={(e) => updateAttributeValue(0, e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase">
-                        Thuộc tính 2: {attributes[1].name}
-                      </Label>
-                      <Input
-                        placeholder="Ví dụ: S, M..."
-                        onChange={(e) => updateAttributeValue(1, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={handleGenerateVariants}
-                    className="mt-2 w-full gap-2 border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                  >
-                    <RefreshCw className="h-4 w-4" /> Tạo danh sách biến thể
-                  </Button>
-                </CardContent>
-              </Card>
+              <VariantGenerator
+                attributes={attributes}
+                dispatch={dispatch}
+                onGenerate={handleGenerateVariants}
+              />
 
               {/* Variants Table */}
-              <Card className="overflow-hidden border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800 gap-0 py-0">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 bg-white py-4 dark:border-slate-800 dark:bg-slate-950">
-                  <CardTitle className="text-lg">Danh sách biến thể ({variants.length})</CardTitle>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    type="button"
-                    onClick={() =>
-                      setVariants([
-                        ...variants,
-                        {
-                          id: `temp-${Date.now()}`,
-                          name: "Mới",
-                          sku: "",
-                          price: basePrice,
-                          costPrice: 0,
-                          stockQuantity: 0,
-                          images: [],
-                        },
-                      ])
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Thêm thủ công
-                  </Button>
-                </CardHeader>
-                <CardContent className="max-h-[500px] overflow-auto p-0">
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10">
-                      <TableRow>
-                        <TableHead className="w-[40px]"></TableHead>
-                        <TableHead className="min-w-[150px]">Tên biến thể</TableHead>
-                        <TableHead className="min-w-[120px] text-blue-600">Mã SKU</TableHead>
-                        <TableHead className="min-w-[100px]">Giá bán</TableHead>
-                        <TableHead className="min-w-[100px]">Giá vốn</TableHead>
-                        <TableHead className="min-w-[80px]">Tồn kho</TableHead>
-                        <TableHead className="w-[40px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {variants.map((variant, idx) => (
-                        <TableRow key={variant.id}>
-                          <TableCell className="font-mono text-xs text-slate-400">
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={variant.name}
-                              onChange={(e) => {
-                                const newV = [...variants];
-                                newV[idx].name = e.target.value;
-                                setVariants(newV);
-                              }}
-                              className="h-8 border-transparent bg-transparent px-2 font-medium hover:border-slate-200 focus:border-slate-200"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={variant.sku}
-                              placeholder="SKU-..."
-                              onChange={(e) => {
-                                const newV = [...variants];
-                                newV[idx].sku = e.target.value;
-                                setVariants(newV);
-                              }}
-                              className="h-8 border-transparent bg-blue-50/50 px-2 font-mono text-blue-700 hover:border-blue-200 focus:border-blue-200"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <NumberInput
-                              name={`variants.${idx}.price`}
-                              data-testid={`variant-price-${idx}`}
-                              aria-label="Giá bán biến thể"
-                              value={variant.price}
-                              onValueChange={(values) => {
-                                const newV = [...variants];
-                                newV[idx].price = Math.max(0, values.floatValue ?? 0);
-                                setVariants(newV);
-                              }}
-                              className="h-8 border-transparent bg-transparent px-2 text-right font-mono hover:border-slate-200 focus:border-slate-200"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <NumberInput
-                              name={`variants.${idx}.costPrice`}
-                              data-testid={`variant-cost-${idx}`}
-                              aria-label="Giá vốn biến thể"
-                              value={variant.costPrice}
-                              onValueChange={(values) => {
-                                const newV = [...variants];
-                                newV[idx].costPrice = Math.max(0, values.floatValue ?? 0);
-                                setVariants(newV);
-                              }}
-                              className="h-8 border-transparent bg-transparent px-2 text-right font-mono text-slate-500 hover:border-slate-200 focus:border-slate-200"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <NumberInput
-                              name={`variants.${idx}.stockQuantity`}
-                              data-testid={`variant-stock-${idx}`}
-                              aria-label="Tồn kho biến thể"
-                              decimalScale={0}
-                              value={variant.stockQuantity}
-                              onValueChange={(values) => {
-                                const newV = [...variants];
-                                newV[idx].stockQuantity = Math.max(0, values.floatValue ?? 0);
-                                setVariants(newV);
-                              }}
-                              onBlur={(e) => {
-                                const raw = (e.target as HTMLInputElement).value ?? "";
-                                const normalized = raw.replace(/\./g, "").replace(",", ".");
-                                const parsed = Number.parseFloat(normalized) || 0;
-                                if (parsed < 0) {
-                                  const newV = [...variants];
-                                  newV[idx].stockQuantity = 0;
-                                  setVariants(newV);
-                                }
-                              }}
-                              className="h-8 border-transparent bg-transparent px-2 text-center font-mono font-bold hover:border-slate-200 focus:border-slate-200"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-red-400 hover:bg-red-50 hover:text-red-500"
-                              onClick={() => {
-                                const newV = variants.filter((_, i) => i !== idx);
-                                setVariants(newV);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <VariantsTable variants={variants} basePrice={basePrice} dispatch={dispatch} />
             </TabsContent>
 
             {/* Tab 1: General Info */}
@@ -515,7 +611,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                       required
                     />
                     {form.formState.errors.name && (
-                      <p className="text-destructive text-sm">
+                      <p className="text-sm text-destructive">
                         {form.formState.errors.name.message}
                       </p>
                     )}
@@ -565,7 +661,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                         )}
                       />
                       {form.formState.errors.basePrice && (
-                        <p className="text-destructive text-sm">
+                        <p className="text-sm text-destructive">
                           {form.formState.errors.basePrice.message}
                         </p>
                       )}
@@ -620,7 +716,9 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                         </Label>
                         <Select
                           value={selectedMediaVariantId}
-                          onValueChange={(value) => setSelectedMediaVariantId(value)}
+                          onValueChange={(value) =>
+                            dispatch({ type: "SET_SELECTED_MEDIA_VARIANT", payload: value })
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Chọn biến thể" />
@@ -637,13 +735,14 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                       <ImageUploader
                         value={selectedMediaVariant?.images ?? []}
                         onChange={(urls) => {
-                          setVariants((prev) =>
-                            prev.map((variant) =>
+                          dispatch({
+                            type: "SET_VARIANTS",
+                            payload: variants.map((variant) =>
                               variant.id === selectedMediaVariantId
                                 ? { ...variant, images: urls }
                                 : variant,
                             ),
-                          );
+                          });
                         }}
                         maxFiles={10}
                       />
@@ -664,7 +763,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
               <CardTitle className="text-base">Hành động</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              <SubmitButton mode={mode} pending={displayPending} />
+              <SubmitButton mode={mode} pending={apiPending} />
               <Button type="button" variant="outline" className="w-full" asChild>
                 <Link href="/products">Hủy bỏ</Link>
               </Button>

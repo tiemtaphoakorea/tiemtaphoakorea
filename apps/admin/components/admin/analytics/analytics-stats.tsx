@@ -1,5 +1,5 @@
-import { formatCurrency } from "@repo/shared/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { DollarSign, ShoppingBag, TrendingDown, TrendingUp, Users } from "lucide-react";
 
 interface AnalyticsStatsProps {

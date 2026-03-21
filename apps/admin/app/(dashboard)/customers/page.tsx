@@ -1,8 +1,10 @@
 "use client";
 
-import type { CustomerStatsItem } from "@repo/database/types/admin";
-import { PAGINATION_DEFAULT } from "@repo/shared/pagination";
-import { formatCurrency } from "@repo/shared/utils";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { CustomerStatsItem } from "@workspace/database/types/admin";
+import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { formatCurrency } from "@workspace/shared/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,19 +14,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@repo/ui/components/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { DataTable } from "@repo/ui/components/data-table";
+} from "@workspace/ui/components/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { DataTable } from "@workspace/ui/components/data-table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@repo/ui/components/dialog";
+} from "@workspace/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,11 +34,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Input } from "@repo/ui/components/input";
-import { useToast } from "@repo/ui/components/use-toast";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
+import { useToast } from "@workspace/ui/components/use-toast";
 import {
   Ban,
   CheckCircle2,
@@ -57,7 +57,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useReducer } from "react";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { adminClient } from "@/services/admin.client";
@@ -73,185 +73,66 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   },
 };
 
-export default function AdminCustomersPage() {
-  return (
-    <Suspense fallback={<div />}>
-      <AdminCustomersPageContent />
-    </Suspense>
-  );
+type UIState = {
+  isLoadingAction: boolean;
+  isAddSheetOpen: boolean;
+  isEditSheetOpen: boolean;
+  editingCustomer: any | null;
+  showCredentials: any | null;
+  deletingCustomer: any | null;
+};
+const initialUIState: UIState = {
+  isLoadingAction: false,
+  isAddSheetOpen: false,
+  isEditSheetOpen: false,
+  editingCustomer: null,
+  showCredentials: null,
+  deletingCustomer: null,
+};
+type UIAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "OPEN_ADD" }
+  | { type: "CLOSE_ADD" }
+  | { type: "OPEN_EDIT"; payload: any }
+  | { type: "CLOSE_EDIT" }
+  | { type: "SHOW_CREDENTIALS"; payload: any }
+  | { type: "HIDE_CREDENTIALS" }
+  | { type: "SET_DELETING"; payload: any | null };
+function uiReducer(state: UIState, action: UIAction): UIState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoadingAction: action.payload };
+    case "OPEN_ADD":
+      return { ...state, isAddSheetOpen: true };
+    case "CLOSE_ADD":
+      return { ...state, isAddSheetOpen: false };
+    case "OPEN_EDIT":
+      return { ...state, isEditSheetOpen: true, editingCustomer: action.payload };
+    case "CLOSE_EDIT":
+      return { ...state, isEditSheetOpen: false, editingCustomer: null };
+    case "SHOW_CREDENTIALS":
+      return { ...state, showCredentials: action.payload };
+    case "HIDE_CREDENTIALS":
+      return { ...state, showCredentials: null };
+    case "SET_DELETING":
+      return { ...state, deletingCustomer: action.payload };
+    default:
+      return state;
+  }
 }
 
-function AdminCustomersPageContent() {
-  "use no memo";
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+type GetColumnsArgs = {
+  onOpenEdit: (customer: any) => void;
+  onSetDeleting: (customer: any) => void;
+  onToggleStatus: (id: string, currentStatus: boolean) => void;
+};
 
-  const searchTerm = searchParams.get("search") || "";
-  const statusFilter = searchParams.get("status") || "All";
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.max(
-    1,
-    parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
-  );
-
-  const [isLoadingAction, setIsLoadingAction] = useState(false);
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<any>(null);
-  const [showCredentials, setShowCredentials] = useState<any>(null);
-  const [deletingCustomer, setDeletingCustomer] = useState<any>(null);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["customers", searchTerm, statusFilter, page, limit],
-    queryFn: () =>
-      adminClient.getCustomers({
-        search: searchTerm,
-        status: statusFilter !== "All" ? statusFilter : undefined,
-        page,
-        limit,
-      }),
-    placeholderData: keepPreviousData,
-  });
-
-  const customers = data?.data || [];
-  const metadata = data?.metadata;
-
-  const updateParams = (newParams: Record<string, string | number | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value.toString());
-      }
-    });
-
-    // Reset to page 1 if filters change
-    if (
-      (newParams.search !== undefined || newParams.status !== undefined) &&
-      newParams.page === undefined
-    ) {
-      params.set("page", "1");
-    }
-
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleSearch = (val: string) => {
-    updateParams({ search: val });
-  };
-
-  const handleStatusFilterChange = (val: string) => {
-    updateParams({ status: val });
-  };
-
-  const handleAddCustomer = async (formData: FormData) => {
-    setIsLoadingAction(true);
-    const payload = {
-      fullName: (formData.get("fullName") as string) ?? "",
-      phone: (formData.get("phone") as string) ?? undefined,
-      address: (formData.get("address") as string) ?? undefined,
-      customerType: (formData.get("customerType") as string) ?? "retail",
-    };
-
-    try {
-      const res = await adminClient.createCustomer(payload);
-      toast({ title: "Thành công", description: "Đã tạo khách hàng mới" });
-      setIsAddSheetOpen(false);
-      setShowCredentials({ customerCode: res.profile.customerCode });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setIsLoadingAction(false);
-    } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
-      setIsLoadingAction(false);
-    }
-  };
-
-  const handleEditCustomer = async (formData: FormData) => {
-    const id = formData.get("id") as string;
-    if (!id) return;
-    setIsLoadingAction(true);
-    const payload = {
-      fullName: (formData.get("fullName") as string) ?? undefined,
-      phone: (formData.get("phone") as string) ?? undefined,
-      address: (formData.get("address") as string) ?? undefined,
-      customerType: (formData.get("customerType") as string) ?? undefined,
-    };
-
-    try {
-      await adminClient.updateCustomer(id, payload);
-      toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
-      setIsEditSheetOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setIsLoadingAction(false);
-    } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
-      setIsLoadingAction(false);
-    }
-  };
-
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    const successDescription = currentStatus ? "Đã chặn khách hàng" : "Đã mở chặn";
-
-    try {
-      await adminClient.toggleCustomerStatus(id, !currentStatus);
-      toast({
-        title: "Thành công",
-        description: successDescription,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
-    } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteCustomer = async () => {
-    const id = deletingCustomer?.id;
-    if (!id) return;
-    setIsLoadingAction(true);
-    try {
-      await adminClient.deleteCustomer(id);
-      toast({ title: "Thành công", description: "Đã xóa khách hàng" });
-      setDeletingCustomer(null);
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setIsLoadingAction(false);
-    } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
-      setIsLoadingAction(false);
-    }
-  };
-
-  // NOTE: handleResetPassword removed - customers don't have auth accounts
-
-  const stats = useMemo(() => {
-    return {
-      total: metadata?.total || 0,
-      active: 0, // Simplified
-      inactive: 0, // Simplified
-      totalSpent: customers.reduce((acc, curr) => acc + Number(curr.totalSpent || 0), 0),
-    };
-  }, [customers, metadata]);
-
-  const columns: ColumnDef<CustomerStatsItem>[] = [
+function getColumns({
+  onOpenEdit,
+  onSetDeleting,
+  onToggleStatus,
+}: GetColumnsArgs): ColumnDef<CustomerStatsItem>[] {
+  return [
     {
       accessorKey: "avatarUrl",
       header: () => <div className="text-center">Avatar</div>,
@@ -352,25 +233,19 @@ function AdminCustomersPageContent() {
                   <UserCheck className="text-primary h-4 w-4" /> Xem chi tiết
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="h-10 gap-2"
-                onClick={() => {
-                  setEditingCustomer(row.original);
-                  setIsEditSheetOpen(true);
-                }}
-              >
+              <DropdownMenuItem className="h-10 gap-2" onClick={() => onOpenEdit(row.original)}>
                 <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="h-10 gap-2 text-red-500 focus:bg-red-50 focus:text-red-500 dark:focus:bg-red-950/20"
-                onClick={() => handleToggleStatus(row.original.id, !!row.original.isActive)}
+                onClick={() => onToggleStatus(row.original.id, !!row.original.isActive)}
               >
                 <Ban className="h-4 w-4" /> {row.original.isActive ? "Chặn" : "Mở chặn"} khách hàng
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="h-10 gap-2 text-red-500 focus:bg-red-50 focus:text-red-500 dark:focus:bg-red-950/20"
-                onClick={() => setDeletingCustomer(row.original)}
+                onClick={() => onSetDeleting(row.original)}
               >
                 <Trash2 className="h-4 w-4" /> Xóa khách hàng
               </DropdownMenuItem>
@@ -380,6 +255,224 @@ function AdminCustomersPageContent() {
       ),
     },
   ];
+}
+
+type DeleteCustomerDialogProps = {
+  deletingCustomer: any | null;
+  isLoadingAction: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+function DeleteCustomerDialog({
+  deletingCustomer,
+  isLoadingAction,
+  onCancel,
+  onConfirm,
+}: DeleteCustomerDialogProps) {
+  return (
+    <AlertDialog open={!!deletingCustomer} onOpenChange={(open) => !open && onCancel()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Xóa khách hàng?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Bạn có chắc muốn xóa khách hàng <strong>{deletingCustomer?.fullName}</strong>? Hành động
+            này không thể hoàn tác.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isLoadingAction}>Hủy</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isLoadingAction}
+            className="bg-red-500 hover:bg-red-600"
+          >
+            {isLoadingAction ? "Đang xóa..." : "Xóa"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+export default function AdminCustomersPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <AdminCustomersPageContent />
+    </Suspense>
+  );
+}
+
+function AdminCustomersPageContent() {
+  "use no memo";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const searchTerm = searchParams.get("search") || "";
+  const statusFilter = searchParams.get("status") || "All";
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(
+    1,
+    parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
+  );
+
+  const [ui, dispatch] = useReducer(uiReducer, initialUIState);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["customers", searchTerm, statusFilter, page, limit],
+    queryFn: () =>
+      adminClient.getCustomers({
+        search: searchTerm,
+        status: statusFilter !== "All" ? statusFilter : undefined,
+        page,
+        limit,
+      }),
+    placeholderData: keepPreviousData,
+  });
+
+  const customers = data?.data || [];
+  const metadata = data?.metadata;
+
+  const updateParams = (newParams: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value.toString());
+      }
+    });
+
+    // Reset to page 1 if filters change
+    if (
+      (newParams.search !== undefined || newParams.status !== undefined) &&
+      newParams.page === undefined
+    ) {
+      params.set("page", "1");
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSearch = (val: string) => {
+    updateParams({ search: val });
+  };
+
+  const handleStatusFilterChange = (val: string) => {
+    updateParams({ status: val });
+  };
+
+  const handleAddCustomer = async (formData: FormData) => {
+    dispatch({ type: "SET_LOADING", payload: true });
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? "",
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? "retail",
+    };
+
+    try {
+      const res = await adminClient.createCustomer(payload);
+      toast({ title: "Thành công", description: "Đã tạo khách hàng mới" });
+      dispatch({ type: "CLOSE_ADD" });
+      dispatch({ type: "SHOW_CREDENTIALS", payload: { customerCode: res.profile.customerCode } });
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      dispatch({ type: "SET_LOADING", payload: false });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+      dispatch({ type: "SET_LOADING", payload: false });
+    }
+  };
+
+  const handleEditCustomer = async (formData: FormData) => {
+    const id = formData.get("id") as string;
+    if (!id) return;
+    dispatch({ type: "SET_LOADING", payload: true });
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? undefined,
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? undefined,
+    };
+
+    try {
+      await adminClient.updateCustomer(id, payload);
+      toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
+      dispatch({ type: "CLOSE_EDIT" });
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      dispatch({ type: "SET_LOADING", payload: false });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+      dispatch({ type: "SET_LOADING", payload: false });
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    const successDescription = currentStatus ? "Đã chặn khách hàng" : "Đã mở chặn";
+
+    try {
+      await adminClient.toggleCustomerStatus(id, !currentStatus);
+      toast({
+        title: "Thành công",
+        description: successDescription,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    const id = ui.deletingCustomer?.id;
+    if (!id) return;
+    dispatch({ type: "SET_LOADING", payload: true });
+    try {
+      await adminClient.deleteCustomer(id);
+      toast({ title: "Thành công", description: "Đã xóa khách hàng" });
+      dispatch({ type: "SET_DELETING", payload: null });
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      dispatch({ type: "SET_LOADING", payload: false });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+      dispatch({ type: "SET_LOADING", payload: false });
+    }
+  };
+
+  // NOTE: handleResetPassword removed - customers don't have auth accounts
+
+  const stats = useMemo(() => {
+    return {
+      total: metadata?.total || 0,
+      active: 0, // Simplified
+      inactive: 0, // Simplified
+      totalSpent: customers.reduce((acc, curr) => acc + Number(curr.totalSpent || 0), 0),
+    };
+  }, [customers, metadata]);
+
+  const columns = getColumns({
+    onOpenEdit: (customer) => dispatch({ type: "OPEN_EDIT", payload: customer }),
+    onSetDeleting: (customer) => dispatch({ type: "SET_DELETING", payload: customer }),
+    onToggleStatus: handleToggleStatus,
+  });
 
   return (
     <div className="flex flex-col gap-8">
@@ -395,9 +488,9 @@ function AdminCustomersPageContent() {
         </div>
 
         <CustomerAddSheet
-          isOpen={isAddSheetOpen}
-          onOpenChange={setIsAddSheetOpen}
-          isSubmitting={isLoadingAction}
+          isOpen={ui.isAddSheetOpen}
+          onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
+          isSubmitting={ui.isLoadingAction}
           onSubmit={handleAddCustomer}
         />
       </div>
@@ -534,41 +627,30 @@ function AdminCustomersPageContent() {
 
       {/* Edit Customer Sheet */}
       <CustomerEditSheet
-        isOpen={isEditSheetOpen}
-        onOpenChange={setIsEditSheetOpen}
-        customer={editingCustomer}
-        isSubmitting={isLoadingAction}
+        isOpen={ui.isEditSheetOpen}
+        onOpenChange={(open) =>
+          open
+            ? dispatch({ type: "OPEN_EDIT", payload: ui.editingCustomer })
+            : dispatch({ type: "CLOSE_EDIT" })
+        }
+        customer={ui.editingCustomer}
+        isSubmitting={ui.isLoadingAction}
         onSubmit={handleEditCustomer}
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deletingCustomer}
-        onOpenChange={(open) => !open && setDeletingCustomer(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xóa khách hàng?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc muốn xóa khách hàng <strong>{deletingCustomer?.fullName}</strong>? Hành
-              động này không thể hoàn tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoadingAction}>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteCustomer}
-              disabled={isLoadingAction}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              {isLoadingAction ? "Đang xóa..." : "Xóa"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteCustomerDialog
+        deletingCustomer={ui.deletingCustomer}
+        isLoadingAction={ui.isLoadingAction}
+        onCancel={() => dispatch({ type: "SET_DELETING", payload: null })}
+        onConfirm={handleDeleteCustomer}
+      />
 
       {/* Credentials Dialog */}
-      <Dialog open={!!showCredentials} onOpenChange={() => setShowCredentials(null)}>
+      <Dialog
+        open={!!ui.showCredentials}
+        onOpenChange={() => dispatch({ type: "HIDE_CREDENTIALS" })}
+      >
         <DialogContent className="rounded-[2rem] border-none shadow-2xl sm:max-w-md">
           <DialogHeader className="items-center space-y-4 pt-4 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30">
@@ -586,13 +668,13 @@ function AdminCustomersPageContent() {
               </p>
               <div className="flex items-center justify-between">
                 <p className="text-lg font-black text-slate-900 dark:text-white">
-                  {showCredentials?.customerCode}
+                  {ui.showCredentials?.customerCode}
                 </p>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(showCredentials?.customerCode);
+                    navigator.clipboard.writeText(ui.showCredentials?.customerCode);
                     toast({ title: "Copied!", duration: 1000 });
                   }}
                 >

@@ -65,10 +65,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
         <TableBody>
           {suppliers.length > 0 ? (
             suppliers.map((supplier) => (
-              <TableRow
-                key={supplier.id}
-                className="group transition-colors"
-              >
+              <TableRow key={supplier.id} className="group transition-colors">
                 <TableCell className="py-4">
                   <Badge variant="outline" className="text-xs font-black uppercase">
                     {supplier.code}

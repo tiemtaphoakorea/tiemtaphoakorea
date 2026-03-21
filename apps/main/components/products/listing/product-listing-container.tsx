@@ -1,9 +1,9 @@
 "use client";
 
-import type { ProductListItem } from "@repo/database/services/product.server";
-import { PRODUCT_SORT } from "@repo/shared/constants";
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import type { ProductSort } from "@repo/shared/types/product";
+import type { ProductListItem } from "@workspace/database/services/product.server";
+import { PRODUCT_SORT } from "@workspace/shared/constants";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import type { ProductSort } from "@workspace/shared/types/product";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProductListing } from "@/components/products/listing/product-listing";
@@ -90,14 +90,6 @@ export function ProductListingContainer({
 
   const handleResetFilters = () => {
     router.push(PUBLIC_ROUTES.PRODUCTS);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    const params = buildParams();
-    params.set("pageSize", String(size));
-    params.delete("page");
-    const query = params.toString();
-    router.push(query ? `${PUBLIC_ROUTES.PRODUCTS}?${query}` : PUBLIC_ROUTES.PRODUCTS);
   };
 
   return (

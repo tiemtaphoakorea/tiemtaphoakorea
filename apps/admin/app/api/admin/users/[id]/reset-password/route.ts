@@ -1,8 +1,8 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { resetUserPassword } from "@repo/database/services/user.server";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { resetUserPassword } from "@workspace/database/services/user.server";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {

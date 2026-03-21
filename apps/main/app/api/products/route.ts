@@ -1,7 +1,7 @@
-import { getProductsForListing } from "@repo/database/services/product.server";
-import { PRODUCT_SORT } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
-import type { ProductSort } from "@repo/shared/types/product";
+import { getProductsForListing } from "@workspace/database/services/product.server";
+import { PRODUCT_SORT } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
+import type { ProductSort } from "@workspace/shared/types/product";
 import { type NextRequest, NextResponse } from "next/server";
 
 const PRODUCT_SORT_SET = new Set<string>(Object.values(PRODUCT_SORT));

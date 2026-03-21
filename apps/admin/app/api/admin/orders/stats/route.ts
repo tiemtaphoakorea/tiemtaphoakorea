@@ -1,6 +1,6 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { getOrderStats } from "@repo/database/services/order.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { getOrderStats } from "@workspace/database/services/order.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

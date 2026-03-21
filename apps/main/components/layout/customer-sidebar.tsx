@@ -1,12 +1,12 @@
-import { ACCOUNT_ROUTES, PUBLIC_ROUTES } from "@repo/shared/routes";
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
+import { ACCOUNT_ROUTES, PUBLIC_ROUTES } from "@workspace/shared/routes";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Separator } from "@repo/ui/components/separator";
+} from "@workspace/ui/components/dropdown-menu";
+import { Separator } from "@workspace/ui/components/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -18,7 +18,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@repo/ui/components/sidebar";
+} from "@workspace/ui/components/sidebar";
 import {
   ChevronRight,
   LayoutDashboard,

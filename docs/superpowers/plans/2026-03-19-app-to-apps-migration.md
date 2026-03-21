@@ -4,7 +4,7 @@
 
 **Goal:** Complete the monorepo split — move all routes, components, services, and hooks from the root `app/` into `apps/admin/` and `apps/main/`, fix broken package imports, and clean up the old root directories.
 
-**Architecture:** The repo is a Turborepo monorepo with `apps/admin` (Next.js, port 3001), `apps/main` (Next.js, port 3000), and shared `packages/database`, `packages/shared`, `packages/ui`. All cross-app code lives in packages; app-specific code lives in the respective app. `@/` paths resolve to the app root; `@repo/*` paths resolve to packages.
+**Architecture:** The repo is a Turborepo monorepo with `apps/admin` (Next.js, port 3001), `apps/main` (Next.js, port 3000), and shared `packages/database`, `packages/shared`, `packages/ui`. All cross-app code lives in packages; app-specific code lives in the respective app. `@/` paths resolve to the app root; `@workspace/*` paths resolve to packages.
 
 **Tech Stack:** Next.js 16, TypeScript, Turborepo, Drizzle ORM, Supabase, Tailwind CSS v4, Biome
 
@@ -14,29 +14,30 @@
 
 When copying files to apps, update these `@/lib/...` and `@/services/...` imports:
 
-| Old (root) | New (monorepo) |
-|---|---|
-| `@/lib/constants` | `@repo/shared/constants` |
-| `@/lib/routes` | `@repo/shared/routes` |
-| `@/lib/utils` | `@repo/shared/utils` |
-| `@/lib/api-endpoints` | `@repo/shared/api-endpoints` |
-| `@/lib/schemas` | `@repo/shared/schemas` |
-| `@/lib/http-status` | `@repo/shared/http-status` |
-| `@/lib/pagination` | `@repo/shared/pagination` |
-| `@/lib/analytics` | `@repo/shared/analytics` |
-| `@/lib/security.server` | `@repo/database/lib/security` |
-| `@/lib/auth.server` | `@repo/database/lib/auth` |
-| `@/lib/db-locking` | `@repo/database/lib/db-locking` |
-| `@/lib/idempotency` | `@repo/database/lib/idempotency` |
-| `@/lib/supabase/server` | `@repo/database/lib/supabase/server` |
-| `@/lib/supabase/admin` | `@repo/database/lib/supabase/admin` |
-| `@/lib/supabase/client` | `@repo/database/lib/supabase/client` |
-| `@/lib/api-client` | `@repo/shared` |
-| `@/services/*.server` | `@repo/database/services/*.server` |
-| `@/types/*` | `@repo/shared/types/*` |
-| `@/components/ui/*` | `@repo/ui/components/*` |
+| Old (root)              | New (monorepo)                            |
+| ----------------------- | ----------------------------------------- |
+| `@/lib/constants`       | `@workspace/shared/constants`             |
+| `@/lib/routes`          | `@workspace/shared/routes`                |
+| `@/lib/utils`           | `@workspace/shared/utils`                 |
+| `@/lib/api-endpoints`   | `@workspace/shared/api-endpoints`         |
+| `@/lib/schemas`         | `@workspace/shared/schemas`               |
+| `@/lib/http-status`     | `@workspace/shared/http-status`           |
+| `@/lib/pagination`      | `@workspace/shared/pagination`            |
+| `@/lib/analytics`       | `@workspace/shared/analytics`             |
+| `@/lib/security.server` | `@workspace/database/lib/security`        |
+| `@/lib/auth.server`     | `@workspace/database/lib/auth`            |
+| `@/lib/db-locking`      | `@workspace/database/lib/db-locking`      |
+| `@/lib/idempotency`     | `@workspace/database/lib/idempotency`     |
+| `@/lib/supabase/server` | `@workspace/database/lib/supabase/server` |
+| `@/lib/supabase/admin`  | `@workspace/database/lib/supabase/admin`  |
+| `@/lib/supabase/client` | `@workspace/database/lib/supabase/client` |
+| `@/lib/api-client`      | `@workspace/shared`                       |
+| `@/services/*.server`   | `@workspace/database/services/*.server`   |
+| `@/types/*`             | `@workspace/shared/types/*`               |
+| `@/components/ui/*`     | `@workspace/ui/components/*`              |
 
 These stay as `@/` (within-app imports, after files are moved to their app):
+
 - `@/components/admin/*` — in admin app
 - `@/components/layout/admin-sidebar` — in admin app
 - `@/components/image-uploader` — in admin app
@@ -51,6 +52,7 @@ These stay as `@/` (within-app imports, after files are moved to their app):
 ## Task 1: Add api-client to packages/shared
 
 **Files:**
+
 - Create: `packages/shared/src/api-client.ts`
 - Modify: `packages/shared/package.json`
 
@@ -70,6 +72,7 @@ Everything else stays the same.
 - [ ] **Step 2: Add export to `packages/shared/package.json`**
 
 Add to the `exports` object:
+
 ```json
 "./api-client": "./src/api-client.ts"
 ```
@@ -87,6 +90,7 @@ git commit -m "feat: add api-client to packages/shared"
 ## Task 2: Fix packages/database — add supabase browser client
 
 **Files:**
+
 - Create: `packages/database/src/lib/supabase/client.ts`
 - Modify: `packages/database/package.json`
 
@@ -97,6 +101,7 @@ File has no internal `@/` imports — copy as-is.
 - [ ] **Step 2: Add export to `packages/database/package.json`**
 
 The `"./lib/*"` wildcard already covers it — no change needed. Verify the exports section includes:
+
 ```json
 "./lib/*": "./src/lib/*.ts"
 ```
@@ -116,6 +121,7 @@ The `packages/ui/src/components/sidebar.tsx` has a broken `@/hooks/useMobile` im
 The `packages/ui/src/components/image-uploader.tsx` has broken `@/lib/*` imports — this component is admin-only, so remove it from packages/ui.
 
 **Files:**
+
 - Create: `packages/ui/src/hooks/useMobile.ts`
 - Modify: `packages/ui/src/components/sidebar.tsx`
 - Delete: `packages/ui/src/components/image-uploader.tsx`
@@ -153,11 +159,13 @@ git commit -m "fix: move useMobile to packages/ui hooks, remove misplaced image-
 ## Task 4: Update root package.json for workspace
 
 **Files:**
+
 - Modify: `package.json` (root)
 
 - [ ] **Step 1: Add workspaces field to root `package.json`**
 
 Add after the `"private": true` line:
+
 ```json
 "workspaces": ["apps/*", "packages/*"],
 ```
@@ -165,6 +173,7 @@ Add after the `"private": true` line:
 - [ ] **Step 2: Update scripts to use turbo**
 
 Replace the `"dev"`, `"build"`, `"start"` scripts with turbo equivalents:
+
 ```json
 "dev": "turbo dev",
 "build": "turbo build",
@@ -175,6 +184,7 @@ Replace the `"dev"`, `"build"`, `"start"` scripts with turbo equivalents:
 ```
 
 Keep these root-level scripts (they reference root-level tools):
+
 ```json
 "db:generate": "drizzle-kit generate",
 "db:migrate": "drizzle-kit migrate",
@@ -208,9 +218,10 @@ git commit -m "feat: configure root package.json as workspace root"
 The admin app needs its full Next.js route structure. Source files come from root `app/admin/` and `app/api/admin/`.
 
 **Mapping:**
+
 - `app/admin/(dashboard)/` → `apps/admin/app/(dashboard)/`
 - `app/admin/(public)/` → `apps/admin/app/(public)/`
-- `app/api/admin/` → `apps/admin/app/api/` *(strip the `/admin` prefix — the app IS admin)*
+- `app/api/admin/` → `apps/admin/app/api/` _(strip the `/admin` prefix — the app IS admin)_
 - `app/layout.tsx` → `apps/admin/app/layout.tsx` (copy as-is, update component imports)
 - `app/globals.css` → `apps/admin/app/globals.css`
 
@@ -231,13 +242,14 @@ cp "$ROOT/app/globals.css" "$ROOT/apps/admin/app/globals.css"
 // Change:
 import { Toaster } from "@/components/ui/toaster";
 // To:
-import { Toaster } from "@repo/ui/components/toaster";
+import { Toaster } from "@workspace/ui/components/toaster";
 // Also remove the css import line:
 // import "./globals.css";
 // And add:
 import "./globals.css";
 ```
-*(The globals.css import stays the same — it references the local file)*
+
+_(The globals.css import stays the same — it references the local file)_
 
 - [ ] **Step 3: Bulk-update `@/lib/*` and `@/services/*.server` imports in all copied admin app files**
 
@@ -246,52 +258,52 @@ Run these sed commands from the repo root to update the copied files:
 ```bash
 ADMIN_APP=apps/admin/app
 
-# lib/* → @repo/shared/*
+# lib/* → @workspace/shared/*
 find "$ADMIN_APP" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/constants"|from "@repo/shared/constants"|g' \
-  -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-  -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-  -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-  -e 's|from "@/lib/schemas"|from "@repo/shared/schemas"|g' \
-  -e 's|from "@/lib/http-status"|from "@repo/shared/http-status"|g' \
-  -e 's|from "@/lib/pagination"|from "@repo/shared/pagination"|g' \
-  -e 's|from "@/lib/analytics"|from "@repo/shared/analytics"|g' \
-  -e 's|from "@/lib/api-client"|from "@repo/shared/api-client"|g'
+  -e 's|from "@/lib/constants"|from "@workspace/shared/constants"|g' \
+  -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+  -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+  -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+  -e 's|from "@/lib/schemas"|from "@workspace/shared/schemas"|g' \
+  -e 's|from "@/lib/http-status"|from "@workspace/shared/http-status"|g' \
+  -e 's|from "@/lib/pagination"|from "@workspace/shared/pagination"|g' \
+  -e 's|from "@/lib/analytics"|from "@workspace/shared/analytics"|g' \
+  -e 's|from "@/lib/api-client"|from "@workspace/shared/api-client"|g'
 
-# lib/security*, lib/auth*, lib/supabase/* → @repo/database/lib/*
+# lib/security*, lib/auth*, lib/supabase/* → @workspace/database/lib/*
 find "$ADMIN_APP" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/security.server"|from "@repo/database/lib/security"|g' \
-  -e 's|from "@/lib/auth.server"|from "@repo/database/lib/auth"|g' \
-  -e 's|from "@/lib/db-locking"|from "@repo/database/lib/db-locking"|g' \
-  -e 's|from "@/lib/idempotency"|from "@repo/database/lib/idempotency"|g' \
-  -e 's|from "@/lib/supabase/server"|from "@repo/database/lib/supabase/server"|g' \
-  -e 's|from "@/lib/supabase/admin"|from "@repo/database/lib/supabase/admin"|g' \
-  -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g'
+  -e 's|from "@/lib/security.server"|from "@workspace/database/lib/security"|g' \
+  -e 's|from "@/lib/auth.server"|from "@workspace/database/lib/auth"|g' \
+  -e 's|from "@/lib/db-locking"|from "@workspace/database/lib/db-locking"|g' \
+  -e 's|from "@/lib/idempotency"|from "@workspace/database/lib/idempotency"|g' \
+  -e 's|from "@/lib/supabase/server"|from "@workspace/database/lib/supabase/server"|g' \
+  -e 's|from "@/lib/supabase/admin"|from "@workspace/database/lib/supabase/admin"|g' \
+  -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g'
 
-# services/*.server → @repo/database/services/*.server
+# services/*.server → @workspace/database/services/*.server
 find "$ADMIN_APP" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/services/analytics.server"|from "@repo/database/services/analytics.server"|g' \
-  -e 's|from "@/services/category.server"|from "@repo/database/services/category.server"|g' \
-  -e 's|from "@/services/chat.server"|from "@repo/database/services/chat.server"|g' \
-  -e 's|from "@/services/customer.server"|from "@repo/database/services/customer.server"|g' \
-  -e 's|from "@/services/dashboard.server"|from "@repo/database/services/dashboard.server"|g' \
-  -e 's|from "@/services/finance.server"|from "@repo/database/services/finance.server"|g' \
-  -e 's|from "@/services/guest.server"|from "@repo/database/services/guest.server"|g' \
-  -e 's|from "@/services/order-split.server"|from "@repo/database/services/order-split.server"|g' \
-  -e 's|from "@/services/order.server"|from "@repo/database/services/order.server"|g' \
-  -e 's|from "@/services/product.server"|from "@repo/database/services/product.server"|g' \
-  -e 's|from "@/services/storage.server"|from "@repo/database/services/storage.server"|g' \
-  -e 's|from "@/services/supplier-management.server"|from "@repo/database/services/supplier-management.server"|g' \
-  -e 's|from "@/services/supplier.server"|from "@repo/database/services/supplier.server"|g' \
-  -e 's|from "@/services/user.server"|from "@repo/database/services/user.server"|g'
+  -e 's|from "@/services/analytics.server"|from "@workspace/database/services/analytics.server"|g' \
+  -e 's|from "@/services/category.server"|from "@workspace/database/services/category.server"|g' \
+  -e 's|from "@/services/chat.server"|from "@workspace/database/services/chat.server"|g' \
+  -e 's|from "@/services/customer.server"|from "@workspace/database/services/customer.server"|g' \
+  -e 's|from "@/services/dashboard.server"|from "@workspace/database/services/dashboard.server"|g' \
+  -e 's|from "@/services/finance.server"|from "@workspace/database/services/finance.server"|g' \
+  -e 's|from "@/services/guest.server"|from "@workspace/database/services/guest.server"|g' \
+  -e 's|from "@/services/order-split.server"|from "@workspace/database/services/order-split.server"|g' \
+  -e 's|from "@/services/order.server"|from "@workspace/database/services/order.server"|g' \
+  -e 's|from "@/services/product.server"|from "@workspace/database/services/product.server"|g' \
+  -e 's|from "@/services/storage.server"|from "@workspace/database/services/storage.server"|g' \
+  -e 's|from "@/services/supplier-management.server"|from "@workspace/database/services/supplier-management.server"|g' \
+  -e 's|from "@/services/supplier.server"|from "@workspace/database/services/supplier.server"|g' \
+  -e 's|from "@/services/user.server"|from "@workspace/database/services/user.server"|g'
 
-# components/ui/* → @repo/ui/components/*
+# components/ui/* → @workspace/ui/components/*
 find "$ADMIN_APP" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/components/ui/|from "@repo/ui/components/|g'
+  -e 's|from "@/components/ui/|from "@workspace/ui/components/|g'
 
-# types/* → @repo/shared/types/*
+# types/* → @workspace/shared/types/*
 find "$ADMIN_APP" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/types/|from "@repo/shared/types/|g'
+  -e 's|from "@/types/|from "@workspace/shared/types/|g'
 ```
 
 - [ ] **Step 4: Verify no stale `@/lib/` or `@/services/*.server` or `@/types/` imports remain in admin app**
@@ -316,6 +328,7 @@ git commit -m "feat: add admin routes to apps/admin/app/"
 ## Task 6: Move admin components to apps/admin/
 
 **Files:**
+
 - Create: `apps/admin/components/admin/` (all files from root `components/admin/`)
 - Create: `apps/admin/components/layout/admin-sidebar.tsx`
 - Create: `apps/admin/components/image-uploader.tsx`
@@ -336,24 +349,24 @@ cp "$ROOT/components/image-uploader.tsx" "$ROOT/apps/admin/components/image-uplo
 ADMIN_COMPS=apps/admin/components
 
 find "$ADMIN_COMPS" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/constants"|from "@repo/shared/constants"|g' \
-  -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-  -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-  -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-  -e 's|from "@/lib/schemas"|from "@repo/shared/schemas"|g' \
-  -e 's|from "@/lib/http-status"|from "@repo/shared/http-status"|g' \
-  -e 's|from "@/lib/pagination"|from "@repo/shared/pagination"|g' \
-  -e 's|from "@/lib/api-client"|from "@repo/shared/api-client"|g' \
-  -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g' \
-  -e 's|from "@/services/analytics.server"|from "@repo/database/services/analytics.server"|g' \
-  -e 's|from "@/services/category.server"|from "@repo/database/services/category.server"|g' \
-  -e 's|from "@/services/chat.server"|from "@repo/database/services/chat.server"|g' \
-  -e 's|from "@/services/customer.server"|from "@repo/database/services/customer.server"|g' \
-  -e 's|from "@/services/order.server"|from "@repo/database/services/order.server"|g' \
-  -e 's|from "@/services/product.server"|from "@repo/database/services/product.server"|g' \
-  -e 's|from "@/services/supplier.server"|from "@repo/database/services/supplier.server"|g' \
-  -e 's|from "@/components/ui/|from "@repo/ui/components/|g' \
-  -e 's|from "@/types/|from "@repo/shared/types/|g'
+  -e 's|from "@/lib/constants"|from "@workspace/shared/constants"|g' \
+  -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+  -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+  -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+  -e 's|from "@/lib/schemas"|from "@workspace/shared/schemas"|g' \
+  -e 's|from "@/lib/http-status"|from "@workspace/shared/http-status"|g' \
+  -e 's|from "@/lib/pagination"|from "@workspace/shared/pagination"|g' \
+  -e 's|from "@/lib/api-client"|from "@workspace/shared/api-client"|g' \
+  -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g' \
+  -e 's|from "@/services/analytics.server"|from "@workspace/database/services/analytics.server"|g' \
+  -e 's|from "@/services/category.server"|from "@workspace/database/services/category.server"|g' \
+  -e 's|from "@/services/chat.server"|from "@workspace/database/services/chat.server"|g' \
+  -e 's|from "@/services/customer.server"|from "@workspace/database/services/customer.server"|g' \
+  -e 's|from "@/services/order.server"|from "@workspace/database/services/order.server"|g' \
+  -e 's|from "@/services/product.server"|from "@workspace/database/services/product.server"|g' \
+  -e 's|from "@/services/supplier.server"|from "@workspace/database/services/supplier.server"|g' \
+  -e 's|from "@/components/ui/|from "@workspace/ui/components/|g' \
+  -e 's|from "@/types/|from "@workspace/shared/types/|g'
 ```
 
 - [ ] **Step 3: Verify**
@@ -377,6 +390,7 @@ git commit -m "feat: move admin components to apps/admin/"
 ## Task 7: Move admin services to apps/admin/
 
 **Files:**
+
 - Create: `apps/admin/services/admin.client.ts`
 
 - [ ] **Step 1: Copy `services/admin.client.ts`**
@@ -393,7 +407,7 @@ cp "$ROOT/services/admin.client.ts" "$ROOT/apps/admin/services/admin.client.ts"
 // Change:
 import { axios } from "@/lib/api-client";
 // To:
-import { axios } from "@repo/shared/api-client";
+import { axios } from "@workspace/shared/api-client";
 ```
 
 Also update any other `@/lib/*` imports following the reference table.
@@ -410,6 +424,7 @@ git commit -m "feat: move admin.client.ts to apps/admin/services/"
 ## Task 8: Complete apps/main/app/ — add API routes and fix imports
 
 **Files:**
+
 - Create: `apps/main/app/api/chat/` (from `app/api/chat/`)
 - Create: `apps/main/app/api/products/` (from `app/api/products/`)
 - Create: `apps/main/app/api/upload/` (from `app/api/upload/`)
@@ -435,29 +450,29 @@ cp "$ROOT/app/not-found.tsx" "$ROOT/apps/main/app/not-found.tsx"
 MAIN_API=apps/main/app/api
 
 find "$MAIN_API" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/constants"|from "@repo/shared/constants"|g' \
-  -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-  -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-  -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-  -e 's|from "@/lib/schemas"|from "@repo/shared/schemas"|g' \
-  -e 's|from "@/lib/http-status"|from "@repo/shared/http-status"|g' \
-  -e 's|from "@/lib/pagination"|from "@repo/shared/pagination"|g' \
-  -e 's|from "@/lib/security.server"|from "@repo/database/lib/security"|g' \
-  -e 's|from "@/lib/auth.server"|from "@repo/database/lib/auth"|g' \
-  -e 's|from "@/lib/db-locking"|from "@repo/database/lib/db-locking"|g' \
-  -e 's|from "@/lib/idempotency"|from "@repo/database/lib/idempotency"|g' \
-  -e 's|from "@/lib/supabase/server"|from "@repo/database/lib/supabase/server"|g' \
-  -e 's|from "@/lib/supabase/admin"|from "@repo/database/lib/supabase/admin"|g' \
-  -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g' \
-  -e 's|from "@/services/analytics.server"|from "@repo/database/services/analytics.server"|g' \
-  -e 's|from "@/services/category.server"|from "@repo/database/services/category.server"|g' \
-  -e 's|from "@/services/chat.server"|from "@repo/database/services/chat.server"|g' \
-  -e 's|from "@/services/customer.server"|from "@repo/database/services/customer.server"|g' \
-  -e 's|from "@/services/order.server"|from "@repo/database/services/order.server"|g' \
-  -e 's|from "@/services/product.server"|from "@repo/database/services/product.server"|g' \
-  -e 's|from "@/services/storage.server"|from "@repo/database/services/storage.server"|g' \
-  -e 's|from "@/services/guest.server"|from "@repo/database/services/guest.server"|g' \
-  -e 's|from "@/types/|from "@repo/shared/types/|g'
+  -e 's|from "@/lib/constants"|from "@workspace/shared/constants"|g' \
+  -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+  -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+  -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+  -e 's|from "@/lib/schemas"|from "@workspace/shared/schemas"|g' \
+  -e 's|from "@/lib/http-status"|from "@workspace/shared/http-status"|g' \
+  -e 's|from "@/lib/pagination"|from "@workspace/shared/pagination"|g' \
+  -e 's|from "@/lib/security.server"|from "@workspace/database/lib/security"|g' \
+  -e 's|from "@/lib/auth.server"|from "@workspace/database/lib/auth"|g' \
+  -e 's|from "@/lib/db-locking"|from "@workspace/database/lib/db-locking"|g' \
+  -e 's|from "@/lib/idempotency"|from "@workspace/database/lib/idempotency"|g' \
+  -e 's|from "@/lib/supabase/server"|from "@workspace/database/lib/supabase/server"|g' \
+  -e 's|from "@/lib/supabase/admin"|from "@workspace/database/lib/supabase/admin"|g' \
+  -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g' \
+  -e 's|from "@/services/analytics.server"|from "@workspace/database/services/analytics.server"|g' \
+  -e 's|from "@/services/category.server"|from "@workspace/database/services/category.server"|g' \
+  -e 's|from "@/services/chat.server"|from "@workspace/database/services/chat.server"|g' \
+  -e 's|from "@/services/customer.server"|from "@workspace/database/services/customer.server"|g' \
+  -e 's|from "@/services/order.server"|from "@workspace/database/services/order.server"|g' \
+  -e 's|from "@/services/product.server"|from "@workspace/database/services/product.server"|g' \
+  -e 's|from "@/services/storage.server"|from "@workspace/database/services/storage.server"|g' \
+  -e 's|from "@/services/guest.server"|from "@workspace/database/services/guest.server"|g' \
+  -e 's|from "@/types/|from "@workspace/shared/types/|g'
 ```
 
 - [ ] **Step 3: Fix imports in existing apps/main/app pages (already copied but with stale imports)**
@@ -467,22 +482,22 @@ MAIN_APP_PAGES=apps/main/app
 
 # Apply same bulk replacements to pre-existing pages
 find "$MAIN_APP_PAGES" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/constants"|from "@repo/shared/constants"|g' \
-  -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-  -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-  -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-  -e 's|from "@/lib/schemas"|from "@repo/shared/schemas"|g' \
-  -e 's|from "@/lib/http-status"|from "@repo/shared/http-status"|g' \
-  -e 's|from "@/lib/pagination"|from "@repo/shared/pagination"|g' \
-  -e 's|from "@/lib/supabase/server"|from "@repo/database/lib/supabase/server"|g' \
-  -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g' \
-  -e 's|from "@/services/analytics.server"|from "@repo/database/services/analytics.server"|g' \
-  -e 's|from "@/services/category.server"|from "@repo/database/services/category.server"|g' \
-  -e 's|from "@/services/product.server"|from "@repo/database/services/product.server"|g' \
-  -e 's|from "@/services/order.server"|from "@repo/database/services/order.server"|g' \
-  -e 's|from "@/services/guest.server"|from "@repo/database/services/guest.server"|g' \
-  -e 's|from "@/components/ui/|from "@repo/ui/components/|g' \
-  -e 's|from "@/types/|from "@repo/shared/types/|g'
+  -e 's|from "@/lib/constants"|from "@workspace/shared/constants"|g' \
+  -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+  -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+  -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+  -e 's|from "@/lib/schemas"|from "@workspace/shared/schemas"|g' \
+  -e 's|from "@/lib/http-status"|from "@workspace/shared/http-status"|g' \
+  -e 's|from "@/lib/pagination"|from "@workspace/shared/pagination"|g' \
+  -e 's|from "@/lib/supabase/server"|from "@workspace/database/lib/supabase/server"|g' \
+  -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g' \
+  -e 's|from "@/services/analytics.server"|from "@workspace/database/services/analytics.server"|g' \
+  -e 's|from "@/services/category.server"|from "@workspace/database/services/category.server"|g' \
+  -e 's|from "@/services/product.server"|from "@workspace/database/services/product.server"|g' \
+  -e 's|from "@/services/order.server"|from "@workspace/database/services/order.server"|g' \
+  -e 's|from "@/services/guest.server"|from "@workspace/database/services/guest.server"|g' \
+  -e 's|from "@/components/ui/|from "@workspace/ui/components/|g' \
+  -e 's|from "@/types/|from "@workspace/shared/types/|g'
 ```
 
 - [ ] **Step 4: Verify**
@@ -507,6 +522,7 @@ git commit -m "feat: add missing API routes to apps/main and fix import paths"
 ## Task 9: Move main app components to apps/main/
 
 **Files:**
+
 - Create: `apps/main/components/account/`
 - Create: `apps/main/components/products/`
 - Create: `apps/main/components/sections/`
@@ -535,20 +551,20 @@ cp "$ROOT/components/layout/social-icon.tsx" "$ROOT/apps/main/components/layout/
 MAIN_COMPS=apps/main/components
 
 find "$MAIN_COMPS" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-  -e 's|from "@/lib/constants"|from "@repo/shared/constants"|g' \
-  -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-  -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-  -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-  -e 's|from "@/lib/schemas"|from "@repo/shared/schemas"|g' \
-  -e 's|from "@/lib/http-status"|from "@repo/shared/http-status"|g' \
-  -e 's|from "@/lib/pagination"|from "@repo/shared/pagination"|g' \
-  -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g' \
-  -e 's|from "@/services/analytics.server"|from "@repo/database/services/analytics.server"|g' \
-  -e 's|from "@/services/category.server"|from "@repo/database/services/category.server"|g' \
-  -e 's|from "@/services/product.server"|from "@repo/database/services/product.server"|g' \
-  -e 's|from "@/services/order.server"|from "@repo/database/services/order.server"|g' \
-  -e 's|from "@/components/ui/|from "@repo/ui/components/|g' \
-  -e 's|from "@/types/|from "@repo/shared/types/|g'
+  -e 's|from "@/lib/constants"|from "@workspace/shared/constants"|g' \
+  -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+  -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+  -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+  -e 's|from "@/lib/schemas"|from "@workspace/shared/schemas"|g' \
+  -e 's|from "@/lib/http-status"|from "@workspace/shared/http-status"|g' \
+  -e 's|from "@/lib/pagination"|from "@workspace/shared/pagination"|g' \
+  -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g' \
+  -e 's|from "@/services/analytics.server"|from "@workspace/database/services/analytics.server"|g' \
+  -e 's|from "@/services/category.server"|from "@workspace/database/services/category.server"|g' \
+  -e 's|from "@/services/product.server"|from "@workspace/database/services/product.server"|g' \
+  -e 's|from "@/services/order.server"|from "@workspace/database/services/order.server"|g' \
+  -e 's|from "@/components/ui/|from "@workspace/ui/components/|g' \
+  -e 's|from "@/types/|from "@workspace/shared/types/|g'
 ```
 
 - [ ] **Step 3: Verify**
@@ -572,6 +588,7 @@ git commit -m "feat: move main components to apps/main/"
 ## Task 10: Move main services and hooks to apps/main/
 
 **Files:**
+
 - Create: `apps/main/services/chat.client.ts`
 - Create: `apps/main/hooks/use-chat-scroll.tsx`
 - Create: `apps/main/hooks/use-realtime-chat.tsx`
@@ -598,12 +615,12 @@ MAIN_HOOKS=apps/main/hooks
 
 for dir in "$MAIN_SVC" "$MAIN_HOOKS"; do
   find "$dir" -name "*.ts" -o -name "*.tsx" | xargs sed -i '' \
-    -e 's|from "@/lib/api-client"|from "@repo/shared/api-client"|g' \
-    -e 's|from "@/lib/api-endpoints"|from "@repo/shared/api-endpoints"|g' \
-    -e 's|from "@/lib/routes"|from "@repo/shared/routes"|g' \
-    -e 's|from "@/lib/utils"|from "@repo/shared/utils"|g' \
-    -e 's|from "@/lib/supabase/client"|from "@repo/database/lib/supabase/client"|g' \
-    -e 's|from "@/types/|from "@repo/shared/types/|g'
+    -e 's|from "@/lib/api-client"|from "@workspace/shared/api-client"|g' \
+    -e 's|from "@/lib/api-endpoints"|from "@workspace/shared/api-endpoints"|g' \
+    -e 's|from "@/lib/routes"|from "@workspace/shared/routes"|g' \
+    -e 's|from "@/lib/utils"|from "@workspace/shared/utils"|g' \
+    -e 's|from "@/lib/supabase/client"|from "@workspace/database/lib/supabase/client"|g' \
+    -e 's|from "@/types/|from "@workspace/shared/types/|g'
 done
 ```
 
@@ -661,7 +678,7 @@ Keep at root (still needed): `vitest.config.ts`, `playwright.config.ts`, `biome.
 grep -r 'from "@/lib/\|from "@/services/\|from "@/components/\|from "@/hooks/' tests/ | grep -v "node_modules" | head -20
 ```
 
-If test imports are found, update them to use `@repo/database`, `@repo/shared`, or `@repo/ui` paths. Tests using `@/services/*.server` → `@repo/database/services/*.server`, etc.
+If test imports are found, update them to use `@workspace/database`, `@workspace/shared`, or `@workspace/ui` paths. Tests using `@/services/*.server` → `@workspace/database/services/*.server`, etc.
 
 - [ ] **Step 4: Commit**
 

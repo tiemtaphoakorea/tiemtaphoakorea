@@ -1,21 +1,21 @@
 "use client";
 
-import { PAGINATION_DEFAULT } from "@repo/shared/pagination";
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
-import { DataTable } from "@repo/ui/components/data-table";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
+import { DataTable } from "@workspace/ui/components/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Input } from "@repo/ui/components/input";
-import { useToast } from "@repo/ui/components/use-toast";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
+import { useToast } from "@workspace/ui/components/use-toast";
 import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";

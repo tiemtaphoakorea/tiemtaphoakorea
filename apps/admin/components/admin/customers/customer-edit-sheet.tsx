@@ -1,16 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type CustomerFormValues, customerSchema, objectToFormData } from "@repo/shared/schemas";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import {
+  type CustomerFormValues,
+  customerSchema,
+  objectToFormData,
+} from "@workspace/shared/schemas";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -18,8 +22,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
-import { useEffect } from "react";
+} from "@workspace/ui/components/sheet";
 import { Controller, useForm } from "react-hook-form";
 
 interface CustomerEditSheetProps {
@@ -41,31 +44,18 @@ export function CustomerEditSheet({
     register,
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      address: "",
-      customerType: "retail",
-    },
+    values: customer
+      ? {
+          fullName: customer.fullName ?? "",
+          phone: customer.phone ?? "",
+          address: customer.address ?? "",
+          customerType: (customer.customerType as "retail" | "wholesale") ?? "retail",
+        }
+      : { fullName: "", phone: "", address: "", customerType: "retail" },
   });
-
-  // The `customer` prop is set by the parent when the user picks a customer to edit.
-  // We can't move this reset into an event handler here because this component has no
-  // direct event that triggers the prop change — it arrives asynchronously from the parent.
-  useEffect(() => {
-    if (customer) {
-      reset({
-        fullName: customer.fullName ?? "",
-        phone: customer.phone ?? "",
-        address: customer.address ?? "",
-        customerType: (customer.customerType as "retail" | "wholesale") ?? "retail",
-      });
-    }
-  }, [customer, reset]);
 
   const onFormSubmit = (data: CustomerFormValues) => {
     const fd = objectToFormData({

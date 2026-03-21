@@ -1,4 +1,4 @@
-import { ERROR_MESSAGE, INTERNAL_ROLES, ROLE } from "@repo/shared/constants";
+import { ERROR_MESSAGE, INTERNAL_ROLES, ROLE } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";

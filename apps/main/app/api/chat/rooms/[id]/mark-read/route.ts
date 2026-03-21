@@ -1,6 +1,6 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { markMessagesAsRead } from "@repo/database/services/chat.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { markMessagesAsRead } from "@workspace/database/services/chat.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

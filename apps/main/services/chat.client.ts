@@ -1,8 +1,8 @@
-import type { ChatMessage } from "@repo/database/types/api";
-import { axios } from "@repo/shared/api-client";
-import { API_ENDPOINTS } from "@repo/shared/api-endpoints";
-import type { CHAT_MESSAGE_TYPE } from "@repo/shared/constants";
-import type { ChatApiMessage } from "@repo/shared/types/chat";
+import type { ChatMessage } from "@workspace/database/types/api";
+import { axios } from "@workspace/shared/api-client";
+import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
+import type { CHAT_MESSAGE_TYPE } from "@workspace/shared/constants";
+import type { ChatApiMessage } from "@workspace/shared/types/chat";
 
 export const chatClient = {
   /**

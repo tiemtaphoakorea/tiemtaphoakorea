@@ -7,7 +7,7 @@ import type { NextConfig } from "next";
 config({ path: path.resolve(__dirname, "../../.env") });
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/ui", "@repo/shared", "@repo/database"],
+  transpilePackages: ["@workspace/ui", "@workspace/shared", "@workspace/database"],
   serverExternalPackages: ["jspdf", "jspdf-autotable"],
   images: {
     remotePatterns: [

@@ -1,7 +1,7 @@
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import { Plus, Search } from "lucide-react";
 
 interface OrderProductSheetProps {

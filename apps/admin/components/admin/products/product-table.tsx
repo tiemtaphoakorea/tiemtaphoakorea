@@ -127,9 +127,7 @@ export function ProductTable({
                     : `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`;
 
                 return (
-                  <TableRow
-                    key={product.id}
-                  >
+                  <TableRow key={product.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {product.imageUrl ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ORDER_STATUS } from "@workspace/shared/constants";
 import { formatCurrency, formatDate, formatVariantDisplayName } from "@workspace/shared/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
@@ -30,7 +31,6 @@ import {
 } from "@workspace/ui/components/table";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useToast } from "@workspace/ui/components/use-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   Banknote,
@@ -52,7 +52,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, use, useState } from "react";
+import { Suspense, use, useReducer, useState } from "react";
 import { adminClient } from "@/services/admin.client";
 
 type OrderStatusValue = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
@@ -113,6 +113,187 @@ const ORDER_STATUS_ACTIONS: Record<
   [ORDER_STATUS.CANCELLED]: [],
 };
 
+// ---------------------------------------------------------------------------
+// Edit reducer
+// ---------------------------------------------------------------------------
+
+type EditState = { isEditing: boolean; editAdminNote: string; editDiscount: number };
+const initialEditState: EditState = { isEditing: false, editAdminNote: "", editDiscount: 0 };
+type EditAction =
+  | { type: "START_EDIT"; payload: { adminNote: string; discount: number } }
+  | { type: "CANCEL_EDIT" }
+  | { type: "SET_NOTE"; payload: string }
+  | { type: "SET_DISCOUNT"; payload: number };
+
+function editReducer(state: EditState, action: EditAction): EditState {
+  switch (action.type) {
+    case "START_EDIT":
+      return {
+        isEditing: true,
+        editAdminNote: action.payload.adminNote,
+        editDiscount: action.payload.discount,
+      };
+    case "CANCEL_EDIT":
+      return { ...state, isEditing: false };
+    case "SET_NOTE":
+      return { ...state, editAdminNote: action.payload };
+    case "SET_DISCOUNT":
+      return { ...state, editDiscount: action.payload };
+    default:
+      return state;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Payment reducer
+// ---------------------------------------------------------------------------
+
+type PaymentState = { isOpen: boolean; amount: number; method: string; ref: string; note: string };
+const initialPaymentState: PaymentState = {
+  isOpen: false,
+  amount: 0,
+  method: "cash",
+  ref: "",
+  note: "",
+};
+type PaymentAction =
+  | { type: "OPEN"; payload?: number }
+  | { type: "CLOSE" }
+  | { type: "SET_AMOUNT"; payload: number }
+  | { type: "SET_METHOD"; payload: string }
+  | { type: "SET_REF"; payload: string }
+  | { type: "SET_NOTE"; payload: string };
+
+function paymentReducer(state: PaymentState, action: PaymentAction): PaymentState {
+  switch (action.type) {
+    case "OPEN":
+      return { ...state, isOpen: true, amount: action.payload ?? 0 };
+    case "CLOSE":
+      return { ...state, isOpen: false, ref: "", note: "" };
+    case "SET_AMOUNT":
+      return { ...state, amount: action.payload };
+    case "SET_METHOD":
+      return { ...state, method: action.payload };
+    case "SET_REF":
+      return { ...state, ref: action.payload };
+    case "SET_NOTE":
+      return { ...state, note: action.payload };
+    default:
+      return state;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PaymentDialog sub-component
+// ---------------------------------------------------------------------------
+
+interface PaymentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  remainingAmount: number;
+  paymentState: PaymentState;
+  paymentDispatch: React.Dispatch<PaymentAction>;
+  onSubmit: () => void;
+  orderNumber: string | number;
+  onTriggerClick: () => void;
+}
+
+function PaymentDialog({
+  open,
+  onOpenChange,
+  remainingAmount,
+  paymentState,
+  paymentDispatch,
+  onSubmit,
+  orderNumber,
+  onTriggerClick,
+}: PaymentDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          onClick={onTriggerClick}
+          className="gap-2 bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700"
+        >
+          <Banknote className="h-4 w-4" /> Thanh toán
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ghi nhận thanh toán</DialogTitle>
+          <DialogDescription>Tạo phiếu thu cho đơn hàng #{orderNumber}.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Số tiền thanh toán</Label>
+            <NumberInput
+              value={paymentState.amount}
+              onValueChange={(values) =>
+                paymentDispatch({ type: "SET_AMOUNT", payload: values.floatValue ?? 0 })
+              }
+              max={remainingAmount}
+            />
+            <p className="text-muted-foreground text-xs">
+              Còn nợ: {formatCurrency(remainingAmount)}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Phương thức</Label>
+            <RadioGroup
+              value={paymentState.method}
+              onValueChange={(v) => paymentDispatch({ type: "SET_METHOD", payload: v })}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="cash" id="cash" />
+                <Label htmlFor="cash">Tiền mặt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="bank_transfer" id="bank" />
+                <Label htmlFor="bank">Chuyển khoản</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="card" id="card" />
+                <Label htmlFor="card">Thẻ</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          {paymentState.method === "bank_transfer" && (
+            <div className="space-y-2">
+              <Label>Mã tham chiếu (Mã GD)</Label>
+              <Input
+                placeholder="VD: FT2332..."
+                value={paymentState.ref}
+                onChange={(e) => paymentDispatch({ type: "SET_REF", payload: e.target.value })}
+              />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label>Ghi chú</Label>
+            <Input
+              placeholder="Ghi chú nội bộ..."
+              value={paymentState.note}
+              onChange={(e) => paymentDispatch({ type: "SET_NOTE", payload: e.target.value })}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => paymentDispatch({ type: "CLOSE" })}>
+            Hủy
+          </Button>
+          <Button onClick={onSubmit} className="bg-emerald-600 font-bold hover:bg-emerald-700">
+            Lưu thanh toán
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page entry point
+// ---------------------------------------------------------------------------
+
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Suspense
@@ -144,16 +325,8 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   // Local State
   const [note, setNote] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [editAdminNote, setEditAdminNote] = useState("");
-  const [editDiscount, setEditDiscount] = useState(0);
-
-  // Payment State
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [paymentRef, setPaymentRef] = useState("");
-  const [paymentNote, setPaymentNote] = useState("");
+  const [editState, editDispatch] = useReducer(editReducer, initialEditState);
+  const [paymentState, paymentDispatch] = useReducer(paymentReducer, initialPaymentState);
 
   // Loading State
   if (isLoading) {
@@ -185,29 +358,30 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   // Handlers
   const handleOpenPayment = () => {
-    setPaymentAmount(remainingAmount);
-    setIsPaymentOpen(true);
+    paymentDispatch({ type: "OPEN", payload: remainingAmount });
   };
 
   const handleRecordPayment = async () => {
-    if (paymentAmount <= 0) return;
+    if (paymentState.amount <= 0) return;
+
+    const referenceCode = paymentState.ref || undefined;
+    const noteValue = paymentState.note || undefined;
 
     try {
       await adminClient.recordOrderPayment(order.id, {
-        amount: paymentAmount,
-        method: paymentMethod,
-        referenceCode: paymentRef || undefined,
-        note: paymentNote || undefined,
+        amount: paymentState.amount,
+        method: paymentState.method,
+        referenceCode: referenceCode,
+        note: noteValue,
       });
       toast({ title: "Thành công", description: "Đã ghi nhận thanh toán." });
-      setIsPaymentOpen(false);
-      setPaymentRef("");
-      setPaymentNote("");
+      paymentDispatch({ type: "CLOSE" });
       await queryClient.invalidateQueries({ queryKey: ["order", id] });
     } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast({
         title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -229,9 +403,10 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         setNote("");
         await queryClient.invalidateQueries({ queryKey: ["order", id] });
       } catch (err: any) {
+        const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
         toast({
           title: "Lỗi",
-          description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -241,19 +416,20 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const handleSaveEdit = async () => {
     try {
       await adminClient.updateOrder(order.id, {
-        adminNote: editAdminNote,
-        discount: editDiscount,
+        adminNote: editState.editAdminNote,
+        discount: editState.editDiscount,
       });
       toast({
         title: "Thành công",
         description: "Cập nhật đơn hàng thành công",
       });
-      setIsEditing(false);
+      editDispatch({ type: "CANCEL_EDIT" });
       await queryClient.invalidateQueries({ queryKey: ["order", id] });
     } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast({
         title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -265,9 +441,10 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
       await adminClient.deleteOrder(order.id);
       router.push("/orders?deleted=true");
     } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast({
         title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -306,87 +483,18 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           </Button>
 
           {status !== ORDER_STATUS.PAID && (
-            <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={handleOpenPayment}
-                  className="gap-2 bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700"
-                >
-                  <Banknote className="h-4 w-4" /> Thanh toán
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Ghi nhận thanh toán</DialogTitle>
-                  <DialogDescription>
-                    Tạo phiếu thu cho đơn hàng #{order.orderNumber}.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Số tiền thanh toán</Label>
-                    <NumberInput
-                      value={paymentAmount}
-                      onValueChange={(values) => setPaymentAmount(values.floatValue ?? 0)}
-                      max={remainingAmount}
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Còn nợ: {formatCurrency(remainingAmount)}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Phương thức</Label>
-                    <RadioGroup
-                      value={paymentMethod}
-                      onValueChange={setPaymentMethod}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="cash" id="cash" />
-                        <Label htmlFor="cash">Tiền mặt</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="bank_transfer" id="bank" />
-                        <Label htmlFor="bank">Chuyển khoản</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="card" id="card" />
-                        <Label htmlFor="card">Thẻ</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  {paymentMethod === "bank_transfer" && (
-                    <div className="space-y-2">
-                      <Label>Mã tham chiếu (Mã GD)</Label>
-                      <Input
-                        placeholder="VD: FT2332..."
-                        value={paymentRef}
-                        onChange={(e) => setPaymentRef(e.target.value)}
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label>Ghi chú</Label>
-                    <Input
-                      placeholder="Ghi chú nội bộ..."
-                      value={paymentNote}
-                      onChange={(e) => setPaymentNote(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsPaymentOpen(false)}>
-                    Hủy
-                  </Button>
-                  <Button
-                    onClick={handleRecordPayment}
-                    className="bg-emerald-600 font-bold hover:bg-emerald-700"
-                  >
-                    Lưu thanh toán
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <PaymentDialog
+              open={paymentState.isOpen}
+              onOpenChange={(open) => {
+                if (!open) paymentDispatch({ type: "CLOSE" });
+              }}
+              remainingAmount={remainingAmount}
+              paymentState={paymentState}
+              paymentDispatch={paymentDispatch}
+              onSubmit={handleRecordPayment}
+              orderNumber={order.orderNumber}
+              onTriggerClick={handleOpenPayment}
+            />
           )}
           {/* Status Actions */}
           {!isTerminal && statusActions.length > 0 && (
@@ -750,7 +858,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               <Separator />
 
               {/* Admin Note & Discount - Editable */}
-              {isEditing ? (
+              {editState.isEditing ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label
@@ -761,8 +869,8 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </Label>
                     <Textarea
                       id="adminNote"
-                      value={editAdminNote}
-                      onChange={(e) => setEditAdminNote(e.target.value)}
+                      value={editState.editAdminNote}
+                      onChange={(e) => editDispatch({ type: "SET_NOTE", payload: e.target.value })}
                       placeholder="Nhập ghi chú..."
                       className="min-h-[80px]"
                     />
@@ -776,8 +884,10 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </Label>
                     <NumberInput
                       id="discount"
-                      value={editDiscount}
-                      onValueChange={(values) => setEditDiscount(values.floatValue ?? 0)}
+                      value={editState.editDiscount}
+                      onValueChange={(values) =>
+                        editDispatch({ type: "SET_DISCOUNT", payload: values.floatValue ?? 0 })
+                      }
                       placeholder="0"
                       decimalScale={0}
                     />
@@ -788,7 +898,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => editDispatch({ type: "CANCEL_EDIT" })}
                       className="flex-1 font-bold"
                     >
                       Hủy
@@ -815,11 +925,15 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     variant="outline"
                     size="sm"
                     className="w-full font-bold"
-                    onClick={() => {
-                      setEditAdminNote(order.adminNote || "");
-                      setEditDiscount(order.discount ? Number(order.discount) : 0);
-                      setIsEditing(true);
-                    }}
+                    onClick={() =>
+                      editDispatch({
+                        type: "START_EDIT",
+                        payload: {
+                          adminNote: order.adminNote || "",
+                          discount: order.discount ? Number(order.discount) : 0,
+                        },
+                      })
+                    }
                   >
                     <Package className="mr-2 h-4 w-4" /> Chỉnh sửa
                   </Button>

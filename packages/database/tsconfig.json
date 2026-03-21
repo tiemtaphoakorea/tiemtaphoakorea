@@ -15,8 +15,8 @@
     "target": "ES2017",
     "baseUrl": ".",
     "paths": {
-      "@repo/shared": ["../shared/src/index.ts"],
-      "@repo/shared/*": ["../shared/src/*"],
+      "@workspace/shared": ["../shared/src/index.ts"],
+      "@workspace/shared/*": ["../shared/src/*"],
       "@/db/db.server": ["./src/db"],
       "@/db/*": ["./src/*"],
       "@/lib/security.server": ["./src/lib/security"],

@@ -1,8 +1,8 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { createExpense, getExpenses } from "@repo/database/services/finance.server";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
-import { calculateMetadata, getPaginationParams } from "@repo/shared/pagination";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { createExpense, getExpenses } from "@workspace/database/services/finance.server";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { calculateMetadata, getPaginationParams } from "@workspace/shared/pagination";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {

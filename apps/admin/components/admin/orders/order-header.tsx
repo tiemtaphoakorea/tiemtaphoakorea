@@ -1,5 +1,5 @@
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { Button } from "@repo/ui/components/button";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { Button } from "@workspace/ui/components/button";
 import { Download, Plus } from "lucide-react";
 import Link from "next/link";
 

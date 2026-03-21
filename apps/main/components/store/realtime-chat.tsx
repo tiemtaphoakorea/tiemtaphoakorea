@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@repo/database/lib/supabase/client";
+import { createClient } from "@workspace/database/lib/supabase/client";
 import type {
   ChatBroadcastPayload,
   ChatPostgresMessageRow,
@@ -8,10 +8,10 @@ import type {
   RealtimeChatProps,
   StoreChatMessage,
   StoreDisplayMessage,
-} from "@repo/shared/types/chat";
-import { cn } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+} from "@workspace/shared/types/chat";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { cn } from "@workspace/ui/lib/utils";
 import { Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { ChatMessageItem } from "@/components/store/chat-message";
@@ -425,7 +425,7 @@ export const RealtimeChat = ({ userId, guestId }: RealtimeChatProps) => {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading chat...</p>
+        <p className="text-sm text-muted-foreground">Loading chat...</p>
       </div>
     );
   }
@@ -483,7 +483,7 @@ const ChatMessages = ({
           return (
             <div
               key={message.id}
-              className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+              className="animate-in duration-300 fade-in slide-in-from-bottom-4"
             >
               <ChatMessageItem
                 message={message}
@@ -495,7 +495,7 @@ const ChatMessages = ({
         })}
       </div>
       {typingSenderName && (
-        <div className="animate-in fade-in mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-3 flex animate-in items-center gap-2 text-xs text-muted-foreground fade-in">
           <span>{typingSenderName} đang nhập</span>
           <div className="flex items-center gap-1">
             <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.2s]" />
@@ -545,7 +545,7 @@ const ChatInputForm = ({
       />
       {!isSending && newMessage.trim() && (
         <Button
-          className="aspect-square rounded-full animate-in fade-in slide-in-from-right-4 duration-300"
+          className="aspect-square animate-in rounded-full duration-300 fade-in slide-in-from-right-4"
           type="submit"
           onMouseDown={(e) => e.preventDefault()}
           disabled={isSending || !roomId}

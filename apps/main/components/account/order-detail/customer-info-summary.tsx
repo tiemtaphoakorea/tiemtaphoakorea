@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { Separator } from "@repo/ui/components/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
 import { MapPin, Phone, User } from "lucide-react";
 
 interface CustomerInfoSummaryProps {

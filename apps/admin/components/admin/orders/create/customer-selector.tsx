@@ -1,8 +1,8 @@
 "use client";
 
-import type { CustomerStatsItem } from "@repo/database/types/admin";
-import { cn } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
+import type { CustomerStatsItem } from "@workspace/database/types/admin";
+import { Button } from "@workspace/ui/components/button";
 import {
   Command,
   CommandEmpty,
@@ -10,11 +10,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@repo/ui/components/command";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/components/popover";
-import { useQuery } from "@tanstack/react-query";
+} from "@workspace/ui/components/command";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
+import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown, Loader2, Plus, User } from "lucide-react";
 import * as React from "react";
 import { useDebounce } from "use-debounce"; // Ensure this pkg is installed or use custom hook
@@ -81,9 +81,9 @@ export function CustomerSelector({
 
   if (newCustomer) {
     return (
-      <div className="rounded-lg border p-4 shadow-sm space-y-4">
+      <div className="space-y-4 rounded-lg border p-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium flex items-center gap-2">
+          <h3 className="flex items-center gap-2 font-medium">
             <Plus className="h-4 w-4" /> Khách hàng mới
           </h3>
           <Button variant="ghost" size="sm" onClick={handleClear}>
@@ -138,14 +138,14 @@ export function CustomerSelector({
             />
             <CommandList id="customer-combobox-list">
               {isLoading && (
-                <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 py-6 text-center text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Đang tìm kiếm...
                 </div>
               )}
               {!isLoading && customers.length === 0 && (
                 <CommandEmpty className="py-6 text-center text-sm">
-                  <p className="text-muted-foreground mb-2">Không tìm thấy khách hàng.</p>
+                  <p className="mb-2 text-muted-foreground">Không tìm thấy khách hàng.</p>
                   <Button
                     variant="outline"
                     size="sm"

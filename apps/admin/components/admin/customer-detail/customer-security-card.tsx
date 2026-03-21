@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Clock, ShieldCheck } from "lucide-react";
 
 interface CustomerSecurityCardProps {

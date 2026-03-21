@@ -4,7 +4,7 @@ import {
   ANALYTICS_GROWTH_RANDOM_RANGE,
   ANALYTICS_TOP_PRODUCTS_LIMIT,
   ROLE,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories, products, productVariants } from "../schema";

@@ -1,113 +1,121 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { Button } from "./button";
+import { Button } from "@workspace/ui/components/button";
 
-interface PaginationControlsProps {
+import { cn } from "@workspace/ui/lib/utils";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsLeftIcon,
+  ChevronsRightIcon,
+} from "lucide-react";
+
+function buildPageList(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = new Set<number>([1, total, current, current - 1, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const out: (number | "ellipsis")[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const p = sorted[i]!;
+    if (i > 0 && p - sorted[i - 1]! > 1) {
+      out.push("ellipsis");
+    }
+    out.push(p);
+  }
+  return out;
+}
+
+export type PaginationControlsProps = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  isLoading?: boolean;
-}
+  className?: string;
+};
 
-export function PaginationControls({
+function PaginationControls({
   currentPage,
   totalPages,
   onPageChange,
-  isLoading = false,
+  className,
 }: PaginationControlsProps) {
-  if (totalPages <= 1) return null;
-
-  const canGoPrev = currentPage > 1;
-  const canGoNext = currentPage < totalPages;
-
-  // Generate page numbers to show
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, "...", totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
-      }
-    }
-    return pages;
-  };
+  const safeTotal = Math.max(1, totalPages);
+  const page = Math.min(Math.max(1, currentPage), safeTotal);
+  const items = buildPageList(page, safeTotal);
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="text-sm font-medium text-slate-500">
-        Trang <span className="text-slate-900 dark:text-white">{currentPage}</span> / {totalPages}
-      </div>
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden h-8 w-8 lg:flex"
-          onClick={() => onPageChange(1)}
-          disabled={!canGoPrev || isLoading}
-        >
-          <span className="sr-only">Go to first page</span>
-          <ChevronsLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={!canGoPrev || isLoading}
-        >
-          <span className="sr-only">Go to previous page</span>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <div className="flex items-center space-x-1">
-          {getPageNumbers().map((page, index) => (
-            <div key={typeof page === "number" ? `page-${page}` : `ellipsis-${index}`}>
-              {typeof page === "number" ? (
-                <Button
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="icon"
-                  className="h-8 w-8 font-bold"
-                  onClick={() => onPageChange(page)}
-                  disabled={isLoading}
-                >
-                  {page}
-                </Button>
-              ) : (
-                <span className="px-2 text-slate-400">...</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={!canGoNext || isLoading}
-        >
-          <span className="sr-only">Go to next page</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden h-8 w-8 lg:flex"
-          onClick={() => onPageChange(totalPages)}
-          disabled={!canGoNext || isLoading}
-        >
-          <span className="sr-only">Go to last page</span>
-          <ChevronsRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+    <nav
+      className={cn("flex flex-wrap items-center justify-center gap-2", className)}
+      aria-label="Pagination"
+    >
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={page <= 1}
+        onClick={() => onPageChange(1)}
+        aria-label="First page"
+      >
+        <span className="sr-only">First</span>
+        <ChevronsLeftIcon className="size-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        aria-label="Previous page"
+      >
+        <ChevronLeftIcon className="size-4" />
+      </Button>
+      {items.map((item, i) =>
+        item === "ellipsis" ? (
+          <span
+            key={`e-${i}`}
+            className="flex size-8 items-center justify-center text-sm text-muted-foreground"
+            aria-hidden
+          >
+            …
+          </span>
+        ) : (
+          <Button
+            key={item}
+            type="button"
+            variant={item === page ? "default" : "outline"}
+            size="icon-sm"
+            className="min-w-8"
+            onClick={() => onPageChange(item)}
+            aria-label={`Page ${item}`}
+            aria-current={item === page ? "page" : undefined}
+          >
+            {item}
+          </Button>
+        ),
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={page >= safeTotal}
+        onClick={() => onPageChange(page + 1)}
+        aria-label="Next page"
+      >
+        <ChevronRightIcon className="size-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        disabled={page >= safeTotal}
+        onClick={() => onPageChange(safeTotal)}
+        aria-label="Last page"
+      >
+        <ChevronsRightIcon className="size-4" />
+      </Button>
+    </nav>
   );
 }
+
+export { PaginationControls };

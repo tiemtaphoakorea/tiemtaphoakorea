@@ -1,11 +1,11 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import type {
   AdminProductDetail,
   ProductFormCategory,
   ProductFormInitialData,
-} from "@repo/shared/types/product";
-import { useQuery } from "@tanstack/react-query";
+} from "@workspace/shared/types/product";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/admin/products/product-form";
 import { adminClient } from "@/services/admin.client";

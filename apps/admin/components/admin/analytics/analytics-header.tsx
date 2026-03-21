@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@workspace/ui/components/button";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Calendar, ChevronDown, Download } from "lucide-react";

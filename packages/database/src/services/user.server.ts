@@ -1,5 +1,5 @@
-import { DEFAULT_PASSWORD_LENGTH, ERROR_MESSAGE, ROLE } from "@repo/shared/constants";
-import { calculateMetadata, PAGINATION_DEFAULT } from "@repo/shared/pagination";
+import { DEFAULT_PASSWORD_LENGTH, ERROR_MESSAGE, ROLE } from "@workspace/shared/constants";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { hashPassword } from "../lib/security";

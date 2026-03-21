@@ -1,4 +1,4 @@
-import { getProductBySlug } from "@repo/database/services/product.server";
+import { getProductBySlug } from "@workspace/database/services/product.server";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

@@ -1,8 +1,9 @@
 "use client";
 
-import type { Product } from "@repo/shared/types/product";
-import { Button } from "@repo/ui/components/button";
-import { Separator } from "@repo/ui/components/separator";
+import type { Product } from "@workspace/shared/types/product";
+import { Button } from "@workspace/ui/components/button";
+import { Label } from "@workspace/ui/components/label";
+import { Separator } from "@workspace/ui/components/separator";
 
 interface ProductInfoActionsProps {
   product: Product;
@@ -41,7 +42,7 @@ export function ProductInfoActions({
     <div className="space-y-4">
       <div className="flex flex-col gap-1 py-4">
         <div className="flex items-baseline gap-3">
-          <span data-testid="product-price" className="text-primary text-4xl font-black">
+          <span data-testid="product-price" className="text-4xl font-black text-primary">
             {formatPrice(price)}
           </span>
         </div>
@@ -50,41 +51,32 @@ export function ProductInfoActions({
       {/* Variant Selector */}
       {product.variants.length > 1 && (
         <div className="space-y-3 pb-4">
-          <label
-            htmlFor="variant-selector"
-            className="text-muted-foreground text-sm font-bold tracking-wider uppercase"
-          >
+          <Label className="text-sm font-bold tracking-wider text-muted-foreground uppercase">
             Phân loại:
-          </label>
-          {/* Hidden select keeps the label association valid for accessibility tools */}
-          <select
-            id="variant-selector"
-            className="sr-only"
-            value={selectedVariantId}
-            onChange={(e) => setSelectedVariantId(e.target.value)}
-            aria-hidden="true"
-            tabIndex={-1}
-          >
-            {product.variants.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-          <div className="flex flex-wrap gap-2">
-            {product.variants.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => setSelectedVariantId(v.id)}
-                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-                  selectedVariantId === v.id
-                    ? "border-primary bg-primary/5 text-primary ring-primary ring-1"
-                    : "border-border bg-white hover:border-gray-400"
-                }`}
-              >
-                {v.name}
-              </button>
-            ))}
+          </Label>
+          <div className="flex flex-wrap gap-2.5">
+            {product.variants.map((v) => {
+              const isSelected = selectedVariantId === v.id;
+              return (
+                <Button
+                  key={v.id}
+                  variant="outline"
+                  onClick={() => setSelectedVariantId(v.id)}
+                  className={`relative ${
+                    isSelected
+                      ? "border-2 border-primary bg-white text-primary shadow-[0_0_0_3px_rgba(0,0,0,0.06)]"
+                      : "border border-border bg-white text-muted-foreground hover:border-slate-400 hover:text-foreground"
+                  }`}
+                >
+                  {v.name}
+                  {isSelected && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] text-primary-foreground">
+                      ✓
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -93,7 +85,7 @@ export function ProductInfoActions({
 
       <div className="space-y-6 py-6">
         <div className="space-y-3">
-          <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase">
+          <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">
             Tình trạng hàng hóa
           </h3>
           <div className="flex items-center gap-4">
@@ -110,7 +102,7 @@ export function ProductInfoActions({
             {stock > 0 && (
               <>
                 <Separator orientation="vertical" className="h-4" />
-                <span className="text-muted-foreground text-sm font-medium">
+                <span className="text-sm font-medium text-muted-foreground">
                   Còn hàng ({stock})
                 </span>
               </>
@@ -121,11 +113,11 @@ export function ProductInfoActions({
         <div className="grid grid-cols-1 gap-4">
           <Button
             disabled={!canOrder}
-            className="shadow-primary/20 bg-primary hover:bg-primary/90 group h-14 rounded-full text-lg font-bold shadow-xl transition-all hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="group h-14 rounded-full bg-primary text-lg font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {canOrder ? "Liên hệ đặt hàng ngay" : "Hết hàng"}
           </Button>
-          <p className="text-muted-foreground text-center text-[10px] font-medium italic">
+          <p className="text-center text-[10px] font-medium text-muted-foreground italic">
             * Sản phẩm này hiện chỉ hỗ trợ đặt chuyển khoản hoặc gọi điện trực tiếp qua Hotline.
           </p>
         </div>

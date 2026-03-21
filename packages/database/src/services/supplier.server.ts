@@ -2,7 +2,7 @@ import {
   ERROR_MESSAGE,
   SUPPLIER_ORDER_STATUS,
   SUPPLIER_ORDER_STATUS_ALL,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { supplierOrders } from "../schema/orders";

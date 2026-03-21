@@ -1,8 +1,8 @@
 "use client";
 
-import { axios } from "@repo/shared/api-client";
-import { API_ENDPOINTS } from "@repo/shared/api-endpoints";
-import { cn } from "@repo/shared/utils";
+import { axios } from "@workspace/shared/api-client";
+import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
+import { cn } from "@workspace/ui/lib/utils";
 import { Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -131,7 +131,7 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
 
           {isUploading ? (
             <div className="flex flex-col items-center text-slate-500">
-              <Loader2 className="text-primary mb-2 h-10 w-10 animate-spin" />
+              <Loader2 className="mb-2 h-10 w-10 animate-spin text-primary" />
               <p className="font-bold">Đang tải ảnh lên...</p>
             </div>
           ) : (

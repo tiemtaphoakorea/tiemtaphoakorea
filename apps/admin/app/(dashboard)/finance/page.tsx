@@ -1,13 +1,13 @@
 "use client";
 
-import { ErrorBoundary } from "@repo/ui/components/error-boundary";
+import { ErrorBoundary } from "@workspace/ui/components/error-boundary";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import { Suspense, useState } from "react";
 import { FinanceStats } from "@/components/admin/finance/finance-stats";
 import { FinanceStatsSkeleton } from "@/components/admin/finance/finance-stats-skeleton";

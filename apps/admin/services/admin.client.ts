@@ -21,19 +21,19 @@ import type {
   Supplier,
   UpdateCustomerData,
   UpdateSupplierData,
-} from "@repo/database/types/admin";
+} from "@workspace/database/types/admin";
 import type {
   ChatMessage,
   ProductResponse,
   ProductWithVariants,
   UserProfileResponse,
-} from "@repo/database/types/api";
-import type { Order } from "@repo/database/types/order";
-import { axios } from "@repo/shared/api-client";
-import { API_ENDPOINTS } from "@repo/shared/api-endpoints";
-import { ADMIN_STATS_SECTION } from "@repo/shared/constants";
-import type { PaginatedResponse } from "@repo/shared/pagination";
-import type { LoginFormValues } from "@repo/shared/schemas";
+} from "@workspace/database/types/api";
+import type { Order } from "@workspace/database/types/order";
+import { axios } from "@workspace/shared/api-client";
+import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
+import { ADMIN_STATS_SECTION } from "@workspace/shared/constants";
+import type { PaginatedResponse } from "@workspace/shared/pagination";
+import type { LoginFormValues } from "@workspace/shared/schemas";
 
 /**
  * Service for client-side admin API calls.

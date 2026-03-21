@@ -1,8 +1,8 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { deleteExpense } from "@repo/database/services/finance.server";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { deleteExpense } from "@workspace/database/services/finance.server";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(request: NextRequest, { params }: IdRouteParams) {

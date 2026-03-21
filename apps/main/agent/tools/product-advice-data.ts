@@ -1,6 +1,6 @@
 import { tool } from "@openai/agents";
-import { db } from "@repo/database/db";
-import { categories, products, productVariants } from "@repo/database/schema";
+import { db } from "@workspace/database/db";
+import { categories, products, productVariants } from "@workspace/database/schema";
 import { and, desc, eq, ilike } from "drizzle-orm";
 import { z } from "zod";
 

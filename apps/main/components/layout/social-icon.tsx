@@ -1,4 +1,4 @@
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import Link from "next/link";
 
 export function SocialIcon({ icon }: { icon: React.ReactNode }) {

@@ -8,7 +8,7 @@ import {
   type PAYMENT_METHOD,
   ROLE,
   SUPPLIER_ORDER_STATUS,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
@@ -386,7 +386,7 @@ export async function updateOrderStatus(
   });
 }
 
-import { calculateMetadata, PAGINATION_DEFAULT } from "@repo/shared/pagination";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 
 export async function getOrders({
   search = "",

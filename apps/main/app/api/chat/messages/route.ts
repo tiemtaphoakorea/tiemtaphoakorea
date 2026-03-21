@@ -1,7 +1,7 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { sendMessage } from "@repo/database/services/chat.server";
-import { CHAT_MESSAGE_TYPE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { sendMessage } from "@workspace/database/services/chat.server";
+import { CHAT_MESSAGE_TYPE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {

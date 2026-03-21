@@ -1,13 +1,13 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   checkIdempotencyKey,
   comparePayloads,
   storeIdempotencyKey,
-} from "@repo/database/lib/idempotency";
-import { recordPayment } from "@repo/database/services/order.server";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { PAYMENT_METHOD } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/lib/idempotency";
+import { recordPayment } from "@workspace/database/services/order.server";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { PAYMENT_METHOD } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
 
     // Update idempotency key with response if clientToken was provided
     if (clientToken) {
-      const { updateIdempotencyKey } = await import("@repo/database/lib/idempotency");
+      const { updateIdempotencyKey } = await import("@workspace/database/lib/idempotency");
       await updateIdempotencyKey(clientToken, orderId, result);
     }
 

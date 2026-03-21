@@ -56,10 +56,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
             <TableBody>
               {orders.length > 0 ? (
                 orders.map((order: any) => (
-                  <TableRow
-                    key={order.id}
-                    className="group transition-colors"
-                  >
+                  <TableRow key={order.id} className="group transition-colors">
                     <TableCell className="py-4">
                       <Link
                         href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}

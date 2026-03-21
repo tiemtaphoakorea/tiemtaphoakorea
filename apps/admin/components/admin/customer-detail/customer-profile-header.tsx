@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Card, CardContent } from "@repo/ui/components/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { Mail, Phone, User } from "lucide-react";
 
 interface CustomerProfileHeaderProps {

@@ -1,7 +1,7 @@
-import type { ProductListItem } from "@repo/database/services/product.server";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Search } from "lucide-react";
+import type { ProductListItem } from "@workspace/database/services/product.server";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Eye, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -19,8 +19,15 @@ export function ProductListing({ products, viewMode, onResetFilters }: ProductLi
           <Search className="h-8 w-8 text-primary/50" />
         </div>
         <h3 className="mb-2 text-xl font-semibold text-foreground">Không tìm thấy sản phẩm</h3>
-        <p className="text-sm text-muted-foreground">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
-        <Button variant="outline" size="sm" className="mt-6 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-white" onClick={onResetFilters}>
+        <p className="text-sm text-muted-foreground">
+          Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-6 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-white"
+          onClick={onResetFilters}
+        >
           Xóa tất cả bộ lọc
         </Button>
       </div>
@@ -32,8 +39,8 @@ export function ProductListing({ products, viewMode, onResetFilters }: ProductLi
       data-testid="product-list"
       className={
         viewMode === "grid"
-          ? "grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6 2xl:grid-cols-4"
-          : "flex flex-col gap-6"
+          ? "grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-5 2xl:grid-cols-4"
+          : "flex flex-col gap-4"
       }
     >
       {products.map((product) => (
@@ -62,37 +69,34 @@ function ProductItem({
       <Link
         href={`/products/${product.slug}`}
         data-testid={`product-card-${product.slug}`}
-        className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-3 transition-all hover:shadow-md hover:border-primary/20 md:flex-row"
+        className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-3 transition-all duration-300 hover:border-primary/20 hover:shadow-md md:flex-row cursor-pointer"
       >
-        <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl md:w-40">
+        <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl md:w-36">
           <Image
             src={product.thumbnail}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            sizes="(max-width: 768px) 50vw, 224px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 50vw, 180px"
           />
         </div>
-        <div className="flex flex-1 flex-col justify-center py-2">
+        <div className="flex flex-1 flex-col justify-center py-1.5">
           <div className="mb-2 flex items-center gap-2">
             <Badge
               variant="secondary"
-              className="bg-primary/5 text-primary border-none text-[10px] font-bold uppercase"
+              className="border-none bg-secondary text-primary text-[10px] font-bold uppercase tracking-wide"
             >
               {product.categoryName}
             </Badge>
           </div>
-          <h3 className="group-hover:text-primary mb-2 text-lg font-bold transition-colors">
+          <h3 className="mb-2 text-base font-bold text-foreground transition-colors group-hover:text-primary">
             {product.name}
           </h3>
-          <p className="text-muted-foreground mb-4 line-clamp-2 text-sm font-medium">
-            {product.description}
-          </p>
+          <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
           <div className="mt-auto flex items-center gap-4">
-            <span data-testid="product-card-price" className="text-primary text-xl font-black">
+            <span data-testid="product-card-price" className="text-lg font-extrabold text-primary">
               {formatPrice(product.minPrice || Number(product.basePrice) || 0)}
             </span>
-            {/* Original Price removed as not in API */}
           </div>
         </div>
       </Link>
@@ -103,40 +107,38 @@ function ProductItem({
     <Link
       href={`/products/${product.slug}`}
       data-testid={`product-card-${product.slug}`}
-      className="group flex h-full flex-col"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/8 cursor-pointer"
     >
-      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-md dark:bg-card">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-t-2xl">
-          <Image
-            src={product.thumbnail}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 768px) 50vw, 33vw"
-          />
-        </div>
-
-        <div className="flex flex-1 flex-col gap-1 p-4">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">
-              {product.categoryName}
-            </span>
+      {/* Image */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
+        <Image
+          src={product.thumbnail}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/8">
+          <div className="flex h-10 w-10 scale-75 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
+            <Eye className="h-4 w-4 text-primary" />
           </div>
+        </div>
+      </div>
 
-          <h3 className="mb-2 line-clamp-2 flex-1 text-sm leading-tight font-bold group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-
-          <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-3">
-            <div className="flex flex-col">
-              <span data-testid="product-card-price" className="text-primary text-base font-black">
-                {formatPrice(product.minPrice || Number(product.basePrice) || 0)}
-              </span>
-              {/* Original Price removed */}
-            </div>
-            <div className="bg-secondary text-primary shadow-none flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:bg-primary group-hover:text-white group-hover:scale-110">
-              <Search className="h-4 w-4" />
-            </div>
+      {/* Content */}
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+          {product.categoryName}
+        </span>
+        <h3 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+          {product.name}
+        </h3>
+        <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3">
+          <span data-testid="product-card-price" className="text-base font-extrabold text-primary">
+            {formatPrice(product.minPrice || Number(product.basePrice) || 0)}
+          </span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-primary transition-all group-hover:bg-primary group-hover:text-white">
+            <Eye className="h-3.5 w-3.5" />
           </div>
         </div>
       </div>

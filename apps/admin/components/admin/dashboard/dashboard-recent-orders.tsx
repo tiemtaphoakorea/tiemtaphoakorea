@@ -1,5 +1,6 @@
 "use client";
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Badge } from "@workspace/ui/components/badge";
@@ -13,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, Eye } from "lucide-react";
 import Link from "next/link";
 import { adminClient } from "@/services/admin.client";

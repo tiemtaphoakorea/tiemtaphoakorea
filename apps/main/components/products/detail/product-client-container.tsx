@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from "@repo/shared/types/product";
+import type { Product } from "@workspace/shared/types/product";
 import { RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { useState } from "react";
 import { ProductGallery } from "./product-gallery";

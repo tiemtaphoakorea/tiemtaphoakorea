@@ -48,10 +48,7 @@ export function SupplierOrderTable({
             orders.map((order) => {
               const config = statusConfig[order.status || "pending"] || statusConfig.pending;
               return (
-                <TableRow
-                  key={order.id}
-                  className="group transition-colors"
-                >
+                <TableRow key={order.id} className="group transition-colors">
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <span className="font-black text-slate-900 dark:text-white">

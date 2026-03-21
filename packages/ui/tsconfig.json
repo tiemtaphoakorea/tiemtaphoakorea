@@ -1,30 +1,11 @@
 {
+  "extends": "@workspace/typescript-config/react-library.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true,
-    "jsx": "react-jsx",
-    "target": "ES2017",
     "baseUrl": ".",
     "paths": {
-      "@repo/shared": ["../shared/src/index.ts"],
-      "@repo/shared/*": ["../shared/src/*"],
-      "@/components/ui/*": ["./src/components/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/lib/utils": ["../shared/src/utils"],
-      "@/lib/api-endpoints": ["../shared/src/api-endpoints"],
-      "@/lib/api-client": ["../shared/src/api-client"]
+      "@workspace/ui/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
 }

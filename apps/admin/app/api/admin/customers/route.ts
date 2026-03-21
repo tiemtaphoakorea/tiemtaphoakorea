@@ -1,6 +1,6 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { createCustomer, getCustomers } from "@repo/database/services/customer.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { createCustomer, getCustomers } from "@workspace/database/services/customer.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

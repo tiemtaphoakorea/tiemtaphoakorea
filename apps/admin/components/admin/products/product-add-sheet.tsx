@@ -1,13 +1,13 @@
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import { NumberInput } from "@repo/ui/components/number-input";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -15,7 +15,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import { Image as ImageIcon } from "lucide-react";
 
 interface ProductAddSheetProps {

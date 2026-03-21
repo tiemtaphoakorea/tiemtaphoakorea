@@ -1,7 +1,11 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { deleteOrder, getOrderDetails, updateOrder } from "@repo/database/services/order.server";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import {
+  deleteOrder,
+  getOrderDetails,
+  updateOrder,
+} from "@workspace/database/services/order.server";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest, { params }: IdRouteParams) {

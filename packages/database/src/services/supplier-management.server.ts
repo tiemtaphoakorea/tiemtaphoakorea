@@ -3,7 +3,7 @@ import {
   CODE_PAD_LENGTH,
   SUPPLIER_CODE_PREFIX,
   SUPPLIER_ORDER_STATUS,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { supplierOrders } from "../schema/orders";

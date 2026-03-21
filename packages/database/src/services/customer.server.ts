@@ -1,5 +1,5 @@
-import { CUSTOMER_CODE_PREFIX, type CUSTOMER_TYPE, ROLE } from "@repo/shared/constants";
-import { calculateMetadata, PAGINATION_DEFAULT } from "@repo/shared/pagination";
+import { CUSTOMER_CODE_PREFIX, type CUSTOMER_TYPE, ROLE } from "@workspace/shared/constants";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { orders } from "../schema/orders";

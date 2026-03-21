@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type SupplierOrderStatusFormValues,
   supplierOrderStatusSchema,
-} from "@repo/shared/schemas";
-import { Button } from "@repo/ui/components/button";
+} from "@workspace/shared/schemas";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +13,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@repo/ui/components/dialog";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { NumberInput } from "@repo/ui/components/number-input";
-import { Textarea } from "@repo/ui/components/textarea";
-import { useEffect } from "react";
+} from "@workspace/ui/components/dialog";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { Controller, useForm } from "react-hook-form";
 
 interface SupplierOrderStatusDialogProps {
@@ -44,32 +43,20 @@ export function SupplierOrderStatusDialog({
     register,
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<SupplierOrderStatusFormValues>({
     resolver: zodResolver(supplierOrderStatusSchema),
-    defaultValues: {
-      status: "",
-      actualCostPrice: "",
-      expectedDate: "",
-      note: "",
-    },
+    values: selectedOrder
+      ? {
+          status: selectedOrder.status || "pending",
+          actualCostPrice: selectedOrder.actualCostPrice?.toString() ?? "",
+          expectedDate: selectedOrder.expectedDate
+            ? new Date(selectedOrder.expectedDate).toISOString().split("T")[0]
+            : "",
+          note: selectedOrder.note ?? "",
+        }
+      : { status: "", actualCostPrice: "", expectedDate: "", note: "" },
   });
-
-  // The `selectedOrder` prop is controlled by the parent. There is no event handler
-  // in this component that sets it, so we can't inline this reset at a call site.
-  useEffect(() => {
-    if (selectedOrder) {
-      reset({
-        status: selectedOrder.status || "pending",
-        actualCostPrice: selectedOrder.actualCostPrice?.toString() ?? "",
-        expectedDate: selectedOrder.expectedDate
-          ? new Date(selectedOrder.expectedDate).toISOString().split("T")[0]
-          : "",
-        note: selectedOrder.note ?? "",
-      });
-    }
-  }, [selectedOrder, reset]);
 
   const onFormSubmit = (data: SupplierOrderStatusFormValues) => {
     if (!selectedOrder || !onUpdateStatus) return;

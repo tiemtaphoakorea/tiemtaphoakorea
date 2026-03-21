@@ -1,22 +1,22 @@
 "use client";
 
-import { PAGINATION_DEFAULT } from "@repo/shared/pagination";
-import { formatDate } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
-import { DataTable } from "@repo/ui/components/data-table";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { formatDate } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
+import { DataTable } from "@workspace/ui/components/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { useToast } from "@repo/ui/components/use-toast";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
+} from "@workspace/ui/components/dropdown-menu";
+import { useToast } from "@workspace/ui/components/use-toast";
 import { Calendar, CalendarDays, MoreHorizontal, Truck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 // Components
 import { SupplierOrderAddSheet } from "@/components/admin/supplier-order-add-sheet";
 import { SupplierOrderHeader } from "@/components/admin/supplier-orders/supplier-order-header";
@@ -47,18 +47,67 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   },
 };
 
-export default function SupplierOrdersPage() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+type UIState = {
+  search: string;
+  status: string;
+  isAddSheetOpen: boolean;
+  isUpdateDialogOpen: boolean;
+  selectedOrder: any | null;
+  pagination: { pageIndex: number; pageSize: number };
+};
 
-  // Pagination State
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: PAGINATION_DEFAULT.LIMIT,
-  });
+const initialUIState: UIState = {
+  search: "",
+  status: "All",
+  isAddSheetOpen: false,
+  isUpdateDialogOpen: false,
+  selectedOrder: null,
+  pagination: { pageIndex: 0, pageSize: PAGINATION_DEFAULT.LIMIT },
+};
+
+type UIAction =
+  | { type: "SET_SEARCH"; payload: string }
+  | { type: "SET_STATUS"; payload: string }
+  | { type: "OPEN_ADD" }
+  | { type: "CLOSE_ADD" }
+  | { type: "OPEN_UPDATE"; payload: any }
+  | { type: "CLOSE_UPDATE" }
+  | { type: "SET_PAGINATION"; payload: Partial<{ pageIndex: number; pageSize: number }> };
+
+function uiReducer(state: UIState, action: UIAction): UIState {
+  switch (action.type) {
+    case "SET_SEARCH":
+      return {
+        ...state,
+        search: action.payload,
+        pagination: { ...state.pagination, pageIndex: 0 },
+      };
+    case "SET_STATUS":
+      return {
+        ...state,
+        status: action.payload,
+        pagination: { ...state.pagination, pageIndex: 0 },
+      };
+    case "OPEN_ADD":
+      return { ...state, isAddSheetOpen: true };
+    case "CLOSE_ADD":
+      return { ...state, isAddSheetOpen: false };
+    case "OPEN_UPDATE":
+      return { ...state, isUpdateDialogOpen: true, selectedOrder: action.payload };
+    case "CLOSE_UPDATE":
+      return { ...state, isUpdateDialogOpen: false, selectedOrder: null };
+    case "SET_PAGINATION":
+      return { ...state, pagination: { ...state.pagination, ...action.payload } };
+    default:
+      return state;
+  }
+}
+
+export default function SupplierOrdersPage() {
+  const [ui, dispatch] = useReducer(uiReducer, initialUIState);
+
+  // Destructure for convenience
+  const { search, status, isAddSheetOpen, isUpdateDialogOpen, selectedOrder, pagination } = ui;
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -105,7 +154,7 @@ export default function SupplierOrdersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "supplier-orders"] });
-      setIsAddSheetOpen(false);
+      dispatch({ type: "CLOSE_ADD" });
       toast({
         title: "Thành công",
         description: "Đã tạo đơn nhập hàng mới",
@@ -126,8 +175,7 @@ export default function SupplierOrdersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "supplier-orders"] });
-      setIsUpdateDialogOpen(false);
-      setSelectedOrder(null);
+      dispatch({ type: "CLOSE_UPDATE" });
       toast({
         title: "Thành công",
         description: "Đã cập nhật trạng thái đơn hàng",
@@ -246,8 +294,7 @@ export default function SupplierOrdersPage() {
             <DropdownMenuContent align="end" className="w-48 font-bold">
               <DropdownMenuItem
                 onClick={() => {
-                  setSelectedOrder(row.original);
-                  setIsUpdateDialogOpen(true);
+                  dispatch({ type: "OPEN_UPDATE", payload: row.original });
                 }}
               >
                 Cập nhật trạng thái
@@ -262,15 +309,15 @@ export default function SupplierOrdersPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SupplierOrderHeader onAddClick={() => setIsAddSheetOpen(true)} />
+      <SupplierOrderHeader onAddClick={() => dispatch({ type: "OPEN_ADD" })} />
 
       <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
         <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <SupplierOrderToolbar
             searchTerm={search}
-            onSearchChange={setSearch}
+            onSearchChange={(v) => dispatch({ type: "SET_SEARCH", payload: v })}
             statusFilter={status}
-            onStatusChange={setStatus}
+            onStatusChange={(v) => dispatch({ type: "SET_STATUS", payload: v })}
             statusConfig={STATUS_CONFIG}
           />
         </CardHeader>
@@ -292,14 +339,16 @@ export default function SupplierOrdersPage() {
             }
             pageCount={pageCount}
             pagination={pagination}
-            onPaginationChange={setPagination}
+            onPaginationChange={(updater) => {
+              dispatch({ type: "SET_PAGINATION", payload: updater });
+            }}
           />
         </CardContent>
       </Card>
 
       <SupplierOrderAddSheet
         isOpen={isAddSheetOpen}
-        onOpenChange={setIsAddSheetOpen}
+        onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
         products={productsData.products}
         suppliers={suppliersData.suppliers}
         onCreateOrder={createOrderMutation.mutate}
@@ -309,15 +358,16 @@ export default function SupplierOrdersPage() {
       {selectedOrder && (
         <SupplierOrderStatusDialog
           open={isUpdateDialogOpen}
-          onOpenChange={setIsUpdateDialogOpen}
+          onOpenChange={(open) =>
+            open
+              ? dispatch({ type: "OPEN_UPDATE", payload: selectedOrder })
+              : dispatch({ type: "CLOSE_UPDATE" })
+          }
           selectedOrder={selectedOrder}
           statusConfig={STATUS_CONFIG}
           isSubmitting={updateStatusMutation.isPending}
           onUpdateStatus={updateStatusMutation.mutate}
-          onClose={() => {
-            setIsUpdateDialogOpen(false);
-            setSelectedOrder(null);
-          }}
+          onClose={() => dispatch({ type: "CLOSE_UPDATE" })}
         />
       )}
     </div>

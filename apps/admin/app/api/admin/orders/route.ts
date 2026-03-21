@@ -1,11 +1,11 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   checkIdempotencyKey,
   comparePayloads,
   storeIdempotencyKey,
-} from "@repo/database/lib/idempotency";
-import { createOrder, getOrders } from "@repo/database/services/order.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/lib/idempotency";
+import { createOrder, getOrders } from "@workspace/database/services/order.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
 
     // Update idempotency key with response if clientToken was provided
     if (clientToken && order?.id) {
-      const { updateIdempotencyKey } = await import("@repo/database/lib/idempotency");
+      const { updateIdempotencyKey } = await import("@workspace/database/lib/idempotency");
       await updateIdempotencyKey(clientToken, order.id, response);
     }
 

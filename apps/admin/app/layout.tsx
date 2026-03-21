@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@repo/ui/components/toaster";
+import "@workspace/ui/styles/globals.css";
+import { Toaster } from "@workspace/ui/components/sonner";
+import { TooltipProvider } from "@workspace/ui/components/tooltip";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -26,8 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${cormorantGaramond.variable} antialiased`} suppressHydrationWarning>
-        {children}
+      <body
+        className={`${dmSans.variable} ${cormorantGaramond.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
       </body>
     </html>

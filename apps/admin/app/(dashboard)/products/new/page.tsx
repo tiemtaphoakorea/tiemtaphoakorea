@@ -1,7 +1,7 @@
 "use client";
 
-import type { ProductFormCategory } from "@repo/shared/types/product";
 import { useQuery } from "@tanstack/react-query";
+import type { ProductFormCategory } from "@workspace/shared/types/product";
 import { ProductForm } from "@/components/admin/products/product-form";
 import { adminClient } from "@/services/admin.client";
 

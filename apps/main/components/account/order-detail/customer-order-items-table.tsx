@@ -1,7 +1,13 @@
-import { formatCurrency, formatVariantDisplayName } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { Separator } from "@repo/ui/components/separator";
+import { formatCurrency, formatVariantDisplayName } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
 import {
   Table,
   TableBody,
@@ -9,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 

@@ -1,10 +1,10 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   createSupplier,
   getActiveSuppliers,
   getSuppliers,
-} from "@repo/database/services/supplier-management.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/services/supplier-management.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

@@ -1,4 +1,4 @@
-import { ERROR_MESSAGE } from "@repo/shared/constants";
+import { ERROR_MESSAGE } from "@workspace/shared/constants";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";

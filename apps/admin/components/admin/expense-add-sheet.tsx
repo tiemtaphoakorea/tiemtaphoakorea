@@ -1,18 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ExpenseFormValues, expenseSchema } from "@repo/shared/schemas";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { NumberInput } from "@repo/ui/components/number-input";
+import { type ExpenseFormValues, expenseSchema } from "@workspace/shared/schemas";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -20,7 +20,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import { Controller, useForm } from "react-hook-form";
 
 interface ExpenseAddSheetProps {

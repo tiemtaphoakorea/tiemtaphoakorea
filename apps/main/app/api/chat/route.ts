@@ -1,15 +1,15 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   getChatMessages,
   getChatRoomByCustomerId,
   getOrCreateChatRoom,
   sendMessage,
   uploadChatImage,
-} from "@repo/database/services/chat.server";
-import { ensureGuestProfile } from "@repo/database/services/guest.server";
-import type { ChatMessage } from "@repo/database/types/admin";
-import { CHAT_MESSAGE_TYPE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/services/chat.server";
+import { ensureGuestProfile } from "@workspace/database/services/guest.server";
+import type { ChatMessage } from "@workspace/database/types/admin";
+import { CHAT_MESSAGE_TYPE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { after, type NextRequest, NextResponse } from "next/server";
 import { autoReplyCustomerMessage } from "@/agent/services";
 

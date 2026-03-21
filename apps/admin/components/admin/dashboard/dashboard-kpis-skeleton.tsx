@@ -1,5 +1,5 @@
-import { Card } from "@repo/ui/components/card";
-import { Skeleton } from "@repo/ui/components/skeleton";
+import { Card } from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function DashboardKPIsSkeleton() {
   return (

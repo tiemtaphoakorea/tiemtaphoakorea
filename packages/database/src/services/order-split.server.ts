@@ -5,7 +5,7 @@ import {
   ORDER_STATUS,
   STOCK_TYPE,
   SUPPLIER_ORDER_STATUS,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { eq, sql } from "drizzle-orm";
 import { generateOrderNumber } from "../lib/db-locking";
 import { orderItems, orderStatusHistory, orders, supplierOrders } from "../schema/orders";

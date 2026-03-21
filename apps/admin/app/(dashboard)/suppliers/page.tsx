@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SupplierFormValues, supplierSchema } from "@workspace/shared/schemas";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -30,7 +31,6 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -196,10 +196,7 @@ function AdminSuppliersContent() {
                 </TableRow>
               ) : suppliers.length > 0 ? (
                 suppliers.map((supplier) => (
-                  <TableRow
-                    key={supplier.id}
-                    className="group"
-                  >
+                  <TableRow key={supplier.id} className="group">
                     <TableCell className="py-3">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-700 dark:text-slate-200">

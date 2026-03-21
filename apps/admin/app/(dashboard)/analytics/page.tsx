@@ -1,7 +1,7 @@
 "use client";
 
-import type { AnalyticsData } from "@repo/database/types/admin";
 import { useQuery } from "@tanstack/react-query";
+import type { AnalyticsData } from "@workspace/database/types/admin";
 import dynamic from "next/dynamic";
 import { AnalyticsHeader } from "@/components/admin/analytics/analytics-header";
 import { AnalyticsStats } from "@/components/admin/analytics/analytics-stats";

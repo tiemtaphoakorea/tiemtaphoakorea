@@ -1,11 +1,11 @@
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@repo/ui/components/dialog";
+} from "@workspace/ui/components/dialog";
 import { CheckCircle2, Copy } from "lucide-react";
 
 interface CredentialsDialogProps {

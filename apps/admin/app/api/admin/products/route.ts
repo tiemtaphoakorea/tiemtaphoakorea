@@ -1,4 +1,4 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   type CreateProductData,
   createProduct,
@@ -6,8 +6,8 @@ import {
   generateProductSlug,
   getProducts,
   getProductsWithVariants,
-} from "@repo/database/services/product.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/services/product.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 

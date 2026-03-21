@@ -1,7 +1,8 @@
 "use client";
 
-import { ADMIN_ROUTE_NAMES, ADMIN_TITLE } from "@repo/shared/constants";
-import { getBreadcrumbName } from "@repo/shared/utils";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { ADMIN_ROUTE_NAMES, ADMIN_TITLE } from "@workspace/shared/constants";
+import { getBreadcrumbName } from "@workspace/shared/utils";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,19 +10,17 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@repo/ui/components/breadcrumb";
-import { Separator } from "@repo/ui/components/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@repo/ui/components/sidebar";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+} from "@workspace/ui/components/breadcrumb";
+import { Separator } from "@workspace/ui/components/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@workspace/ui/components/sidebar";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { Fragment, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { adminClient } from "@/services/admin.client";
 
 function AdminLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     document.title = ADMIN_TITLE;
@@ -39,24 +38,22 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const data = await adminClient.getProfile();
       // The API returns { profile: ... } structure based on route.ts
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint_disable-next-line @typescript-eslint/no-explicit-any
       return (data as any)?.profile;
     },
     retry: 1,
   });
 
-  useEffect(() => {
-    if (!isLoading && (isError || !user)) {
-      router.replace("/login");
-    }
-  }, [isError, isLoading, user, router]);
-
-  if (isLoading || isError || !user) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
       </div>
     );
+  }
+
+  if (isError || !user) {
+    redirect("/login");
   }
 
   return (
@@ -65,7 +62,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
       <SidebarInset className="bg-muted/40 transition-[margin] peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ml-[--sidebar-width] md:peer-data-[variant=inset]:rounded-none">
         <header className="glass-header flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground -ml-1 h-10 w-10 rounded-lg transition-colors" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Separator orientation="vertical" className="mr-2 h-full" />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">

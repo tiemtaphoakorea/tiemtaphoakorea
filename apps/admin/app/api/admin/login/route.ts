@@ -1,7 +1,7 @@
-import { db } from "@repo/database/db";
-import { signSession, verifyPassword } from "@repo/database/lib/security";
-import { profiles } from "@repo/database/schema/profiles";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { db } from "@workspace/database/db";
+import { signSession, verifyPassword } from "@workspace/database/lib/security";
+import { profiles } from "@workspace/database/schema/profiles";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 

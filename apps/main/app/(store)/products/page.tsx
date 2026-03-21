@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 
-import { getCategories } from "@repo/database/services/category.server";
-import { getProductsForListing } from "@repo/database/services/product.server";
-import { PRODUCT_SORT } from "@repo/shared/constants";
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import { Skeleton } from "@repo/ui/components/skeleton";
+import { getCategories } from "@workspace/database/services/category.server";
+import { getProductsForListing } from "@workspace/database/services/product.server";
+import { PRODUCT_SORT } from "@workspace/shared/constants";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -26,20 +26,23 @@ export default async function ProductsPage({
   return (
     <>
       {/* Header Section (Static Shell) */}
-      <div className="border-primary/10 border-b bg-slate-50/40">
-        <div className="container mx-auto px-4 py-6 md:py-8">
-          <nav className="text-muted-foreground mb-3 flex items-center gap-2 text-xs">
-            <Link href={PUBLIC_ROUTES.HOME} className="hover:text-primary transition-colors">
+      <div className="bg-primary">
+        <div className="container mx-auto px-4 py-10 md:py-14">
+          <nav className="mb-4 flex items-center gap-2 text-xs text-primary-foreground/60">
+            <Link
+              href={PUBLIC_ROUTES.HOME}
+              className="transition-colors hover:text-primary-foreground"
+            >
               Trang chủ
             </Link>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-semibold">Sản phẩm</span>
+            <span className="font-semibold text-primary-foreground">Sản phẩm</span>
           </nav>
           <div className="max-w-2xl space-y-2">
-            <h1 className="text-foreground text-2xl font-bold tracking-tight md:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-primary-foreground md:text-3xl">
               Danh mục sản phẩm
             </h1>
-            <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
+            <p className="text-sm leading-relaxed text-primary-foreground/70 md:text-base">
               Khám phá bộ sưu tập những sản phẩm chăm sóc sắc đẹp và đồ gia dụng hàng đầu từ Hàn
               Quốc.
             </p>

@@ -1,7 +1,7 @@
 "use client";
 
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import { Button } from "@repo/ui/components/button";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import { Button } from "@workspace/ui/components/button";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";

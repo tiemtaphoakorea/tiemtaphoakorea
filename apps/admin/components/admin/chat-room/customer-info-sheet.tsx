@@ -1,6 +1,6 @@
-import { Button } from "@repo/ui/components/button";
-import { Separator } from "@repo/ui/components/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@repo/ui/components/sheet";
+import { Button } from "@workspace/ui/components/button";
+import { Separator } from "@workspace/ui/components/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Calendar, Package, Phone, User, Wallet } from "lucide-react";
 import Link from "next/link";
 

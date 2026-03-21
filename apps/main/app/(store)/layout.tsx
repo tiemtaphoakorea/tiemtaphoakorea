@@ -1,34 +1,18 @@
-"use client";
-
-import { useState, useSyncExternalStore } from "react";
+import { getCategories } from "@workspace/database/services/category.server";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
-import { ChatWidget } from "@/components/store/chat-widget";
+import { ChatWidgetInitializer } from "@/components/store/chat-widget-initializer";
 
-const SUBSCRIBE = () => () => {};
-
-export default function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [guestId] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const saved = localStorage.getItem("chat_guest_id");
-    if (saved) return saved;
-    const newId = crypto.randomUUID();
-    localStorage.setItem("chat_guest_id", newId);
-    return newId;
-  });
-
-  const mounted = useSyncExternalStore(
-    SUBSCRIBE,
-    () => true,
-    () => false,
-  );
+export default async function StoreLayout({ children }: { children: React.ReactNode }) {
+  const allCategories = await getCategories();
+  const categories = allCategories.filter((c) => c.isActive);
 
   return (
-    <div className="bg-background flex min-h-screen flex-col font-sans text-slate-900 antialiased selection:bg-rose-500/30 selection:text-rose-600 dark:text-slate-50">
-      <Navbar />
+    <div className="bg-background flex min-h-screen flex-col font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary dark:text-slate-50">
+      <Navbar categories={categories} />
       <main className="w-full flex-1">{children}</main>
       <Footer />
-      {mounted && guestId && <ChatWidget guestId={guestId} title="Store Support" />}
+      <ChatWidgetInitializer />
     </div>
   );
 }

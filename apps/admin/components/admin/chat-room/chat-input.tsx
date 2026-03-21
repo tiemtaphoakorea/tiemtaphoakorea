@@ -1,8 +1,8 @@
-import { createClient } from "@repo/database/lib/supabase/client";
-import type { ChatTypingPayload } from "@repo/shared/types/chat";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { createClient } from "@workspace/database/lib/supabase/client";
+import type { ChatTypingPayload } from "@workspace/shared/types/chat";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import { Image as ImageIcon, Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chatClient } from "@/services/chat.client";

@@ -1,7 +1,7 @@
-import type { Supplier } from "@repo/database/types/admin";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import type { Supplier } from "@workspace/database/types/admin";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -9,8 +9,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
-import { Textarea } from "@repo/ui/components/textarea";
+} from "@workspace/ui/components/sheet";
+import { Textarea } from "@workspace/ui/components/textarea";
 
 interface SupplierEditSheetProps {
   isOpen: boolean;

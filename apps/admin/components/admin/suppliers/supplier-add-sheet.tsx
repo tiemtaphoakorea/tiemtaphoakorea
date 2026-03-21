@@ -1,5 +1,5 @@
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -8,8 +8,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@repo/ui/components/sheet";
-import { Textarea } from "@repo/ui/components/textarea";
+} from "@workspace/ui/components/sheet";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { Plus } from "lucide-react";
 
 interface SupplierAddSheetProps {

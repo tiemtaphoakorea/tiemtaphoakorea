@@ -1,8 +1,8 @@
 "use client";
 
-import type { ChatWidgetProps } from "@repo/shared/types/chat";
-import { Button } from "@repo/ui/components/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/components/popover";
+import type { ChatWidgetProps } from "@workspace/shared/types/chat";
+import { Button } from "@workspace/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 import { RealtimeChat } from "@/components/store/realtime-chat";

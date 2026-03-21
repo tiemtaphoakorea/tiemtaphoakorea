@@ -2,9 +2,9 @@ import {
   FEATURED_PRODUCTS_LIMIT_DEFAULT,
   PRODUCT_SORT,
   VARIANT_ID_PREFIX,
-} from "@repo/shared/constants";
-import { BusinessError } from "@repo/shared/http-status";
-import { calculateMetadata, PAGINATION_DEFAULT } from "@repo/shared/pagination";
+} from "@workspace/shared/constants";
+import { BusinessError } from "@workspace/shared/http-status";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { and, desc, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
@@ -405,7 +405,11 @@ export async function getProductsForListing(params: {
   let categoryIdFilter: ReturnType<typeof inArray> | undefined;
   if (categorySlug) {
     const allCats = await db
-      .select({ id: categories.id, slug: categories.slug, parentId: categories.parentId })
+      .select({
+        id: categories.id,
+        slug: categories.slug,
+        parentId: categories.parentId,
+      })
       .from(categories);
     const root = allCats.find((c) => c.slug === categorySlug);
     console.log(

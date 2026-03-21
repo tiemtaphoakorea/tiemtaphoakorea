@@ -1,7 +1,7 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { uploadImage } from "@repo/database/services/storage.server";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { uploadImage } from "@workspace/database/services/storage.server";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

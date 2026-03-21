@@ -1,16 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type CustomerFormValues, customerSchema, objectToFormData } from "@repo/shared/schemas";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import {
+  type CustomerFormValues,
+  customerSchema,
+  objectToFormData,
+} from "@workspace/shared/schemas";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -19,7 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 import { UserPlus } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";

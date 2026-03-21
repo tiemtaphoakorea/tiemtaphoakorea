@@ -1,8 +1,8 @@
 "use client";
 
-import { formatCurrency } from "@repo/shared/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { CreditCard, ShoppingBag, TrendingUp, Users } from "lucide-react";
 import { adminClient } from "@/services/admin.client";
 

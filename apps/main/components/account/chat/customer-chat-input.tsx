@@ -1,5 +1,5 @@
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import { Image as ImageIcon, Loader2, Send } from "lucide-react";
 
 interface CustomerChatInputProps {

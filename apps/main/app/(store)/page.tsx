@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getFeaturedProducts } from "@repo/database/services/product.server";
+import { getFeaturedProducts } from "@workspace/database/services/product.server";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { FeaturedProducts } from "@/components/sections/featured-products";

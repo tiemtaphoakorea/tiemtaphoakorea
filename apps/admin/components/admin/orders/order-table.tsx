@@ -1,7 +1,7 @@
-import { ADMIN_ROUTES } from "@workspace/shared/routes"
-import { formatCurrency } from "@workspace/shared/utils"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Table,
   TableBody,
@@ -9,21 +9,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@workspace/ui/components/table"
-import { Eye, Smartphone } from "lucide-react"
-import Link from "next/link"
+} from "@workspace/ui/components/table";
+import { Eye, Smartphone } from "lucide-react";
+import Link from "next/link";
 
 interface OrderTableProps {
-  orders: any[]
-  statusConfig: Record<string, { label: string; color: string; icon: any }>
-  formatDate: (date: any) => string
+  orders: any[];
+  statusConfig: Record<string, { label: string; color: string; icon: any }>;
+  formatDate: (date: any) => string;
 }
 
-export function OrderTable({
-  orders,
-  statusConfig,
-  formatDate,
-}: OrderTableProps) {
+export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -45,7 +41,7 @@ export function OrderTable({
           </TableRow>
         ) : (
           orders.map((order) => {
-            const StatusIcon = statusConfig[order.status]?.icon
+            const StatusIcon = statusConfig[order.status]?.icon;
             return (
               <TableRow key={order.id}>
                 <TableCell className="border-l-4 border-l-transparent font-black text-slate-900 transition-all hover:border-l-primary">
@@ -92,10 +88,10 @@ export function OrderTable({
                   </Button>
                 </TableCell>
               </TableRow>
-            )
+            );
           })
         )}
       </TableBody>
     </Table>
-  )
+  );
 }

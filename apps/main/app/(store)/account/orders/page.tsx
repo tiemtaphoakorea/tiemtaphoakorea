@@ -1,4 +1,4 @@
-import { ACCOUNT_ROUTES } from "@repo/shared/routes";
+import { ACCOUNT_ROUTES } from "@workspace/shared/routes";
 import Link from "next/link";
 
 export default function AccountOrdersPage() {

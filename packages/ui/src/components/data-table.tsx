@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@repo/shared/utils";
 import { type ColumnDef, flexRender } from "@tanstack/react-table";
+import { cn } from "@workspace/ui/lib/utils";
 import { Loader2 } from "lucide-react";
 import { PaginationControls } from "./pagination-controls";
 import { Skeleton } from "./skeleton";
@@ -32,7 +32,9 @@ type FlatColumn<TData, TValue> = ColumnDef<TData, TValue> & {
   id?: string;
 };
 
-function flattenColumns<TData, TValue>(columns: ColumnDef<TData, TValue>[]) {
+function flattenColumns<TData, TValue>(
+  columns: ColumnDef<TData, TValue>[],
+): FlatColumn<TData, TValue>[] {
   return columns.flatMap((column) => {
     const flatColumn = column as FlatColumn<TData, TValue>;
     return flatColumn.columns?.length ? flattenColumns(flatColumn.columns) : [flatColumn];
@@ -83,7 +85,7 @@ export function DataTable<TData, TValue>({
     <div className="relative space-y-4">
       {isFetching && !isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/10 backdrop-blur-[1px]">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
       <div
@@ -91,7 +93,7 @@ export function DataTable<TData, TValue>({
           className,
           isFetching &&
             !isLoading &&
-            "opacity-40 grayscale-20 transition-all duration-300 pointer-events-none",
+            "pointer-events-none opacity-40 grayscale-20 transition-all duration-300",
         )}
       >
         <Table>
@@ -100,8 +102,14 @@ export function DataTable<TData, TValue>({
               {flatColumns.map((column, columnIndex) => (
                 <TableHead key={getColumnId(column, columnIndex)}>
                   {flexRender(column.header, {
-                    column: { columnDef: column, id: getColumnId(column, columnIndex) },
-                    header: { id: getColumnId(column, columnIndex), isPlaceholder: false },
+                    column: {
+                      columnDef: column,
+                      id: getColumnId(column, columnIndex),
+                    },
+                    header: {
+                      id: getColumnId(column, columnIndex),
+                      isPlaceholder: false,
+                    },
                     table: null,
                   } as never)}
                 </TableHead>
@@ -195,13 +203,12 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {onPaginationChange && pagination && (
-        <div className="border-t border-slate-100 px-6 dark:border-slate-800">
+      {onPaginationChange && pagination && pageCount > 1 && (
+        <div className="border-t border-slate-100 px-6 py-4 dark:border-slate-800">
           <PaginationControls
             currentPage={pagination.pageIndex + 1}
             totalPages={pageCount}
             onPageChange={(page) => onPaginationChange({ ...pagination, pageIndex: page - 1 })}
-            isLoading={isLoading}
           />
         </div>
       )}

@@ -1,14 +1,14 @@
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@repo/ui/components/card";
+} from "@workspace/ui/components/card";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 

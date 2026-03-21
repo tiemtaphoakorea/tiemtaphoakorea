@@ -1,19 +1,19 @@
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
+} from "@workspace/ui/components/sheet";
 
 interface CategoryAddSheetProps {
   categories: any[];

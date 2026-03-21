@@ -1,4 +1,4 @@
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@workspace/ui/components/button";
 import { Plus } from "lucide-react";
 
 interface SupplierOrderHeaderProps {

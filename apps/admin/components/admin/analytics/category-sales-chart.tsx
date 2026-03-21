@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@repo/ui/components/card";
+} from "@workspace/ui/components/card";
 import {
   Bar,
   BarChart,

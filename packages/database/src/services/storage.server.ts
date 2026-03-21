@@ -2,7 +2,7 @@ import {
   PRODUCT_IMAGE_BUCKET_NAME,
   PRODUCT_IMAGE_PATH_PREFIX,
   STORAGE_CACHE_CONTROL,
-} from "@repo/shared/constants";
+} from "@workspace/shared/constants";
 import { createAdminClient } from "../lib/supabase/admin";
 
 export async function uploadImage(file: File) {

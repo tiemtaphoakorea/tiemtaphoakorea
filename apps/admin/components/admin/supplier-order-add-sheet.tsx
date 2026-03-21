@@ -1,10 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { SupplierLookupItem } from "@repo/database/types/admin";
-import { type SupplierOrderAddFormValues, supplierOrderAddSchema } from "@repo/shared/schemas";
-import { cn } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
+import type { SupplierLookupItem } from "@workspace/database/types/admin";
+import { type SupplierOrderAddFormValues, supplierOrderAddSchema } from "@workspace/shared/schemas";
+import { Button } from "@workspace/ui/components/button";
 import {
   Command,
   CommandEmpty,
@@ -12,11 +11,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@repo/ui/components/command";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { NumberInput } from "@repo/ui/components/number-input";
-import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/components/popover";
+} from "@workspace/ui/components/command";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import {
   Sheet,
   SheetContent,
@@ -24,8 +23,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@repo/ui/components/sheet";
-import { Textarea } from "@repo/ui/components/textarea";
+} from "@workspace/ui/components/sheet";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -176,7 +176,7 @@ export function SupplierOrderAddSheet({
                 )}
               />
               {errors.variantId && (
-                <p className="text-destructive text-sm">{errors.variantId.message}</p>
+                <p className="text-sm text-destructive">{errors.variantId.message}</p>
               )}
             </div>
 
@@ -284,7 +284,7 @@ export function SupplierOrderAddSheet({
                   )}
                 />
                 {errors.quantity && (
-                  <p className="text-destructive text-sm">{errors.quantity.message}</p>
+                  <p className="text-sm text-destructive">{errors.quantity.message}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -331,7 +331,7 @@ export function SupplierOrderAddSheet({
             <Button
               type="submit"
               disabled={isCreatingOrder || !variantId}
-              className="shadow-primary/20 h-12 px-8 font-bold shadow-lg"
+              className="h-12 px-8 font-bold shadow-lg shadow-primary/20"
             >
               {isCreatingOrder ? "Đang xử lý..." : "Xác nhận tạo đơn"}
             </Button>

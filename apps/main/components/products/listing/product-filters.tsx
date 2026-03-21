@@ -1,9 +1,9 @@
 "use client";
 
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import type { ProductFilterCategory } from "@repo/shared/types/product";
-import { Button } from "@repo/ui/components/button";
-import { Separator } from "@repo/ui/components/separator";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import type { ProductFilterCategory } from "@workspace/shared/types/product";
+import { Button } from "@workspace/ui/components/button";
+import { Separator } from "@workspace/ui/components/separator";
 import { Filter, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -43,7 +43,9 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
       {/* Sidebar Filters - Desktop */}
       <aside className="sticky top-32 hidden h-fit w-64 space-y-8 lg:block">
         <div>
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Danh mục</h3>
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Danh mục
+          </h3>
           <div className="space-y-2">
             {categoryList.map((cat) => (
               <button
@@ -55,7 +57,9 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
                     : "font-medium text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeCategorySlug === cat.slug ? "bg-primary" : "bg-transparent"}`} />
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeCategorySlug === cat.slug ? "bg-primary" : "bg-transparent"}`}
+                />
                 {cat.name}
               </button>
             ))}

@@ -1,6 +1,6 @@
-import type { ChatMessage } from "@repo/database/services/chat.server";
-import { INTERNAL_CHAT_ROLES } from "@repo/shared/constants";
-import { ScrollArea } from "@repo/ui/components/scroll-area";
+import type { ChatMessage } from "@workspace/database/services/chat.server";
+import { INTERNAL_CHAT_ROLES } from "@workspace/shared/constants";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 

@@ -1,9 +1,9 @@
 "use client";
 
-import type { CustomerDetail } from "@repo/database/types/admin";
-import { formatDate } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
+import type { CustomerDetail } from "@workspace/database/types/admin";
+import { formatDate } from "@workspace/shared/utils";
+import { Button } from "@workspace/ui/components/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

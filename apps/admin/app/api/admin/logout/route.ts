@@ -1,4 +1,4 @@
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function POST() {

@@ -1,8 +1,8 @@
 "use client";
 
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { Button } from "@repo/ui/components/button";
-import { ErrorBoundary } from "@repo/ui/components/error-boundary";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { Button } from "@workspace/ui/components/button";
+import { ErrorBoundary } from "@workspace/ui/components/error-boundary";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";

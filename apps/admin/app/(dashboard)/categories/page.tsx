@@ -1,31 +1,28 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import type { CategoryWithChildren } from "@workspace/database/types/admin"
-import {
-  type CategoryFormValues,
-  categorySchema,
-} from "@workspace/shared/schemas"
-import { cn } from "@workspace/ui/lib/utils"
-import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardHeader } from "@workspace/ui/components/card"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CategoryWithChildren } from "@workspace/database/types/admin";
+import { type CategoryFormValues, categorySchema } from "@workspace/shared/schemas";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu"
-import { Input } from "@workspace/ui/components/input"
-import { NumberInput } from "@workspace/ui/components/number-input"
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@workspace/ui/components/select"
+} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -33,8 +30,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@workspace/ui/components/sheet"
-import { Skeleton } from "@workspace/ui/components/skeleton"
+} from "@workspace/ui/components/sheet";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -42,8 +39,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@workspace/ui/components/table"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+} from "@workspace/ui/components/table";
+import { cn } from "@workspace/ui/lib/utils";
 import {
   ChevronDown,
   ChevronRight,
@@ -53,13 +50,64 @@ import {
   Plus,
   Search,
   Trash2,
-} from "lucide-react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Suspense, useMemo, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { adminClient } from "@/services/admin.client"
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useReducer } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { adminClient } from "@/services/admin.client";
 
-// Recursive row component
+// ── UI state ──────────────────────────────────────────────────────────────────
+
+type UIState = {
+  expandedMap: Record<string, boolean>;
+  isSheetOpen: boolean;
+  editingCategory: CategoryWithChildren | null;
+  formMode: "add" | "edit";
+  isSubmitting: boolean;
+};
+
+type UIAction =
+  | { type: "TOGGLE_EXPAND"; id: string; currentValue: boolean }
+  | { type: "OPEN_ADD" }
+  | { type: "OPEN_EDIT"; category: CategoryWithChildren }
+  | { type: "CLOSE_SHEET" }
+  | { type: "SET_SUBMITTING"; value: boolean };
+
+const initialUIState: UIState = {
+  expandedMap: {},
+  isSheetOpen: false,
+  editingCategory: null,
+  formMode: "add",
+  isSubmitting: false,
+};
+
+function uiReducer(state: UIState, action: UIAction): UIState {
+  switch (action.type) {
+    case "TOGGLE_EXPAND":
+      return {
+        ...state,
+        expandedMap: { ...state.expandedMap, [action.id]: !action.currentValue },
+      };
+    case "OPEN_ADD":
+      return { ...state, formMode: "add", editingCategory: null, isSheetOpen: true };
+    case "OPEN_EDIT":
+      return {
+        ...state,
+        formMode: "edit",
+        editingCategory: action.category,
+        isSheetOpen: true,
+      };
+    case "CLOSE_SHEET":
+      return { ...state, isSheetOpen: false };
+    case "SET_SUBMITTING":
+      return { ...state, isSubmitting: action.value };
+    default:
+      return state;
+  }
+}
+
+// ── Recursive row component ───────────────────────────────────────────────────
+
 const CategoryRow = ({
   category,
   level = 0,
@@ -68,24 +116,21 @@ const CategoryRow = ({
   onEdit,
   onDelete,
 }: {
-  category: CategoryWithChildren
-  level: number
-  expandedMap: Record<string, boolean>
-  toggleExpand: (id: string) => void
-  onEdit: (cat: CategoryWithChildren) => void
-  onDelete: (cat: CategoryWithChildren) => void
+  category: CategoryWithChildren;
+  level: number;
+  expandedMap: Record<string, boolean>;
+  toggleExpand: (id: string) => void;
+  onEdit: (cat: CategoryWithChildren) => void;
+  onDelete: (cat: CategoryWithChildren) => void;
 }) => {
-  const hasChildren = category.children && category.children.length > 0
-  const isExpanded = expandedMap[category.id]
+  const hasChildren = category.children && category.children.length > 0;
+  const isExpanded = expandedMap[category.id];
 
   return (
     <>
       <TableRow className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
         <TableCell className="w-[400px]">
-          <div
-            className="flex items-center gap-2"
-            style={{ paddingLeft: `${level * 24}px` }}
-          >
+          <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 24}px` }}>
             {hasChildren ? (
               <button
                 onClick={() => toggleExpand(category.id)}
@@ -104,7 +149,7 @@ const CategoryRow = ({
             <FolderOpen
               className={cn(
                 "h-4 w-4",
-                level === 0 ? "fill-primary/20 text-primary" : "text-slate-400"
+                level === 0 ? "fill-primary/20 text-primary" : "text-slate-400",
               )}
             />
 
@@ -112,7 +157,7 @@ const CategoryRow = ({
               <span
                 className={cn(
                   "font-bold text-slate-700 dark:text-slate-200",
-                  level === 0 && "text-base"
+                  level === 0 && "text-base",
                 )}
               >
                 {category.name}
@@ -132,16 +177,11 @@ const CategoryRow = ({
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">
-              #{category.displayOrder}
-            </span>
+            <span className="text-xs font-bold text-slate-500">#{category.displayOrder}</span>
           </div>
         </TableCell>
         <TableCell>
-          <Badge
-            variant={category.isActive ? "outline" : "secondary"}
-            className="text-[10px]"
-          >
+          <Badge variant={category.isActive ? "outline" : "secondary"} className="text-[10px]">
             {category.isActive ? "Hiển thị" : "Đã ẩn"}
           </Badge>
         </TableCell>
@@ -156,10 +196,7 @@ const CategoryRow = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 font-bold">
-              <DropdownMenuItem
-                onClick={() => onEdit(category)}
-                className="gap-2"
-              >
+              <DropdownMenuItem onClick={() => onEdit(category)} className="gap-2">
                 <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -187,31 +224,211 @@ const CategoryRow = ({
           />
         ))}
     </>
-  )
-}
+  );
+};
+
+// ── Sheet form sub-component ──────────────────────────────────────────────────
+
+const CategorySheetForm = ({
+  isOpen,
+  onOpenChange,
+  formMode,
+  editingCategory,
+  isSubmitting,
+  form,
+  flatCategories,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  formMode: "add" | "edit";
+  editingCategory: CategoryWithChildren | null;
+  isSubmitting: boolean;
+  form: ReturnType<typeof useForm<CategoryFormValues>>;
+  flatCategories: Array<{ id: string; name: string; depth?: number | null }>;
+  onSubmit: (data: CategoryFormValues) => Promise<void>;
+}) => (
+  <Sheet open={isOpen} onOpenChange={onOpenChange}>
+    <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetTitle className="text-2xl font-black">
+          {formMode === "add" ? "Thêm danh mục" : "Chỉnh sửa danh mục"}
+        </SheetTitle>
+        <SheetDescription className="font-medium text-slate-500">
+          {formMode === "add"
+            ? "Tạo danh mục sản phẩm mới."
+            : `Cập nhật thông tin cho "${editingCategory?.name}".`}
+        </SheetDescription>
+      </SheetHeader>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6 py-8">
+        <div className="space-y-4">
+          <div className="grid gap-2">
+            <label
+              htmlFor="category-name"
+              className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
+            >
+              Tên danh mục <span className="text-red-500">*</span>
+            </label>
+            <Input
+              id="category-name"
+              {...form.register("name")}
+              placeholder="Ví dụ: Áo Thun, Quần Jean..."
+              className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+              aria-invalid={!!form.formState.errors.name}
+            />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <label
+              htmlFor="category-parent"
+              className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
+            >
+              Danh mục cha
+            </label>
+            <Controller
+              name="parentId"
+              control={form.control}
+              render={({ field }) => (
+                <Select value={field.value ?? "root_none_value"} onValueChange={field.onChange}>
+                  <SelectTrigger
+                    id="category-parent"
+                    className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
+                  >
+                    <SelectValue placeholder="--- Không (Danh mục gốc) ---" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="root_none_value">--- Không (Danh mục gốc) ---</SelectItem>
+                    {flatCategories.map((cat) => (
+                      <SelectItem
+                        key={cat.id}
+                        value={cat.id}
+                        disabled={editingCategory?.id === cat.id}
+                      >
+                        {Array(cat.depth || 0)
+                          .fill("— ")
+                          .join("") + cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label
+              htmlFor="category-description"
+              className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
+            >
+              Mô tả
+            </label>
+            <Input
+              id="category-description"
+              {...form.register("description")}
+              placeholder="Mô tả ngắn về danh mục..."
+              className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label
+                htmlFor="category-display-order"
+                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
+              >
+                Thứ tự hiển thị
+              </label>
+              <Controller
+                name="displayOrder"
+                control={form.control}
+                render={({ field }) => (
+                  <NumberInput
+                    id="category-display-order"
+                    decimalScale={0}
+                    value={field.value}
+                    onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    aria-invalid={!!form.formState.errors.displayOrder}
+                  />
+                )}
+              />
+              {form.formState.errors.displayOrder && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.displayOrder.message}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <label
+                htmlFor="category-status"
+                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
+              >
+                Trạng thái
+              </label>
+              <Controller
+                name="isActive"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ? "true" : "false"}
+                    onValueChange={(v) => field.onChange(v === "true")}
+                  >
+                    <SelectTrigger
+                      id="category-status"
+                      className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Hiển thị</SelectItem>
+                      <SelectItem value="false">Ẩn</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="h-11 w-full rounded-xl font-black shadow-lg shadow-primary/20"
+          >
+            {isSubmitting ? "Đang lưu..." : formMode === "add" ? "Tạo danh mục" : "Lưu thay đổi"}
+          </Button>
+        </SheetFooter>
+      </form>
+    </SheetContent>
+  </Sheet>
+);
+
+// ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function AdminCategories() {
   return (
     <Suspense fallback={<div />}>
       <AdminCategoriesContent />
     </Suspense>
-  )
+  );
 }
 
-function AdminCategoriesContent() {
-  "use no memo"
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const searchTerm = searchParams.get("search") || ""
+// ── Main content component ────────────────────────────────────────────────────
 
-  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({})
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [editingCategory, setEditingCategory] =
-    useState<CategoryWithChildren | null>(null)
-  const [formMode, setFormMode] = useState<"add" | "edit">("add")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+function AdminCategoriesContent() {
+  "use no memo";
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const searchTerm = searchParams.get("search") || "";
+
+  const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -222,117 +439,104 @@ function AdminCategoriesContent() {
       displayOrder: 0,
       isActive: true,
     },
-  })
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories", searchTerm],
     queryFn: () => adminClient.getCategories({ search: searchTerm }),
-  })
-  const categories = data?.categories || []
-  const flatCategories = data?.flatCategories || []
+  });
+  const categories = data?.categories || [];
+  const flatCategories = data?.flatCategories || [];
 
   // Auto-expand all if searching or initially
   const autoExpandedMap = useMemo(() => {
-    const allIds: Record<string, boolean> = {}
+    const allIds: Record<string, boolean> = {};
     const traverse = (cats: CategoryWithChildren[]) => {
       cats.forEach((c) => {
-        allIds[c.id] = true
-        if (c.children) traverse(c.children)
-      })
-    }
+        allIds[c.id] = true;
+        if (c.children) traverse(c.children);
+      });
+    };
     if (categories.length > 0) {
-      traverse(categories)
+      traverse(categories);
     }
-    return allIds
-  }, [categories])
+    return allIds;
+  }, [categories]);
   const displayExpandedMap =
-    Object.keys(expandedMap).length > 0
-      ? { ...autoExpandedMap, ...expandedMap }
-      : autoExpandedMap
+    Object.keys(ui.expandedMap).length > 0
+      ? { ...autoExpandedMap, ...ui.expandedMap }
+      : autoExpandedMap;
 
   const toggleExpand = (id: string) => {
-    setExpandedMap((prev) => ({
-      ...prev,
-      [id]: !(id in prev ? prev[id] : autoExpandedMap[id]),
-    }))
-  }
+    const currentValue = id in ui.expandedMap ? ui.expandedMap[id] : autoExpandedMap[id];
+    dispatch({ type: "TOGGLE_EXPAND", id, currentValue });
+  };
 
   const handleSearch = (val: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (val) params.set("search", val)
-    else params.delete("search")
-    router.push(`${pathname}?${params.toString()}`)
-  }
+    const params = new URLSearchParams(searchParams.toString());
+    if (val) params.set("search", val);
+    else params.delete("search");
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const openAdd = () => {
-    setFormMode("add")
-    setEditingCategory(null)
+    dispatch({ type: "OPEN_ADD" });
     form.reset({
       name: "",
       parentId: "root_none_value",
       description: "",
       displayOrder: 0,
       isActive: true,
-    })
-    setIsSheetOpen(true)
-  }
+    });
+  };
 
   const openEdit = (cat: CategoryWithChildren) => {
-    setFormMode("edit")
-    setEditingCategory(cat)
+    dispatch({ type: "OPEN_EDIT", category: cat });
     form.reset({
       name: cat.name,
       parentId: cat.parentId || "root_none_value",
       description: cat.description ?? "",
       displayOrder: cat.displayOrder ?? 0,
       isActive: cat.isActive !== false,
-    })
-    setIsSheetOpen(true)
-  }
+    });
+  };
 
   const handleDelete = async (cat: CategoryWithChildren) => {
-    if (
-      confirm(
-        `Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`
-      )
-    ) {
+    if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
       try {
-        await adminClient.deleteCategory(cat.id)
-        await queryClient.invalidateQueries({ queryKey: ["categories"] })
+        await adminClient.deleteCategory(cat.id);
+        await queryClient.invalidateQueries({ queryKey: ["categories"] });
       } catch (error: any) {
-        alert(error.message || "Failed to delete")
+        alert(error.message || "Failed to delete");
       }
     }
-  }
+  };
 
   const handleSubmit = async (data: CategoryFormValues) => {
-    setIsSubmitting(true)
-    const parentId =
-      data.parentId === "root_none_value" || !data.parentId
-        ? null
-        : data.parentId
+    dispatch({ type: "SET_SUBMITTING", value: true });
+    const parentId = data.parentId === "root_none_value" || !data.parentId ? null : data.parentId;
     const payload = {
       name: data.name,
       parentId,
       description: data.description ?? "",
       displayOrder: data.displayOrder ?? 0,
       isActive: data.isActive ?? true,
-    }
+    };
     try {
-      if (formMode === "add") {
-        await adminClient.createCategory(payload)
+      if (ui.formMode === "add") {
+        await adminClient.createCategory(payload);
       } else {
-        if (!editingCategory) return
-        await adminClient.updateCategory(editingCategory.id, payload)
+        if (!ui.editingCategory) return;
+        await adminClient.updateCategory(ui.editingCategory.id, payload);
       }
-      setIsSheetOpen(false)
-      await queryClient.invalidateQueries({ queryKey: ["categories"] })
-      setIsSubmitting(false)
+      dispatch({ type: "CLOSE_SHEET" });
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      dispatch({ type: "SET_SUBMITTING", value: false });
     } catch (error: any) {
-      alert(error.message || "Action failed")
-      setIsSubmitting(false)
+      alert(error.message || "Action failed");
+      dispatch({ type: "SET_SUBMITTING", value: false });
     }
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -419,10 +623,7 @@ function AdminCategoriesContent() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-40 text-center font-medium text-slate-500"
-                  >
+                  <TableCell colSpan={5} className="h-40 text-center font-medium text-slate-500">
                     Chưa có danh mục nào. Hãy tạo danh mục đầu tiên!
                   </TableCell>
                 </TableRow>
@@ -433,180 +634,16 @@ function AdminCategoriesContent() {
       </Card>
 
       {/* Add/Edit Sheet */}
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
-            <SheetTitle className="text-2xl font-black">
-              {formMode === "add" ? "Thêm danh mục" : "Chỉnh sửa danh mục"}
-            </SheetTitle>
-            <SheetDescription className="font-medium text-slate-500">
-              {formMode === "add"
-                ? "Tạo danh mục sản phẩm mới."
-                : `Cập nhật thông tin cho "${editingCategory?.name}".`}
-            </SheetDescription>
-          </SheetHeader>
-
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col gap-6 py-8"
-          >
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="category-name"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Tên danh mục <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="category-name"
-                  {...form.register("name")}
-                  placeholder="Ví dụ: Áo Thun, Quần Jean..."
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                  aria-invalid={!!form.formState.errors.name}
-                />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="category-parent"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Danh mục cha
-                </label>
-                <Controller
-                  name="parentId"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value ?? "root_none_value"}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="category-parent"
-                        className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
-                      >
-                        <SelectValue placeholder="--- Không (Danh mục gốc) ---" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="root_none_value">
-                          --- Không (Danh mục gốc) ---
-                        </SelectItem>
-                        {flatCategories.map((cat) => (
-                          <SelectItem
-                            key={cat.id}
-                            value={cat.id}
-                            disabled={editingCategory?.id === cat.id}
-                          >
-                            {Array(cat.depth || 0)
-                              .fill("— ")
-                              .join("") + cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="category-description"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Mô tả
-                </label>
-                <Input
-                  id="category-description"
-                  {...form.register("description")}
-                  placeholder="Mô tả ngắn về danh mục..."
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label
-                    htmlFor="category-display-order"
-                    className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                  >
-                    Thứ tự hiển thị
-                  </label>
-                  <Controller
-                    name="displayOrder"
-                    control={form.control}
-                    render={({ field }) => (
-                      <NumberInput
-                        id="category-display-order"
-                        decimalScale={0}
-                        value={field.value}
-                        onValueChange={(values) =>
-                          field.onChange(values.floatValue ?? 0)
-                        }
-                        className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                        aria-invalid={!!form.formState.errors.displayOrder}
-                      />
-                    )}
-                  />
-                  {form.formState.errors.displayOrder && (
-                    <p className="text-sm text-destructive">
-                      {form.formState.errors.displayOrder.message}
-                    </p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <label
-                    htmlFor="category-status"
-                    className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                  >
-                    Trạng thái
-                  </label>
-                  <Controller
-                    name="isActive"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value ? "true" : "false"}
-                        onValueChange={(v) => field.onChange(v === "true")}
-                      >
-                        <SelectTrigger
-                          id="category-status"
-                          className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="true">Hiển thị</SelectItem>
-                          <SelectItem value="false">Ẩn</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-11 w-full rounded-xl font-black shadow-lg shadow-primary/20"
-              >
-                {isSubmitting
-                  ? "Đang lưu..."
-                  : formMode === "add"
-                    ? "Tạo danh mục"
-                    : "Lưu thay đổi"}
-              </Button>
-            </SheetFooter>
-          </form>
-        </SheetContent>
-      </Sheet>
+      <CategorySheetForm
+        isOpen={ui.isSheetOpen}
+        onOpenChange={(open) => !open && dispatch({ type: "CLOSE_SHEET" })}
+        formMode={ui.formMode}
+        editingCategory={ui.editingCategory}
+        isSubmitting={ui.isSubmitting}
+        form={form}
+        flatCategories={flatCategories}
+        onSubmit={handleSubmit}
+      />
     </div>
-  )
+  );
 }

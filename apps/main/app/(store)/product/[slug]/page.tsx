@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { getProductBySlug } from "@repo/database/services/product.server";
-import { PUBLIC_ROUTES } from "@repo/shared/routes";
-import { Skeleton } from "@repo/ui/components/skeleton";
+import { getProductBySlug } from "@workspace/database/services/product.server";
+import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";

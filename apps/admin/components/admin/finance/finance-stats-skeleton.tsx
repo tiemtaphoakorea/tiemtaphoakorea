@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
-import { Skeleton } from "@repo/ui/components/skeleton";
+import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
+import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function FinanceStatsSkeleton() {
   return (

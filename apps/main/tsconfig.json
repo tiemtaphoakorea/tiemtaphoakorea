@@ -16,12 +16,12 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "@repo/database": ["../../packages/database/src/index.ts"],
-      "@repo/database/*": ["../../packages/database/src/*"],
-      "@repo/shared": ["../../packages/shared/src/index.ts"],
-      "@repo/shared/*": ["../../packages/shared/src/*"],
-      "@repo/ui": ["../../packages/ui/src/index.ts"],
-      "@repo/ui/*": ["../../packages/ui/src/*"]
+      "@workspace/database": ["../../packages/database/src/index.ts"],
+      "@workspace/database/*": ["../../packages/database/src/*"],
+      "@workspace/shared": ["../../packages/shared/src/index.ts"],
+      "@workspace/shared/*": ["../../packages/shared/src/*"],
+      "@workspace/ui": ["../../packages/ui/src/index.ts"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"]
     },
     "baseUrl": ".",
     "target": "ES2017"

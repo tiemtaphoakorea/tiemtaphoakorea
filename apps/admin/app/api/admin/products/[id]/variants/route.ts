@@ -1,9 +1,9 @@
-import { db } from "@repo/database/db";
-import { getInternalUser } from "@repo/database/lib/auth";
-import { costPriceHistory, productVariants } from "@repo/database/schema/products";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { db } from "@workspace/database/db";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { costPriceHistory, productVariants } from "@workspace/database/schema/products";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request, { params }: IdRouteParams) {

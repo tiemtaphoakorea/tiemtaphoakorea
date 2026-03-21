@@ -1,12 +1,12 @@
-import { getInternalUser } from "@repo/database/lib/auth";
+import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   deleteProduct,
   getProductById,
   type UpdateProductData,
   updateProduct,
-} from "@repo/database/services/product.server";
-import type { IdRouteParams } from "@repo/database/types/api";
-import { BusinessError, HTTP_STATUS } from "@repo/shared/http-status";
+} from "@workspace/database/services/product.server";
+import type { IdRouteParams } from "@workspace/database/types/api";
+import { BusinessError, HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: IdRouteParams) {

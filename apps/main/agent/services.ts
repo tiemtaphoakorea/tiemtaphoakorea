@@ -1,13 +1,13 @@
 import { run } from "@openai/agents";
-import { db } from "@repo/database/db";
-import { adminNotifications, profiles } from "@repo/database/schema";
-import { getChatMessages, sendMessage } from "@repo/database/services/chat.server";
+import { db } from "@workspace/database/db";
+import { adminNotifications, profiles } from "@workspace/database/schema";
+import { getChatMessages, sendMessage } from "@workspace/database/services/chat.server";
 import {
   CHAT_MESSAGE_TYPE,
   CHAT_TEXT_MAX_LENGTH,
   INTERNAL_CHAT_ROLES,
-} from "@repo/shared/constants";
-import type { AutoReplyInput } from "@repo/shared/types/ai-agent";
+} from "@workspace/shared/constants";
+import type { AutoReplyInput } from "@workspace/shared/types/ai-agent";
 import { eq } from "drizzle-orm";
 import { AGENT_ENABLED, AGENT_USERNAME, MAX_CONTEXT_MESSAGES, MAX_TURNS } from "./constants";
 import { agent } from "./index";

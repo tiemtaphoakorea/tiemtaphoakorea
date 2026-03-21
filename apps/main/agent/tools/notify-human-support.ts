@@ -1,7 +1,7 @@
 import { tool } from "@openai/agents";
-import { db } from "@repo/database/db";
-import { chatRooms } from "@repo/database/schema/chat";
-import { adminNotifications } from "@repo/database/schema/notifications";
+import { db } from "@workspace/database/db";
+import { chatRooms } from "@workspace/database/schema/chat";
+import { adminNotifications } from "@workspace/database/schema/notifications";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 

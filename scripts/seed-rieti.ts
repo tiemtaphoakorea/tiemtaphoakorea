@@ -266,52 +266,49 @@ async function main() {
     console.log(`  [cat] ${s.name}`);
   }
 
-  // --- Step 2: Group rows by product_name (case-insensitive) ---
-  const groups = new Map<string, CsvRow[]>();
+  // --- Step 2: Group rows by product_name, upsert one product per group ---
+  const productGroups = new Map<string, CsvRow[]>();
   for (const row of validRows) {
-    const key = row.product_name.toUpperCase();
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(row);
+    const key = row.product_name;
+    if (!productGroups.has(key)) productGroups.set(key, []);
+    productGroups.get(key)!.push(row);
   }
 
-  // --- Step 3: Upsert products, variants, images ---
-  const total = groups.size;
+  const total = productGroups.size;
   let processed = 0;
 
-  console.log(`\nSeeding ${total} products...\n`);
+  console.log(`\nSeeding ${total} products (${validRows.length} variants total)...\n`);
 
-  for (const [, rows] of groups) {
+  for (const [productName, variants] of productGroups) {
     processed++;
-    const productName = rows[0].product_name;
+    const first = variants[0];
     try {
       await db.transaction(async (tx) => {
-        const base_price = Math.min(...rows.map((r) => r.price));
-        const firstRow = rows[0];
-        const categoryId = categoryIdBySlug.get(firstRow.series_slug) ?? null;
+        const categoryId = categoryIdBySlug.get(first.series_slug) ?? null;
 
         const [product] = await tx
           .insert(schema.products)
           .values({
             name: productName,
-            slug: firstRow.slug,
-            description: firstRow.description || null,
-            basePrice: base_price.toFixed(2),
+            slug: first.slug,
+            description: first.description || null,
+            basePrice: first.price.toFixed(2),
             categoryId,
+            isActive: true,
           })
           .onConflictDoUpdate({
             target: schema.products.slug,
             set: {
               name: productName,
-              description: firstRow.description || null,
-              basePrice: base_price.toFixed(2),
+              description: first.description || null,
+              basePrice: first.price.toFixed(2),
               categoryId,
+              isActive: true,
             },
           })
           .returning({ id: schema.products.id });
 
-        let _totalImages = 0;
-
-        for (const row of rows) {
+        for (const row of variants) {
           const [variant] = await tx
             .insert(schema.productVariants)
             .values({
@@ -341,14 +338,13 @@ async function main() {
                 isPrimary: i === 0,
               })),
             );
-            _totalImages += row.image_urls.length;
           }
         }
 
         const seriesName =
-          allSeriesDefs.find((s) => s.slug === firstRow.series_slug)?.name ?? firstRow.series_slug;
+          allSeriesDefs.find((s) => s.slug === first.series_slug)?.name ?? first.series_slug;
         console.log(
-          `  [${processed}/${total}] ${productName.padEnd(30)} ${rows.length} variants  ${seriesName}`,
+          `  [${processed}/${total}] ${productName.padEnd(20)} ${variants.length} variant(s)  ${seriesName}`,
         );
       });
     } catch (err) {

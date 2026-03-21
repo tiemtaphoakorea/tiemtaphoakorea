@@ -1,5 +1,5 @@
-import { formatCurrency } from "@repo/shared/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 
 interface CustomerFinancialStatsProps {
   totalSpent: number;

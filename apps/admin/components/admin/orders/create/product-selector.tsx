@@ -1,8 +1,9 @@
 "use client";
 
-import type { ProductWithVariants } from "@repo/database/types/api";
-import { cn, formatCurrency } from "@repo/shared/utils";
-import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
+import type { ProductWithVariants } from "@workspace/database/types/api";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Button } from "@workspace/ui/components/button";
 import {
   Command,
   CommandEmpty,
@@ -10,16 +11,16 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@repo/ui/components/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/components/popover";
+} from "@workspace/ui/components/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
-import { useQuery } from "@tanstack/react-query";
+} from "@workspace/ui/components/select";
+import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown, Loader2, Plus, X } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";

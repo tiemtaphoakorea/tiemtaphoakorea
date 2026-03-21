@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { GUEST_CODE_PREFIX, GUEST_EMAIL_DOMAIN, ROLE } from "@repo/shared/constants";
+import { GUEST_CODE_PREFIX, GUEST_EMAIL_DOMAIN, ROLE } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { profiles } from "../schema/profiles";

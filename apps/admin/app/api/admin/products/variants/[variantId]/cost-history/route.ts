@@ -1,6 +1,6 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { getCostPriceHistory } from "@repo/database/services/product.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { getCostPriceHistory } from "@workspace/database/services/product.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export async function GET(

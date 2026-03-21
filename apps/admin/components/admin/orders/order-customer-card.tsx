@@ -1,15 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { Input } from "@repo/ui/components/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
-import { Separator } from "@repo/ui/components/separator";
+} from "@workspace/ui/components/select";
+import { Separator } from "@workspace/ui/components/separator";
 import { User } from "lucide-react";
 
 interface OrderCustomerCardProps {

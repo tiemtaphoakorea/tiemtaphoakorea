@@ -1,8 +1,8 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { createUser, getUsersPaginated } from "@repo/database/services/user.server";
-import { ROLE } from "@repo/shared/constants";
-import { HTTP_STATUS } from "@repo/shared/http-status";
-import { PAGINATION_DEFAULT } from "@repo/shared/pagination";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { createUser, getUsersPaginated } from "@workspace/database/services/user.server";
+import { ROLE } from "@workspace/shared/constants";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {

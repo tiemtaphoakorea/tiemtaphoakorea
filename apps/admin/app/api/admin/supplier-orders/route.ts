@@ -1,6 +1,9 @@
-import { getInternalUser } from "@repo/database/lib/auth";
-import { createSupplierOrders, getSupplierOrders } from "@repo/database/services/supplier.server";
-import { HTTP_STATUS } from "@repo/shared/http-status";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import {
+  createSupplierOrders,
+  getSupplierOrders,
+} from "@workspace/database/services/supplier.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {

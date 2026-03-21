@@ -4,8 +4,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@repo/ui/components/card";
-import { Separator } from "@repo/ui/components/separator";
+} from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
 
 interface CustomerOrderStatusCardProps {
   order: any;
