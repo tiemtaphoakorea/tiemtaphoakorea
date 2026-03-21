@@ -1,21 +1,21 @@
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Card, CardContent } from "@repo/ui/components/card";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import { Input } from "@repo/ui/components/input";
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@repo/ui/components/select";
+} from "@workspace/ui/components/select";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Edit, Filter, MoreHorizontal, Package, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -92,11 +92,11 @@ export function ProductTable({
         {/* Table */}
         <Table>
           <TableHeader>
-            <TableRow className="border-slate-100 hover:bg-transparent dark:border-slate-800">
-              <TableHead className="text-xs font-black uppercase">Sản phẩm</TableHead>
-              <TableHead className="text-xs font-black uppercase">Danh mục</TableHead>
-              <TableHead className="text-right text-xs font-black uppercase">Giá bán</TableHead>
-              <TableHead className="text-center text-xs font-black uppercase">Tồn kho</TableHead>
+            <TableRow>
+              <TableHead>Sản phẩm</TableHead>
+              <TableHead>Danh mục</TableHead>
+              <TableHead className="text-right">Giá bán</TableHead>
+              <TableHead className="text-center">Tồn kho</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -129,7 +129,6 @@ export function ProductTable({
                 return (
                   <TableRow
                     key={product.id}
-                    className="border-slate-100 hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-900/50"
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
