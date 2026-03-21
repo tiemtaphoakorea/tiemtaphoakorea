@@ -1,8 +1,8 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
+} from "@workspace/ui/components/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Ban, Edit2, Key, MapPin, MoreHorizontal, Phone, ShoppingBag, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -79,26 +79,14 @@ export function CustomerTable({
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[80px] text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Avatar
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Khách hàng
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Liên hệ
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Đơn hàng
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Tổng chi tiêu
-            </TableHead>
-            <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Trạng thái
-            </TableHead>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[80px] text-center">Avatar</TableHead>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Liên hệ</TableHead>
+            <TableHead>Đơn hàng</TableHead>
+            <TableHead>Tổng chi tiêu</TableHead>
+            <TableHead>Trạng thái</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -108,7 +96,7 @@ export function CustomerTable({
               <TableRow
                 key={customer.id}
                 onClick={(e) => handleRowClick(customer.id, e)}
-                className="group cursor-pointer transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                className="group cursor-pointer transition-colors"
               >
                 <TableCell className="py-4">
                   <div className="flex items-center justify-center">
