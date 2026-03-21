@@ -1,14 +1,14 @@
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@repo/ui/components/card";
+} from "@workspace/ui/components/card";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
+} from "@workspace/ui/components/table";
 import { Eye, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
@@ -44,20 +44,12 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+            <TableHeader>
               <TableRow>
-                <TableHead className="px-8 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Mã đơn
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Ngày đặt
-                </TableHead>
-                <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Trạng thái
-                </TableHead>
-                <TableHead className="px-8 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                  Tổng tiền
-                </TableHead>
+                <TableHead className="px-8">Mã đơn</TableHead>
+                <TableHead>Ngày đặt</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="px-8 text-right">Tổng tiền</TableHead>
                 <TableHead className="w-[150px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -66,7 +58,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                 orders.map((order: any) => (
                   <TableRow
                     key={order.id}
-                    className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                    className="group transition-colors"
                   >
                     <TableCell className="px-8 py-4">
                       <Link
