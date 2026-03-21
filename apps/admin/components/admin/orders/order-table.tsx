@@ -1,7 +1,7 @@
-import { ADMIN_ROUTES } from "@repo/shared/routes";
-import { formatCurrency } from "@repo/shared/utils";
-import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
+import { ADMIN_ROUTES } from "@workspace/shared/routes"
+import { formatCurrency } from "@workspace/shared/utils"
+import { Badge } from "@workspace/ui/components/badge"
+import { Button } from "@workspace/ui/components/button"
 import {
   Table,
   TableBody,
@@ -9,30 +9,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui/components/table";
-import { Eye, Smartphone } from "lucide-react";
-import Link from "next/link";
+} from "@workspace/ui/components/table"
+import { Eye, Smartphone } from "lucide-react"
+import Link from "next/link"
 
 interface OrderTableProps {
-  orders: any[];
-  statusConfig: Record<string, { label: string; color: string; icon: any }>;
-  formatDate: (date: any) => string;
+  orders: any[]
+  statusConfig: Record<string, { label: string; color: string; icon: any }>
+  formatDate: (date: any) => string
 }
 
-export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps) {
+export function OrderTable({
+  orders,
+  statusConfig,
+  formatDate,
+}: OrderTableProps) {
   return (
     <Table>
-      <TableHeader className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+      <TableHeader>
         <TableRow>
-          <TableHead className="text-xs font-bold text-slate-500 uppercase">Mã đơn</TableHead>
-          <TableHead className="text-xs font-bold text-slate-500 uppercase">Khách hàng</TableHead>
-          <TableHead className="text-xs font-bold text-slate-500 uppercase">Trạng thái</TableHead>
-          <TableHead className="text-right text-xs font-bold text-slate-500 uppercase">
-            Tổng tiền
-          </TableHead>
-          <TableHead className="text-center text-xs font-bold text-slate-500 uppercase">
-            Ngày tạo
-          </TableHead>
+          <TableHead>Mã đơn</TableHead>
+          <TableHead>Khách hàng</TableHead>
+          <TableHead>Trạng thái</TableHead>
+          <TableHead className="text-right">Tổng tiền</TableHead>
+          <TableHead className="text-center">Ngày tạo</TableHead>
           <TableHead className="w-[140px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -45,13 +45,10 @@ export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps
           </TableRow>
         ) : (
           orders.map((order) => {
-            const StatusIcon = statusConfig[order.status]?.icon;
+            const StatusIcon = statusConfig[order.status]?.icon
             return (
-              <TableRow
-                key={order.id}
-                className="border-slate-100 hover:bg-slate-50/50 dark:border-slate-800"
-              >
-                <TableCell className="hover:border-l-primary border-l-4 border-l-transparent font-black text-slate-900 transition-all">
+              <TableRow key={order.id}>
+                <TableCell className="border-l-4 border-l-transparent font-black text-slate-900 transition-all hover:border-l-primary">
                   #{order.orderNumber}
                 </TableCell>
                 <TableCell>
@@ -85,7 +82,7 @@ export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
+                    className="gap-2 px-3 font-bold text-primary hover:bg-primary/5 hover:text-primary"
                     asChild
                   >
                     <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>
@@ -95,10 +92,10 @@ export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps
                   </Button>
                 </TableCell>
               </TableRow>
-            );
+            )
           })
         )}
       </TableBody>
     </Table>
-  );
+  )
 }
