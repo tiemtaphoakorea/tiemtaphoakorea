@@ -15,7 +15,6 @@ const parseTemperature = (value: string | undefined, fallback: number): number =
 };
 
 export const AGENT_ENABLED = parseBoolean(process.env.AI_AGENT_ENABLED, true);
-export const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 export const MODEL = process.env.AI_AGENT_MODEL || "gpt-4o-mini";
 export const MAX_CONTEXT_MESSAGES = parsePositiveInt(process.env.AI_AGENT_MAX_CONTEXT_MESSAGES, 12);
 export const TEMPERATURE = parseTemperature(process.env.AI_AGENT_TEMPERATURE, 0.4);
