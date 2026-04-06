@@ -60,6 +60,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useReducer } from "react";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -322,7 +323,7 @@ function AdminCustomersPageContent() {
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customers", searchTerm, statusFilter, page, limit],
+    queryKey: queryKeys.customers.list(searchTerm, statusFilter, page, limit),
     queryFn: () =>
       adminClient.getCustomers({
         search: searchTerm,
@@ -379,7 +380,7 @@ function AdminCustomersPageContent() {
       toast({ title: "Thành công", description: "Đã tạo khách hàng mới" });
       dispatch({ type: "CLOSE_ADD" });
       dispatch({ type: "SHOW_CREDENTIALS", payload: { customerCode: res.profile.customerCode } });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
       toast({
@@ -406,7 +407,7 @@ function AdminCustomersPageContent() {
       await adminClient.updateCustomer(id, payload);
       toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
       dispatch({ type: "CLOSE_EDIT" });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
       toast({
@@ -427,7 +428,7 @@ function AdminCustomersPageContent() {
         title: "Thành công",
         description: successDescription,
       });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err: any) {
       toast({
         title: "Lỗi",
@@ -445,7 +446,7 @@ function AdminCustomersPageContent() {
       await adminClient.deleteCustomer(id);
       toast({ title: "Thành công", description: "Đã xóa khách hàng" });
       dispatch({ type: "SET_DELETING", payload: null });
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
       toast({

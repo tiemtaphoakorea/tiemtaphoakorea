@@ -22,6 +22,7 @@ import { SupplierOrderAddSheet } from "@/components/admin/supplier-order-add-she
 import { SupplierOrderHeader } from "@/components/admin/supplier-orders/supplier-order-header";
 import { SupplierOrderStatusDialog } from "@/components/admin/supplier-orders/supplier-order-status-dialog";
 import { SupplierOrderToolbar } from "@/components/admin/supplier-orders/supplier-order-toolbar";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -113,7 +114,7 @@ export default function SupplierOrdersPage() {
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["admin", "supplier-orders", { search, status }],
+    queryKey: queryKeys.admin.supplierOrders.list(search, status),
     queryFn: async () => {
       const orders = await adminClient.getSupplierOrders({
         search,
@@ -133,7 +134,7 @@ export default function SupplierOrdersPage() {
   }, [orders, pagination]);
 
   const { data: productsData = { products: [] } } = useQuery({
-    queryKey: ["admin", "products", { include: "variants" }],
+    queryKey: queryKeys.admin.products.withVariants,
     queryFn: async () => {
       return adminClient.getProductsWithVariants();
     },
@@ -141,7 +142,7 @@ export default function SupplierOrdersPage() {
   });
 
   const { data: suppliersData = { suppliers: [] } } = useQuery({
-    queryKey: ["admin", "suppliers", { status: "active" }],
+    queryKey: queryKeys.admin.suppliersActive,
     queryFn: async () => {
       return adminClient.getSuppliers(); // Existing method getSuppliers takes optional search
     },
@@ -153,7 +154,7 @@ export default function SupplierOrdersPage() {
       return adminClient.createSupplierOrder(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "supplier-orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
       dispatch({ type: "CLOSE_ADD" });
       toast({
         title: "Thành công",
@@ -174,7 +175,7 @@ export default function SupplierOrdersPage() {
       return adminClient.updateSupplierOrderStatus(id, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "supplier-orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
       dispatch({ type: "CLOSE_UPDATE" });
       toast({
         title: "Thành công",

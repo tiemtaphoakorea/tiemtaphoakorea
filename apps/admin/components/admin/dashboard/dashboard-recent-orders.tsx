@@ -16,11 +16,12 @@ import {
 } from "@workspace/ui/components/table";
 import { ArrowRight, Eye } from "lucide-react";
 import Link from "next/link";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export function DashboardRecentOrders() {
   const { data } = useSuspenseQuery({
-    queryKey: ["dashboard", "recent-orders"],
+    queryKey: queryKeys.dashboard.recentOrders,
     queryFn: () => adminClient.getRecentOrders(),
   });
 

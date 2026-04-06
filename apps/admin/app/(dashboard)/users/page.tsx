@@ -75,6 +75,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useReducer } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 // ---------------------------------------------------------------------------
@@ -663,7 +664,7 @@ function AdminUsersPageContent() {
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["users", searchTerm, page, limit],
+    queryKey: queryKeys.users.list(searchTerm, page, limit),
     queryFn: () => adminClient.getUsers({ search: searchTerm || undefined, page, limit }),
     placeholderData: keepPreviousData,
   });
@@ -726,7 +727,7 @@ function AdminUsersPageContent() {
         role: res.profile?.role,
       },
     });
-    await queryClient.invalidateQueries({ queryKey: ["users"] });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     dispatch({ type: "SET_LOADING", payload: false });
   };
 
@@ -744,7 +745,7 @@ function AdminUsersPageContent() {
       await adminClient.updateUser(id, payload);
       toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
       dispatch({ type: "CLOSE_EDIT" });
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
       toast({
@@ -765,7 +766,7 @@ function AdminUsersPageContent() {
         title: "Thành công",
         description: successDescription,
       });
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     } catch (err: any) {
       toast({
         title: "Lỗi",
@@ -783,7 +784,7 @@ function AdminUsersPageContent() {
       await adminClient.deleteUser(id);
       toast({ title: "Thành công", description: "Đã xóa nhân viên" });
       dispatch({ type: "SET_DELETING", payload: null });
-      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
       toast({

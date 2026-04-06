@@ -45,6 +45,8 @@ export type ProductFormVariant = {
   price: number;
   costPrice: number;
   stockQuantity: number;
+  /** Số tồn tối đa (kể cả) để vẫn coi là "sắp hết" — theo từng biến thể. */
+  lowStockThreshold: number;
   images: string[];
 };
 
@@ -63,6 +65,7 @@ export type AdminProductDetail = {
     price: string;
     costPrice: string | null;
     stockQuantity: number;
+    lowStockThreshold?: number | null;
     stockType: string | null;
     images: Array<{ imageUrl: string }>;
   }>;

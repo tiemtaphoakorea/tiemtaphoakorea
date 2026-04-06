@@ -53,6 +53,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 type OrderStatusValue = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
@@ -317,7 +318,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   // Data Fetching
   const { data, isLoading, error } = useQuery({
-    queryKey: ["order", id],
+    queryKey: queryKeys.order(id),
     queryFn: () => adminClient.getOrder(id),
   });
 
@@ -376,7 +377,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
       });
       toast({ title: "Thành công", description: "Đã ghi nhận thanh toán." });
       paymentDispatch({ type: "CLOSE" });
-      await queryClient.invalidateQueries({ queryKey: ["order", id] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast({
@@ -401,7 +402,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           description: "Cập nhật trạng thái thành công",
         });
         setNote("");
-        await queryClient.invalidateQueries({ queryKey: ["order", id] });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
       } catch (err: any) {
         const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
         toast({
@@ -424,7 +425,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         description: "Cập nhật đơn hàng thành công",
       });
       editDispatch({ type: "CANCEL_EDIT" });
-      await queryClient.invalidateQueries({ queryKey: ["order", id] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast({

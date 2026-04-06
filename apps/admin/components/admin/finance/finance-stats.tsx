@@ -5,6 +5,7 @@ import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { ArrowUpRight, DollarSign, PieChart, TrendingUp, Wallet } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 interface FinanceStatsProps {
@@ -16,7 +17,7 @@ interface FinanceStatsProps {
 
 export function FinanceStats({ date }: FinanceStatsProps) {
   const { data } = useSuspenseQuery({
-    queryKey: ["admin", "finance", "stats", date],
+    queryKey: queryKeys.admin.finance.stats(date),
     queryFn: () => adminClient.getFinancialStats(date),
   });
 

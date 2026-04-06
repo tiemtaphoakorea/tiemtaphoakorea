@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import type {
   AdminProductDetail,
   ProductFormCategory,
@@ -8,6 +9,7 @@ import type {
 } from "@workspace/shared/types/product";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/admin/products/product-form";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export default function EditProductPage() {
@@ -15,7 +17,7 @@ export default function EditProductPage() {
   const params = useParams();
   const id = params.id as string;
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["product-edit", id],
+    queryKey: queryKeys.productEdit(id),
     queryFn: async () => {
       const [catData, productData] = await Promise.all([
         adminClient.getCategories(),
@@ -39,6 +41,10 @@ export default function EditProductPage() {
               price: parseFloat(v.price),
               costPrice: parseFloat(v.costPrice || "0"),
               stockQuantity: v.stockQuantity ?? 0,
+              lowStockThreshold:
+                v.lowStockThreshold != null
+                  ? Number(v.lowStockThreshold)
+                  : LOW_STOCK_DEFAULT_THRESHOLD,
               images: v.images?.map((img) => img.imageUrl) ?? [],
             })),
           }

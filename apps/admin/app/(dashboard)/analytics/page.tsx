@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { AnalyticsHeader } from "@/components/admin/analytics/analytics-header";
 import { AnalyticsStats } from "@/components/admin/analytics/analytics-stats";
 import { TopProducts } from "@/components/admin/analytics/top-products";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 const RevenueChart = dynamic(
@@ -24,7 +25,7 @@ const CategorySalesChart = dynamic(
 export default function AdminAnalyticsPage() {
   "use no memo";
   const { data, isLoading, error } = useQuery<AnalyticsData>({
-    queryKey: ["admin", "analytics"],
+    queryKey: queryKeys.admin.analytics,
     queryFn: async () => {
       const result = await adminClient.getAnalytics();
       return result as unknown as AnalyticsData;

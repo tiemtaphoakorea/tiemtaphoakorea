@@ -16,6 +16,7 @@ import { ChatHeader } from "@/components/admin/chat-room/chat-header";
 import { ChatInput } from "@/components/admin/chat-room/chat-input";
 import { CustomerInfoSheet } from "@/components/admin/chat-room/customer-info-sheet";
 import { MessageList } from "@/components/admin/chat-room/message-list";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 import { chatClient } from "@/services/chat.client";
 
@@ -33,20 +34,20 @@ export default function ChatPage() {
 
   // Get current user profile
   const { data: user } = useQuery({
-    queryKey: ["admin", "profile"],
+    queryKey: queryKeys.admin.profile,
     queryFn: adminClient.getProfile,
     staleTime: Infinity, // Profile doesn't change often
   });
 
   // Fetch rooms (filter on backend via search param)
   const { data: rooms = [] } = useQuery({
-    queryKey: ["admin", "chat", "rooms", searchTerm],
+    queryKey: queryKeys.admin.chat.rooms.list(searchTerm),
     queryFn: () => adminClient.getChatRooms({ search: searchTerm || undefined }),
   });
 
   // Fetch messages for selected room
   const { data: messagesData } = useQuery({
-    queryKey: ["admin", "chat", "messages", selectedRoomId],
+    queryKey: queryKeys.admin.chat.messages(selectedRoomId),
     queryFn: async () => {
       if (!selectedRoomId) return { messages: [] };
       return adminClient.getChatMessages(selectedRoomId);
@@ -86,12 +87,12 @@ export default function ChatPage() {
       if (!selectedRoomId || !user) return undefined;
 
       await queryClient.cancelQueries({
-        queryKey: ["admin", "chat", "messages", selectedRoomId],
+        queryKey: queryKeys.admin.chat.messages(selectedRoomId),
       });
 
       const previousMessages = queryClient.getQueryData<{
         messages: AdminChatMessage[];
-      }>(["admin", "chat", "messages", selectedRoomId]);
+      }>(queryKeys.admin.chat.messages(selectedRoomId));
 
       const tempId = `temp-${crypto.randomUUID()}`;
       const optimisticMessage: AdminChatMessage = {
@@ -110,7 +111,7 @@ export default function ChatPage() {
       };
 
       queryClient.setQueryData<{ messages: AdminChatMessage[] }>(
-        ["admin", "chat", "messages", selectedRoomId],
+        queryKeys.admin.chat.messages(selectedRoomId),
         (old) => ({
           messages: [...(old?.messages || []), optimisticMessage],
         }),
@@ -121,7 +122,7 @@ export default function ChatPage() {
     onError: (_error, _variables, context) => {
       if (!context) return;
       queryClient.setQueryData(
-        ["admin", "chat", "messages", context.roomId],
+        queryKeys.admin.chat.messages(context.roomId),
         context.previousMessages,
       );
     },
@@ -129,7 +130,7 @@ export default function ChatPage() {
       if (!selectedRoomId) return;
       // Invalidate rooms to update last message
       queryClient.invalidateQueries({
-        queryKey: ["admin", "chat", "rooms"],
+        queryKey: queryKeys.admin.chat.rooms.all,
       });
     },
     onSettled: (result, _error, _variables, context) => {
@@ -138,7 +139,7 @@ export default function ChatPage() {
       if (result?.message) {
         const confirmedMessage = normalizeApiMessage(result.message);
         queryClient.setQueryData<{ messages: AdminChatMessage[] }>(
-          ["admin", "chat", "messages", context.roomId],
+          queryKeys.admin.chat.messages(context.roomId),
           (old) => {
             const currentMessages = old?.messages || [];
             const withoutTemp = currentMessages.filter((msg) => msg.id !== context.tempId);
@@ -152,7 +153,7 @@ export default function ChatPage() {
       }
 
       queryClient.invalidateQueries({
-        queryKey: ["admin", "chat", "messages", context.roomId],
+        queryKey: queryKeys.admin.chat.messages(context.roomId),
       });
     },
   });
@@ -169,7 +170,7 @@ export default function ChatPage() {
 
   const markRoomAsReadInCache = (roomId: string) => {
     queryClient.setQueriesData<ChatRoomWithDetails[]>(
-      { queryKey: ["admin", "chat", "rooms"] },
+      { queryKey: queryKeys.admin.chat.rooms.all },
       (previous) => {
         if (!previous) return previous;
         return previous.map((room) =>
@@ -200,7 +201,7 @@ export default function ChatPage() {
       .channel("admin-chat-rooms")
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_rooms" }, () => {
         queryClient.invalidateQueries({
-          queryKey: ["admin", "chat", "rooms"],
+          queryKey: queryKeys.admin.chat.rooms.all,
         });
       })
       .subscribe((status) => {
@@ -211,11 +212,11 @@ export default function ChatPage() {
       .channel("admin-chat-messages")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
         queryClient.invalidateQueries({
-          queryKey: ["admin", "chat", "rooms"],
+          queryKey: queryKeys.admin.chat.rooms.all,
         });
         if (selectedRoomRef.current) {
           queryClient.invalidateQueries({
-            queryKey: ["admin", "chat", "messages", selectedRoomRef.current],
+            queryKey: queryKeys.admin.chat.messages(selectedRoomRef.current),
           });
         }
       })

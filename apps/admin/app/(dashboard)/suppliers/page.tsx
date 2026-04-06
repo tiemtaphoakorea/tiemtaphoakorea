@@ -35,6 +35,7 @@ import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export default function AdminSuppliers() {
@@ -71,7 +72,7 @@ function AdminSuppliersContent() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["suppliers", searchTerm],
+    queryKey: queryKeys.suppliers.list(searchTerm),
     queryFn: () => adminClient.getSuppliers({ search: searchTerm }),
   });
   const suppliers = data?.suppliers || [];
@@ -108,7 +109,7 @@ function AdminSuppliersContent() {
     if (confirm(`Bạn có chắc muốn xóa nhà cung cấp "${supplier.name}"?`)) {
       try {
         await adminClient.deleteSupplier(supplier.id);
-        await queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
       } catch (error: any) {
         alert(error.message || "Failed to delete");
       }
@@ -134,7 +135,7 @@ function AdminSuppliersContent() {
         await adminClient.updateSupplier(editingSupplier.id, payload);
       }
       setIsSheetOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
       setIsSubmitting(false);
     } catch (error: any) {
       alert(error.message || "Action failed");

@@ -54,6 +54,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useReducer } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 // ── UI state ──────────────────────────────────────────────────────────────────
@@ -442,7 +443,7 @@ function AdminCategoriesContent() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["categories", searchTerm],
+    queryKey: queryKeys.categories.list(searchTerm),
     queryFn: () => adminClient.getCategories({ search: searchTerm }),
   });
   const categories = data?.categories || [];
@@ -505,7 +506,7 @@ function AdminCategoriesContent() {
     if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
       try {
         await adminClient.deleteCategory(cat.id);
-        await queryClient.invalidateQueries({ queryKey: ["categories"] });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
       } catch (error: any) {
         alert(error.message || "Failed to delete");
       }
@@ -530,7 +531,7 @@ function AdminCategoriesContent() {
         await adminClient.updateCategory(ui.editingCategory.id, payload);
       }
       dispatch({ type: "CLOSE_SHEET" });
-      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
       dispatch({ type: "SET_SUBMITTING", value: false });
     } catch (error: any) {
       alert(error.message || "Action failed");

@@ -739,230 +739,229 @@ async function seedE2E() {
   }
 
   if (customerProfile) {
-  console.log("  → Orders");
-  const order = await upsertById(
-    schema.orders,
-    schema.orders.id,
-    () =>
-      db.query.orders.findFirst({
-        where: eq(schema.orders.orderNumber, "E2E-0001"),
-      }),
-    {
-      orderNumber: "E2E-0001",
-      customerId: customerProfile.id,
-      status: "paid",
-      subtotal: "240.00",
-      discount: "0",
-      total: "240.00",
-      totalCost: "140.00",
-      profit: "100.00",
-      shippingName: "Nguyen Van A",
-      shippingPhone: "0900000005",
-      shippingAddress: "123 Le Loi, District 1, HCMC",
-      customerNote: "Please deliver quickly",
-      adminNote: "Seed order",
-      paidAmount: "240.00",
-      paidAt: new Date(),
-      createdBy: adminProfile.id,
-    },
-    {
-      status: "paid",
-      subtotal: "240.00",
-      discount: "0",
-      total: "240.00",
-      totalCost: "140.00",
-      profit: "100.00",
-      shippingName: "Nguyen Van A",
-      shippingPhone: "0900000005",
-      shippingAddress: "123 Le Loi, District 1, HCMC",
-      customerNote: "Please deliver quickly",
-      adminNote: "Seed order",
-      paidAmount: "240.00",
-      paidAt: new Date(),
-      updatedAt: new Date(),
-    },
-  );
+    console.log("  → Orders");
+    const order = await upsertById(
+      schema.orders,
+      schema.orders.id,
+      () =>
+        db.query.orders.findFirst({
+          where: eq(schema.orders.orderNumber, "E2E-0001"),
+        }),
+      {
+        orderNumber: "E2E-0001",
+        customerId: customerProfile.id,
+        status: "paid",
+        subtotal: "240.00",
+        discount: "0",
+        total: "240.00",
+        totalCost: "140.00",
+        profit: "100.00",
+        shippingName: "Nguyen Van A",
+        shippingPhone: "0900000005",
+        shippingAddress: "123 Le Loi, District 1, HCMC",
+        customerNote: "Please deliver quickly",
+        adminNote: "Seed order",
+        paidAmount: "240.00",
+        paidAt: new Date(),
+        createdBy: adminProfile.id,
+      },
+      {
+        status: "paid",
+        subtotal: "240.00",
+        discount: "0",
+        total: "240.00",
+        totalCost: "140.00",
+        profit: "100.00",
+        shippingName: "Nguyen Van A",
+        shippingPhone: "0900000005",
+        shippingAddress: "123 Le Loi, District 1, HCMC",
+        customerNote: "Please deliver quickly",
+        adminNote: "Seed order",
+        paidAmount: "240.00",
+        paidAt: new Date(),
+        updatedAt: new Date(),
+      },
+    );
 
-  const existingOrderItem = await db.query.orderItems.findFirst({
-    where: and(
-      eq(schema.orderItems.orderId, order.id),
-      eq(schema.orderItems.variantId, primaryVariant.id),
-    ),
-  });
+    const existingOrderItem = await db.query.orderItems.findFirst({
+      where: and(
+        eq(schema.orderItems.orderId, order.id),
+        eq(schema.orderItems.variantId, primaryVariant.id),
+      ),
+    });
 
-  if (existingOrderItem) {
-    await db
-      .update(schema.orderItems)
-      .set({
+    if (existingOrderItem) {
+      await db
+        .update(schema.orderItems)
+        .set({
+          quantity: 2,
+          unitPrice: "120.00",
+          costPriceAtOrderTime: "70.00",
+          lineTotal: "240.00",
+          lineCost: "140.00",
+          lineProfit: "100.00",
+        })
+        .where(eq(schema.orderItems.id, existingOrderItem.id));
+    } else {
+      await db.insert(schema.orderItems).values({
+        orderId: order.id,
+        variantId: primaryVariant.id,
+        productName: primaryProduct.name,
+        variantName: primaryVariant.name,
+        sku: primaryVariant.sku,
         quantity: 2,
         unitPrice: "120.00",
         costPriceAtOrderTime: "70.00",
         lineTotal: "240.00",
         lineCost: "140.00",
         lineProfit: "100.00",
-      })
-      .where(eq(schema.orderItems.id, existingOrderItem.id));
-  } else {
-    await db.insert(schema.orderItems).values({
-      orderId: order.id,
-      variantId: primaryVariant.id,
-      productName: primaryProduct.name,
-      variantName: primaryVariant.name,
-      sku: primaryVariant.sku,
-      quantity: 2,
-      unitPrice: "120.00",
-      costPriceAtOrderTime: "70.00",
-      lineTotal: "240.00",
-      lineCost: "140.00",
-      lineProfit: "100.00",
+      });
+    }
+
+    const existingStatusHistory = await db.query.orderStatusHistory.findFirst({
+      where: and(
+        eq(schema.orderStatusHistory.orderId, order.id),
+        eq(schema.orderStatusHistory.status, "paid"),
+      ),
     });
-  }
 
-  const existingStatusHistory = await db.query.orderStatusHistory.findFirst({
-    where: and(
-      eq(schema.orderStatusHistory.orderId, order.id),
-      eq(schema.orderStatusHistory.status, "paid"),
-    ),
-  });
+    if (!existingStatusHistory) {
+      await db.insert(schema.orderStatusHistory).values({
+        orderId: order.id,
+        status: "paid",
+        note: "Payment received",
+        createdBy: adminProfile.id,
+      });
+    }
 
-  if (!existingStatusHistory) {
-    await db.insert(schema.orderStatusHistory).values({
-      orderId: order.id,
-      status: "paid",
-      note: "Payment received",
-      createdBy: adminProfile.id,
+    console.log("  → Payments");
+    const existingPayment = await db.query.payments.findFirst({
+      where: and(eq(schema.payments.orderId, order.id), eq(schema.payments.method, "cash")),
     });
-  }
 
-  console.log("  → Payments");
-  const existingPayment = await db.query.payments.findFirst({
-    where: and(eq(schema.payments.orderId, order.id), eq(schema.payments.method, "cash")),
-  });
-
-  if (existingPayment) {
-    await db
-      .update(schema.payments)
-      .set({
+    if (existingPayment) {
+      await db
+        .update(schema.payments)
+        .set({
+          amount: "240.00",
+          note: "E2E payment",
+        })
+        .where(eq(schema.payments.id, existingPayment.id));
+    } else {
+      await db.insert(schema.payments).values({
+        orderId: order.id,
         amount: "240.00",
+        method: "cash",
         note: "E2E payment",
-      })
-      .where(eq(schema.payments.id, existingPayment.id));
-  } else {
-    await db.insert(schema.payments).values({
-      orderId: order.id,
-      amount: "240.00",
-      method: "cash",
-      note: "E2E payment",
-      createdBy: adminProfile.id,
+        createdBy: adminProfile.id,
+      });
+    }
+
+    console.log("  → Supplier Orders");
+    const existingSupplierOrder = await db.query.supplierOrders.findFirst({
+      where: and(
+        eq(schema.supplierOrders.supplierId, supplier.id),
+        eq(schema.supplierOrders.variantId, primaryVariant.id),
+      ),
     });
-  }
 
-  console.log("  → Supplier Orders");
-  const existingSupplierOrder = await db.query.supplierOrders.findFirst({
-    where: and(
-      eq(schema.supplierOrders.supplierId, supplier.id),
-      eq(schema.supplierOrders.variantId, primaryVariant.id),
-    ),
-  });
-
-  if (existingSupplierOrder) {
-    await db
-      .update(schema.supplierOrders)
-      .set({
+    if (existingSupplierOrder) {
+      await db
+        .update(schema.supplierOrders)
+        .set({
+          status: "ordered",
+          quantity: 20,
+          actualCostPrice: "65.00",
+          note: "E2E supplier order",
+          orderedAt: new Date(),
+          expectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.supplierOrders.id, existingSupplierOrder.id));
+    } else {
+      await db.insert(schema.supplierOrders).values({
+        supplierId: supplier.id,
+        variantId: primaryVariant.id,
         status: "ordered",
         quantity: 20,
         actualCostPrice: "65.00",
         note: "E2E supplier order",
         orderedAt: new Date(),
         expectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.supplierOrders.id, existingSupplierOrder.id));
-  } else {
-    await db.insert(schema.supplierOrders).values({
-      supplierId: supplier.id,
-      variantId: primaryVariant.id,
-      status: "ordered",
-      quantity: 20,
-      actualCostPrice: "65.00",
-      note: "E2E supplier order",
-      orderedAt: new Date(),
-      expectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdBy: adminProfile.id,
+        createdBy: adminProfile.id,
+      });
+    }
+
+    console.log("  → Notifications");
+    const existingNotification = await db.query.adminNotifications.findFirst({
+      where: and(
+        eq(schema.adminNotifications.type, "order_created"),
+        eq(schema.adminNotifications.orderId, order.id),
+      ),
     });
-  }
 
-  console.log("  → Notifications");
-  const existingNotification = await db.query.adminNotifications.findFirst({
-    where: and(
-      eq(schema.adminNotifications.type, "order_created"),
-      eq(schema.adminNotifications.orderId, order.id),
-    ),
-  });
+    if (!existingNotification) {
+      await db.insert(schema.adminNotifications).values({
+        type: "order_created",
+        title: "New order created",
+        message: "E2E order created for testing",
+        orderId: order.id,
+        isRead: false,
+      });
+    }
 
-  if (!existingNotification) {
-    await db.insert(schema.adminNotifications).values({
-      type: "order_created",
-      title: "New order created",
-      message: "E2E order created for testing",
-      orderId: order.id,
-      isRead: false,
+    console.log("  → Idempotency Keys");
+    await upsertById(
+      schema.idempotencyKeys,
+      schema.idempotencyKeys.id,
+      () =>
+        db.query.idempotencyKeys.findFirst({
+          where: eq(schema.idempotencyKeys.key, "e2e-order-create-0001"),
+        }),
+      {
+        key: "e2e-order-create-0001",
+        resourceType: "order",
+        resourceId: order.id,
+        requestPayload: JSON.stringify({
+          orderNumber: "E2E-0001",
+          customerId: customerProfile.id,
+        }),
+        responsePayload: JSON.stringify({ orderId: order.id }),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+      {
+        resourceId: order.id,
+        requestPayload: JSON.stringify({
+          orderNumber: "E2E-0001",
+          customerId: customerProfile.id,
+        }),
+        responsePayload: JSON.stringify({ orderId: order.id }),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    );
+
+    console.log("  → Expenses");
+    const existingExpense = await db.query.expenses.findFirst({
+      where: eq(schema.expenses.description, "E2E Hosting"),
     });
-  }
 
-  console.log("  → Idempotency Keys");
-  await upsertById(
-    schema.idempotencyKeys,
-    schema.idempotencyKeys.id,
-    () =>
-      db.query.idempotencyKeys.findFirst({
-        where: eq(schema.idempotencyKeys.key, "e2e-order-create-0001"),
-      }),
-    {
-      key: "e2e-order-create-0001",
-      resourceType: "order",
-      resourceId: order.id,
-      requestPayload: JSON.stringify({
-        orderNumber: "E2E-0001",
-        customerId: customerProfile.id,
-      }),
-      responsePayload: JSON.stringify({ orderId: order.id }),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    },
-    {
-      resourceId: order.id,
-      requestPayload: JSON.stringify({
-        orderNumber: "E2E-0001",
-        customerId: customerProfile.id,
-      }),
-      responsePayload: JSON.stringify({ orderId: order.id }),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    },
-  );
-
-  console.log("  → Expenses");
-  const existingExpense = await db.query.expenses.findFirst({
-    where: eq(schema.expenses.description, "E2E Hosting"),
-  });
-
-  if (existingExpense) {
-    await db
-      .update(schema.expenses)
-      .set({
+    if (existingExpense) {
+      await db
+        .update(schema.expenses)
+        .set({
+          amount: "50.00",
+          type: "fixed",
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.expenses.id, existingExpense.id));
+    } else {
+      await db.insert(schema.expenses).values({
+        description: "E2E Hosting",
         amount: "50.00",
         type: "fixed",
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.expenses.id, existingExpense.id));
-  } else {
-    await db.insert(schema.expenses).values({
-      description: "E2E Hosting",
-      amount: "50.00",
-      type: "fixed",
-      createdBy: adminProfile.id,
-    });
-  }
-
+        createdBy: adminProfile.id,
+      });
+    }
   } // end if (customerProfile)
 
   console.log("  → Reports");

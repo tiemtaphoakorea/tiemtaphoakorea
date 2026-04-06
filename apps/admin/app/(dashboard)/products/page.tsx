@@ -49,6 +49,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useReducer } from "react";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 // ---------------------------------------------------------------------------
@@ -460,7 +461,7 @@ function AdminProductsContent() {
   const updated = searchParams.get("updated") === "1";
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["products", search, page, limit, stockStatus],
+    queryKey: queryKeys.products.list(search, page, limit, stockStatus),
     queryFn: () =>
       adminClient.getProducts({
         search,
@@ -511,7 +512,7 @@ function AdminProductsContent() {
     try {
       await adminClient.deleteProduct(deleteTarget.id);
       // Ensure the products table refetches and the deleted item disappears
-      await queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all, exact: false });
       router.refresh(); // safe no-op for server parts; invalidate handles client data
       dispatch({ type: "SET_DELETE_TARGET", payload: null });
     } catch (error: any) {
@@ -527,7 +528,7 @@ function AdminProductsContent() {
     dispatch({ type: "SET_DELETING", payload: true });
     try {
       const result = await adminClient.bulkDeleteProducts(selectedIds);
-      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       router.refresh();
       exitSelectMode();
       if (result.failed.length > 0) {

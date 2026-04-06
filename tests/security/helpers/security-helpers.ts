@@ -7,8 +7,8 @@
  * - Security assertion helpers
  */
 
-import { vi } from "vitest";
 import type { NextRequest } from "next/server";
+import { vi } from "vitest";
 
 // ============================================================================
 // SENSITIVE KEYS - Should NEVER be exposed to client

@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
 import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
 import { Badge } from "@workspace/ui/components/badge";
@@ -40,6 +42,7 @@ import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ImageUploader } from "@/components/image-uploader";
+import { queryKeys } from "@/lib/query-keys";
 
 // ---------------------------------------------------------------------------
 // Reducer
@@ -175,6 +178,7 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                   price: basePrice,
                   costPrice: 0,
                   stockQuantity: 0,
+                  lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
                   images: [],
                 },
               ],
@@ -194,6 +198,12 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
               <TableHead className="min-w-[100px]">Giá bán</TableHead>
               <TableHead className="min-w-[100px]">Giá vốn</TableHead>
               <TableHead className="min-w-[80px]">Tồn kho</TableHead>
+              <TableHead
+                className="min-w-[88px]"
+                title="Cảnh báo sắp hết khi tồn kho ≤ giá trị này (theo biến thể)"
+              >
+                Ngưỡng cảnh báo
+              </TableHead>
               <TableHead className="w-[40px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -284,6 +294,24 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                   />
                 </TableCell>
                 <TableCell>
+                  <NumberInput
+                    name={`variants.${idx}.lowStockThreshold`}
+                    data-testid={`variant-low-stock-threshold-${idx}`}
+                    aria-label="Ngưỡng cảnh báo tồn kho biến thể"
+                    decimalScale={0}
+                    value={variant.lowStockThreshold}
+                    onValueChange={(values) => {
+                      const newV = [...variants];
+                      newV[idx] = {
+                        ...newV[idx],
+                        lowStockThreshold: Math.max(0, values.floatValue ?? 0),
+                      };
+                      dispatch({ type: "SET_VARIANTS", payload: newV });
+                    }}
+                    className="h-8 border-transparent bg-transparent px-2 text-center font-mono hover:border-slate-200 focus:border-slate-200"
+                  />
+                </TableCell>
+                <TableCell>
                   <Button
                     type="button"
                     size="icon"
@@ -337,6 +365,7 @@ function SubmitButton({ mode, pending }: { mode: "create" | "edit"; pending: boo
 export function ProductForm({ initialData, categories, mode }: ProductFormProps) {
   "use no memo";
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [formState, dispatch] = useReducer(formReducer, {
     apiError: null,
@@ -353,6 +382,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         price: 0,
         costPrice: 0,
         stockQuantity: 0,
+        lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
         images: [],
       },
     ],
@@ -407,6 +437,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         price: basePrice,
         costPrice: 0,
         stockQuantity: 0,
+        lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
         images: [],
       };
     });
@@ -444,10 +475,11 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       const price = Number(v.price);
       const costPrice = Number(v.costPrice ?? 0);
       const stock = Number(v.stockQuantity ?? 0);
-      if (price < 0 || costPrice < 0 || stock < 0) {
+      const lowTh = Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD);
+      if (price < 0 || costPrice < 0 || stock < 0 || lowTh < 0 || !Number.isFinite(lowTh)) {
         dispatch({
           type: "SET_API_ERROR",
-          payload: `Biến thể ${i + 1}: Giá, giá vốn và tồn kho phải >= 0.`,
+          payload: `Biến thể ${i + 1}: Giá, giá vốn, tồn kho và ngưỡng cảnh báo phải là số hợp lệ và >= 0.`,
         });
         return;
       }
@@ -466,6 +498,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         price: Number(v.price),
         costPrice: Number(v.costPrice ?? 0),
         stockQuantity: Number(v.stockQuantity ?? 0),
+        lowStockThreshold: Math.floor(Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD)),
         images: v.images ?? [],
       })),
     };
@@ -480,6 +513,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         price: Number(v.price),
         costPrice: Number(v.costPrice ?? 0),
         stockQuantity: Number(v.stockQuantity ?? 0),
+        lowStockThreshold: Math.floor(Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD)),
         images: v.images ?? [],
       })),
     };
@@ -507,6 +541,14 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
 
     if (res?.data?.success) {
       dispatch({ type: "SET_API_PENDING", payload: false });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.products.all, exact: false });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.admin.products.all,
+        exact: false,
+      });
+      if (mode === "edit" && productId) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.productEdit(productId) });
+      }
       router.push("/products");
       return;
     }

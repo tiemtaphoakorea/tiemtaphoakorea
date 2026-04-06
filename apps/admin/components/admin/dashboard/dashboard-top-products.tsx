@@ -2,11 +2,12 @@
 
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export function DashboardTopProducts() {
   const { data } = useSuspenseQuery({
-    queryKey: ["dashboard", "top-products"],
+    queryKey: queryKeys.dashboard.topProducts,
     queryFn: () => adminClient.getTopProducts(),
   });
 

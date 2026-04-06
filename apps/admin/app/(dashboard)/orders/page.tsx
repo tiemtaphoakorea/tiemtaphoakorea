@@ -18,6 +18,7 @@ import { Suspense, useMemo } from "react";
 import { OrderHeader } from "@/components/admin/orders/order-header";
 import { OrderStats } from "@/components/admin/orders/order-stats";
 import { OrderToolbar } from "@/components/admin/orders/order-toolbar";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -75,7 +76,7 @@ function AdminOrdersContent() {
   );
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["orders", searchTerm, statusFilter, page, limit],
+    queryKey: queryKeys.orders.list(searchTerm, statusFilter, page, limit),
     queryFn: () =>
       adminClient.getOrders({
         search: searchTerm,
@@ -120,7 +121,7 @@ function AdminOrdersContent() {
   };
 
   const { data: statsContent } = useQuery({
-    queryKey: ["orders", "stats"],
+    queryKey: queryKeys.orders.stats,
     queryFn: () => adminClient.getOrderStats(),
     staleTime: 1000 * 60 * 5,
   });

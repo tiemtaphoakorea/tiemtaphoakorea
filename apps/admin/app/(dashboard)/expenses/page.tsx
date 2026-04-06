@@ -20,6 +20,7 @@ import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { ExpenseAddSheet } from "@/components/admin/expense-add-sheet";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export default function ExpensesPage() {
@@ -46,7 +47,7 @@ function ExpensesPageContent() {
   );
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "expenses", type, page, limit],
+    queryKey: queryKeys.admin.expenses.list(type, page, limit),
     queryFn: () =>
       adminClient.getExpenses({
         type: type || undefined,
@@ -77,8 +78,8 @@ function ExpensesPageContent() {
   const createMutation = useMutation({
     mutationFn: (data: any) => adminClient.createExpense(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
       setIsAddSheetOpen(false);
       toast({ title: "Thành công", description: "Đã thêm chi phí thành công" });
     },
@@ -94,8 +95,8 @@ function ExpensesPageContent() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminClient.deleteExpense(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
       toast({ title: "Thành công", description: "Đã xóa chi phí" });
     },
     onError: () => {

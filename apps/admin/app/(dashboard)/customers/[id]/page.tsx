@@ -12,6 +12,7 @@ import { CustomerLocationCard } from "@/components/admin/customer-detail/custome
 import { CustomerOrderHistoryTable } from "@/components/admin/customer-detail/customer-order-history-table";
 import { CustomerProfileHeader } from "@/components/admin/customer-detail/customer-profile-header";
 import { CustomerSecurityCard } from "@/components/admin/customer-detail/customer-security-card";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export default function CustomerDetailPage() {
@@ -20,7 +21,7 @@ export default function CustomerDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const { data, isLoading, isError } = useQuery<{ customer?: CustomerDetail }>({
-    queryKey: ["customer", id],
+    queryKey: queryKeys.customer(id),
     queryFn: () => adminClient.getCustomer(id),
     enabled: Boolean(id),
   });

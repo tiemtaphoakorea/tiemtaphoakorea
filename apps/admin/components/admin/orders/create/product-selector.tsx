@@ -25,6 +25,7 @@ import { Check, ChevronsUpDown, Loader2, Plus, X } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { useDebounce } from "use-debounce";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 interface ProductSelectorProps {
@@ -46,7 +47,7 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
 
   // Fetch Products
   const { data, isLoading } = useQuery({
-    queryKey: ["products", "variants", debouncedSearch],
+    queryKey: queryKeys.products.variants(debouncedSearch),
     queryFn: () => adminClient.getProductsWithVariants(),
   });
 

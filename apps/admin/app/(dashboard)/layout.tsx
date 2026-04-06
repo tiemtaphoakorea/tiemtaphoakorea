@@ -17,6 +17,7 @@ import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 import { Fragment, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 function AdminLayoutContent({ children }: { children: ReactNode }) {
@@ -34,7 +35,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["admin", "profile"],
+    queryKey: queryKeys.admin.profile,
     queryFn: async () => {
       const data = await adminClient.getProfile();
       // The API returns { profile: ... } structure based on route.ts

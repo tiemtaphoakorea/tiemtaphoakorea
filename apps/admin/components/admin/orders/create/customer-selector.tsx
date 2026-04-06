@@ -18,6 +18,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown, Loader2, Plus, User } from "lucide-react";
 import * as React from "react";
 import { useDebounce } from "use-debounce"; // Ensure this pkg is installed or use custom hook
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 interface CustomerSelectorProps {
@@ -39,7 +40,7 @@ export function CustomerSelector({
   const selectedCustomerId = selectedCustomer?.id;
 
   const { data: customersData, isLoading } = useQuery({
-    queryKey: ["customers", "search", debouncedSearch],
+    queryKey: queryKeys.customers.search(debouncedSearch),
     queryFn: () => adminClient.getCustomers({ search: debouncedSearch, limit: 10 }),
     enabled: open, // Only fetch when open
   });

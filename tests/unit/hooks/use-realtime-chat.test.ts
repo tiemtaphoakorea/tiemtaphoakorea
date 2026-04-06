@@ -1,11 +1,11 @@
 /**
  * @vitest-environment jsdom
  */
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to create stable mock objects that survive hoisting
-const { mockSend, mockRemoveChannel, mockSubscribe, mockChannel, mockSupabase } = vi.hoisted(() => {
+const { mockSend, mockChannel, mockSupabase } = vi.hoisted(() => {
   const mockSend = vi.fn().mockResolvedValue(undefined);
   const mockRemoveChannel = vi.fn();
   let subscribeCallback: ((status: string) => Promise<void> | void) | null = null;
@@ -28,7 +28,7 @@ const { mockSend, mockRemoveChannel, mockSubscribe, mockChannel, mockSupabase } 
     removeChannel: mockRemoveChannel,
   };
 
-  return { mockSend, mockRemoveChannel, mockSubscribe, mockChannel, mockSupabase };
+  return { mockSend, mockChannel, mockSupabase };
 });
 
 vi.mock("@/lib/supabase/client", () => ({

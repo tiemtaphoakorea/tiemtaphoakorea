@@ -4,11 +4,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { CreditCard, ShoppingBag, TrendingUp, Users } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 export function DashboardKPIs() {
   const { data } = useSuspenseQuery({
-    queryKey: ["dashboard", "kpi"],
+    queryKey: queryKeys.dashboard.kpi,
     queryFn: () => adminClient.getDashboardKPIs(),
   });
 
