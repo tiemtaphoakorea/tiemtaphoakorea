@@ -1,0 +1,11 @@
+{
+  "name": "k-smart-guide",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify export && unzip -o export.zip -d out && rm export.zip"
+  },
+  "devDependencies": {
+    "mintlify": "4.2.504"
+  }
+}
