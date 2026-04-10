@@ -14,8 +14,10 @@ Menu bên trái → **Đơn hàng**.
 ## Vòng đời đơn hàng
 
 ```
-Chờ xác nhận → Đã thanh toán → Đang chuẩn bị → Đang giao → Đã giao
+Chờ xác nhận (pending) → Đã thanh toán (paid) → Đang chuẩn bị (preparing) → Đang giao (shipping) → Đã giao (delivered)
 ```
+
+Đơn hàng có thể bị hủy (`cancelled`) ở bất kỳ bước nào trước khi giao.
 
 ## Các thao tác chính
 
@@ -29,8 +31,11 @@ Chờ xác nhận → Đã thanh toán → Đang chuẩn bị → Đang giao →
   <Step title="Cập nhật trạng thái giao hàng">
     Nhấn nút chuyển trạng thái: **Đang chuẩn bị** → **Đang giao** → **Đã giao**.
   </Step>
+  <Step title="Xử lý đơn tách (split orders)">
+    Nếu khách chọn giao từng phần (giao khi có hàng), hệ thống tự tách đơn. Mỗi phần đơn được quản lý độc lập.
+  </Step>
 </Steps>
 
 <Note>
-Đơn hàng hỗ trợ thanh toán một phần. Nhập đúng số tiền khách đã trả — phần còn lại sẽ ghi nhận là nợ.
+Đơn hàng hỗ trợ thanh toán một phần. Khách có thể đặt cọc trước và thanh toán phần còn lại khi nhận hàng.
 </Note>
