@@ -1,0 +1,98 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "K-SMART Hướng dẫn sử dụng",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Chủ shop",
+        "groups": [
+          {
+            "group": "Bắt đầu",
+            "pages": ["owner/introduction"]
+          },
+          {
+            "group": "Vận hành",
+            "pages": [
+              "owner/dashboard",
+              "owner/products",
+              "owner/categories",
+              "owner/orders",
+              "owner/supplier-orders",
+              "owner/suppliers",
+              "owner/customers",
+              "owner/chat"
+            ]
+          },
+          {
+            "group": "Quản lý cấp cao",
+            "pages": [
+              "owner/analytics",
+              "owner/expenses",
+              "owner/finance",
+              "owner/users"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Quản lý",
+        "groups": [
+          {
+            "group": "Bắt đầu",
+            "pages": ["manager/introduction"]
+          },
+          {
+            "group": "Vận hành",
+            "pages": [
+              "manager/dashboard",
+              "manager/products",
+              "manager/categories",
+              "manager/orders",
+              "manager/supplier-orders",
+              "manager/suppliers",
+              "manager/customers",
+              "manager/chat"
+            ]
+          },
+          {
+            "group": "Báo cáo",
+            "pages": ["manager/analytics"]
+          }
+        ]
+      },
+      {
+        "tab": "Nhân viên",
+        "groups": [
+          {
+            "group": "Bắt đầu",
+            "pages": ["staff/introduction"]
+          },
+          {
+            "group": "Vận hành",
+            "pages": [
+              "staff/dashboard",
+              "staff/products",
+              "staff/categories",
+              "staff/orders",
+              "staff/supplier-orders",
+              "staff/suppliers",
+              "staff/customers",
+              "staff/chat"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
