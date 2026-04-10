@@ -1,0 +1,44 @@
+---
+title: "Đơn hàng"
+description: "Quản lý toàn bộ đơn hàng khách hàng từ khi đặt đến khi giao thành công."
+---
+
+## Mô tả
+
+Trang Đơn hàng là trung tâm xử lý tất cả đơn hàng của khách hàng. Bạn có thể xem, xác nhận, cập nhật trạng thái và theo dõi thanh toán.
+
+## Cách truy cập
+
+Menu bên trái → **Đơn hàng**.
+
+## Vòng đời đơn hàng
+
+```
+Chờ xác nhận (pending) → Đã thanh toán (paid) → Đang chuẩn bị (preparing) → Đang giao (shipping) → Đã giao (delivered)
+```
+
+Đơn hàng có thể bị hủy (`cancelled`) ở bất kỳ bước nào trước khi giao.
+
+## Các thao tác chính
+
+<Steps>
+  <Step title="Xem danh sách đơn hàng">
+    Bảng hiển thị tất cả đơn hàng với mã đơn, tên khách, tổng tiền, trạng thái và ngày đặt. Dùng bộ lọc để tìm theo trạng thái hoặc khoảng thời gian.
+  </Step>
+  <Step title="Xác nhận thanh toán">
+    Mở đơn hàng → nhấn **Xác nhận thanh toán**. Chọn phương thức thanh toán (tiền mặt, chuyển khoản, thẻ) và nhập số tiền đã nhận.
+  </Step>
+  <Step title="Cập nhật trạng thái">
+    Trong trang chi tiết đơn hàng, nhấn nút tương ứng để chuyển trạng thái: **Đang chuẩn bị** → **Đang giao** → **Đã giao**.
+  </Step>
+  <Step title="Xem lợi nhuận đơn hàng">
+    Mỗi đơn hàng hiển thị lợi nhuận tính theo giá vốn tại thời điểm bán. Chủ shop có thể xem chi phí và lãi gộp từng sản phẩm trong đơn.
+  </Step>
+  <Step title="Xử lý đơn tách (split orders)">
+    Nếu khách chọn giao từng phần (giao khi có hàng), hệ thống tự tách đơn. Mỗi phần đơn được quản lý độc lập.
+  </Step>
+</Steps>
+
+<Note>
+Đơn hàng hỗ trợ thanh toán một phần. Khách có thể đặt cọc trước và thanh toán phần còn lại khi nhận hàng.
+</Note>
