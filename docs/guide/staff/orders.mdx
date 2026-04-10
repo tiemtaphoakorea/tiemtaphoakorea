@@ -1,0 +1,36 @@
+---
+title: "Đơn hàng"
+description: "Xử lý đơn hàng khách hàng: xác nhận thanh toán và cập nhật trạng thái giao hàng."
+---
+
+## Mô tả
+
+Nhân viên xử lý các đơn hàng trong ngày: xác nhận thanh toán và cập nhật trạng thái giao hàng.
+
+## Cách truy cập
+
+Menu bên trái → **Đơn hàng**.
+
+## Vòng đời đơn hàng
+
+```
+Chờ xác nhận → Đã thanh toán → Đang chuẩn bị → Đang giao → Đã giao
+```
+
+## Các thao tác chính
+
+<Steps>
+  <Step title="Tìm đơn hàng cần xử lý">
+    Lọc theo trạng thái **Chờ xác nhận** để thấy các đơn chưa được xử lý.
+  </Step>
+  <Step title="Xác nhận thanh toán">
+    Mở đơn → nhấn **Xác nhận thanh toán** → chọn phương thức (tiền mặt/chuyển khoản/thẻ) → nhập số tiền → **Xác nhận**.
+  </Step>
+  <Step title="Cập nhật trạng thái giao hàng">
+    Nhấn **Đang chuẩn bị** khi bắt đầu đóng gói, **Đang giao** khi giao cho shipper, **Đã giao** khi khách nhận được hàng.
+  </Step>
+</Steps>
+
+<Note>
+Đơn hàng hỗ trợ thanh toán một phần. Nhập đúng số tiền khách đã trả — phần còn lại sẽ ghi nhận là nợ.
+</Note>
