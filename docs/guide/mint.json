@@ -18,82 +18,67 @@
   ],
   "navigation": [
     {
-      "tab": "Chủ shop",
-      "groups": [
-        {
-          "group": "Bắt đầu",
-          "pages": ["owner/introduction"]
-        },
-        {
-          "group": "Vận hành",
-          "pages": [
-            "owner/dashboard",
-            "owner/products",
-            "owner/categories",
-            "owner/orders",
-            "owner/supplier-orders",
-            "owner/suppliers",
-            "owner/customers",
-            "owner/chat"
-          ]
-        },
-        {
-          "group": "Quản lý cấp cao",
-          "pages": [
-            "owner/analytics",
-            "owner/expenses",
-            "owner/finance",
-            "owner/users"
-          ]
-        }
+      "group": "Bắt đầu",
+      "pages": ["owner/introduction"]
+    },
+    {
+      "group": "Vận hành",
+      "pages": [
+        "owner/dashboard",
+        "owner/products",
+        "owner/categories",
+        "owner/orders",
+        "owner/supplier-orders",
+        "owner/suppliers",
+        "owner/customers",
+        "owner/chat"
       ]
     },
     {
-      "tab": "Quản lý",
-      "groups": [
-        {
-          "group": "Bắt đầu",
-          "pages": ["manager/introduction"]
-        },
-        {
-          "group": "Vận hành",
-          "pages": [
-            "manager/dashboard",
-            "manager/products",
-            "manager/categories",
-            "manager/orders",
-            "manager/supplier-orders",
-            "manager/suppliers",
-            "manager/customers",
-            "manager/chat"
-          ]
-        },
-        {
-          "group": "Báo cáo",
-          "pages": ["manager/analytics"]
-        }
+      "group": "Quản lý cấp cao",
+      "pages": [
+        "owner/analytics",
+        "owner/expenses",
+        "owner/finance",
+        "owner/users"
       ]
     },
     {
-      "tab": "Nhân viên",
-      "groups": [
-        {
-          "group": "Bắt đầu",
-          "pages": ["staff/introduction"]
-        },
-        {
-          "group": "Vận hành",
-          "pages": [
-            "staff/dashboard",
-            "staff/products",
-            "staff/categories",
-            "staff/orders",
-            "staff/supplier-orders",
-            "staff/suppliers",
-            "staff/customers",
-            "staff/chat"
-          ]
-        }
+      "group": "Bắt đầu",
+      "pages": ["manager/introduction"]
+    },
+    {
+      "group": "Vận hành",
+      "pages": [
+        "manager/dashboard",
+        "manager/products",
+        "manager/categories",
+        "manager/orders",
+        "manager/supplier-orders",
+        "manager/suppliers",
+        "manager/customers",
+        "manager/chat"
+      ]
+    },
+    {
+      "group": "Báo cáo",
+      "pages": ["manager/analytics"]
+    },
+    {
+      "group": "Bắt đầu",
+      "pages": ["staff/introduction"]
+    },
+    {
+      "group": "Vận hành",
+      "pages": [
+        "staff/dashboard",
+        "staff/products",
+        "staff/categories",
+        "staff/orders",
+        "staff/supplier-orders",
+        "staff/suppliers",
+        "staff/customers",
+        "staff/chat"
       ]
     }
   ]
