@@ -4,7 +4,7 @@ import type { ProductFormCategory } from "@workspace/shared/types/product";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronDown, ChevronRight, Folder, FolderOpen, Tag } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Folder, FolderOpen, Search, Tag, X } from "lucide-react";
 import { useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -253,6 +253,27 @@ export function CategoryTreeSelector({
         align="start"
         sideOffset={4}
       >
+        {/* Search input */}
+        <div className="relative mb-1.5">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm danh mục..."
+            className="h-8 w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-7 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
+          />
+          {query.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
         <ScrollArea className="max-h-64">
           <div className="space-y-0.5 py-0.5">
             {tree.length === 0 ? (
