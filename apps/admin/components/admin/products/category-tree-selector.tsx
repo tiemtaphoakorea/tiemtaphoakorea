@@ -95,23 +95,57 @@ interface TreeNodeProps {
   selectedId: string;
   onSelect: (id: string) => void;
   defaultOpen?: boolean;
+  query?: string;
+  matchingIds?: Set<string>;
+  ancestorIds?: Set<string>;
 }
 
-function TreeNode({ node, selectedId, onSelect, defaultOpen = true }: TreeNodeProps) {
+function TreeNode({
+  node,
+  selectedId,
+  onSelect,
+  defaultOpen = true,
+  query = "",
+  matchingIds = new Set(),
+  ancestorIds = new Set(),
+}: TreeNodeProps) {
   const hasChildren = node.children.length > 0;
   const [open, setOpen] = useState(defaultOpen && node.depth === 0);
   const isSelected = selectedId === node.id;
 
+  const isSearching = query.trim().length > 0;
+  const isMatch = isSearching && matchingIds.has(node.id);
+  const isAncestor = isSearching && ancestorIds.has(node.id);
+  const isDimmed = isSearching && !isMatch && !isAncestor;
+
+  // When searching, force-expand ancestors of matches; collapse everything else
+  const effectiveOpen = isSearching ? isAncestor : open;
+
   const indentClass = node.depth === 0 ? "" : node.depth === 1 ? "ml-5" : "ml-10";
+
+  // Highlight matching substring in yellow
+  function renderName(name: string) {
+    if (!isMatch || !query.trim()) return name;
+    const q = query.trim();
+    const idx = name.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return name;
+    return (
+      <>
+        {name.slice(0, idx)}
+        <mark className="rounded-sm bg-yellow-200 px-0.5 text-yellow-900 dark:bg-yellow-700 dark:text-yellow-100">
+          {name.slice(idx, idx + q.length)}
+        </mark>
+        {name.slice(idx + q.length)}
+      </>
+    );
+  }
 
   return (
     <div>
       <button
         type="button"
         onClick={() => {
-          if (hasChildren) {
-            setOpen((prev) => !prev);
-          }
+          if (hasChildren && !isSearching) setOpen((prev) => !prev);
           onSelect(node.id);
         }}
         className={cn(
@@ -119,13 +153,15 @@ function TreeNode({ node, selectedId, onSelect, defaultOpen = true }: TreeNodePr
           indentClass,
           isSelected
             ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-            : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+            : isDimmed
+              ? "text-slate-300 dark:text-slate-600"
+              : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
         )}
       >
-        {/* Expand/collapse chevron — only for parent nodes */}
+        {/* Chevron — hidden when dimmed during search */}
         <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
-          {hasChildren ? (
-            open ? (
+          {hasChildren && !isDimmed ? (
+            effectiveOpen ? (
               <ChevronDown className="h-3.5 w-3.5 opacity-60" />
             ) : (
               <ChevronRight className="h-3.5 w-3.5 opacity-60" />
@@ -138,24 +174,24 @@ function TreeNode({ node, selectedId, onSelect, defaultOpen = true }: TreeNodePr
         {/* Folder/tag icon */}
         <span className="flex-shrink-0">
           {hasChildren ? (
-            open ? (
-              <FolderOpen className="h-4 w-4 text-amber-500" />
+            effectiveOpen ? (
+              <FolderOpen className={cn("h-4 w-4", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500")} />
             ) : (
-              <Folder className="h-4 w-4 text-amber-500" />
+              <Folder className={cn("h-4 w-4", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500")} />
             )
           ) : (
-            <Tag className="h-3.5 w-3.5 text-slate-400" />
+            <Tag className={cn("h-3.5 w-3.5", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-slate-400")} />
           )}
         </span>
 
         <span className={cn("flex-1 truncate text-left", hasChildren && "font-medium")}>
-          {node.name}
+          {renderName(node.name)}
         </span>
 
         {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
       </button>
 
-      {hasChildren && open && (
+      {hasChildren && effectiveOpen && (
         <div>
           {node.children.map((child) => (
             <TreeNode
@@ -164,6 +200,9 @@ function TreeNode({ node, selectedId, onSelect, defaultOpen = true }: TreeNodePr
               selectedId={selectedId}
               onSelect={onSelect}
               defaultOpen={false}
+              query={query}
+              matchingIds={matchingIds}
+              ancestorIds={ancestorIds}
             />
           ))}
         </div>
@@ -195,7 +234,6 @@ export function CategoryTreeSelector({
   const tree = buildTree(categories);
   const selectedName = value ? findCategoryName(categories, value) : "";
 
-  // Forwarded to TreeNode in Task 3 for filtering and highlighting
   const trimmed = query.trim();
   const { matchingIds, ancestorIds } =
     trimmed.length > 0
@@ -290,6 +328,9 @@ export function CategoryTreeSelector({
                   selectedId={value}
                   onSelect={handleSelect}
                   defaultOpen={true}
+                  query={trimmed}
+                  matchingIds={matchingIds}
+                  ancestorIds={ancestorIds}
                 />
               ))
             )}
