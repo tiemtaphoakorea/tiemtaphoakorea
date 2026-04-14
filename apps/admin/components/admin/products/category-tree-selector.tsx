@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/component
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronDown, ChevronRight, Folder, FolderOpen, Search, Tag, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,6 +52,8 @@ function buildTree(flat: ProductFormCategory[], maxDepth = 3): CategoryNode[] {
 function findCategoryName(flat: ProductFormCategory[], id: string): string {
   return flat.find((c) => c.id === id)?.name ?? "";
 }
+
+const EMPTY_SET = new Set<string>();
 
 /**
  * Walk the tree and return:
@@ -106,14 +108,14 @@ function TreeNode({
   onSelect,
   defaultOpen = true,
   query = "",
-  matchingIds = new Set(),
-  ancestorIds = new Set(),
+  matchingIds = EMPTY_SET,
+  ancestorIds = EMPTY_SET,
 }: TreeNodeProps) {
   const hasChildren = node.children.length > 0;
   const [open, setOpen] = useState(defaultOpen && node.depth === 0);
   const isSelected = selectedId === node.id;
 
-  const isSearching = query.trim().length > 0;
+  const isSearching = query.length > 0;
   const isMatch = isSearching && matchingIds.has(node.id);
   const isAncestor = isSearching && ancestorIds.has(node.id);
   const isDimmed = isSearching && !isMatch && !isAncestor;
@@ -125,8 +127,8 @@ function TreeNode({
 
   // Highlight matching substring in yellow
   function renderName(name: string) {
-    if (!isMatch || !query.trim()) return name;
-    const q = query.trim();
+    if (!isMatch || !query) return name;
+    const q = query;
     const idx = name.toLowerCase().indexOf(q.toLowerCase());
     if (idx === -1) return name;
     return (
@@ -231,14 +233,17 @@ export function CategoryTreeSelector({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const tree = buildTree(categories);
+  const tree = useMemo(() => buildTree(categories), [categories]);
   const selectedName = value ? findCategoryName(categories, value) : "";
 
   const trimmed = query.trim();
-  const { matchingIds, ancestorIds } =
-    trimmed.length > 0
-      ? computeFilterSets(tree, trimmed)
-      : { matchingIds: new Set<string>(), ancestorIds: new Set<string>() };
+  const { matchingIds, ancestorIds } = useMemo(
+    () =>
+      trimmed.length > 0
+        ? computeFilterSets(tree, trimmed)
+        : { matchingIds: new Set<string>(), ancestorIds: new Set<string>() },
+    [tree, trimmed],
+  );
 
   const handleSelect = (id: string) => {
     onValueChange(id);
