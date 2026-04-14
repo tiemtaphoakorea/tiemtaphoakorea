@@ -195,6 +195,7 @@ export function CategoryTreeSelector({
   const tree = buildTree(categories);
   const selectedName = value ? findCategoryName(categories, value) : "";
 
+  // Forwarded to TreeNode in Task 3 for filtering and highlighting
   const trimmed = query.trim();
   const { matchingIds, ancestorIds } =
     trimmed.length > 0
