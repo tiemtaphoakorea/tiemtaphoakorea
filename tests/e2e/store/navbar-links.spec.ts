@@ -1,5 +1,5 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, test } from "../fixtures/auth";
-import { STOREFRONT_BASE_URL } from "../helpers/api";
 
 test.describe("Storefront - Navbar Links", () => {
   // Use a clean session for shopping flow

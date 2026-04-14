@@ -1,5 +1,6 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
-import { apiGet, getChatRooms, STOREFRONT_BASE_URL } from "../helpers/api";
+import { apiGet, getChatRooms } from "../helpers/api";
 
 /**
  * Chat - Guest Identification

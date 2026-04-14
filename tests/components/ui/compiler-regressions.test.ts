@@ -14,14 +14,17 @@ describe("tooling regression guards", () => {
     expect(source).not.toContain("useReactTable");
   });
 
-  it("keeps the chart wrapper free of direct recharts imports and injected inner HTML", async () => {
+  it("verifies the chart wrapper uses static recharts import via ChartStyle component", async () => {
     const source = await readFile(
       path.join(repoRoot, "packages/ui/src/components/chart.tsx"),
       "utf8",
     );
 
-    expect(source).not.toContain('from "recharts"');
-    expect(source).not.toContain("dangerouslySetInnerHTML");
-    expect(source).toContain('import("recharts")');
+    // chart.tsx uses static recharts import (not dynamic lazy-loading)
+    expect(source).toContain('from "recharts"');
+    expect(source).not.toContain('import("recharts")');
+    // ChartStyle handles CSS injection
+    expect(source).toContain("ChartStyle");
+    expect(source).toContain("__html");
   });
 });

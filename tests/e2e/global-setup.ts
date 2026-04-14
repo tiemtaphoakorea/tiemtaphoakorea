@@ -5,6 +5,6 @@ const run = (command: string) => {
 };
 
 export default async function globalSetup() {
-  run("npm run db:reset");
-  run("npm run db:seed:e2e");
+  run("pnpm run db:reset");
+  run("pnpm run db:seed:e2e");
 }

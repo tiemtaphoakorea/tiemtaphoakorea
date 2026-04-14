@@ -1,9 +1,33 @@
+import { createBrowserClient } from "@supabase/ssr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useChat, useUnreadCount } from "@/hooks/useChat";
 
-// --- Mocks Setup ---
+// --- Hoisted mocks (must be defined before vi.mock factories run) ---
 
-const stateSetters: any[] = [];
-const effectCallbacks: any[] = [];
+const { stateSetters, effectCallbacks, mockChannel, mockSupabase, chatClientMock } = vi.hoisted(
+  () => {
+    const stateSetters: any[] = [];
+    const effectCallbacks: any[] = [];
+
+    const mockChannel = {
+      on: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    };
+
+    const mockSupabase = {
+      channel: vi.fn(() => mockChannel),
+      removeChannel: vi.fn(),
+      from: vi.fn(),
+    };
+
+    const chatClientMock = {
+      sendMessage: vi.fn(),
+    };
+
+    return { stateSetters, effectCallbacks, mockChannel, mockSupabase, chatClientMock };
+  },
+);
 
 vi.mock("react", () => ({
   useState: vi.fn((initial) => {
@@ -13,7 +37,6 @@ vi.mock("react", () => ({
   }),
   useEffect: vi.fn((cb) => {
     effectCallbacks.push(cb);
-    // Run effect immediately to simulate mount
     try {
       const cleanup = cb();
       return cleanup;
@@ -25,27 +48,9 @@ vi.mock("react", () => ({
   useRef: vi.fn((val) => ({ current: val })),
 }));
 
-// Mock Channel
-const mockChannel = {
-  on: vi.fn(), // We will mock implementation per test if needed
-  subscribe: vi.fn(),
-  unsubscribe: vi.fn(),
-};
-
-// Mock Supabase Client
-const mockSupabase = {
-  channel: vi.fn(() => mockChannel),
-  removeChannel: vi.fn(),
-  from: vi.fn(),
-};
-
 vi.mock("@supabase/ssr", () => ({
   createBrowserClient: vi.fn(() => mockSupabase),
 }));
-
-const chatClientMock = {
-  sendMessage: vi.fn(),
-};
 
 vi.mock("@/services/chat.client", () => ({
   chatClient: chatClientMock,
@@ -61,12 +66,14 @@ describe("useChat", () => {
     stateSetters.length = 0;
     effectCallbacks.length = 0;
 
-    // Reset mocks default behavior
+    vi.mocked(createBrowserClient).mockImplementation(() => mockSupabase);
+
     mockChannel.on.mockReturnThis();
     mockChannel.subscribe.mockImplementation((cb) => {
       if (cb) cb("SUBSCRIBED");
       return mockChannel;
     });
+    mockSupabase.channel.mockReturnValue(mockChannel);
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -89,9 +96,7 @@ describe("useChat", () => {
     }
   });
 
-  it("should initialize and subscribe to channel", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
+  it("should initialize and subscribe to channel", () => {
     useChat({
       roomId: "room1",
       initialMessages: [],
@@ -110,15 +115,10 @@ describe("useChat", () => {
       expect.any(Function),
     );
     expect(mockChannel.subscribe).toHaveBeenCalled();
-
-    // Verify connection state set to true (index 1)
     expect(stateSetters[1]).toHaveBeenCalledWith(true);
   });
 
   it("should handle new message received via realtime", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
-    // Capture the 'on' callback
     let realtimeCallback: any;
     mockChannel.on.mockImplementation((event, filter, callback) => {
       if (event === "postgres_changes") {
@@ -127,7 +127,6 @@ describe("useChat", () => {
       return mockChannel;
     });
 
-    // Mock supabase.from(...)...single() return
     const newMessage = {
       id: "msg-1",
       room_id: "room1",
@@ -157,15 +156,10 @@ describe("useChat", () => {
       onNewMessage: onNewMessageMock,
     });
 
-    // Simulate realtime event
     expect(realtimeCallback).toBeDefined();
     await realtimeCallback({ new: { id: "msg-1" } });
 
-    // Verify messages updated
-    // setMessages is index 0
     expect(stateSetters[0]).toHaveBeenCalled();
-    // Since we can't easily inspect the functional update in this mock setup,
-    // we verify onNewMessage callback which is called with the formatted message
     expect(onNewMessageMock).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "msg-1",
@@ -176,8 +170,6 @@ describe("useChat", () => {
   });
 
   it("should handle realtime message with array profiles", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
     let realtimeCallback: any;
     mockChannel.on.mockImplementation((event, filter, callback) => {
       if (event === "postgres_changes") {
@@ -192,7 +184,7 @@ describe("useChat", () => {
       sender_id: "user3",
       content: "Hi Array",
       message_type: "text",
-      profiles: [{ full_name: "User Array", role: "admin" }], // Array case
+      profiles: [{ full_name: "User Array", role: "admin" }],
     };
 
     mockSupabase.from.mockReturnValue({
@@ -201,7 +193,6 @@ describe("useChat", () => {
       single: vi.fn().mockResolvedValue({ data: newMessage }),
     });
 
-    // Pass undefined for onNewMessage to test that branch
     useChat({
       roomId: "room1",
       initialMessages: [],
@@ -212,14 +203,10 @@ describe("useChat", () => {
     });
 
     await realtimeCallback({ new: { id: "msg-2" } });
-
     expect(stateSetters[0]).toHaveBeenCalled();
-    // We can't verify onNewMessage since it's undefined, but we verify it doesn't crash
   });
 
   it("should ignore duplicate messages from realtime", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
     let realtimeCallback: any;
     mockChannel.on.mockImplementation((event, filter, callback) => {
       if (event === "postgres_changes") {
@@ -269,20 +256,14 @@ describe("useChat", () => {
     await realtimeCallback({ new: { id: "msg-1" } });
 
     expect(stateSetters[0]).toHaveBeenCalledTimes(2);
-
     const updateFn = stateSetters[0].mock.calls[1][0];
-
     expect(typeof updateFn).toBe("function");
-
     const newState = updateFn([existingMessage]);
-
     expect(newState).toHaveLength(1);
     expect(newState[0].id).toBe("msg-1");
   });
 
-  it("should handle subscription status errors", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
+  it("should handle subscription status errors", () => {
     mockChannel.subscribe.mockImplementation((cb) => {
       if (cb) cb("CHANNEL_ERROR");
       return mockChannel;
@@ -296,13 +277,10 @@ describe("useChat", () => {
       supabasePublishableKey: "key",
     });
 
-    // Error setter is index 3
     expect(stateSetters[3]).toHaveBeenCalledWith(expect.stringContaining("Mất kết nối"));
   });
 
-  it("should cleanup channel on unmount", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
+  it("should cleanup channel on unmount", () => {
     useChat({
       roomId: "room1",
       initialMessages: [],
@@ -323,10 +301,7 @@ describe("useChat", () => {
     }
   });
 
-  it("should update messages when initialMessages changes", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
-    // Initial render
+  it("should update messages when initialMessages changes", () => {
     useChat({
       roomId: "room1",
       initialMessages: [],
@@ -335,19 +310,14 @@ describe("useChat", () => {
       supabasePublishableKey: "key",
     });
 
-    // Simulate re-render with new messages
-    // This triggers the 3rd effect
     const messagesEffect = effectCallbacks[2];
     if (messagesEffect) {
       messagesEffect();
-      // Check setMessages called (index 0)
       expect(stateSetters[0]).toHaveBeenCalled();
     }
   });
 
   it("should send message successfully", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
     const result = useChat({
       roomId: "room1",
       initialMessages: [],
@@ -357,7 +327,6 @@ describe("useChat", () => {
     });
 
     chatClientMock.sendMessage.mockResolvedValueOnce({ success: true });
-
     await result.sendMessage("Hello", "text");
 
     expect(chatClientMock.sendMessage).toHaveBeenCalledWith({
@@ -366,14 +335,11 @@ describe("useChat", () => {
       messageType: "text",
       imageUrl: undefined,
     });
-
     expect(stateSetters[2]).toHaveBeenCalledWith(true);
     expect(stateSetters[2]).toHaveBeenCalledWith(false);
   });
 
   it("should send image message without content", async () => {
-    const { useChat } = await import("@/hooks/useChat");
-
     const result = useChat({
       roomId: "room1",
       initialMessages: [],
@@ -383,8 +349,6 @@ describe("useChat", () => {
     });
 
     chatClientMock.sendMessage.mockResolvedValueOnce({ success: true });
-
-    // Should not throw validation error
     await result.sendMessage("", "image", "http://image.url");
 
     expect(chatClientMock.sendMessage).toHaveBeenCalledWith({
@@ -395,9 +359,7 @@ describe("useChat", () => {
     });
   });
 
-  // Previous error handling tests...
   it("should handle send message error", async () => {
-    const { useChat } = await import("@/hooks/useChat");
     const result = useChat({
       roomId: "room1",
       initialMessages: [],
@@ -407,31 +369,26 @@ describe("useChat", () => {
     });
 
     chatClientMock.sendMessage.mockRejectedValueOnce(new Error("Network error"));
-
     await expect(result.sendMessage("Hello", "text")).rejects.toThrow("Network error");
     expect(stateSetters[3]).toHaveBeenCalledWith("Network error");
   });
 
-  it("should handle missing supabase config", async () => {
-    const { useChat } = await import("@/hooks/useChat");
+  it("should handle missing supabase config", () => {
     useChat({
       roomId: "room1",
       initialMessages: [],
       currentUserId: "user1",
-      supabaseUrl: "", // missing
-      supabasePublishableKey: "", // missing
+      supabaseUrl: "",
+      supabasePublishableKey: "",
     });
     expect(stateSetters[3]).toHaveBeenCalledWith(expect.stringContaining("Thiếu cấu hình"));
   });
 
-  it("should handle supabase client init error", async () => {
-    // Mock createBrowserClient to throw
-    const { createBrowserClient } = await import("@supabase/ssr");
-    (createBrowserClient as any).mockImplementationOnce(() => {
+  it("should handle supabase client init error", () => {
+    vi.mocked(createBrowserClient).mockImplementationOnce(() => {
       throw new Error("Init fail");
     });
 
-    const { useChat } = await import("@/hooks/useChat");
     useChat({
       roomId: "room1",
       initialMessages: [],
@@ -444,7 +401,6 @@ describe("useChat", () => {
   });
 
   it("should validate empty string message", async () => {
-    const { useChat } = await import("@/hooks/useChat");
     const result = useChat({
       roomId: "room1",
       initialMessages: [],
@@ -463,6 +419,15 @@ describe("useUnreadCount", () => {
     vi.clearAllMocks();
     stateSetters.length = 0;
     effectCallbacks.length = 0;
+
+    vi.mocked(createBrowserClient).mockImplementation(() => mockSupabase);
+
+    mockChannel.on.mockReturnThis();
+    mockChannel.subscribe.mockImplementation((cb) => {
+      if (cb) cb("SUBSCRIBED");
+      return mockChannel;
+    });
+    mockSupabase.channel.mockReturnValue(mockChannel);
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -483,9 +448,7 @@ describe("useUnreadCount", () => {
     if (global.window) delete global.window;
   });
 
-  it("should subscribe to unread count", async () => {
-    const { useUnreadCount } = await import("@/hooks/useChat");
-
+  it("should subscribe to unread count", () => {
     useUnreadCount("http://sb", "key", 0);
 
     expect(mockSupabase.channel).toHaveBeenCalledWith("admin_unread_count");
@@ -494,11 +457,9 @@ describe("useUnreadCount", () => {
   });
 
   it("should update count on event", async () => {
-    const { useUnreadCount } = await import("@/hooks/useChat");
-
     let realtimeCallback: any;
     mockChannel.on.mockImplementation((event, filter, callback) => {
-      realtimeCallback = callback; // No filter for unread count
+      realtimeCallback = callback;
       return mockChannel;
     });
 
@@ -511,14 +472,11 @@ describe("useUnreadCount", () => {
     useUnreadCount("http://sb", "key", 0);
 
     expect(realtimeCallback).toBeDefined();
-    await realtimeCallback(); // trigger update
-
-    // setUnreadCount is index 0 for this hook
+    await realtimeCallback();
     expect(stateSetters[0]).toHaveBeenCalledWith(8);
   });
 
-  it("should cleanup on unmount", async () => {
-    const { useUnreadCount } = await import("@/hooks/useChat");
+  it("should cleanup on unmount", () => {
     useUnreadCount("http://sb", "key", 0);
 
     const effect = effectCallbacks[0];

@@ -1,0 +1,5 @@
+{"type":"server-started","port":53132,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53132","screen_dir":"/Users/kien.ha/Code/auth_shop_platform/.superpowers/brainstorm/83428-1775797723/content","state_dir":"/Users/kien.ha/Code/auth_shop_platform/.superpowers/brainstorm/83428-1775797723/state"}
+{"type":"screen-added","file":"/Users/kien.ha/Code/auth_shop_platform/.superpowers/brainstorm/83428-1775797723/content/approaches.html"}
+{"type":"screen-added","file":"/Users/kien.ha/Code/auth_shop_platform/.superpowers/brainstorm/83428-1775797723/content/design-structure.html"}
+{"type":"screen-added","file":"/Users/kien.ha/Code/auth_shop_platform/.superpowers/brainstorm/83428-1775797723/content/design-v2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

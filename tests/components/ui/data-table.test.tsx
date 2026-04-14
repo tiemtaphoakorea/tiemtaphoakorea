@@ -76,7 +76,7 @@ describe("DataTable", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: /go to next page/i }));
+    await userEvent.click(screen.getByRole("button", { name: /next page/i }));
     expect(onPaginationChange).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10 });
   });
 });

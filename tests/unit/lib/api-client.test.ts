@@ -1,43 +1,36 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const requestHandlers: Array<(config: any) => any> = [];
-const responseHandlers: Array<{
-  success: (r: any) => any;
-  error: (e: any) => any;
-}> = [];
-const mockAxiosInstance = {
-  interceptors: {
-    request: {
-      use: (handler: (config: any) => any) => {
-        requestHandlers.push(handler);
-      },
-    },
-    response: {
-      use: (success: (r: any) => any, error: (e: any) => any) => {
-        responseHandlers.push({ success, error });
-      },
-    },
-  },
-};
-
-const create = vi.fn(() => mockAxiosInstance);
-const isAxiosError = (err: any) => Boolean(err?.isAxiosError);
-
-vi.mock("axios", () => ({
-  default: { create },
-  create,
-  isAxiosError,
-}));
+// Access the real api-client module and extract interceptor handlers
+// directly from the axios instance's internal `handlers` array.
+// We cannot mock "axios" because pnpm resolves it to a different
+// node_modules path than what the test file can reach.
+let requestFulfilled: (config: any) => any;
+let responseFulfilled: (response: any) => any;
+let responseRejected: (error: any) => any;
+let ApiErrorClass: any;
 
 describe("api-client", () => {
   const originalWindow = globalThis.window;
   const originalLocalStorage = (globalThis as any).localStorage;
 
+  beforeAll(async () => {
+    delete (globalThis as any).window;
+    delete (globalThis as any).localStorage;
+
+    const mod = await import("@/lib/api-client");
+    ApiErrorClass = mod.ApiError;
+
+    const axiosInst = (mod as any).axios;
+    const reqHandlers = axiosInst?.interceptors?.request?.handlers;
+    const resHandlers = axiosInst?.interceptors?.response?.handlers;
+
+    requestFulfilled = reqHandlers?.[0]?.fulfilled;
+    responseFulfilled = resHandlers?.[0]?.fulfilled;
+    responseRejected = resHandlers?.[0]?.rejected;
+  });
+
   beforeEach(() => {
-    requestHandlers.length = 0;
-    responseHandlers.length = 0;
     vi.clearAllMocks();
-    vi.resetModules();
     delete (globalThis as any).window;
     delete (globalThis as any).localStorage;
   });
@@ -55,29 +48,24 @@ describe("api-client", () => {
     }
   });
 
-  it("should attach auth header and clean params", async () => {
+  it("should attach auth header and clean params", () => {
     (globalThis as any).window = { location: { pathname: "/" } };
     (globalThis as any).localStorage = {
       getItem: vi.fn(() => "token-123"),
       removeItem: vi.fn(),
     };
 
-    await import("@/lib/api-client");
-    const handler = requestHandlers[0];
-
     const config = {
       headers: {},
       params: { a: 1, b: null, c: "", d: "ok" },
     };
 
-    const result = handler(config);
+    const result = requestFulfilled(config);
     expect(result.headers.Authorization).toBe("Bearer token-123");
     expect(result.params).toEqual({ a: 1, d: "ok" });
   });
 
-  it("should remove Content-Type for FormData requests", async () => {
-    await import("@/lib/api-client");
-    const handler = requestHandlers[0];
+  it("should remove Content-Type for FormData requests", () => {
     const formData = new FormData();
     formData.append("file", new Blob(["x"]), "test.png");
 
@@ -86,19 +74,16 @@ describe("api-client", () => {
       headers: { "Content-Type": "application/json" },
     };
 
-    const result = handler(config);
+    const result = requestFulfilled(config);
     expect(result.headers["Content-Type"]).toBeUndefined();
   });
 
-  it("should return response data on success", async () => {
-    await import("@/lib/api-client");
-    const handler = responseHandlers[0].success;
-
-    const result = handler({ data: { ok: true } });
+  it("should return response data on success", () => {
+    const result = responseFulfilled({ data: { ok: true } });
     expect(result).toEqual({ ok: true });
   });
 
-  it("should redirect on 401 and throw ApiError", async () => {
+  it("should redirect on 401 and throw ApiError", () => {
     (globalThis as any).window = {
       location: { pathname: "/dashboard", href: "" },
     };
@@ -107,23 +92,17 @@ describe("api-client", () => {
       removeItem: vi.fn(),
     };
 
-    const { ApiError } = await import("@/lib/api-client");
-    const handler = responseHandlers[0].error;
-
     const error = {
       isAxiosError: true,
       response: { status: 401, data: { message: "Unauthorized" } },
       message: "Unauthorized",
     };
 
-    expect(() => handler(error)).toThrow(ApiError);
+    expect(() => responseRejected(error)).toThrow(ApiErrorClass);
     expect((globalThis as any).window.location.href).toBe("/login");
   });
 
-  it("should throw ApiError for non-axios errors", async () => {
-    const { ApiError } = await import("@/lib/api-client");
-    const handler = responseHandlers[0].error;
-
-    expect(() => handler(new Error("boom"))).toThrow(ApiError);
+  it("should throw ApiError for non-axios errors", () => {
+    expect(() => responseRejected(new Error("boom"))).toThrow(ApiErrorClass);
   });
 });

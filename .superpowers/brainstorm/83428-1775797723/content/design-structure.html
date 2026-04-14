@@ -1,0 +1,94 @@
+<h2>Thiết kế cấu trúc Mintlify</h2>
+<p class="subtitle">4 tab vai trò — mỗi tab có sidebar tính năng riêng</p>
+
+<div class="section">
+  <h3>Cấu trúc file</h3>
+  <div class="mockup">
+    <div class="mockup-header">Thư mục dự án (đặt trong /docs/guide/)</div>
+    <div class="mockup-body" style="font-family:monospace;font-size:13px;line-height:1.8;padding:16px">
+      <div style="color:#6366f1;font-weight:600">docs/guide/</div>
+      <div style="margin-left:16px">
+        <span style="color:#10b981">mint.json</span> &nbsp;<span style="color:#94a3b8;font-size:11px">— cấu hình tabs, màu sắc, logo</span><br>
+        <br>
+        <span style="color:#f59e0b">📁 chu-shop/</span> &nbsp;<span style="color:#94a3b8;font-size:11px">— Tab: Chủ shop (Owner)</span><br>
+        <div style="margin-left:16px;color:#94a3b8">
+          gioi-thieu.mdx · dashboard.mdx · san-pham.mdx · danh-muc.mdx<br>
+          don-hang.mdx · nhap-hang.mdx · nha-cung-cap.mdx · khach-hang.mdx<br>
+          tin-nhan.mdx · <span style="color:#ef4444">chi-phi.mdx · tai-chinh.mdx · nhan-su.mdx</span> · bao-cao.mdx
+        </div>
+        <br>
+        <span style="color:#f59e0b">📁 quan-ly/</span> &nbsp;<span style="color:#94a3b8;font-size:11px">— Tab: Quản lý (Manager)</span><br>
+        <div style="margin-left:16px;color:#94a3b8">
+          gioi-thieu.mdx · dashboard.mdx · san-pham.mdx · danh-muc.mdx<br>
+          don-hang.mdx · nhap-hang.mdx · nha-cung-cap.mdx · khach-hang.mdx<br>
+          tin-nhan.mdx · <span style="color:#f59e0b">bao-cao.mdx</span>
+        </div>
+        <br>
+        <span style="color:#f59e0b">📁 admin/</span> &nbsp;<span style="color:#94a3b8;font-size:11px">— Tab: Admin</span><br>
+        <div style="margin-left:16px;color:#94a3b8">
+          gioi-thieu.mdx · dashboard.mdx · san-pham.mdx · danh-muc.mdx<br>
+          don-hang.mdx · nhap-hang.mdx · nha-cung-cap.mdx · khach-hang.mdx · tin-nhan.mdx
+        </div>
+        <br>
+        <span style="color:#f59e0b">📁 nhan-vien/</span> &nbsp;<span style="color:#94a3b8;font-size:11px">— Tab: Nhân viên (Staff)</span><br>
+        <div style="margin-left:16px;color:#94a3b8">
+          gioi-thieu.mdx · dashboard.mdx · san-pham.mdx · danh-muc.mdx<br>
+          don-hang.mdx · nhap-hang.mdx · nha-cung-cap.mdx · khach-hang.mdx · tin-nhan.mdx
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mockup giao diện Mintlify</h3>
+  <div class="mockup">
+    <div class="mockup-header">K-SMART Hướng dẫn sử dụng — http://localhost:3333</div>
+    <div class="mockup-body" style="padding:0;display:flex;min-height:340px">
+      <!-- Top nav tabs -->
+      <div style="width:200px;background:#1e1e2e;color:#cdd6f4;padding:16px;flex-shrink:0">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#6c7086;margin-bottom:12px">VAI TRÒ</div>
+        <div style="background:#313244;color:#cba6f7;padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:13px;font-weight:600">👑 Chủ shop</div>
+        <div style="padding:6px 10px;margin-bottom:4px;font-size:13px;color:#6c7086">📊 Quản lý</div>
+        <div style="padding:6px 10px;margin-bottom:4px;font-size:13px;color:#6c7086">🛡️ Admin</div>
+        <div style="padding:6px 10px;margin-bottom:4px;font-size:13px;color:#6c7086">👤 Nhân viên</div>
+        <hr style="border-color:#313244;margin:12px 0">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#6c7086;margin-bottom:8px">TÍNH NĂNG</div>
+        <div style="color:#a6e3a1;padding:4px 10px;font-size:12px">▸ Giới thiệu</div>
+        <div style="color:#a6e3a1;padding:4px 10px;font-size:12px">▸ Dashboard & KPI</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Sản phẩm</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Danh mục</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Đơn hàng</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Nhập hàng</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Nhà cung cấp</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Khách hàng</div>
+        <div style="color:#cdd6f4;padding:4px 10px;font-size:12px">▸ Tin nhắn</div>
+        <div style="color:#f38ba8;padding:4px 10px;font-size:12px">▸ Chi phí 🔒</div>
+        <div style="color:#f38ba8;padding:4px 10px;font-size:12px">▸ Tài chính 🔒</div>
+        <div style="color:#f38ba8;padding:4px 10px;font-size:12px">▸ Nhân sự 🔒</div>
+        <div style="color:#fab387;padding:4px 10px;font-size:12px">▸ Báo cáo ⭐</div>
+      </div>
+      <!-- Content area -->
+      <div style="flex:1;padding:24px;background:#fff">
+        <div style="font-size:11px;color:#6366f1;font-weight:600;margin-bottom:8px">CHỦ SHOP → DASHBOARD & KPI</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px">Dashboard & KPI</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:16px">Trang tổng quan hiển thị các chỉ số kinh doanh quan trọng theo thời gian thực.</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">📊 Các widget KPI</div>
+          <div style="font-size:12px;color:#475569">Doanh thu hôm nay · Đơn hàng mới · Sản phẩm sắp hết · Lợi nhuận tháng</div>
+        </div>
+        <div style="font-size:12px;color:#94a3b8;font-style:italic">← Nội dung được viết bằng MDX, hỗ trợ ảnh chụp màn hình và callout box</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Lưu ý thiết kế</h3>
+  <ul style="font-size:14px;line-height:2;color:#374151">
+    <li>Admin và Staff có <strong>cùng quyền truy cập tính năng</strong> — có thể dùng chung nội dung hoặc tách riêng để mô tả trách nhiệm khác nhau</li>
+    <li>Các tính năng 🔒 (Chi phí, Tài chính, Nhân sự) chỉ xuất hiện trong tab <strong>Chủ shop</strong></li>
+    <li>Báo cáo ⭐ xuất hiện trong tab <strong>Chủ shop</strong> và <strong>Quản lý</strong></li>
+    <li>Mỗi trang MDX có thể gồm: mô tả, ảnh chụp màn hình, callout tips, bảng thao tác</li>
+  </ul>
+</div>

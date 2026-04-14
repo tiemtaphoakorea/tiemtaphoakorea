@@ -1,5 +1,6 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
-import { getChatRooms, STOREFRONT_BASE_URL } from "../helpers/api";
+import { getChatRooms } from "../helpers/api";
 
 /**
  * Chat - Admin/Customer Flow
