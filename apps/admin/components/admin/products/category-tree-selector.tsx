@@ -241,7 +241,7 @@ export function CategoryTreeSelector({
     () =>
       trimmed.length > 0
         ? computeFilterSets(tree, trimmed)
-        : { matchingIds: new Set<string>(), ancestorIds: new Set<string>() },
+        : { matchingIds: EMPTY_SET, ancestorIds: EMPTY_SET },
     [tree, trimmed],
   );
 
