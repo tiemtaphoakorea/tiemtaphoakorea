@@ -48,12 +48,8 @@ describe("api-client", () => {
     }
   });
 
-  it("should attach auth header and clean params", () => {
+  it("should NOT attach Authorization header (cookie-only auth) and clean params", () => {
     (globalThis as any).window = { location: { pathname: "/" } };
-    (globalThis as any).localStorage = {
-      getItem: vi.fn(() => "token-123"),
-      removeItem: vi.fn(),
-    };
 
     const config = {
       headers: {},
@@ -61,7 +57,8 @@ describe("api-client", () => {
     };
 
     const result = requestFulfilled(config);
-    expect(result.headers.Authorization).toBe("Bearer token-123");
+    // Auth is handled via httpOnly cookie — no Bearer header should be injected
+    expect(result.headers.Authorization).toBeUndefined();
     expect(result.params).toEqual({ a: 1, d: "ok" });
   });
 
@@ -86,10 +83,6 @@ describe("api-client", () => {
   it("should redirect on 401 and throw ApiError", () => {
     (globalThis as any).window = {
       location: { pathname: "/dashboard", href: "" },
-    };
-    (globalThis as any).localStorage = {
-      getItem: vi.fn(() => "token-123"),
-      removeItem: vi.fn(),
     };
 
     const error = {
