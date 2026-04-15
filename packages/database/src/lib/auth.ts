@@ -6,6 +6,27 @@ import { db } from "../db";
 import { profiles } from "../schema/profiles";
 import { hashPassword, verifyPassword, verifySession } from "./security";
 
+// In-memory TTL cache for profile lookups.
+// Avoids a round-trip DB query on every API call for the same user.
+// TTL: 60s — safe because role/isActive changes are infrequent admin operations.
+const _profileCache = new Map<string, { value: typeof profiles.$inferSelect | null; expiresAt: number }>();
+const PROFILE_CACHE_TTL = 60_000;
+
+async function getCachedProfile(userId: string) {
+  const now = Date.now();
+  const cached = _profileCache.get(userId);
+  if (cached && cached.expiresAt > now) return cached.value;
+
+  const profile = await db.query.profiles.findFirst({ where: eq(profiles.id, userId) }) ?? null;
+  _profileCache.set(userId, { value: profile, expiresAt: now + PROFILE_CACHE_TTL });
+  return profile;
+}
+
+/** Call when a profile is updated so the cache entry is invalidated immediately. */
+export function invalidateProfileCache(userId: string) {
+  _profileCache.delete(userId);
+}
+
 export { INTERNAL_ROLES };
 
 function redirectWithStatus(url: string) {
@@ -26,18 +47,10 @@ export async function getSession(request?: Request) {
   let token: string | undefined;
 
   if (request) {
-    // Check Authorization header first
-    const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      token = authHeader.substring(7);
-    }
-
-    // Then check cookies
-    if (!token) {
-      const cookieHeader = request.headers.get("Cookie") || "";
-      const match = cookieHeader.match(/admin_session=([^;]+)/);
-      token = match ? match[1] : undefined;
-    }
+    // Read session from httpOnly cookie only — no Authorization header
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const match = cookieHeader.match(/admin_session=([^;]+)/);
+    token = match ? match[1] : undefined;
   } else {
     // Server Component or Action
     const cookieStore = await cookies();
@@ -77,14 +90,10 @@ export async function getUserProfile(userIdOrRequest: string | Request) {
   if (typeof userIdOrRequest !== "string") {
     const { user } = await getSession(userIdOrRequest);
     if (!user) return null;
-    return db.query.profiles.findFirst({
-      where: eq(profiles.id, user.id),
-    });
+    return getCachedProfile(user.id);
   }
 
-  return await db.query.profiles.findFirst({
-    where: eq(profiles.id, userIdOrRequest),
-  });
+  return getCachedProfile(userIdOrRequest);
 }
 
 export async function requireRole(
@@ -176,5 +185,6 @@ export async function changeAdminPassword(
     .set({ passwordHash: newPasswordHash, updatedAt: new Date() })
     .where(eq(profiles.id, user.id));
 
+  invalidateProfileCache(user.id);
   return { success: true };
 }
