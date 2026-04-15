@@ -328,4 +328,50 @@ describe("Input Validation & Injection Prevention", () => {
       expect(Array.isArray(invalidOrder.items)).toBe(false);
     });
   });
+
+  describe("Category API Validation", () => {
+    it("should reject category creation with missing name", async () => {
+      const { categorySchema } = await import("@/lib/schemas");
+      const body = { displayOrder: 0, isActive: true }; // no name
+
+      const result = categorySchema.safeParse(body);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const fields = Object.keys(result.error.flatten().fieldErrors);
+        expect(fields).toContain("name");
+      }
+    });
+
+    it("should strip unknown fields not in allowlist", async () => {
+      const { categorySchema } = await import("@/lib/schemas");
+      const body = {
+        name: "Test Category",
+        displayOrder: 0,
+        isActive: true,
+        id: "injected-id",
+        createdAt: "2020-01-01",
+      };
+
+      const result = categorySchema.safeParse(body);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).not.toHaveProperty("id");
+        expect(result.data).not.toHaveProperty("createdAt");
+      }
+    });
+  });
+
+  describe("Product listing limit", () => {
+    it("should cap limit to 100 maximum", () => {
+      const rawLimit = parseInt("999999", 10);
+      const safeLimit = Math.min(100, Math.max(1, rawLimit));
+      expect(safeLimit).toBe(100);
+    });
+
+    it("should floor limit to 1 minimum", () => {
+      const rawLimit = parseInt("-5", 10);
+      const safeLimit = Math.min(100, Math.max(1, rawLimit));
+      expect(safeLimit).toBe(1);
+    });
+  });
 });

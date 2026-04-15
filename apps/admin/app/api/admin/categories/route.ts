@@ -6,6 +6,7 @@ import {
   getFlatCategories,
 } from "@workspace/database/services/category.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { categorySchema } from "@workspace/shared/schemas";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -16,8 +17,15 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
+  const flatOnly = searchParams.get("flat") === "true";
 
   try {
+    // When ?flat=true, skip building the full category tree (saves one DB query + JS tree-build)
+    if (flatOnly) {
+      const flatCategories = await getFlatCategories();
+      return NextResponse.json({ flatCategories });
+    }
+
     const [categories, flatCategories] = await Promise.all([
       getCategories(search),
       getFlatCategories(),
@@ -27,9 +35,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal Server Error",
-      },
+      { error: "Đã có lỗi xảy ra khi tải danh sách danh mục." },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
@@ -42,14 +48,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const data = await request.json();
-    const slug = await generateCategorySlug(data.name);
+    const body = await request.json();
+    const parsed = categorySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.flatten().fieldErrors },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
+    }
+
+    const { name, parentId, description, displayOrder, isActive } = parsed.data;
+    const slug = await generateCategorySlug(name);
 
     const newCategory = await createCategory({
-      ...data,
+      name,
+      parentId: parentId ?? null,
+      description,
       slug,
-      displayOrder: Number(data.displayOrder) || 0,
-      isActive: data.isActive === true || data.isActive === "true",
+      displayOrder: displayOrder ?? 0,
+      isActive: isActive ?? true,
     });
 
     return NextResponse.json({ success: true, category: newCategory });
