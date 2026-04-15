@@ -3,13 +3,6 @@ import { ROLE } from "@workspace/shared/constants";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Separator } from "@workspace/ui/components/separator";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -24,13 +17,13 @@ import {
 import {
   BarChart3,
   Building2,
-  ChevronRight,
   FolderOpen,
   LayoutDashboard,
   LogOut,
   MessageCircle,
   Package,
   PieChart,
+  Settings2,
   ShoppingCart,
   Truck,
   Users,
@@ -54,6 +47,7 @@ const NAV_ITEMS = [
   { icon: Wallet, label: "Chi phí", href: ADMIN_ROUTES.EXPENSES },
   { icon: PieChart, label: "Tài chính", href: ADMIN_ROUTES.FINANCE },
   { icon: BarChart3, label: "Báo cáo", href: ADMIN_ROUTES.ANALYTICS },
+  { icon: Settings2, label: "Cài đặt", href: ADMIN_ROUTES.SETTINGS },
 ];
 
 const SECONDARY_ITEMS: { icon: any; label: string; href: string }[] = [];
@@ -88,6 +82,11 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     // Analytics: Owner and Manager
     if (item.href === ADMIN_ROUTES.ANALYTICS) {
       return user.role === ROLE.OWNER || user.role === ROLE.MANAGER;
+    }
+
+    // Settings: Owner only
+    if (item.href === ADMIN_ROUTES.SETTINGS) {
+      return user.role === ROLE.OWNER;
     }
 
     // Other operational modules are visible to all internal roles
@@ -174,39 +173,27 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-sidebar-border border-t p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group flex h-14 w-full items-center gap-3 rounded-xl p-2 transition-colors"
-              data-testid="user-menu"
-            >
-              <Avatar className="border-primary/10 h-10 w-10 border-2">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>KH</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-1 flex-col items-start overflow-hidden">
-                <span className="truncate text-sm font-bold">Kien Ha</span>
-                <span className="text-muted-foreground truncate text-[10px] font-bold tracking-tighter uppercase">
-                  Administrator
-                </span>
-              </div>
-              <ChevronRight className="text-muted-foreground h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end" className="w-56 rounded-xl p-2">
-            <DropdownMenuItem className="h-10 rounded-lg font-bold">Profile</DropdownMenuItem>
-            <DropdownMenuItem className="h-10 rounded-lg font-bold">Settings</DropdownMenuItem>
-            <Separator className="my-2" />
-            <DropdownMenuItem
-              className="h-10 cursor-pointer rounded-lg font-bold text-red-500 focus:text-red-500"
-              onSelect={handleLogout}
-              disabled={isLoggingOut}
-              data-testid="logout-button"
-            >
-              <LogOut className="mr-2 h-4 w-4" /> Đăng xuất
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-3">
+          <Avatar className="border-primary/10 h-9 w-9 border-2">
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>KH</AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-bold">{user?.fullName ?? "—"}</span>
+            <span className="text-muted-foreground truncate text-[10px] font-bold tracking-tighter uppercase">
+              {user?.role ?? ""}
+            </span>
+          </div>
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            data-testid="logout-button"
+            className="text-muted-foreground hover:text-destructive shrink-0 rounded-lg p-1.5 transition-colors disabled:opacity-50"
+            title="Đăng xuất"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
