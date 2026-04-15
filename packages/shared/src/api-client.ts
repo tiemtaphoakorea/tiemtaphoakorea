@@ -91,6 +91,9 @@ axiosInstance.interceptors.request.use(
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Reset redirect flag on any successful response so subsequent 401s
+    // (e.g. after a same-page re-login) still trigger the redirect.
+    hasRedirectedToLogin = false;
     return response.data;
   },
   (error) => {
