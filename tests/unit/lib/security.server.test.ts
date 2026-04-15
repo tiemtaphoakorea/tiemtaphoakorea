@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { hashPassword, signSession, verifyPassword, verifySession } from "@/lib/security.server";
 
 describe("security.server", () => {
@@ -35,6 +35,19 @@ describe("security.server", () => {
       const invalidToken = "invalid.token.here";
       const result = await verifySession(invalidToken);
       expect(result).toBeNull();
+    });
+  });
+
+  describe("environment configuration", () => {
+    it("should throw if SESSION_SECRET env var is missing", async () => {
+      const original = process.env.SESSION_SECRET;
+      delete process.env.SESSION_SECRET;
+      vi.resetModules();
+
+      await expect(import("@/lib/security.server")).rejects.toThrow("SESSION_SECRET");
+
+      process.env.SESSION_SECRET = original;
+      vi.resetModules();
     });
   });
 });
