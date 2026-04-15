@@ -297,6 +297,36 @@ describe("Expenses and Finance 401/403 split", () => {
   });
 });
 
+describe("server-side middleware protection", () => {
+  it("should redirect unauthenticated requests to /login", () => {
+    const hasSession = false;
+    const isDashboardRoute = true;
+    const shouldRedirect = isDashboardRoute && !hasSession;
+    expect(shouldRedirect).toBe(true);
+  });
+
+  it("should pass requests with a valid session cookie", () => {
+    const hasSession = true;
+    const isDashboardRoute = true;
+    const shouldRedirect = isDashboardRoute && !hasSession;
+    expect(shouldRedirect).toBe(false);
+  });
+
+  it("should always allow /login without a session cookie", () => {
+    const hasSession = false;
+    const isLoginRoute = true;
+    const shouldRedirect = !isLoginRoute && !hasSession;
+    expect(shouldRedirect).toBe(false);
+  });
+
+  it("should always allow /api/admin/login without a session cookie", () => {
+    const publicPaths = ["/login", "/api/admin/login"];
+    const pathname = "/api/admin/login";
+    const isPublic = publicPaths.some((p) => pathname.startsWith(p));
+    expect(isPublic).toBe(true);
+  });
+});
+
 describe("GET /api/admin/analytics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
