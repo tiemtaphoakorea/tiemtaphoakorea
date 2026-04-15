@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import { CategoryTreeSelector } from "@/components/admin/products/category-tree-selector";
 import { Switch } from "@workspace/ui/components/switch";
 import {
   Table,
@@ -35,7 +36,7 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Textarea } from "@workspace/ui/components/textarea";
-import axios from "axios";
+import { type ApiError, axios } from "@workspace/shared/api-client";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -406,6 +407,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       categoryId: initialData?.categoryId ?? "",
       basePrice: initialData?.basePrice ?? 0,
       isActive: initialData?.isActive !== false,
+      isFeatured: initialData?.isFeatured ?? false,
     },
   });
 
@@ -492,6 +494,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       categoryId: data.categoryId || null,
       basePrice: Number(data.basePrice ?? 0),
       isActive: data.isActive !== false,
+      isFeatured: data.isFeatured === true,
       variants: finalVariants.map((v) => ({
         name: v.name,
         sku: v.sku,
@@ -529,17 +532,18 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         }
         res = await axios.put(`/api/admin/products/${productId}`, updatePayload);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
       const message =
-        err.response?.data?.error ??
-        err?.message ??
+        (apiErr?.data?.error as string | undefined) ??
+        (err instanceof Error ? err.message : null) ??
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm");
       dispatch({ type: "SET_API_ERROR", payload: message });
       dispatch({ type: "SET_API_PENDING", payload: false });
       return;
     }
 
-    if (res?.data?.success) {
+    if (res?.success) {
       dispatch({ type: "SET_API_PENDING", payload: false });
       await queryClient.invalidateQueries({ queryKey: queryKeys.products.all, exact: false });
       await queryClient.invalidateQueries({
@@ -556,7 +560,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     dispatch({
       type: "SET_API_ERROR",
       payload:
-        res?.data?.error ||
+        res?.error ||
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm"),
     });
     dispatch({ type: "SET_API_PENDING", payload: false });
@@ -668,20 +672,11 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                         name="categoryId"
                         control={form.control}
                         render={({ field }) => (
-                          <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                            <SelectTrigger className="h-11">
-                              <SelectValue placeholder="Chọn danh mục" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {Array(cat.depth ?? 0)
-                                    .fill("— ")
-                                    .join("") + cat.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <CategoryTreeSelector
+                            categories={categories}
+                            value={field.value ?? ""}
+                            onValueChange={field.onChange}
+                          />
                         )}
                       />
                     </div>
@@ -733,6 +728,22 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                       )}
                     />
                     <Label className="cursor-pointer font-bold">Hiển thị sản phẩm</Label>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+                    <Controller
+                      name="isFeatured"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                    <div>
+                      <Label className="cursor-pointer font-bold">Bán chạy / Nổi bật</Label>
+                      <p className="text-[11px] text-slate-500">
+                        Hiển thị trong mục "Bán chạy" trên trang chủ
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
