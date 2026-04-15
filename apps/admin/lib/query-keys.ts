@@ -83,7 +83,8 @@ export const queryKeys = {
       [QK.productsRoot, QK.productVariants, debouncedSearch] as const,
   },
   productEdit: (id: string) => [QK.productEditRoot, id] as const,
-  productCategories: [QK.productCategories] as const,
+  // Nested under categoriesRoot so invalidating categories.all also covers this key
+  productCategories: [QK.categoriesRoot, "for-products"] as const,
   customers: {
     all: [QK.customersRoot] as const,
     list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
@@ -110,5 +111,11 @@ export const queryKeys = {
   suppliers: {
     all: [QK.suppliersRoot] as const,
     list: (searchTerm: string) => [QK.suppliersRoot, searchTerm] as const,
+  },
+  banners: {
+    all: ["banners"] as const,
+  },
+  categoryCards: {
+    all: ["category-cards"] as const,
   },
 } as const;
