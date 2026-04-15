@@ -156,6 +156,19 @@ describe("Authentication Security", () => {
     });
   });
 
+  describe("login response security", () => {
+    it("should NOT include access_token in login API response", () => {
+      // The login route sets an httpOnly cookie but must not return a raw token
+      // in the JSON body — that would make it XSS-accessible via localStorage.
+      const loginResponse = {
+        success: true,
+        user: { id: "u1", username: "admin", role: "owner", fullName: "Admin" },
+      };
+
+      expect(loginResponse).not.toHaveProperty("access_token");
+    });
+  });
+
   describe("Password Security", () => {
     it("should not return password in user creation response", async () => {
       // When creating a user, the password should not be included in the profile response

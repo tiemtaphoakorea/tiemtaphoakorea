@@ -50,11 +50,9 @@ export const adminClient = {
     return axios.post<{
       success: boolean;
       error?: string;
-      access_token?: string;
     }>(API_ENDPOINTS.ADMIN.LOGIN, data) as unknown as Promise<{
       success: boolean;
       error?: string;
-      access_token?: string;
     }>;
   },
 

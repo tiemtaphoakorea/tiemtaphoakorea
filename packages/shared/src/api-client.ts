@@ -35,11 +35,6 @@ function redirectToLoginIfNeeded() {
   if (pathname.startsWith("/login")) return;
 
   hasRedirectedToLogin = true;
-  try {
-    localStorage.removeItem("sb-access-token");
-  } catch {
-    // Ignore storage errors and still redirect.
-  }
 
   // Use the default login path
   const loginPath = "/login";
@@ -75,15 +70,7 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    // 1. Inject Authorization header
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("sb-access-token");
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    // 2. Filter params
+    // Filter params
     if (config.params) {
       const cleanedParams: Record<string, any> = {};
       Object.entries(config.params).forEach(([key, value]) => {
