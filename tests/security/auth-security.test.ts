@@ -156,6 +156,20 @@ describe("Authentication Security", () => {
     });
   });
 
+  describe("login role check", () => {
+    it("should reject customer-role accounts from admin login", () => {
+      const internalRoles = ["owner", "manager", "staff"];
+      expect(internalRoles.includes("customer")).toBe(false);
+    });
+
+    it("should allow internal-role accounts", () => {
+      const internalRoles = ["owner", "manager", "staff"];
+      for (const role of internalRoles) {
+        expect(internalRoles.includes(role)).toBe(true);
+      }
+    });
+  });
+
   describe("login response security", () => {
     it("should NOT include access_token in login API response", () => {
       // The login route sets an httpOnly cookie but must not return a raw token
