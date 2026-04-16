@@ -208,31 +208,37 @@ describe("Customer Service", () => {
     });
   });
 
-  describe("getOrderHistory", () => {
-    it("should return status history for an order", async () => {
-      const historyRow = {
-        id: "hist-1",
-        orderId: "order-1",
-        status: "paid",
-        createdAt: new Date(),
-        creator: { fullName: "Admin" },
-      };
-      (db.query.orderStatusHistory.findMany as any).mockResolvedValue([historyRow]);
+});
 
-      const result = await getOrderHistory("order-1");
 
-      expect(db.query.orderStatusHistory.findMany).toHaveBeenCalled();
-      expect(result).toHaveLength(1);
-      expect(result[0].status).toBe("paid");
-    });
+describe("Order Service - getOrderHistory", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    it("should return empty array when order has no history", async () => {
-      (db.query.orderStatusHistory.findMany as any).mockResolvedValue([]);
+  it("should return status history for an order", async () => {
+    const historyRow = {
+      id: "hist-1",
+      orderId: "order-1",
+      status: "paid",
+      createdAt: new Date(),
+      creator: { fullName: "Admin" },
+    };
+    (db.query.orderStatusHistory.findMany as any).mockResolvedValue([historyRow]);
 
-      const result = await getOrderHistory("order-999");
+    const result = await getOrderHistory("order-1");
 
-      expect(result).toEqual([]);
-    });
+    expect(db.query.orderStatusHistory.findMany).toHaveBeenCalled();
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe("paid");
+  });
+
+  it("should return empty array when order has no history", async () => {
+    (db.query.orderStatusHistory.findMany as any).mockResolvedValue([]);
+
+    const result = await getOrderHistory("order-999");
+
+    expect(result).toEqual([]);
   });
 });
 

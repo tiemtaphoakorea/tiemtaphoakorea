@@ -655,5 +655,28 @@ describe("Product Service", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeLessThanOrEqual(1);
     });
+
+    it("should NOT return products created before the date window", async () => {
+      const timestamp = Date.now();
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 90);
+
+      // Insert a product directly with a createdAt 90 days in the past
+      const [oldProduct] = await db
+        .insert(products)
+        .values({
+          name: `Old Arrival ${timestamp}`,
+          slug: `old-arrival-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          createdAt: oldDate,
+        })
+        .returning({ id: products.id });
+
+      // getNewArrivals with a 7-day window — oldProduct was created 90 days ago
+      const result = await getNewArrivals(100, 7);
+      const resultIds = result.map((p: any) => p.id);
+      expect(resultIds).not.toContain(oldProduct.id);
+    });
   });
 });
