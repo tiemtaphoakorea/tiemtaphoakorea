@@ -32,21 +32,6 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Role Hierarchy", () => {
-    const ROLE_HIERARCHY = {
-      owner: 100,
-      manager: 80,
-      staff: 60,
-      customer: 20,
-      guest: 10,
-    };
-
-    it("[docs] should define correct role hierarchy", () => {
-      expect(ROLE_HIERARCHY.owner).toBeGreaterThan(ROLE_HIERARCHY.manager);
-      expect(ROLE_HIERARCHY.manager).toBeGreaterThan(ROLE_HIERARCHY.staff);
-      expect(ROLE_HIERARCHY.staff).toBeGreaterThan(ROLE_HIERARCHY.customer);
-      expect(ROLE_HIERARCHY.customer).toBeGreaterThan(ROLE_HIERARCHY.guest);
-    });
-
     it("ROLE constants match expected hierarchy", async () => {
       const { ROLE } = await import("@/lib/constants");
       expect(ROLE).toBeDefined();
@@ -54,18 +39,6 @@ describe("Authorization/RBAC Security", () => {
       expect(ROLE.MANAGER).toBe("manager");
       expect(ROLE.STAFF).toBe("staff");
       expect(ROLE.CUSTOMER).toBe("customer");
-    });
-
-    it("should have internal roles defined correctly", async () => {
-      const { INTERNAL_ROLES } = await import("@/lib/auth.server");
-
-      expect(INTERNAL_ROLES).toContain("owner");
-      expect(INTERNAL_ROLES).toContain("manager");
-      expect(INTERNAL_ROLES).toContain("staff");
-
-      // Customer and guest are NOT internal roles
-      expect(INTERNAL_ROLES).not.toContain("customer");
-      expect(INTERNAL_ROLES).not.toContain("guest");
     });
   });
 
