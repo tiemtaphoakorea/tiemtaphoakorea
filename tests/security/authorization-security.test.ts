@@ -40,11 +40,20 @@ describe("Authorization/RBAC Security", () => {
       guest: 10,
     };
 
-    it("should define correct role hierarchy", () => {
+    it("[docs] should define correct role hierarchy", () => {
       expect(ROLE_HIERARCHY.owner).toBeGreaterThan(ROLE_HIERARCHY.manager);
       expect(ROLE_HIERARCHY.manager).toBeGreaterThan(ROLE_HIERARCHY.staff);
       expect(ROLE_HIERARCHY.staff).toBeGreaterThan(ROLE_HIERARCHY.customer);
       expect(ROLE_HIERARCHY.customer).toBeGreaterThan(ROLE_HIERARCHY.guest);
+    });
+
+    it("ROLE constants match expected hierarchy", async () => {
+      const { ROLE } = await import("@/lib/constants");
+      expect(ROLE).toBeDefined();
+      expect(ROLE.OWNER).toBe("owner");
+      expect(ROLE.MANAGER).toBe("manager");
+      expect(ROLE.STAFF).toBe("staff");
+      expect(ROLE.CUSTOMER).toBe("customer");
     });
 
     it("should have internal roles defined correctly", async () => {
@@ -203,7 +212,7 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Horizontal Privilege Escalation Prevention", () => {
-    it("should prevent customer A from accessing customer B data", () => {
+    it("[docs] should prevent customer A from accessing customer B data", () => {
       const customerA = { ...MOCK_PROFILES.customer, id: "customer-a-id" };
       const _customerB = { ...MOCK_PROFILES.customer, id: "customer-b-id" };
 
@@ -218,7 +227,7 @@ describe("Authorization/RBAC Security", () => {
       expect(isAuthorized).toBe(false);
     });
 
-    it("should prevent user from modifying another user role", () => {
+    it("[docs] should prevent user from modifying another user role", () => {
       const manager = MOCK_PROFILES.manager;
       const _targetUserId = "other-user-id";
 
@@ -228,7 +237,7 @@ describe("Authorization/RBAC Security", () => {
       expect(canModifyUsers).toBe(false);
     });
 
-    it("should prevent order access across customers", () => {
+    it("[docs] should prevent order access across customers", () => {
       const order = {
         id: "order-123",
         customerId: "customer-a-id",
@@ -244,7 +253,7 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("API Endpoint Authorization", () => {
-    it("should require internal user for upload endpoint", async () => {
+    it("[docs] should require internal user for upload endpoint", async () => {
       // /api/upload requires owner or manager
       const allowedRoles = ["owner", "manager"];
 
