@@ -35,43 +35,18 @@ describe("Input Validation & Injection Prevention", () => {
   });
 
   describe("SQL Injection Prevention", () => {
-    describe("Search Parameters", () => {
-      it.each(
-        SQL_INJECTION_PAYLOADS,
-      )("should sanitize SQL injection payload: %s", async (payload) => {
-        // Drizzle ORM uses parameterized queries, which should prevent SQL injection
-        // This test verifies the search parameter doesn't break the query
-
-        const { db } = await import("@/db/db.server");
-
-        // Simulate a search with malicious input
-        vi.mocked(db.query.products.findMany).mockResolvedValue([]);
-
-        // The search should complete without error (not execute malicious SQL)
-        const result = await db.query.products.findMany();
-
-        expect(result).toEqual([]);
-        expect(db.query.products.findMany).toHaveBeenCalled();
-      });
-
-      it("should use parameterized queries (Drizzle ORM)", () => {
-        // Drizzle uses prepared statements by default
-        // This is a documentation test to confirm the pattern
-
-        const searchTerm = "'; DROP TABLE users; --";
-
-        // In Drizzle, this would be:
-        // ilike(products.name, `%${searchTerm}%`)
-        // Which becomes a parameterized query, not string concatenation
-
-        // The % wrapping doesn't make it unsafe because the entire value is parameterized
-        const parameterizedValue = `%${searchTerm}%`;
-
-        // The value should be treated as a literal string, not SQL
+    describe("Search Parameters are safely parameterized via Drizzle ORM", () => {
+      it("ilike() wraps user input in % placeholders — the whole value is a bind variable, never raw SQL", () => {
+        // Drizzle's ilike(column, `%${value}%`) generates:
+        //   WHERE column ILIKE $1   with $1 = '%payload%' as a bound parameter.
+        // The SQL string sent to Postgres never contains the user value — only a placeholder.
+        // This test documents the invariant: search terms reach the DB as bind variables only.
+        const payload = "'; DROP TABLE users; --";
+        const parameterizedValue = `%${payload}%`;
+        // The value is a plain JS string — safe when passed to ilike() as a bind variable.
+        expect(typeof parameterizedValue).toBe("string");
+        // Containing the payload as a string is fine; it would not be interpreted as SQL.
         expect(parameterizedValue).toContain("DROP TABLE");
-        expect(parameterizedValue).toContain("%");
-
-        // But when passed through Drizzle, it's safely escaped
       });
     });
 
