@@ -9,9 +9,10 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "test": "echo 'No tests configured'",
+    "test": "vitest run",
     "db:reset": "tsx scripts/reset-db.ts",
     "db:seed:e2e": "tsx scripts/seed-e2e.ts",
+    "db:migrate:sapo": "tsx scripts/migrate-sapo-products.ts",
     "test:e2e": "playwright test"
   },
   "lint-staged": {
