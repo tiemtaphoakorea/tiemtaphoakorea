@@ -669,11 +669,21 @@ describe("Product Service", () => {
           .from(costPriceHistory)
           .where(eq(costPriceHistory.variantId, variantId));
 
-        // The application code inserts the OLD cost price (100),
-        // and a DB trigger also fires inserting the NEW cost price (200).
+        // NOTE: Two rows are written per cost change:
+        //   1. App-level insert (product.server.ts) records OLD cost price
+        //   2. DB trigger (trigger_funtion.sql log_cost_price_trigger) records NEW cost price
+        // This is existing system behavior. The dual-write may warrant future consolidation.
         expect(historyRows.length).toBe(2);
         const costs = historyRows.map((r) => Number(r.costPrice)).sort((a, b) => a - b);
         expect(costs).toEqual([100, 200]);
+
+        // Application-level insert records the OLD cost; trigger records the NEW cost.
+        const appRow = historyRows.find((r: any) => r.note === null || r.note === undefined);
+        const triggerRow = historyRows.find((r: any) => r.note === "Auto-logged from variant update");
+        expect(appRow).toBeDefined();
+        expect(triggerRow).toBeDefined();
+        expect(Number(appRow!.costPrice)).toBe(100); // old cost from app insert
+        expect(Number(triggerRow!.costPrice)).toBe(200); // new cost from trigger
       });
 
       it("should NOT insert a history row when cost price is unchanged", async () => {
