@@ -140,7 +140,7 @@ describe("Customer Service", () => {
       expect(result.profile.id).toBe("new-customer-id");
     });
 
-    it("should create a customer with auth user and profile", async () => {
+    it("should create a customer profile without creating an auth account", async () => {
       (db.query.profiles.findFirst as any).mockResolvedValue(null);
 
       const customerData = {
