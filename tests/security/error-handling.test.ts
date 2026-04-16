@@ -345,7 +345,6 @@ describe("Error Handling Security", () => {
       const { expenseSchema } = await import("@/lib/schemas");
       const result = expenseSchema.safeParse({
         type: "fixed",
-        note: "test",
         description: "test expense",
         date: "2026-04-16",
         // amount missing
