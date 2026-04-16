@@ -11,6 +11,7 @@ import {
   deleteProduct,
   generateProductSlug,
   getFeaturedProducts,
+  getNewArrivals,
   getProductById,
   getProductBySlug,
   getProducts,
@@ -116,6 +117,68 @@ describe("Product Service", () => {
       expect(dbProduct?.variants[0].name).toBe("Red - S");
       expect(dbProduct?.variants[0].images.length).toBe(1);
       expect(dbProduct?.variants[0].images[0].imageUrl).toBe("http://test.com/img1.jpg");
+    });
+
+    it("should throw when a variant has negative stock quantity", async () => {
+      const input = {
+        name: "Negative Stock Product",
+        slug: `negative-stock-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          {
+            name: "Bad Variant",
+            sku: `NEGATIVE-SKU-${Date.now()}`,
+            price: 100,
+            costPrice: 50,
+            stockQuantity: -1, // Invalid: negative stock
+          },
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow("Quantity cannot be negative");
+    });
+
+    it("should throw when two variants share the same SKU", async () => {
+      const sku = `DUPLICATE-SKU-${Date.now()}`;
+      const input = {
+        name: "Duplicate SKU Product",
+        slug: `duplicate-sku-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          { name: "Variant A", sku, price: 100, costPrice: 50, stockQuantity: 5 },
+          { name: "Variant B", sku, price: 120, costPrice: 60, stockQuantity: 3 }, // same SKU
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow(`SKU "${sku}" đã tồn tại`);
+    });
+
+    it("should throw when a SKU already exists in the database", async () => {
+      const sku = `EXISTING-SKU-${Date.now()}`;
+
+      // First create a product with this SKU
+      await createProduct({
+        name: "First Product",
+        slug: `first-product-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [{ name: "V1", sku, price: 100, costPrice: 50, stockQuantity: 5 }],
+      });
+
+      // Now try to create another product with the same SKU
+      const input = {
+        name: "Second Product",
+        slug: `second-product-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          { name: "V2", sku, price: 100, costPrice: 50, stockQuantity: 3 }, // same SKU as above
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow(`SKU "${sku}" đã tồn tại`);
     });
   });
 
@@ -564,6 +627,33 @@ describe("Product Service", () => {
 
       expect(first?.images.length ?? 0).toBe(0);
       expect(second?.images[0]?.imageUrl).toBe("http://test.com/mv2.jpg");
+    });
+  });
+
+  describe("getNewArrivals", () => {
+    it("should return products created within the last N days up to the limit", async () => {
+      const timestamp = Date.now();
+      await createProduct({
+        name: `New Arrival ${timestamp}`,
+        slug: `new-arrival-${timestamp}`,
+        categoryId: TEST_CAT_ID,
+        isActive: true,
+        variants: [{ name: "NA1", sku: `NA1-${timestamp}`, price: 100 }],
+      });
+
+      const result = await getNewArrivals(10, 7);
+
+      // The product was just created so it should be within the 7-day window
+      const found = result.find((p) => p.slug === `new-arrival-${timestamp}`);
+      expect(found).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should respect the limit parameter", async () => {
+      const result = await getNewArrivals(1, 30);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeLessThanOrEqual(1);
     });
   });
 });
