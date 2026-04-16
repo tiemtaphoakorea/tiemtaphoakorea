@@ -35,10 +35,9 @@ test.describe("Supplier Orders - Status Update", () => {
     // Open supplier orders list filtered by this SKU so we can easily find the row
     await page.goto("/supplier-orders");
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
-    await page.waitForTimeout(500);
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 5000 });
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
@@ -81,10 +80,9 @@ test.describe("Supplier Orders - Status Update", () => {
     // Open supplier orders list and find the row
     await page.goto("/supplier-orders");
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
-    await page.waitForTimeout(500);
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 5000 });
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
@@ -108,9 +106,9 @@ test.describe("Supplier Orders - Status Update", () => {
     // Ensure we have at least one product variant to create a supplier order for
     const products = await getProductsWithVariants(page);
     if (products.length === 0) {
-      // Environment has no products yet -> skip this test gracefully
-      test.skip();
-      return;
+      throw new Error(
+        "Precondition failed: no products found. Seed the database with at least one product with variants before running E2E tests.",
+      );
     }
 
     const variant =
@@ -129,10 +127,9 @@ test.describe("Supplier Orders - Status Update", () => {
     // Open supplier orders list and find the row
     await page.goto("/supplier-orders");
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
-    await page.waitForTimeout(500);
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 5000 });
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
