@@ -9,11 +9,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  PATH_TRAVERSAL_PAYLOADS,
-  SQL_INJECTION_PAYLOADS,
-  XSS_PAYLOADS,
-} from "./helpers/security-helpers";
+import { PATH_TRAVERSAL_PAYLOADS, XSS_PAYLOADS } from "./helpers/security-helpers";
 
 // Mock database
 vi.mock("@/db/db.server", () => ({
@@ -36,7 +32,7 @@ describe("Input Validation & Injection Prevention", () => {
 
   describe("SQL Injection Prevention", () => {
     describe("Search Parameters are safely parameterized via Drizzle ORM", () => {
-      it("ilike() wraps user input in % placeholders — the whole value is a bind variable, never raw SQL", () => {
+      it("[docs] ilike() parameterizes user input as a bind variable — the value never reaches Postgres as raw SQL", () => {
         // Drizzle's ilike(column, `%${value}%`) generates:
         //   WHERE column ILIKE $1   with $1 = '%payload%' as a bound parameter.
         // The SQL string sent to Postgres never contains the user value — only a placeholder.
