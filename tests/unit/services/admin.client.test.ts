@@ -49,6 +49,16 @@ describe("admin.client", () => {
       expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.STATS);
     });
 
+    it("should return the full stats response shape from getStats", async () => {
+      const { adminClient } = await import("@/services/admin.client");
+      const mockStats = { totalRevenue: 5000, totalOrders: 12 };
+      axiosMock.get.mockResolvedValue({ stats: mockStats });
+
+      const result = await adminClient.getStats();
+
+      expect(result).toEqual({ stats: mockStats });
+    });
+
     it("should call stats endpoint for KPIs", async () => {
       const { adminClient } = await import("@/services/admin.client");
       axiosMock.get.mockResolvedValue({ kpiStats: {} });
@@ -240,6 +250,13 @@ describe("admin.client", () => {
       await adminClient.deleteOrder("ord-1");
 
       expect(axiosMock.delete).toHaveBeenCalledWith(`${API_ENDPOINTS.ADMIN.ORDERS}/ord-1`);
+    });
+
+    it("should propagate axios error to caller", async () => {
+      const { adminClient } = await import("@/services/admin.client");
+      axiosMock.get.mockRejectedValue(new Error("Network Error"));
+
+      await expect(adminClient.getOrders({})).rejects.toThrow("Network Error");
     });
 
     it("should update order status", async () => {
