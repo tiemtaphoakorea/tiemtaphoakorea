@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { categories } from "@/db/schema/categories";
 import { orderItems, orders } from "@/db/schema/orders";
-import { products, productVariants } from "@/db/schema/products";
+import { costPriceHistory, products, productVariants } from "@/db/schema/products";
 import { profiles } from "@/db/schema/profiles";
 import { BusinessError } from "@/lib/http-status";
 import {
@@ -627,6 +627,138 @@ describe("Product Service", () => {
 
       expect(first?.images.length ?? 0).toBe(0);
       expect(second?.images[0]?.imageUrl).toBe("http://test.com/mv2.jpg");
+    });
+
+    describe("cost price history tracking", () => {
+      it("should insert a history row when cost price changes", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Change ${timestamp}`,
+          slug: `cost-history-change-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPH1",
+              sku: `CPH1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Change ${timestamp}`,
+          slug: `cost-history-change-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPH1",
+              sku: `CPH1-${timestamp}`,
+              price: 200,
+              costPrice: 200,
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        // The application code inserts the OLD cost price (100),
+        // and a DB trigger also fires inserting the NEW cost price (200).
+        expect(historyRows.length).toBe(2);
+        const costs = historyRows.map((r) => Number(r.costPrice)).sort((a, b) => a - b);
+        expect(costs).toEqual([100, 200]);
+      });
+
+      it("should NOT insert a history row when cost price is unchanged", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Same ${timestamp}`,
+          slug: `cost-history-same-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPS1",
+              sku: `CPS1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Same ${timestamp}`,
+          slug: `cost-history-same-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPS1",
+              sku: `CPS1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        expect(historyRows.length).toBe(0);
+      });
+
+      it("should NOT insert a history row when costPrice is omitted from the update", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Omit ${timestamp}`,
+          slug: `cost-history-omit-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPO1",
+              sku: `CPO1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Omit ${timestamp}`,
+          slug: `cost-history-omit-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPO1",
+              sku: `CPO1-${timestamp}`,
+              price: 200,
+              // costPrice intentionally omitted
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        expect(historyRows.length).toBe(0);
+      });
     });
   });
 
