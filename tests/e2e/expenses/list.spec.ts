@@ -14,8 +14,6 @@ test.describe("Expense - List", () => {
     await expect(page.locator("h1, h2").filter({ hasText: /chi phí|expense/i })).toBeVisible();
 
     // Verify the page content rendered beyond just the heading — table or empty state
-    await expect(
-      page.locator("table, [data-testid='empty-state'], .empty-state").first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("[data-slot='table']").first()).toBeVisible();
   });
 });

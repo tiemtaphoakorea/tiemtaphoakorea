@@ -21,8 +21,6 @@ test.describe("Accounting - Cost Price History", () => {
     ).toBeVisible();
 
     // Verify the history table or empty state rendered — not just the heading
-    await expect(
-      page.locator("table thead, table tbody, [data-testid='empty-state']").first()
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("[data-slot='table']").first()).toBeVisible();
   });
 });
