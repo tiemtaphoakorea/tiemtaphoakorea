@@ -111,7 +111,8 @@ test.describe("Supplier Orders - Stock Updates", () => {
     expect(supplierOrder?.id).toBeTruthy();
 
     // Receive the order via API
-    await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    const patchResponse = await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    expect(patchResponse.status()).toBe(200);
 
     // Verify stock did NOT increase (pre_order items don't update stock)
     const productsAfter = await getProductsWithVariants(page);
@@ -156,7 +157,8 @@ test.describe("Supplier Orders - Stock Updates", () => {
     expect(orderDetails.order?.id).toBeFalsy(); // No linked order
 
     // Receive the order
-    await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    const patchResponse = await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    expect(patchResponse.status()).toBe(200);
 
     // Verify stock increased (manual restocking always updates stock)
     const productsAfter = await getProductsWithVariants(page);

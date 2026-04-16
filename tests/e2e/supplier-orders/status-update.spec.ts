@@ -37,7 +37,7 @@ test.describe("Supplier Orders - Status Update", () => {
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible({ timeout: 5000 });
+    await expect(row).toBeVisible();
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
@@ -82,7 +82,7 @@ test.describe("Supplier Orders - Status Update", () => {
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible({ timeout: 5000 });
+    await expect(row).toBeVisible();
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
@@ -129,7 +129,7 @@ test.describe("Supplier Orders - Status Update", () => {
     await page.getByPlaceholder("Tìm mã đơn, SKU, tên sản phẩm...").fill(String(variant.sku));
 
     const row = page.locator("table tbody tr").first();
-    await expect(row).toBeVisible({ timeout: 5000 });
+    await expect(row).toBeVisible();
 
     // Open actions menu -> "Cập nhật trạng thái"
     await row.getByRole("button").last().click();
