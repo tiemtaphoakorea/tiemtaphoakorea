@@ -20,7 +20,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10)));
+  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
   const stockStatus = searchParams.get("stockStatus") || undefined;
   const include = searchParams.get("include");
 

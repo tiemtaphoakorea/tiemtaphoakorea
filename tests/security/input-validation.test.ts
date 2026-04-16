@@ -374,16 +374,18 @@ describe("Input Validation & Injection Prevention", () => {
     });
 
     it("clamp expression handles all edge cases (mirrors apps/admin/app/api/admin/products/route.ts:23)", () => {
-      // Exact expression: Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10)))
-      const clamp = (raw: string | null) =>
-        Math.min(100, Math.max(1, parseInt(raw || "10", 10)));
+      // Mirrors the NaN-safe expression in apps/admin/app/api/admin/products/route.ts
+      const clamp = (raw: string | null) => {
+        const rawVal = parseInt(raw || "10", 10);
+        return Math.min(100, Math.max(1, Number.isNaN(rawVal) ? 10 : rawVal));
+      };
 
       expect(clamp("999999")).toBe(100);
       expect(clamp("-5")).toBe(1);
       expect(clamp("0")).toBe(1);
       expect(clamp("50")).toBe(50);
       expect(clamp(null)).toBe(10);
-      expect(clamp("abc")).toBeNaN(); // NaN → Math.max(1, NaN) → NaN (parseInt("abc") = NaN propagates)
+      expect(clamp("abc")).toBe(10); // NaN-safe: falls back to default 10
     });
   });
 
@@ -405,13 +407,9 @@ describe("Input Validation & Injection Prevention", () => {
         quantity: -1,
         supplierId: "550e8400-e29b-41d4-a716-446655440001",
       });
-      // If the schema enforces positive quantity, this should fail
+      expect(result.success).toBe(false);
       if (!result.success) {
-        const errors = result.error.flatten().fieldErrors;
-        expect(errors.quantity).toBeDefined();
-      } else {
-        // Schema allows -1 — documents a potential validation gap
-        console.warn("[security] supplierOrderAddSchema does not enforce positive quantity");
+        expect(result.error.flatten().fieldErrors.quantity).toBeDefined();
       }
     });
   });
