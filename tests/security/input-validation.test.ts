@@ -155,13 +155,13 @@ describe("Input Validation & Injection Prevention", () => {
     });
 
     describe("Content-Type Headers", () => {
-      it("should set correct Content-Type for JSON responses", () => {
+      it("[docs] should set correct Content-Type for JSON responses", () => {
         const response = Response.json({ data: "test" });
 
         expect(response.headers.get("Content-Type")).toContain("application/json");
       });
 
-      it("should not return HTML for API endpoints", () => {
+      it("[docs] should not return HTML for API endpoints", () => {
         const apiResponse = Response.json({ error: "Not found" });
 
         // API should return JSON, not HTML

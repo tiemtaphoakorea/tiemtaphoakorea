@@ -340,7 +340,7 @@ describe("Error Handling Security", () => {
     });
   });
 
-  describe("Real error format contracts", () => {
+  describe("Schema validation contracts (Zod)", () => {
     it("expenseSchema should reject missing amount", async () => {
       const { expenseSchema } = await import("@/lib/schemas");
       const result = expenseSchema.safeParse({

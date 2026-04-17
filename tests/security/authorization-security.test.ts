@@ -149,7 +149,10 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Guest Access Control", () => {
-    it("should allow guest to send chat messages with valid guest ID", () => {
+    // NOTE: The real chat route (apps/main/app/api/chat/route.ts) authorizes guests via
+    // `guestId` in the request body, not an x-guest-id header. These tests document the
+    // intended contract but do not exercise the real route.
+    it("[docs] should allow guest to send chat messages with valid guest ID", () => {
       const guestId = "guest-uuid-12345";
       const request = createGuestRequest(guestId, {
         method: "POST",
@@ -161,7 +164,7 @@ describe("Authorization/RBAC Security", () => {
       expect(guestHeader).toBe(guestId);
     });
 
-    it("should reject guest without guest ID header", () => {
+    it("[docs] should reject guest without guest ID header", () => {
       const request = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/chat.send",
@@ -172,7 +175,7 @@ describe("Authorization/RBAC Security", () => {
       expect(guestHeader).toBeNull();
     });
 
-    it("should validate guest ID format", () => {
+    it("[docs] should validate guest ID format", () => {
       const validGuestId = "guest-550e8400-e29b-41d4-a716-446655440000";
       const invalidGuestId = "invalid";
 
@@ -235,11 +238,10 @@ describe("Authorization/RBAC Security", () => {
       expect(allowedRoles).not.toContain("customer");
     });
 
-    it("should allow authenticated user OR guest for chat.send", () => {
-      // Chat send allows either:
-      // 1. Authenticated user (any role)
-      // 2. Guest with x-guest-id header
-
+    it("[docs] should allow authenticated user OR guest for chat.send", () => {
+      // Real route: apps/main/app/api/chat/route.ts
+      // Actual auth: authenticated user (via supabase session) OR guestId in request body.
+      // This test exercises only request construction, not the real route handler.
       const authenticatedRequest = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/chat.send",
