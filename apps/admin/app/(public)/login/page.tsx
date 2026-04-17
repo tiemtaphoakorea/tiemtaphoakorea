@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiError } from "@workspace/shared/api-client";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { type LoginFormValues, loginSchema } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
@@ -37,31 +38,18 @@ export default function AdminLoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setError("");
-    let responseData:
-      | {
-          success?: boolean;
-          error?: string;
-        }
-      | undefined;
-
     try {
-      responseData = await adminClient.login(data);
+      await adminClient.login(data);
+      router.push("/");
     } catch (err) {
-      console.error(err);
-      if (err instanceof TypeError || !navigator.onLine) {
-        setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.");
+      if (err instanceof ApiError) {
+        setError(
+          err.data?.error ?? "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.",
+        );
       } else {
-        setError("Đã có lỗi hệ thống xảy ra. Vui lòng thử lại sau hoặc liên hệ hỗ trợ kỹ thuật.");
+        setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.");
       }
-      return;
     }
-
-    if (!responseData?.success) {
-      setError(responseData?.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.");
-      return;
-    }
-
-    router.push("/");
   }
 
   return (
