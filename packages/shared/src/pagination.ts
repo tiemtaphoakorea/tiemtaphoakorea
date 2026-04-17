@@ -23,7 +23,7 @@ export function getPaginationParams(request: Request) {
   const rawPage = parseInt(searchParams.get("page") || "1", 10);
   const page = Math.max(1, Number.isNaN(rawPage) ? PAGINATION_DEFAULT.PAGE : rawPage);
   const rawLimit = parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10);
-  const limit = Math.max(1, Number.isNaN(rawLimit) ? PAGINATION_DEFAULT.LIMIT : rawLimit);
+  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? PAGINATION_DEFAULT.LIMIT : rawLimit));
   const offset = (page - 1) * limit;
 
   return { page, limit, offset };

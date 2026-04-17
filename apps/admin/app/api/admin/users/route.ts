@@ -17,11 +17,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || undefined;
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.max(
-      1,
-      parseInt(searchParams.get("limit") || String(PAGINATION_DEFAULT.LIMIT), 10),
-    );
+    const rawPage = parseInt(searchParams.get("page") || "1", 10);
+    const page = Math.max(1, Number.isNaN(rawPage) ? PAGINATION_DEFAULT.PAGE : rawPage);
+    const rawLimit = parseInt(searchParams.get("limit") || String(PAGINATION_DEFAULT.LIMIT), 10);
+    const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? PAGINATION_DEFAULT.LIMIT : rawLimit));
     const result = await getUsersPaginated({ search, page, limit });
     return NextResponse.json(result);
   } catch (error: any) {
