@@ -11,8 +11,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const rawPage = parseInt(searchParams.get("page") || "1", 10);
+  const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
+  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
 
   try {
     const result = await getCustomers({ search, page, limit });

@@ -1,0 +1,125 @@
+---
+title: "Phân quyền vai trò"
+description: "Ma trận quyền hạn chi tiết cho từng vai trò trong hệ thống K-SMART."
+---
+
+## Tổng quan
+
+K-SMART có 3 vai trò nội bộ. Mỗi vai trò xác định tính năng nào được truy cập và thao tác nào được thực hiện.
+
+| Vai trò | Tiếng Anh | Mô tả ngắn |
+|---------|-----------|-----------|
+| **Chủ shop** | `owner` | Toàn quyền — bao gồm tài chính, nhân sự và cài đặt |
+| **Quản lý** | `manager` | Toàn bộ vận hành và báo cáo — không có tài chính/nhân sự |
+| **Nhân viên** | `staff` | Vận hành hàng ngày — không có báo cáo, tài chính, nhân sự |
+
+---
+
+## Ma trận quyền hạn
+
+### Sản phẩm
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách sản phẩm | ✅ | ✅ | ✅ |
+| Thêm / chỉnh sửa sản phẩm | ✅ | ✅ | ✅ |
+| **Tải lên ảnh sản phẩm** | ✅ | ✅ | ❌ |
+| Cập nhật tồn kho biến thể | ✅ | ✅ | ✅ |
+| Đánh dấu sản phẩm nổi bật (`Bán chạy / Nổi bật`) | ✅ | ✅ | ✅ |
+| Ẩn / hiện sản phẩm (`Hiển thị sản phẩm`) | ✅ | ✅ | ✅ |
+| Xóa sản phẩm | ✅ | ✅ | ✅ |
+
+### Danh mục
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh mục | ✅ | ✅ | ✅ |
+| Thêm / chỉnh sửa / xóa danh mục | ✅ | ✅ | ✅ |
+
+### Đơn hàng
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách đơn hàng | ✅ | ✅ | ✅ |
+| Xem chi tiết đơn hàng | ✅ | ✅ | ✅ |
+| Tạo đơn hàng mới (admin) | ✅ | ✅ | ✅ |
+| Ghi nhận thanh toán | ✅ | ✅ | ✅ |
+| Cập nhật trạng thái đơn | ✅ | ✅ | ✅ |
+| Chỉnh sửa ghi chú / giảm giá | ✅ | ✅ | ✅ |
+| In hóa đơn | ✅ | ✅ | ✅ |
+| Xóa đơn (chỉ sau khi hủy) | ✅ | ✅ | ✅ |
+
+### Nhập hàng (Supplier Orders)
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách đơn nhập | ✅ | ✅ | ✅ |
+| Tạo đơn nhập hàng | ✅ | ✅ | ✅ |
+| Xác nhận đặt hàng với NCC | ✅ | ✅ | ✅ |
+| Xác nhận nhận hàng | ✅ | ✅ | ✅ |
+| Hủy đơn nhập | ✅ | ✅ | ✅ |
+
+### Nhà cung cấp
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách nhà cung cấp | ✅ | ✅ | ✅ |
+| Thêm / chỉnh sửa / xóa nhà cung cấp | ✅ | ✅ | ✅ |
+
+### Khách hàng
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách và hồ sơ khách | ✅ | ✅ | ✅ |
+| Tìm kiếm khách hàng | ✅ | ✅ | ✅ |
+| **Vô hiệu hóa / kích hoạt khách hàng** | ✅ | ✅ | ❌ |
+
+### Tin nhắn (Chat)
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem và trả lời hội thoại | ✅ | ✅ | ✅ |
+| Gửi ảnh | ✅ | ✅ | ✅ |
+
+### Báo cáo & Phân tích
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem báo cáo doanh thu và đơn hàng | ✅ | ✅ | ❌ |
+| Xem top sản phẩm | ✅ | ✅ | ❌ |
+
+### Chi phí & Tài chính
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem và quản lý chi phí vận hành | ✅ | ❌ | ❌ |
+| Xem báo cáo lợi nhuận (P&L) | ✅ | ❌ | ❌ |
+
+### Nhân sự
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Xem danh sách nhân viên | ✅ | ❌ | ❌ |
+| Tạo tài khoản nhân viên mới | ✅ | ❌ | ❌ |
+| Thay đổi vai trò nhân viên | ✅ | ❌ | ❌ |
+| Vô hiệu hóa tài khoản nhân viên | ✅ | ❌ | ❌ |
+
+### Cài đặt (Trang chủ & Banner)
+
+| Thao tác | Chủ shop | Quản lý | Nhân viên |
+|----------|:--------:|:-------:|:---------:|
+| Quản lý banner trang chủ | ✅ | ❌ | ❌ |
+| Quản lý ô danh mục trang chủ | ✅ | ❌ | ❌ |
+| Bật/tắt danh mục trên thanh nav | ✅ | ❌ | ❌ |
+
+---
+
+## Lưu ý quan trọng
+
+<Note>
+**Ảnh sản phẩm**: Nhân viên xem và chỉnh sửa được thông tin sản phẩm nhưng **không thể tải lên ảnh**. Liên hệ Quản lý hoặc Chủ shop để cập nhật hình ảnh.
+</Note>
+
+<Warning>
+**Tài chính và Nhân sự** là các mục chỉ dành riêng cho Chủ shop. Menu điều hướng của Quản lý và Nhân viên không hiển thị hai mục này.
+</Warning>

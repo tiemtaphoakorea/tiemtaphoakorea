@@ -29,6 +29,7 @@ export type ProductSort = "latest" | "price-asc" | "price-desc";
 export interface ProductFilterCategory {
   name: string;
   slug: string;
+  children?: ProductFilterCategory[];
 }
 
 // Product form (admin create/edit)
@@ -58,6 +59,7 @@ export type AdminProductDetail = {
   categoryId: string | null;
   basePrice: string | null;
   isActive: boolean | null;
+  isFeatured: boolean | null;
   variants: Array<{
     id: string;
     name: string;
@@ -79,6 +81,7 @@ export type ProductFormInitialData = {
   categoryId: string;
   basePrice: number;
   isActive: boolean;
+  isFeatured: boolean;
   variants: ProductFormVariant[];
 };
 
@@ -88,6 +91,7 @@ export type ProductFormData = {
   categoryId: string;
   basePrice: number;
   isActive: boolean;
+  isFeatured: boolean;
 };
 
 export interface ProductFormProps {

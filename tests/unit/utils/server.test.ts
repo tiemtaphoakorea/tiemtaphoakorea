@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createClient } from "@/utils/supabase/server";
 
 const { createServerClientMock, cookiesMock } = vi.hoisted(() => ({
-  createServerClientMock: vi.fn(() => ({ mock: true })),
+  createServerClientMock: vi.fn(),
   cookiesMock: vi.fn(),
 }));
 
@@ -41,6 +42,7 @@ describe("utils/supabase/server", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    createServerClientMock.mockReturnValue({ mock: true });
     process.env = { ...originalEnv };
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://supabase.test";
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY = "public-key";
@@ -58,7 +60,6 @@ describe("utils/supabase/server", () => {
 
     cookiesMock.mockResolvedValue(cookieStore);
 
-    const { createClient } = await import("@/utils/supabase/server");
     const client = await createClient();
 
     expect(client).toEqual({ mock: true });
@@ -80,7 +81,6 @@ describe("utils/supabase/server", () => {
 
     cookiesMock.mockResolvedValue(cookieStore);
 
-    const { createClient } = await import("@/utils/supabase/server");
     await createClient();
 
     const options = getCreateServerClientOptions();

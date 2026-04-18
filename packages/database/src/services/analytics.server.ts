@@ -67,14 +67,14 @@ export async function getAnalyticsData() {
     // 3. Category Distribution
     const categorySales = await db
       .select({
-        category: categories.name,
+        category: sql<string>`coalesce(${categories.name}, 'Uncategorized')`,
         sales: sql<number>`count(${orderItems.id})`.mapWith(Number),
       })
       .from(orderItems)
       .innerJoin(productVariants, eq(orderItems.variantId, productVariants.id))
       .innerJoin(products, eq(productVariants.productId, products.id))
-      .innerJoin(categories, eq(products.categoryId, categories.id))
-      .groupBy(categories.name)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .groupBy(sql`coalesce(${categories.name}, 'Uncategorized')`)
       .orderBy(desc(sql`count(${orderItems.id})`));
 
     // 4. Top Products

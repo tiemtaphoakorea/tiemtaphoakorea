@@ -884,6 +884,106 @@ describe("recordPayment", () => {
       }),
     ).rejects.toThrow("Order not found");
   });
+
+  it("should throw INVALID_PAYMENT_AMOUNT for amount = 0", async () => {
+    await expect(
+      recordPayment({
+        orderId: "order-1",
+        amount: 0,
+        method: "cash" as any,
+        userId: "admin-1",
+      }),
+    ).rejects.toThrow("INVALID_PAYMENT_AMOUNT");
+  });
+
+  it("should throw INVALID_PAYMENT_AMOUNT for negative amount", async () => {
+    await expect(
+      recordPayment({
+        orderId: "order-1",
+        amount: -100,
+        method: "cash" as any,
+        userId: "admin-1",
+      }),
+    ).rejects.toThrow("INVALID_PAYMENT_AMOUNT");
+  });
+
+  it("should throw INVALID_PAYMENT_AMOUNT for NaN amount", async () => {
+    await expect(
+      recordPayment({
+        orderId: "order-1",
+        amount: Number.NaN,
+        method: "cash" as any,
+        userId: "admin-1",
+      }),
+    ).rejects.toThrow("INVALID_PAYMENT_AMOUNT");
+  });
+
+  it("should throw OVERPAYMENT_NOT_ALLOWED when payment exceeds remaining balance", async () => {
+    // Mock pre-transaction check - order found
+    const selectMock: any = {
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
+    };
+    (db.select as any).mockReturnValue(selectMock);
+
+    // Mock transaction query - order with 800 paid of 1000 total
+    mockTx.where.mockResolvedValueOnce([
+      { id: "order-1", total: "1000", paidAmount: "800", status: "pending" },
+    ]);
+
+    // 800 + 300 = 1100 > 1000 → should throw OVERPAYMENT_NOT_ALLOWED
+    await expect(
+      recordPayment({
+        orderId: "order-1",
+        amount: 300,
+        method: "cash" as any,
+        userId: "admin-1",
+      }),
+    ).rejects.toThrow("OVERPAYMENT_NOT_ALLOWED");
+  });
+});
+
+describe("updateOrderStatus - CANCELLED terminal state", () => {
+  const createMockTx = () => {
+    const tx: any = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      for: vi.fn(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      innerJoin: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
+      execute: vi.fn(),
+    };
+    tx.returning.mockResolvedValue([{ id: "order-1", status: "paid" }]);
+    return tx;
+  };
+
+  let mockTx: ReturnType<typeof createMockTx>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTx = createMockTx();
+    (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
+  });
+
+  it("should throw when transitioning from CANCELLED to any other status", async () => {
+    mockTx.for.mockResolvedValueOnce([
+      { id: "order-1", orderNumber: "ORD-001", status: "cancelled" },
+    ]);
+    mockTx.where.mockReturnValue(mockTx);
+
+    await expect(
+      updateOrderStatus("order-1", ORDER_STATUS.PAID, "admin-1"),
+    ).rejects.toThrow("Cannot update a cancelled order");
+
+    expect(mockTx.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("getOrderStats", () => {

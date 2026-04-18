@@ -54,7 +54,7 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-PROD-011]] - Low Stock Alert & Stock Filters
 - [[TC-PROD-012]] - Deactivate Product & Catalog Visibility
 - [[TC-PROD-013]] - Customer Catalog View
-- [[TC-PROD-014]] - Category Management (Create/Edit/Assign)
+- [[TC-PROD-014]] - Category Management (Create/Edit/Assign) ⚠️ *Superseded by TC-CAT-001–005*
 - [[TC-PROD-015]] - Product Slug Uniqueness Handling
 - [[TC-PROD-016]] - Variant Stock Quantity Validation
 - [[TC-PROD-017]] - Category Filter Uses Active Products Only
@@ -64,6 +64,14 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-PROD-021]] - Concurrent Stock Updates from Two Admin Sessions
 - [[TC-PROD-022]] - Prevent Negative Stock on Manual Update
 
+### Categories
+
+- [[TC-CAT-001]] - Category Create
+- [[TC-CAT-002]] - Category Delete
+- [[TC-CAT-003]] - Category Edit
+- [[TC-CAT-004]] - Category List
+- [[TC-CAT-005]] - Category Search
+
 ### Customer Catalog
 
 - [[TC-CATALOG-001]] - Catalog List + Search & Filter
@@ -72,6 +80,7 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-CATALOG-004]] - Public Access to Catalog and Detail
 - [[TC-CATALOG-005]] - Retail Price Display Updates After Admin Change
 - [[TC-CATALOG-006]] - Catalog Pagination and Empty State
+- [[TC-CATALOG-007]] - Product Sort Order on Listing Page
 
 ### Order Management
 
@@ -101,6 +110,7 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-ORD-024]] - Order Payment Status Derived from Paid Amount
 - [[TC-ORD-025]] - Order Total Recalculation with Multiple Items
 - [[TC-ORD-026]] - Order with Zero Items Rejected
+- [[TC-ORD-028]] - Full Order Lifecycle End-to-End *(missing)*
 
 ### Customer Management
 
@@ -114,6 +124,8 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-CUST-008]] - Auto-Create Customer from Order
 - [[TC-CUST-009]] - Customer Stats Calculation
 - [[TC-CUST-010]] - Duplicate Customer Phone Handling
+- [[TC-CUST-011]] - Customer Profile Edit *(missing)*
+- [[TC-CUST-012]] - Customer Reactivation Cycle *(missing)*
 
 ### Supplier Management
 
@@ -168,6 +180,8 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-CHAT-010]] - Guest Cannot Access Admin Chat Routes
 - [[TC-CHAT-011]] - Concurrent Send and Mark-as-Read
 - [[TC-CHAT-012]] - Concurrent Messages Order Consistency
+- [[TC-CHAT-013]] - Attachment Upload Valid File Baseline *(missing)*
+- [[TC-CHAT-014]] - Guest Session Expiry and Re-Identification *(missing)*
 
 ### Accounting
 
@@ -185,6 +199,7 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-ACC-012]] - Profit Report Date Range Boundaries
 - [[TC-ACC-013]] - Expense Amount Validation
 - [[TC-ACC-014]] - Profit Report Empty State
+- [[TC-ACC-015]] - COGS Calculation Accuracy *(missing)*
 
 ### Payment
 
@@ -198,6 +213,8 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-PAY-008]] - Payment Negative Amount Rejected
 - [[TC-PAY-009]] - Zero Payment Amount Rejected
 - [[TC-PAY-010]] - Duplicate Payment Submission Prevented
+- [[TC-PAY-011]] - Payment on Cancelled Order Rejected *(missing)*
+- [[TC-PAY-012]] - Card Payment Method Coverage *(missing)*
 
 ### User Management
 
@@ -220,6 +237,7 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-DASH-009]] - Unread Chat Count Widget
 - [[TC-DASH-010]] - Dashboard Date Range Filter
 - [[TC-DASH-011]] - Dashboard Empty State
+- [[TC-DASH-012]] - Dashboard KPI Exact Delta Verification *(missing)*
 
 ### Security
 
@@ -233,6 +251,9 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-SEC-008]] - CSRF Protection on State-Changing Requests
 - [[TC-SEC-009]] - Rate Limiting on Login Attempts
 - [[TC-SEC-010]] - RLS Policy Enforcement for Customers and Orders
+- [[TC-SEC-011]] - Session Fixation Prevention *(missing)*
+- [[TC-SEC-012]] - Session/Token Expiry Enforcement *(missing)*
+- [[TC-SEC-013]] - HTTP Method Override Attack *(missing)*
 
 ### Cross-Feature Integration
 
@@ -257,9 +278,29 @@ Directory: `docs/035-QA/Test-Cases/`
 - [[TC-INT-019]] - Idempotent Add Payment with Different Payload
 - [[TC-INT-020]] - Idempotent Cancel Order Request
 
+### Finance
+
+- [[TC-FIN-001]] - Finance Dashboard Load
+- [[TC-FIN-002]] - Finance Date Filters
+- [[TC-FIN-003]] - Finance Filter Changes Displayed Data *(missing)*
+
+### Accessibility
+
+- [[TC-A11Y-001]] - Storefront Accessibility Scan *(missing)*
+
+### Store
+
+- [[TC-STORE-001]] - Storefront Homepage Load
+- [[TC-STORE-002]] - Product Detail Page
+- [[TC-STORE-003]] - Navbar Category Links
+- [[TC-STORE-004]] - Listing Search and Filter
+- [[TC-STORE-005]] - Inactive Product Hidden from Storefront *(missing)*
+
 ## Reports
 
 Directory: `docs/035-QA/Reports/`
+
+- [[QA-Review-2026-04-09]] - Full E2E Test Review (150 files, 19 domains) — April 2026
 
 ## Automation
 

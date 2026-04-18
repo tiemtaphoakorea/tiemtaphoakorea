@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiError } from "@workspace/shared/api-client";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { type LoginFormValues, loginSchema } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
@@ -13,7 +14,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
-import { AlertCircle, ArrowRight, Lock, User } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -24,6 +25,7 @@ export default function AdminLoginPage() {
   "use no memo";
   const router = useRouter();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -36,32 +38,18 @@ export default function AdminLoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setError("");
-    let responseData:
-      | {
-          success?: boolean;
-          error?: string;
-          access_token?: string;
-        }
-      | undefined;
-
     try {
-      responseData = await adminClient.login(data);
+      await adminClient.login(data);
+      router.push("/");
     } catch (err) {
-      console.error(err);
-      setError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
-      return;
+      if (err instanceof ApiError) {
+        setError(
+          err.data?.error ?? "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.",
+        );
+      } else {
+        setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.");
+      }
     }
-
-    if (!responseData?.success) {
-      setError(responseData?.error || "Đăng nhập thất bại");
-      return;
-    }
-
-    if (responseData.access_token) {
-      localStorage.setItem("sb-access-token", responseData.access_token);
-    }
-
-    router.push("/");
   }
 
   return (
@@ -91,7 +79,7 @@ export default function AdminLoginPage() {
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6 px-8">
+          <CardContent className="space-y-6 px-8 pb-8">
             {error && (
               <div className="bg-destructive/10 border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-2 flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold">
                 <AlertCircle className="h-4 w-4 shrink-0" />
@@ -99,8 +87,8 @@ export default function AdminLoginPage() {
               </div>
             )}
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="username" className="text-sm font-medium text-foreground">
+              <div className="space-y-3">
+                <label htmlFor="username" className="block text-sm font-medium text-foreground">
                   Tên đăng nhập
                 </label>
                 <div className="group relative">
@@ -122,9 +110,9 @@ export default function AdminLoginPage() {
                   </p>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="ml-1 flex items-center justify-between">
-                  <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
                     Mật khẩu
                   </label>
                 </div>
@@ -135,11 +123,19 @@ export default function AdminLoginPage() {
                   <Input
                     id="password"
                     {...register("password")}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="h-12 rounded-lg border-border bg-background pl-12 text-sm transition-all focus:ring-1 focus:ring-ring"
+                    className="h-12 rounded-lg border-border bg-background pl-12 pr-12 text-sm transition-all focus:ring-1 focus:ring-ring"
                     aria-invalid={!!errors.password}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-4 -translate-y-1/2 transition-colors"
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-destructive ml-1 text-sm font-medium">
@@ -149,7 +145,7 @@ export default function AdminLoginPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4 px-8 pt-4 pb-8">
+          <CardFooter className="flex flex-col gap-4 px-8 pt-6 pb-8">
             <Button
               type="submit"
               disabled={isSubmitting}

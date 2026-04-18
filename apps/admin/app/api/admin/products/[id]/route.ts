@@ -29,9 +29,7 @@ export async function GET(request: Request, { params }: IdRouteParams) {
   } catch (error) {
     console.error("Failed to fetch product:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal Server Error",
-      },
+      { error: "Đã có lỗi xảy ra khi tải thông tin sản phẩm." },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
@@ -61,6 +59,7 @@ export async function PUT(request: Request, { params }: IdRouteParams) {
       categoryId: (data.categoryId as string) || null,
       basePrice: Number(data.basePrice || 0),
       isActive: data.isActive !== false,
+      isFeatured: data.isFeatured === true,
       variants: (data.variants || []).map((v: any) => ({
         ...v,
         price: v.price !== undefined ? Number(v.price) : undefined,

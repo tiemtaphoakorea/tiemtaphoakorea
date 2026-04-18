@@ -314,6 +314,11 @@ export async function updateOrderStatus(
       throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
     }
 
+    // CANCELLED is a terminal state — no transitions allowed out of it
+    if (lockedOrder.status === ORDER_STATUS.CANCELLED) {
+      throw new Error(`Cannot update a cancelled order`);
+    }
+
     // Prevent cancelling if status is SHIPPING or DELIVERED
     if (status === ORDER_STATUS.CANCELLED) {
       if (

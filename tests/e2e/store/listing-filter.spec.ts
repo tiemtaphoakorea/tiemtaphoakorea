@@ -1,6 +1,6 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, test } from "../fixtures/auth";
 import { TEST_PRODUCTS } from "../fixtures/data";
-import { STOREFRONT_BASE_URL } from "../helpers/api";
 
 test.describe("Storefront - Listing Filter", () => {
   // Use a clean session for shopping flow

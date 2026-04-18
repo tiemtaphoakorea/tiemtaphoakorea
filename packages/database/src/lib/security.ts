@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import { jwtVerify, SignJWT } from "jose";
 
 const SALT_ROUNDS = 10;
-const SESSION_SECRET = process.env.SESSION_SECRET || "default_secret";
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  throw new Error("SESSION_SECRET env var is required but not set");
+}
 const secret = new TextEncoder().encode(SESSION_SECRET);
 
 export async function hashPassword(password: string): Promise<string> {

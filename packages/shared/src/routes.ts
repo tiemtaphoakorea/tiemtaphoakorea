@@ -58,6 +58,9 @@ export const ADMIN_ROUTES = {
 
   // Users (Staff Management)
   USERS: "/users",
+
+  // Site Settings (includes homepage banners + nav config)
+  SETTINGS: "/settings",
 } as const;
 
 // ============================================================================

@@ -1,0 +1,136 @@
+---
+title: "Cài đặt"
+description: "Quản lý hiển thị trang chủ: banner carousel, ô danh mục và thanh điều hướng."
+---
+
+## Mô tả
+
+Trang Cài đặt cho phép Chủ shop tùy chỉnh giao diện cửa hàng — kiểm soát nội dung xuất hiện trên trang chủ của storefront mà không cần chỉnh sửa code.
+
+## Cách truy cập
+
+Menu bên trái → **Cài đặt** *(chỉ hiển thị với tài khoản Chủ shop)*.
+
+Trang có 3 tab: **Điều hướng**, **Banner slides** và **Ô danh mục**.
+
+---
+
+## Tab 1 — Điều hướng
+
+Kiểm soát danh mục nào hiển thị dưới dạng pill links trên thanh nav của storefront.
+
+### Bật/tắt danh mục trên nav
+
+<Steps>
+  <Step title="Mở tab Điều hướng">
+    Nhấn tab **Điều hướng** ở đầu trang Cài đặt. Danh sách hiển thị toàn bộ danh mục gốc kèm số danh mục con.
+  </Step>
+  <Step title="Bật hoặc tắt từng danh mục">
+    Gạt công tắc bên phải tên danh mục để bật (`ON`) hoặc tắt (`OFF`) hiển thị trên nav.
+    Thay đổi có hiệu lực ngay lập tức — không cần lưu thêm.
+  </Step>
+</Steps>
+
+<Note>
+Danh mục đang ẩn (trạng thái `Ẩn` trong trang Danh mục) không thể bật trên nav. Hãy kích hoạt danh mục trước, sau đó quay lại đây để bật.
+</Note>
+
+---
+
+## Tab 2 — Banner slides
+
+Quản lý carousel ảnh lớn hiển thị ở khu vực hero đầu trang chủ.
+
+### Các loại banner
+
+| Loại | Mô tả |
+|------|-------|
+| **Danh mục** | Banner liên kết đến một danh mục sản phẩm |
+| **Tùy chọn** | Banner với ảnh và nội dung tự chỉnh (tiêu đề, phụ đề, CTA) |
+
+### Trạng thái banner
+
+| Trạng thái | Ý nghĩa |
+|-----------|---------|
+| **Đang chạy** | Đang hiển thị trực tiếp trên storefront |
+| **Lên lịch** | Đã kích hoạt nhưng chưa đến ngày bắt đầu |
+| **Hết hạn** | Đã qua ngày kết thúc |
+| **Ẩn** | Đã tắt thủ công |
+
+### Thêm banner mới
+
+<Steps>
+  <Step title="Mở form thêm banner">
+    Nhấn nút **Thêm banner** ở góc phải trên cùng của tab.
+  </Step>
+  <Step title="Chọn loại banner">
+    - **Danh mục** — chọn danh mục từ dropdown; banner tự lấy tên danh mục làm tiêu đề.
+    - **Tùy chọn** — điền tiêu đề, phụ đề, nhãn CTA chính/phụ, URL đích và tag giảm giá (tùy chọn).
+  </Step>
+  <Step title="Tải lên ảnh">
+    Nhấn vùng ảnh để upload. Định dạng hỗ trợ: JPG, PNG, WebP. Kích thước khuyến nghị: 1440 × 600px.
+  </Step>
+  <Step title="Đặt màu nhấn (accent color)">
+    Chọn màu hiển thị trên badge giảm giá và các phần tử overlay nếu cần.
+  </Step>
+  <Step title="Lên lịch (tùy chọn)">
+    Điền **Ngày bắt đầu** và/hoặc **Ngày kết thúc** để banner tự động bật/tắt theo thời gian.
+    Để trống cả hai nếu muốn banner chạy vĩnh viễn khi được bật.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Banner mới xuất hiện trong danh sách với thứ tự cuối cùng.
+  </Step>
+</Steps>
+
+### Chỉnh sửa và xóa banner
+
+- Nhấn **⋯** trên card banner → chọn **Chỉnh sửa** để mở lại form.
+- Nhấn **⋯** → **Xoá** để xóa vĩnh viễn.
+
+### Bật/tắt banner nhanh
+
+Gạt công tắc nhỏ ở cuối card để bật (`ON`) hoặc tắt (`OFF`) banner mà không cần vào form chỉnh sửa.
+
+### Thứ tự hiển thị
+
+Các banner slide theo thứ tự trường `sortOrder`. Để sắp xếp lại, chỉnh sửa từng banner và cập nhật số thứ tự.
+
+---
+
+## Tab 3 — Ô danh mục
+
+Quản lý 4 ô ảnh dạng grid hiển thị ngay dưới banner trang chủ, dùng để dẫn khách đến các danh mục chính.
+
+<Note>
+Tối đa **4 ô đang bật** cùng lúc. Nút **Thêm ô** bị vô hiệu hóa khi đã đủ 4 ô hoạt động.
+</Note>
+
+### Thêm ô danh mục mới
+
+<Steps>
+  <Step title="Mở form thêm ô">
+    Nhấn nút **Thêm ô** ở góc phải.
+  </Step>
+  <Step title="Chọn loại ô">
+    - **Liên kết danh mục** — chọn danh mục; tiêu đề và URL tự điền từ danh mục.
+    - **Tùy chỉnh** — nhập tiêu đề, số lượng sản phẩm hiển thị (ví dụ: "250+ sản phẩm") và URL đích.
+  </Step>
+  <Step title="Tải lên ảnh nền">
+    Nhấn vùng ảnh để upload ảnh nền cho ô. Tỉ lệ khuyến nghị: 4:3.
+  </Step>
+  <Step title="Đặt màu nhấn (tùy chọn)">
+    Chọn màu overlay hoặc viền nếu cần.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Ô mới xuất hiện trong grid.
+  </Step>
+</Steps>
+
+### Chỉnh sửa và xóa ô
+
+- Nhấn biểu tượng bút chì trên card để chỉnh sửa.
+- Nhấn biểu tượng thùng rác để xóa vĩnh viễn.
+
+### Bật/tắt ô
+
+Gạt công tắc nhỏ ở cuối card để ẩn hoặc hiện ô trên storefront mà không cần xóa.

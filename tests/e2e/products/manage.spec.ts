@@ -1,9 +1,6 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
-import {
-  cleanupTestProducts,
-  createProductWithVariants,
-  STOREFRONT_BASE_URL,
-} from "../helpers/api";
+import { cleanupTestProducts, createProductWithVariants } from "../helpers/api";
 
 test.describe("Product Management (Create/Edit/Deactivate)", () => {
   let runId: string;

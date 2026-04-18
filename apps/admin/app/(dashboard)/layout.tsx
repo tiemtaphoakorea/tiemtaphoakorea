@@ -38,22 +38,21 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     queryKey: queryKeys.admin.profile,
     queryFn: async () => {
       const data = await adminClient.getProfile();
-      // The API returns { profile: ... } structure based on route.ts
       // eslint_disable-next-line @typescript-eslint/no-explicit-any
       return (data as any)?.profile;
     },
     retry: 1,
+    enabled: typeof window !== "undefined",
+    // Profile changes rarely — cache for 5 minutes so navigating between pages
+    // doesn't refetch; eliminates the blocking spinner on subsequent visits.
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (isError || !user) {
+  // Only redirect on confirmed error, not while loading.
+  // This lets the sidebar shell and page content render immediately in parallel
+  // with the profile fetch, instead of blocking behind a full-screen spinner.
+  if (isError) {
     redirect("/login");
   }
 

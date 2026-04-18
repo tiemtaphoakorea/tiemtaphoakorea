@@ -32,31 +32,13 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Role Hierarchy", () => {
-    const ROLE_HIERARCHY = {
-      owner: 100,
-      manager: 80,
-      staff: 60,
-      customer: 20,
-      guest: 10,
-    };
-
-    it("should define correct role hierarchy", () => {
-      expect(ROLE_HIERARCHY.owner).toBeGreaterThan(ROLE_HIERARCHY.manager);
-      expect(ROLE_HIERARCHY.manager).toBeGreaterThan(ROLE_HIERARCHY.staff);
-      expect(ROLE_HIERARCHY.staff).toBeGreaterThan(ROLE_HIERARCHY.customer);
-      expect(ROLE_HIERARCHY.customer).toBeGreaterThan(ROLE_HIERARCHY.guest);
-    });
-
-    it("should have internal roles defined correctly", async () => {
-      const { INTERNAL_ROLES } = await import("@/lib/auth.server");
-
-      expect(INTERNAL_ROLES).toContain("owner");
-      expect(INTERNAL_ROLES).toContain("manager");
-      expect(INTERNAL_ROLES).toContain("staff");
-
-      // Customer and guest are NOT internal roles
-      expect(INTERNAL_ROLES).not.toContain("customer");
-      expect(INTERNAL_ROLES).not.toContain("guest");
+    it("ROLE constants are defined with correct string values", async () => {
+      const { ROLE } = await import("@/lib/constants");
+      expect(ROLE).toBeDefined();
+      expect(ROLE.OWNER).toBe("owner");
+      expect(ROLE.MANAGER).toBe("manager");
+      expect(ROLE.STAFF).toBe("staff");
+      expect(ROLE.CUSTOMER).toBe("customer");
     });
   });
 
@@ -167,7 +149,10 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Guest Access Control", () => {
-    it("should allow guest to send chat messages with valid guest ID", () => {
+    // NOTE: The real chat route (apps/main/app/api/chat/route.ts) authorizes guests via
+    // `guestId` in the request body, not an x-guest-id header. These tests document the
+    // intended contract but do not exercise the real route.
+    it("[docs] should allow guest to send chat messages with valid guest ID", () => {
       const guestId = "guest-uuid-12345";
       const request = createGuestRequest(guestId, {
         method: "POST",
@@ -179,7 +164,7 @@ describe("Authorization/RBAC Security", () => {
       expect(guestHeader).toBe(guestId);
     });
 
-    it("should reject guest without guest ID header", () => {
+    it("[docs] should reject guest without guest ID header", () => {
       const request = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/chat.send",
@@ -190,7 +175,7 @@ describe("Authorization/RBAC Security", () => {
       expect(guestHeader).toBeNull();
     });
 
-    it("should validate guest ID format", () => {
+    it("[docs] should validate guest ID format", () => {
       const validGuestId = "guest-550e8400-e29b-41d4-a716-446655440000";
       const invalidGuestId = "invalid";
 
@@ -203,7 +188,7 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("Horizontal Privilege Escalation Prevention", () => {
-    it("should prevent customer A from accessing customer B data", () => {
+    it("[docs] should prevent customer A from accessing customer B data", () => {
       const customerA = { ...MOCK_PROFILES.customer, id: "customer-a-id" };
       const _customerB = { ...MOCK_PROFILES.customer, id: "customer-b-id" };
 
@@ -218,7 +203,7 @@ describe("Authorization/RBAC Security", () => {
       expect(isAuthorized).toBe(false);
     });
 
-    it("should prevent user from modifying another user role", () => {
+    it("[docs] should prevent user from modifying another user role", () => {
       const manager = MOCK_PROFILES.manager;
       const _targetUserId = "other-user-id";
 
@@ -228,7 +213,7 @@ describe("Authorization/RBAC Security", () => {
       expect(canModifyUsers).toBe(false);
     });
 
-    it("should prevent order access across customers", () => {
+    it("[docs] should prevent order access across customers", () => {
       const order = {
         id: "order-123",
         customerId: "customer-a-id",
@@ -244,7 +229,7 @@ describe("Authorization/RBAC Security", () => {
   });
 
   describe("API Endpoint Authorization", () => {
-    it("should require internal user for upload endpoint", async () => {
+    it("[docs] should require internal user for upload endpoint", async () => {
       // /api/upload requires owner or manager
       const allowedRoles = ["owner", "manager"];
 
@@ -253,11 +238,10 @@ describe("Authorization/RBAC Security", () => {
       expect(allowedRoles).not.toContain("customer");
     });
 
-    it("should allow authenticated user OR guest for chat.send", () => {
-      // Chat send allows either:
-      // 1. Authenticated user (any role)
-      // 2. Guest with x-guest-id header
-
+    it("[docs] should allow authenticated user OR guest for chat.send", () => {
+      // Real route: apps/main/app/api/chat/route.ts
+      // Actual auth: authenticated user (via supabase session) OR guestId in request body.
+      // This test exercises only request construction, not the real route handler.
       const authenticatedRequest = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/chat.send",

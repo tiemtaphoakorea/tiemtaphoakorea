@@ -1,4 +1,5 @@
 import path from "node:path";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 const db = (p: string) => path.resolve(__dirname, `packages/database/src/${p}`);
@@ -6,10 +7,16 @@ const shared = (p: string) => path.resolve(__dirname, `packages/shared/src/${p}`
 const ui = (p: string) => path.resolve(__dirname, `packages/ui/src/${p}`);
 const adminApp = (p: string) => path.resolve(__dirname, `apps/admin/${p}`);
 const mainApp = (p: string) => path.resolve(__dirname, `apps/main/${p}`);
+// Canonical paths for packages that exist in multiple symlinked locations (pnpm workspaces)
+// This ensures vi.mock() intercepts imports regardless of which symlink path resolves them.
+const supabaseSsr = path.resolve(__dirname, "packages/database/node_modules/@supabase/ssr");
+const nextHeaders = path.resolve(__dirname, "packages/database/node_modules/next/headers");
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     environment: "node",
+    environmentMatchGlobs: [["tests/components/**", "jsdom"]],
     globals: true,
     include: [
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
@@ -18,6 +25,8 @@ export default defineConfig({
     ],
     setupFiles: ["./tests/setup.ts", "./tests/unit/setup.ts"],
     alias: {
+      "@supabase/ssr": supabaseSsr,
+      "next/headers": nextHeaders,
       "@/db/db.server": db("db"),
       "@/db": db(""),
       "@/lib/security.server": db("lib/security"),
@@ -41,6 +50,8 @@ export default defineConfig({
       "@/lib": shared(""),
       "@/services/admin.client": adminApp("services/admin.client"),
       "@/services/chat.client": mainApp("services/chat.client"),
+      "@/services/banner.server": db("services/banner.server"),
+      "@/services/categoryCard.server": db("services/categoryCard.server"),
       "@/services": db("services"),
       "@/components/admin": adminApp("components/admin"),
       "@/components/store": mainApp("components/store"),
@@ -51,7 +62,7 @@ export default defineConfig({
       "@/components/ui": ui("components"),
       "@/components/image-uploader": adminApp("components/image-uploader"),
       "@/components": mainApp("components"),
-      "@/hooks/useMobile": ui("hooks/useMobile"),
+      "@/hooks/useMobile": ui("hooks/use-mobile"),
       "@/hooks": mainApp("hooks"),
       "@/types/admin": db("types/admin"),
       "@/types/api": db("types/api"),
@@ -79,6 +90,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@supabase/ssr": supabaseSsr,
+      "next/headers": nextHeaders,
       "@/db/db.server": db("db"),
       "@/db": db(""),
       "@/lib/security.server": db("lib/security"),
@@ -102,6 +115,8 @@ export default defineConfig({
       "@/lib": shared(""),
       "@/services/admin.client": adminApp("services/admin.client"),
       "@/services/chat.client": mainApp("services/chat.client"),
+      "@/services/banner.server": db("services/banner.server"),
+      "@/services/categoryCard.server": db("services/categoryCard.server"),
       "@/services": db("services"),
       "@/components/admin": adminApp("components/admin"),
       "@/components/store": mainApp("components/store"),
@@ -112,7 +127,7 @@ export default defineConfig({
       "@/components/ui": ui("components"),
       "@/components/image-uploader": adminApp("components/image-uploader"),
       "@/components": mainApp("components"),
-      "@/hooks/useMobile": ui("hooks/useMobile"),
+      "@/hooks/useMobile": ui("hooks/use-mobile"),
       "@/hooks": mainApp("hooks"),
       "@/types/admin": db("types/admin"),
       "@/types/api": db("types/api"),

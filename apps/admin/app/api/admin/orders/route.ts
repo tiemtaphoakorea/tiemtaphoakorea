@@ -18,8 +18,10 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || undefined;
   const status = searchParams.get("status") || "All";
   const customerId = searchParams.get("customerId") || undefined;
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const rawPage = parseInt(searchParams.get("page") || "1", 10);
+  const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
+  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
 
   try {
     const result = await getOrders({ search, status, customerId, page, limit });

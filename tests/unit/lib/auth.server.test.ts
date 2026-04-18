@@ -5,6 +5,7 @@ import {
   getAuthenticatedUser,
   getInternalUser,
   getUserProfile,
+  invalidateProfileCache,
   requireAdmin,
   requireInternalUser,
   requireRole,
@@ -36,11 +37,16 @@ vi.mock("@/db/db.server", () => ({
 describe("Auth Server Helpers", () => {
   const makeRequestWithToken = (token = "test-token") =>
     new Request("http://localhost", {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Cookie: `admin_session=${token}` },
     });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear in-memory profile cache so tests don't bleed into each other
+    invalidateProfileCache("user-123");
+    invalidateProfileCache("owner-id");
+    invalidateProfileCache("staff-id");
+    invalidateProfileCache("manager-id");
   });
 
   describe("requireUserSession", () => {

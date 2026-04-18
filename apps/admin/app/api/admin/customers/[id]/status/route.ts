@@ -1,12 +1,14 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
+import { requireRole } from "@workspace/database/lib/auth";
 import { updateCustomer } from "@workspace/database/services/customer.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
+import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(request: NextRequest, { params }: IdRouteParams) {
-  const user = await getInternalUser(request);
-  if (!user) {
+  try {
+    await requireRole(request, [ROLE.OWNER, ROLE.MANAGER]);
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
   }
 
@@ -14,13 +16,16 @@ export async function PATCH(request: NextRequest, { params }: IdRouteParams) {
     const body = await request.json();
     const { isActive } = body;
 
-    if (isActive === undefined) {
-      return NextResponse.json({ error: "Missing isActive" }, { status: HTTP_STATUS.BAD_REQUEST });
+    if (isActive !== true && isActive !== false) {
+      return NextResponse.json(
+        { error: "isActive must be a boolean" },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
 
     const { id } = await params;
     const updatedProfile = await updateCustomer(id, {
-      isActive: Boolean(isActive),
+      isActive,
     });
 
     return NextResponse.json({ success: true, profile: updatedProfile });

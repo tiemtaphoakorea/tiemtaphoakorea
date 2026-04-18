@@ -1,3 +1,4 @@
+import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { apiPost, cleanupTestProducts, createProductWithVariants } from "../helpers/api";
 
@@ -91,7 +92,7 @@ test.describe("Product List & Search", () => {
     });
 
     // View customer catalog (public URL)
-    await page.goto("http://localhost:3000/products");
+    await page.goto(`${STOREFRONT_BASE_URL}/products`);
     await page.waitForLoadState("networkidle");
 
     // Search for active product - should be visible

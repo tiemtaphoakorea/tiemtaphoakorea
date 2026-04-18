@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const setState = vi.fn();
-const useState = vi.fn(() => [undefined, setState]);
-const useEffect = vi.fn((fn: any) => fn());
+const { setState, useState, useEffect } = vi.hoisted(() => {
+  const setState = vi.fn();
+  const useState = vi.fn(() => [undefined, setState]);
+  const useEffect = vi.fn((fn: any) => fn());
+  return { setState, useState, useEffect };
+});
 
 vi.mock("react", () => ({
+  default: { useState, useEffect },
   useState,
   useEffect,
 }));

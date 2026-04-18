@@ -17,7 +17,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Stack Trace Protection", () => {
-    it("should NOT include stack trace in production errors", () => {
+    it("[docs] should NOT include stack trace in production errors", () => {
       const productionError = {
         message: "An error occurred",
         status: 500,
@@ -27,7 +27,7 @@ describe("Error Handling Security", () => {
       expect(JSON.stringify(productionError)).not.toMatch(/at\s+\w+\s+\(/);
     });
 
-    it("should allow stack trace only in development mode", () => {
+    it("[docs] should allow stack trace only in development mode", () => {
       const isDevelopment = process.env.NODE_ENV !== "production";
 
       const devError = {
@@ -42,7 +42,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should strip stack trace before sending response", () => {
+    it("[docs] should strip stack trace before sending response", () => {
       const internalError = new Error("Database connection failed");
       internalError.stack = "Error: Database connection failed\n    at db.ts:50";
 
@@ -57,7 +57,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Database Error Protection", () => {
-    it("should NOT expose table names in errors", () => {
+    it("[docs] should NOT expose table names in errors", () => {
       const dbErrors = [
         'relation "users" does not exist',
         'column "password" does not exist',
@@ -75,7 +75,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should NOT expose SQL syntax errors", () => {
+    it("[docs] should NOT expose SQL syntax errors", () => {
       const sqlErrors = [
         "syntax error at or near 'SELECT'",
         "unterminated quoted string",
@@ -90,7 +90,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should NOT reveal database connection details", () => {
+    it("[docs] should NOT reveal database connection details", () => {
       const connectionErrors = [
         "connection refused to localhost:5432",
         "FATAL: password authentication failed",
@@ -110,7 +110,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Authentication Error Messages", () => {
-    it("should use generic message for invalid credentials", () => {
+    it("[docs] should use generic message for invalid credentials", () => {
       // Don't reveal whether email or password was wrong
       const authError = "Invalid email or password";
 
@@ -124,7 +124,7 @@ describe("Error Handling Security", () => {
       expect(authError).not.toMatch(/password incorrect/i);
     });
 
-    it("should not reveal user existence", () => {
+    it("[docs] should not reveal user existence", () => {
       // For security, don't confirm if email exists
       const loginFailureMessage = "Invalid email or password";
 
@@ -134,7 +134,7 @@ describe("Error Handling Security", () => {
       expect(loginFailureMessage).toBe("Invalid email or password");
     });
 
-    it("should handle session expiry gracefully", () => {
+    it("[docs] should handle session expiry gracefully", () => {
       const sessionError = {
         message: "Your session has expired. Please log in again.",
         code: "SESSION_EXPIRED",
@@ -149,7 +149,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("API Error Response Format", () => {
-    it("should return consistent error structure", () => {
+    it("[docs] should return consistent error structure", () => {
       const errorResponse = {
         error: "Not authorized",
         status: 401,
@@ -165,7 +165,7 @@ describe("Error Handling Security", () => {
       expect(errorResponse).not.toHaveProperty("sql");
     });
 
-    it("should use appropriate HTTP status codes", () => {
+    it("[docs] should use appropriate HTTP status codes", () => {
       const errorCases = [
         { error: "Not found", expectedStatus: 404 },
         { error: "Unauthorized", expectedStatus: 401 },
@@ -180,7 +180,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should not include debug info in production responses", () => {
+    it("[docs] should not include debug info in production responses", () => {
       const productionError = {
         error: "Operation failed",
         // Should NOT include in production:
@@ -195,7 +195,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Validation Error Messages", () => {
-    it("should provide user-friendly validation errors", () => {
+    it("[docs] should provide user-friendly validation errors", () => {
       const validationErrors = [
         { field: "email", message: "Please enter a valid email address" },
         { field: "phone", message: "Phone number must be 10-11 digits" },
@@ -210,7 +210,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should not expose schema validation details", () => {
+    it("[docs] should not expose schema validation details", () => {
       const schemaError = "Invalid input data";
 
       // Should NOT reveal:
@@ -224,7 +224,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Error Logging Security", () => {
-    it("should log errors internally without exposing to client", () => {
+    it("[docs] should log errors internally without exposing to client", () => {
       const internalLog = {
         timestamp: new Date().toISOString(),
         level: "error",
@@ -244,7 +244,7 @@ describe("Error Handling Security", () => {
       expect(clientResponse).not.toHaveProperty("query");
     });
 
-    it("should redact sensitive data in logs", () => {
+    it("[docs] should redact sensitive data in logs", () => {
       const sensitiveData = {
         email: "user@example.com",
         password: "secret123",
@@ -261,7 +261,7 @@ describe("Error Handling Security", () => {
       expect(redactedLog.creditCard).toMatch(/^\*+\d{4}$/);
     });
 
-    it("should not log full request bodies with sensitive data", () => {
+    it("[docs] should not log full request bodies with sensitive data", () => {
       const requestBody = {
         email: "user@example.com",
         password: "secret123",
@@ -280,7 +280,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("ErrorBoundary Security", () => {
-    it("should show generic message in production ErrorBoundary", () => {
+    it("[docs] should show generic message in production ErrorBoundary", () => {
       const isProduction = process.env.NODE_ENV === "production";
 
       const errorBoundaryMessage = isProduction
@@ -293,7 +293,7 @@ describe("Error Handling Security", () => {
       }
     });
 
-    it("should not render error stack in production", () => {
+    it("[docs] should not render error stack in production", () => {
       const isProduction = process.env.NODE_ENV === "production";
       const error = new Error("Test error");
 
@@ -306,7 +306,7 @@ describe("Error Handling Security", () => {
   });
 
   describe("Third-Party Error Handling", () => {
-    it("should not expose Supabase error details", () => {
+    it("[docs] should not expose Supabase error details", () => {
       const _supabaseError = {
         message: "Invalid API key",
         hint: "Please check your SUPABASE_KEY",
@@ -324,7 +324,7 @@ describe("Error Handling Security", () => {
       expect(clientError).not.toHaveProperty("code");
     });
 
-    it("should not expose Drizzle ORM error details", () => {
+    it("[docs] should not expose Drizzle ORM error details", () => {
       const _drizzleError = {
         message: "column users.password does not exist",
         code: "42703",
@@ -337,6 +337,37 @@ describe("Error Handling Security", () => {
       expect(clientError.error).not.toContain("column");
       expect(clientError.error).not.toContain("password");
       expect(clientError).not.toHaveProperty("code");
+    });
+  });
+
+  describe("Schema validation contracts (Zod)", () => {
+    it("expenseSchema should reject missing amount", async () => {
+      const { expenseSchema } = await import("@/lib/schemas");
+      const result = expenseSchema.safeParse({
+        type: "fixed",
+        description: "test expense",
+        date: "2026-04-16",
+        // amount missing
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors;
+        expect(errors.amount).toBeDefined();
+      }
+    });
+
+    it("userSchema should reject empty username", async () => {
+      const { userSchema } = await import("@/lib/schemas");
+      const result = userSchema.safeParse({
+        fullName: "Test User",
+        username: "",
+        role: "staff",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors;
+        expect(errors.username).toBeDefined();
+      }
     });
   });
 });

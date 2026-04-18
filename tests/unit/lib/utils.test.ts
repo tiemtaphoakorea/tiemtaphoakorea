@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addDays,
-  cn,
   endOfMonth,
   formatCurrency,
   formatDate,
@@ -18,6 +17,7 @@ import {
   startOfMonth,
   subtractDays,
 } from "@/lib/utils";
+import { cn } from "../../../packages/ui/src/lib/utils";
 
 describe("utils", () => {
   beforeEach(() => {

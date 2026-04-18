@@ -2,6 +2,7 @@ import { DEFAULT_PASSWORD_LENGTH, ERROR_MESSAGE, ROLE } from "@workspace/shared/
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
+import { invalidateProfileCache } from "../lib/auth";
 import { hashPassword } from "../lib/security";
 import type { UserRole } from "../schema/enums";
 import { profiles } from "../schema/profiles";
@@ -105,32 +106,24 @@ export async function createUser(data: CreateUserData) {
 }
 
 export async function updateUserRole(userId: string, newRole: UserRole) {
-  // Update Profile
   const [updatedProfile] = await db
     .update(profiles)
     .set({ role: newRole, updatedAt: new Date() })
     .where(eq(profiles.id, userId))
     .returning();
 
-  // Optional: Update Auth Metadata if needed
-  /*
-  const supabaseAdmin = await createClient();
-  await supabaseAdmin.auth.admin.updateUserById(userId, {
-    user_metadata: { role: newRole }
-  });
-  */
-
+  invalidateProfileCache(userId);
   return updatedProfile;
 }
 
 export async function toggleUserStatus(userId: string, isActive: boolean) {
-  // 1. Update Profile
   const [updatedProfile] = await db
     .update(profiles)
     .set({ isActive, updatedAt: new Date() })
     .where(eq(profiles.id, userId))
     .returning();
 
+  invalidateProfileCache(userId);
   return updatedProfile;
 }
 
@@ -144,6 +137,7 @@ export async function updateUser(userId: string, data: UpdateUserData) {
     .where(eq(profiles.id, userId))
     .returning();
 
+  invalidateProfileCache(userId);
   return updatedProfile;
 }
 

@@ -3,14 +3,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { categories } from "@/db/schema/categories";
 import { orderItems, orders } from "@/db/schema/orders";
-import { products, productVariants } from "@/db/schema/products";
+import { costPriceHistory, products, productVariants } from "@/db/schema/products";
 import { profiles } from "@/db/schema/profiles";
 import { BusinessError } from "@/lib/http-status";
 import {
   createProduct,
   deleteProduct,
   generateProductSlug,
+  getBestSellers,
   getFeaturedProducts,
+  getNewArrivals,
   getProductById,
   getProductBySlug,
   getProducts,
@@ -116,6 +118,68 @@ describe("Product Service", () => {
       expect(dbProduct?.variants[0].name).toBe("Red - S");
       expect(dbProduct?.variants[0].images.length).toBe(1);
       expect(dbProduct?.variants[0].images[0].imageUrl).toBe("http://test.com/img1.jpg");
+    });
+
+    it("should throw when a variant has negative stock quantity", async () => {
+      const input = {
+        name: "Negative Stock Product",
+        slug: `negative-stock-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          {
+            name: "Bad Variant",
+            sku: `NEGATIVE-SKU-${Date.now()}`,
+            price: 100,
+            costPrice: 50,
+            stockQuantity: -1, // Invalid: negative stock
+          },
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow("Quantity cannot be negative");
+    });
+
+    it("should throw when two variants share the same SKU", async () => {
+      const sku = `DUPLICATE-SKU-${Date.now()}`;
+      const input = {
+        name: "Duplicate SKU Product",
+        slug: `duplicate-sku-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          { name: "Variant A", sku, price: 100, costPrice: 50, stockQuantity: 5 },
+          { name: "Variant B", sku, price: 120, costPrice: 60, stockQuantity: 3 }, // same SKU
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow(`SKU "${sku}" đã tồn tại`);
+    });
+
+    it("should throw when a SKU already exists in the database", async () => {
+      const sku = `EXISTING-SKU-${Date.now()}`;
+
+      // First create a product with this SKU
+      await createProduct({
+        name: "First Product",
+        slug: `first-product-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [{ name: "V1", sku, price: 100, costPrice: 50, stockQuantity: 5 }],
+      });
+
+      // Now try to create another product with the same SKU
+      const input = {
+        name: "Second Product",
+        slug: `second-product-${Date.now()}`,
+        categoryId: TEST_CAT_ID,
+        basePrice: 100,
+        variants: [
+          { name: "V2", sku, price: 100, costPrice: 50, stockQuantity: 3 }, // same SKU as above
+        ],
+      };
+
+      await expect(createProduct(input)).rejects.toThrow(`SKU "${sku}" đã tồn tại`);
     });
   });
 
@@ -383,6 +447,7 @@ describe("Product Service", () => {
         slug: `featured-1-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: true,
+        isFeatured: true,
         variants: [{ name: "F1", sku: `F1-${timestamp}`, price: 10 }],
       });
       await createProduct({
@@ -390,6 +455,7 @@ describe("Product Service", () => {
         slug: `featured-2-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: true,
+        isFeatured: true,
         variants: [{ name: "F2", sku: `F2-${timestamp}`, price: 10 }],
       });
       await createProduct({
@@ -397,11 +463,13 @@ describe("Product Service", () => {
         slug: `featured-inactive-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: false,
+        isFeatured: true,
         variants: [{ name: "FI", sku: `FI-${timestamp}`, price: 10 }],
       });
 
       const result = await getFeaturedProducts(2);
       expect(result.length).toBeLessThanOrEqual(2);
+      expect(result.some((p) => p.slug.includes(`featured-1-${timestamp}`) || p.slug.includes(`featured-2-${timestamp}`))).toBe(true);
       expect(result.some((p) => p.slug.includes("featured-inactive"))).toBe(false);
     });
   });
@@ -564,6 +632,337 @@ describe("Product Service", () => {
 
       expect(first?.images.length ?? 0).toBe(0);
       expect(second?.images[0]?.imageUrl).toBe("http://test.com/mv2.jpg");
+    });
+
+    describe("cost price history tracking", () => {
+      it("should insert a history row when cost price changes", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Change ${timestamp}`,
+          slug: `cost-history-change-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPH1",
+              sku: `CPH1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Change ${timestamp}`,
+          slug: `cost-history-change-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPH1",
+              sku: `CPH1-${timestamp}`,
+              price: 200,
+              costPrice: 200,
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        // NOTE: Two rows are written per cost change:
+        //   1. App-level insert (product.server.ts) records OLD cost price
+        //   2. DB trigger (trigger_funtion.sql log_cost_price_trigger) records NEW cost price
+        // This is existing system behavior. The dual-write may warrant future consolidation.
+        expect(historyRows.length).toBe(2);
+        const costs = historyRows.map((r) => Number(r.costPrice)).sort((a, b) => a - b);
+        expect(costs).toEqual([100, 200]);
+
+        // Application-level insert records the OLD cost; trigger records the NEW cost.
+        const appRow = historyRows.find((r: any) => r.note === null || r.note === undefined);
+        const triggerRow = historyRows.find((r: any) => r.note === "Auto-logged from variant update");
+        expect(appRow).toBeDefined();
+        expect(triggerRow).toBeDefined();
+        expect(Number(appRow!.costPrice)).toBe(100); // old cost from app insert
+        expect(Number(triggerRow!.costPrice)).toBe(200); // new cost from trigger
+      });
+
+      it("should NOT insert a history row when cost price is unchanged", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Same ${timestamp}`,
+          slug: `cost-history-same-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPS1",
+              sku: `CPS1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Same ${timestamp}`,
+          slug: `cost-history-same-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPS1",
+              sku: `CPS1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        expect(historyRows.length).toBe(0);
+      });
+
+      it("should NOT insert a history row when costPrice is omitted from the update", async () => {
+        const timestamp = Date.now();
+        const created = await createProduct({
+          name: `Cost History Omit ${timestamp}`,
+          slug: `cost-history-omit-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              name: "CPO1",
+              sku: `CPO1-${timestamp}`,
+              price: 200,
+              costPrice: 100,
+            },
+          ],
+        });
+
+        const product = await getProductById(created.id);
+        const variantId = product?.variants[0].id as string;
+
+        await updateProduct(created.id, {
+          name: `Cost History Omit ${timestamp}`,
+          slug: `cost-history-omit-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          variants: [
+            {
+              id: variantId,
+              name: "CPO1",
+              sku: `CPO1-${timestamp}`,
+              price: 200,
+              // costPrice intentionally omitted
+            } as any,
+          ],
+        });
+
+        const historyRows = await db
+          .select()
+          .from(costPriceHistory)
+          .where(eq(costPriceHistory.variantId, variantId));
+
+        expect(historyRows.length).toBe(0);
+      });
+    });
+  });
+
+  describe("getNewArrivals", () => {
+    it("should return products created within the last N days up to the limit", async () => {
+      const timestamp = Date.now();
+      await createProduct({
+        name: `New Arrival ${timestamp}`,
+        slug: `new-arrival-${timestamp}`,
+        categoryId: TEST_CAT_ID,
+        isActive: true,
+        variants: [{ name: "NA1", sku: `NA1-${timestamp}`, price: 100 }],
+      });
+
+      const result = await getNewArrivals(10, 7);
+
+      // The product was just created so it should be within the 7-day window
+      const found = result.find((p) => p.slug === `new-arrival-${timestamp}`);
+      expect(found).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should respect the limit parameter", async () => {
+      const result = await getNewArrivals(1, 30);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeLessThanOrEqual(1);
+    });
+
+    it("should NOT return products created before the date window", async () => {
+      const timestamp = Date.now();
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 90);
+
+      // Insert a product directly with a createdAt 90 days in the past
+      const [oldProduct] = await db
+        .insert(products)
+        .values({
+          name: `Old Arrival ${timestamp}`,
+          slug: `old-arrival-${timestamp}`,
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          createdAt: oldDate,
+        })
+        .returning({ id: products.id });
+
+      // getNewArrivals with a 7-day window — oldProduct was created 90 days ago
+      const result = await getNewArrivals(100, 7);
+      const resultIds = result.map((p: any) => p.id);
+      expect(resultIds).not.toContain(oldProduct.id);
+    });
+  });
+
+  describe("getBestSellers", () => {
+    it("returns active products ordered by total units sold", async () => {
+      // Create a product with a variant
+      const [prod] = await db
+        .insert(products)
+        .values({
+          name: "Best Seller Test Product",
+          slug: "best-seller-test-product",
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          isFeatured: false,
+        })
+        .returning();
+
+      const [variant] = await db
+        .insert(productVariants)
+        .values({
+          productId: prod!.id,
+          sku: "BST-001",
+          name: "Default",
+          price: "100000",
+          stockQuantity: 50,
+        })
+        .returning();
+
+      // Insert a fake profile and order so we can add order items
+      const TEST_PROFILE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+      await db
+        .insert(profiles)
+        .values({ id: TEST_PROFILE_ID, username: "bstest-user", fullName: "BS Test", role: "customer" })
+        .onConflictDoNothing();
+
+      const [order] = await db
+        .insert(orders)
+        .values({
+          orderNumber: "ORD-BST-001",
+          customerId: TEST_PROFILE_ID,
+          status: "delivered",
+          total: "100000",
+        })
+        .returning();
+
+      // Insert a second product with fewer units sold
+      const [prod2] = await db
+        .insert(products)
+        .values({
+          name: "Low Seller Test Product",
+          slug: "low-seller-test-product",
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          isFeatured: false,
+        })
+        .returning();
+
+      const [variant2] = await db
+        .insert(productVariants)
+        .values({
+          productId: prod2!.id,
+          sku: "LST-001",
+          name: "Default",
+          price: "100000",
+          stockQuantity: 50,
+        })
+        .returning();
+
+      const [order2] = await db
+        .insert(orders)
+        .values({
+          orderNumber: "ORD-LST-001",
+          customerId: TEST_PROFILE_ID,
+          status: "delivered",
+          total: "100000",
+        })
+        .returning();
+
+      await db.insert(orderItems).values([
+        {
+          orderId: order!.id,
+          variantId: variant!.id,
+          productName: prod!.name,
+          variantName: "Default",
+          sku: "BST-001",
+          quantity: 5,
+          unitPrice: "100000",
+          lineTotal: "500000",
+        },
+        {
+          orderId: order2!.id,
+          variantId: variant2!.id,
+          productName: prod2!.name,
+          variantName: "Default",
+          sku: "LST-001",
+          quantity: 1,
+          unitPrice: "100000",
+          lineTotal: "100000",
+        },
+      ]);
+
+      const results = await getBestSellers(10);
+
+      expect(results.length).toBeGreaterThan(0);
+      const found = results.find((r) => r.id === prod!.id);
+      expect(found).toBeDefined();
+      expect(found!.name).toBe("Best Seller Test Product");
+
+      // Verify ordering: 5-unit product should appear before 1-unit product
+      const idx1 = results.findIndex((r) => r.id === prod!.id);
+      const idx2 = results.findIndex((r) => r.id === prod2!.id);
+      expect(idx1).toBeLessThan(idx2);
+
+      // Cleanup
+      await db.delete(orderItems).where(eq(orderItems.orderId, order2!.id));
+      await db.delete(orders).where(eq(orders.id, order2!.id));
+      await db.delete(products).where(eq(products.id, prod2!.id));
+      await db.delete(orderItems).where(eq(orderItems.orderId, order!.id));
+      await db.delete(orders).where(eq(orders.id, order!.id));
+      await db.delete(profiles).where(eq(profiles.id, TEST_PROFILE_ID));
+      await db.delete(products).where(eq(products.id, prod!.id));
+    });
+
+    it("excludes inactive products", async () => {
+      const [prod] = await db
+        .insert(products)
+        .values({
+          name: "Inactive Best Seller",
+          slug: "inactive-best-seller-test",
+          categoryId: TEST_CAT_ID,
+          isActive: false,
+        })
+        .returning();
+
+      const results = await getBestSellers(10);
+      const found = results.find((r) => r.id === prod!.id);
+      expect(found).toBeUndefined();
+
+      await db.delete(products).where(eq(products.id, prod!.id));
     });
   });
 });

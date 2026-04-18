@@ -34,6 +34,7 @@ export default function EditProductPage() {
             categoryId: product.categoryId || "",
             basePrice: parseFloat(product.basePrice || "0"),
             isActive: product.isActive ?? true,
+            isFeatured: product.isFeatured ?? false,
             variants: product.variants.map((v) => ({
               id: v.id,
               name: v.name,

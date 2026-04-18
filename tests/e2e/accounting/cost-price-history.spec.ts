@@ -19,5 +19,8 @@ test.describe("Accounting - Cost Price History", () => {
     await expect(
       page.locator("text=Sản phẩm").or(page.locator("text=Products")).first(),
     ).toBeVisible();
+
+    // Verify the history table or empty state rendered — not just the heading
+    await expect(page.locator("[data-slot='table']").first()).toBeVisible();
   });
 });

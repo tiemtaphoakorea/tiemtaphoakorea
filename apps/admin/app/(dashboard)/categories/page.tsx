@@ -506,7 +506,7 @@ function AdminCategoriesContent() {
     if (confirm(`Bạn có chắc muốn xóa danh mục "${cat.name}"? Danh mục này sẽ bị xóa vĩnh viễn.`)) {
       try {
         await adminClient.deleteCategory(cat.id);
-        await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all, exact: false });
       } catch (error: any) {
         alert(error.message || "Failed to delete");
       }
@@ -531,7 +531,7 @@ function AdminCategoriesContent() {
         await adminClient.updateCategory(ui.editingCategory.id, payload);
       }
       dispatch({ type: "CLOSE_SHEET" });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all, exact: false });
       dispatch({ type: "SET_SUBMITTING", value: false });
     } catch (error: any) {
       alert(error.message || "Action failed");

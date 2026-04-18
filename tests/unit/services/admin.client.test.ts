@@ -49,6 +49,17 @@ describe("admin.client", () => {
       expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.STATS);
     });
 
+    it("should return stats with totalRevenue from getStats response", async () => {
+      const { adminClient } = await import("@/services/admin.client");
+      const mockStats = { totalRevenue: 5000, totalOrders: 12 };
+      axiosMock.get.mockResolvedValue({ stats: mockStats });
+
+      const result = await adminClient.getStats();
+
+      expect((result as any).stats.totalRevenue).toBe(5000);
+      expect((result as any).stats.totalOrders).toBe(12);
+    });
+
     it("should call stats endpoint for KPIs", async () => {
       const { adminClient } = await import("@/services/admin.client");
       axiosMock.get.mockResolvedValue({ kpiStats: {} });
@@ -240,6 +251,15 @@ describe("admin.client", () => {
       await adminClient.deleteOrder("ord-1");
 
       expect(axiosMock.delete).toHaveBeenCalledWith(`${API_ENDPOINTS.ADMIN.ORDERS}/ord-1`);
+    });
+
+    it("should propagate axios error to caller", async () => {
+      const { adminClient } = await import("@/services/admin.client");
+      // Note: axiosMock bypasses the real ApiError interceptor (packages/shared/api-client.ts).
+      // In production, callers receive ApiError, not a plain Error.
+      axiosMock.get.mockRejectedValue(new Error("Network Error"));
+
+      await expect(adminClient.getOrders({})).rejects.toThrow("Network Error");
     });
 
     it("should update order status", async () => {

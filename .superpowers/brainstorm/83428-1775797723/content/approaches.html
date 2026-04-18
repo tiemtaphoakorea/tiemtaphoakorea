@@ -1,0 +1,41 @@
+<h2>3 Hướng tiếp cận cấu trúc Mintlify</h2>
+<p class="subtitle">Mỗi option là một cách tổ chức nội dung guide theo vai trò</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Tab = Vai trò (Role-first)</h3>
+      <p>4 tab chính: <strong>Chủ shop</strong> · <strong>Quản lý</strong> · <strong>Admin</strong> · <strong>Nhân viên</strong><br>
+      Mỗi tab có sidebar riêng liệt kê đầy đủ các tính năng của vai trò đó — kể cả tính năng chung.<br><br>
+      <em>Ưu:</em> Nhân viên mở đúng tab của mình, không thấy nội dung không liên quan.<br>
+      <em>Nhược:</em> Nội dung trùng lặp nhiều (Dashboard, Sản phẩm... giống nhau cho 3 vai trò dưới).</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Shared core + Tab riêng cho tính năng độc quyền</h3>
+      <p>1 tab <strong>Dùng chung</strong> (Dashboard, Sản phẩm, Đơn hàng, Chat...) + tab riêng <strong>Chủ shop</strong> (Tài chính, Nhân sự, Chi phí) và <strong>Quản lý</strong> (Báo cáo).<br><br>
+      <em>Ưu:</em> Không trùng nội dung. Dễ bảo trì khi cập nhật tính năng chung.<br>
+      <em>Nhược:</em> Nhân viên phải đọc 2 nơi (tab chung + tab riêng) — hơi phân mảnh.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Tab = Nhóm tính năng + Badge vai trò</h3>
+      <p>Tab theo chủ đề: <strong>Bán hàng</strong> · <strong>Kho & Sản phẩm</strong> · <strong>Tài chính & Báo cáo</strong> · <strong>Cài đặt & Nhân sự</strong><br>
+      Mỗi trang ghi rõ badge: <code>🔒 Chỉ Chủ shop</code> hoặc <code>👥 Quản lý trở lên</code>.<br><br>
+      <em>Ưu:</em> Cấu trúc theo luồng công việc, không trùng nội dung, dễ mở rộng.<br>
+      <em>Nhược:</em> Ít "tách riêng" hơn — nhân viên vẫn thấy các mục không truy cập được (dù có label).</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:var(--surface-2,#f8f9fa);border-radius:8px;border-left:4px solid var(--accent,#6366f1)">
+  <p class="label">Khuyến nghị của tôi</p>
+  <p><strong>Option A</strong> phù hợp nhất với yêu cầu "tách riêng hoàn toàn theo vai trò" — mỗi nhân viên biết chính xác mình nên đọc tab nào. Nội dung trùng lặp có thể giải quyết bằng include/snippet trong Mintlify.</p>
+</div>

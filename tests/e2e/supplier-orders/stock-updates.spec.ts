@@ -26,8 +26,9 @@ test.describe("Supplier Orders - Stock Updates", () => {
 
     // Skip test if no in_stock variant found
     if (!inStockVariant) {
-      test.skip();
-      return;
+      throw new Error(
+        "Precondition failed: no in-stock variant found. Seed the database with at least one product with an in-stock variant.",
+      );
     }
 
     const initialStock = Number(inStockVariant.stockQuantity || 0);
@@ -93,8 +94,9 @@ test.describe("Supplier Orders - Stock Updates", () => {
 
     // Skip if no pre_order variant found
     if (!preOrderVariant) {
-      test.skip();
-      return;
+      throw new Error(
+        "Precondition failed: no pre-order variant found. Seed the database with at least one product with a pre-order variant.",
+      );
     }
 
     const initialStock = Number(preOrderVariant.stockQuantity || 0);
@@ -109,10 +111,8 @@ test.describe("Supplier Orders - Stock Updates", () => {
     expect(supplierOrder?.id).toBeTruthy();
 
     // Receive the order via API
-    await updateSupplierOrderStatus(page, supplierOrder.id, "received");
-
-    // Wait a moment for transaction to complete
-    await page.waitForTimeout(500);
+    const patchResponse = await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    expect(patchResponse.status()).toBe(200);
 
     // Verify stock did NOT increase (pre_order items don't update stock)
     const productsAfter = await getProductsWithVariants(page);
@@ -157,7 +157,8 @@ test.describe("Supplier Orders - Stock Updates", () => {
     expect(orderDetails.order?.id).toBeFalsy(); // No linked order
 
     // Receive the order
-    await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    const patchResponse = await updateSupplierOrderStatus(page, supplierOrder.id, "received");
+    expect(patchResponse.status()).toBe(200);
 
     // Verify stock increased (manual restocking always updates stock)
     const productsAfter = await getProductsWithVariants(page);
