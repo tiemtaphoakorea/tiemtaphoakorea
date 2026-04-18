@@ -447,6 +447,7 @@ describe("Product Service", () => {
         slug: `featured-1-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: true,
+        isFeatured: true,
         variants: [{ name: "F1", sku: `F1-${timestamp}`, price: 10 }],
       });
       await createProduct({
@@ -454,6 +455,7 @@ describe("Product Service", () => {
         slug: `featured-2-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: true,
+        isFeatured: true,
         variants: [{ name: "F2", sku: `F2-${timestamp}`, price: 10 }],
       });
       await createProduct({
@@ -461,11 +463,13 @@ describe("Product Service", () => {
         slug: `featured-inactive-${timestamp}`,
         categoryId: TEST_CAT_ID,
         isActive: false,
+        isFeatured: true,
         variants: [{ name: "FI", sku: `FI-${timestamp}`, price: 10 }],
       });
 
       const result = await getFeaturedProducts(2);
       expect(result.length).toBeLessThanOrEqual(2);
+      expect(result.some((p) => p.slug.includes(`featured-1-${timestamp}`) || p.slug.includes(`featured-2-${timestamp}`))).toBe(true);
       expect(result.some((p) => p.slug.includes("featured-inactive"))).toBe(false);
     });
   });
@@ -865,16 +869,61 @@ describe("Product Service", () => {
         })
         .returning();
 
-      await db.insert(orderItems).values({
-        orderId: order!.id,
-        variantId: variant!.id,
-        productName: prod!.name,
-        variantName: "Default",
-        sku: "BST-001",
-        quantity: 5,
-        unitPrice: "100000",
-        lineTotal: "500000",
-      });
+      // Insert a second product with fewer units sold
+      const [prod2] = await db
+        .insert(products)
+        .values({
+          name: "Low Seller Test Product",
+          slug: "low-seller-test-product",
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          isFeatured: false,
+        })
+        .returning();
+
+      const [variant2] = await db
+        .insert(productVariants)
+        .values({
+          productId: prod2!.id,
+          sku: "LST-001",
+          name: "Default",
+          price: "100000",
+          stockQuantity: 50,
+        })
+        .returning();
+
+      const [order2] = await db
+        .insert(orders)
+        .values({
+          orderNumber: "ORD-LST-001",
+          customerId: TEST_PROFILE_ID,
+          status: "delivered",
+          total: "100000",
+        })
+        .returning();
+
+      await db.insert(orderItems).values([
+        {
+          orderId: order!.id,
+          variantId: variant!.id,
+          productName: prod!.name,
+          variantName: "Default",
+          sku: "BST-001",
+          quantity: 5,
+          unitPrice: "100000",
+          lineTotal: "500000",
+        },
+        {
+          orderId: order2!.id,
+          variantId: variant2!.id,
+          productName: prod2!.name,
+          variantName: "Default",
+          sku: "LST-001",
+          quantity: 1,
+          unitPrice: "100000",
+          lineTotal: "100000",
+        },
+      ]);
 
       const results = await getBestSellers(10);
 
@@ -883,7 +932,15 @@ describe("Product Service", () => {
       expect(found).toBeDefined();
       expect(found!.name).toBe("Best Seller Test Product");
 
+      // Verify ordering: 5-unit product should appear before 1-unit product
+      const idx1 = results.findIndex((r) => r.id === prod!.id);
+      const idx2 = results.findIndex((r) => r.id === prod2!.id);
+      expect(idx1).toBeLessThan(idx2);
+
       // Cleanup
+      await db.delete(orderItems).where(eq(orderItems.orderId, order2!.id));
+      await db.delete(orders).where(eq(orders.id, order2!.id));
+      await db.delete(products).where(eq(products.id, prod2!.id));
       await db.delete(orderItems).where(eq(orderItems.orderId, order!.id));
       await db.delete(orders).where(eq(orders.id, order!.id));
       await db.delete(profiles).where(eq(profiles.id, TEST_PROFILE_ID));

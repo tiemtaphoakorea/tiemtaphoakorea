@@ -561,7 +561,15 @@ export async function getNewArrivals(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT, da
  */
 export async function getBestSellers(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT) {
   return await db
-    .select(PRODUCT_CARD_SELECT(products))
+    .select({
+      ...PRODUCT_CARD_SELECT(products),
+      // Override totalStock with a correlated subquery to avoid inflation from orderItems join
+      totalStock: sql<number>`coalesce((
+        select sum(pv2.stock_quantity)
+        from ${productVariants} as pv2
+        where pv2.product_id = ${products.id}
+      ), 0)`,
+    })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
@@ -604,7 +612,7 @@ export async function updateProduct(id: string, data: UpdateProductData) {
         categoryId: data.categoryId,
         basePrice: data.basePrice?.toString() || "0",
         isActive: data.isActive ?? true,
-        isFeatured: data.isFeatured ?? false,
+        ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
         updatedAt: new Date(),
       })
       .where(eq(products.id, id));
