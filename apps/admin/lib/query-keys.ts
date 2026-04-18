@@ -115,7 +115,4 @@ export const queryKeys = {
   banners: {
     all: ["banners"] as const,
   },
-  categoryCards: {
-    all: ["category-cards"] as const,
-  },
 } as const;

@@ -11,19 +11,49 @@ Trang Nhập hàng quản lý các đơn mua hàng từ nhà cung cấp. Xác nh
 
 Menu bên trái → **Nhập hàng**.
 
+## Vòng đời đơn nhập hàng
+
+```mermaid
+flowchart TD
+    A["Chờ xác nhận<br/>pending"] --> B["Đã đặt hàng<br/>ordered"]
+    B --> C["Đã nhận hàng<br/>received"]
+
+    A & B -->|Hủy| D["Đã hủy<br/>cancelled"]
+
+    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
+    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+```
+
+| Trạng thái | Ý nghĩa |
+|-----------|---------|
+| `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
+| `ordered` — Đã đặt hàng | Đã xác nhận đặt hàng với nhà cung cấp, đang chờ hàng về |
+| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho và giá vốn đã được cập nhật |
+| `cancelled` — Đã hủy | Đơn nhập bị hủy |
+
 ## Các thao tác chính
 
 <Steps>
   <Step title="Tạo đơn nhập hàng">
     Nhấn **Tạo đơn nhập** → chọn nhà cung cấp → thêm sản phẩm, số lượng, giá vốn → **Lưu**.
+    Đơn được tạo ở trạng thái **Chờ xác nhận**.
+  </Step>
+  <Step title="Xác nhận đã đặt hàng với nhà cung cấp">
+    Sau khi liên hệ nhà cung cấp, mở đơn nhập → nhấn **Xác nhận đặt hàng**.
+    Trạng thái chuyển sang **Đã đặt hàng** — hệ thống ghi lại ngày đặt.
   </Step>
   <Step title="Xác nhận nhận hàng">
-    Khi hàng về, mở đơn nhập → nhấn **Xác nhận nhận hàng** để cập nhật tồn kho tự động.
+    Khi hàng về kho, mở đơn nhập → nhấn **Xác nhận nhận hàng** để cập nhật tồn kho tự động.
   </Step>
   <Step title="Theo dõi trạng thái đơn nhập">
-    Danh sách đơn nhập hiển thị trạng thái (chờ xác nhận / đã nhận) và tổng giá trị từng đơn.
+    Danh sách đơn nhập hiển thị trạng thái, nhà cung cấp và tổng giá trị từng đơn.
   </Step>
 </Steps>
+
+### Hủy đơn nhập
+
+Đơn ở trạng thái `pending` hoặc `ordered` có thể hủy. Đơn đã `received` không thể hủy vì tồn kho đã được cập nhật.
 
 <Note>
 Giá vốn nhập trong đơn nhập hàng sẽ được ghi vào lịch sử giá vốn sản phẩm, ảnh hưởng đến tính toán lợi nhuận của các đơn hàng tiếp theo.

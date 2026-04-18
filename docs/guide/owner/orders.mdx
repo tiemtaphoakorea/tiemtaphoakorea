@@ -15,17 +15,40 @@ Menu bên trái → **Đơn hàng**.
 
 ```mermaid
 flowchart TD
-    A["Chờ xác nhận<br/>pending"] --> B["Đã thanh toán<br/>paid"]
-    B --> C["Đang giao<br/>shipping"]
-    C --> D["Đã giao<br/>delivered"]
+    A["Chờ xác nhận<br/>pending"] -->|Thu tiền đủ| B["Đã thanh toán<br/>paid"]
+    B -->|Đánh dấu đã giao| D["Đã giao<br/>delivered"]
 
-    A & B & C -->|Hủy| F["Đã hủy<br/>cancelled"]
+    B -.->|Nếu đơn qua luồng khác| E["Đang đóng gói<br/>preparing"]
+    E -.-> C["Đang giao<br/>shipping"]
+    E & C -->|Đánh dấu đã giao| D
+
+    A & B & E -->|Hủy| F["Đã hủy<br/>cancelled"]
 
     style F fill:#fee2e2,stroke:#ef4444,color:#991b1b
     style D fill:#dcfce7,stroke:#22c55e,color:#166534
+    style E fill:#fef9c3,stroke:#eab308,color:#713f12
 ```
 
-Đơn hàng có thể bị hủy (`cancelled`) ở bất kỳ bước nào trước khi giao.
+### Luồng xử lý thông thường
+
+Trong admin, luồng chuẩn là: **Chờ xác nhận → Đã thanh toán → Đã giao**.
+
+Các trạng thái `preparing` (Đang đóng gói) và `shipping` (Đang giao) có thể xuất hiện trên những đơn hàng được xử lý qua các luồng khác. Khi gặp đơn ở những trạng thái này, bạn có thể đánh dấu đã giao hoặc hủy (chỉ `preparing` — xem bảng bên dưới).
+
+### Mô tả các trạng thái
+
+| Trạng thái | Màu badge | Ý nghĩa |
+|-----------|-----------|---------|
+| `pending` — Chờ xác nhận | Xám | Đơn vừa được tạo, chưa thu tiền |
+| `paid` — Đã thanh toán | Xanh lam | Khách đã thanh toán đủ |
+| `preparing` — Đang đóng gói | Vàng | Hàng đang được chuẩn bị để giao |
+| `shipping` — Đang giao | Xanh chàm | Hàng đã được bàn giao cho shipper |
+| `delivered` — Đã giao | Xanh lá | Khách đã nhận hàng thành công |
+| `cancelled` — Đã hủy | Đỏ | Đơn đã bị hủy |
+
+<Note>
+**Tồn kho**: Số lượng tồn kho bị trừ ngay khi đơn hàng được tạo thành công. Khi đơn bị hủy, tồn kho được hoàn trả tự động.
+</Note>
 
 ## Trang danh sách
 
@@ -98,7 +121,7 @@ Các nút hành động xuất hiện ở góc phải tiêu đề, thay đổi t
 | Chờ xác nhận | **Hủy đơn** |
 | Đã thanh toán | **Đánh dấu đã giao** |
 | Đang đóng gói | **Đánh dấu đã giao** · **Hủy đơn** |
-| Đang giao | **Đánh dấu đã giao** · **Hủy đơn** |
+| Đang giao | **Đánh dấu đã giao** |
 | Đã giao / Đã hủy | *(trạng thái cuối — không có hành động)* |
 
 <Steps>

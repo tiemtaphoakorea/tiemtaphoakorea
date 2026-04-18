@@ -4,7 +4,7 @@ import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import type { ProductFilterCategory } from "@workspace/shared/types/product";
 import { Button } from "@workspace/ui/components/button";
 import { Separator } from "@workspace/ui/components/separator";
-import { Filter, X } from "lucide-react";
+import { ChevronDown, Filter, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -18,7 +18,26 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
   const searchParams = useSearchParams();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const categoryList = [{ name: "Tất cả", slug: "" }, ...categories];
+  // Auto-expand the parent of the active category
+  const initialExpanded = new Set(
+    categories
+      .filter(
+        (cat) =>
+          cat.slug === activeCategorySlug ||
+          cat.children?.some((c) => c.slug === activeCategorySlug),
+      )
+      .map((cat) => cat.slug),
+  );
+  const [expandedSlugs, setExpandedSlugs] = useState<Set<string>>(initialExpanded);
+
+  const toggleExpanded = (slug: string) => {
+    setExpandedSlugs((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  };
 
   const handleCategoryChange = (categorySlug: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,23 +65,55 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Danh mục
           </h3>
-          <div className="space-y-2">
-            {categoryList.map((cat) => (
-              <button
-                key={cat.slug}
-                onClick={() => handleCategoryChange(cat.slug)}
-                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all ${
-                  activeCategorySlug === cat.slug
-                    ? "font-semibold text-primary"
-                    : "font-medium text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeCategorySlug === cat.slug ? "bg-primary" : "bg-transparent"}`}
-                />
-                {cat.name}
-              </button>
-            ))}
+          <div className="space-y-0.5">
+            {/* "Tất cả" */}
+            <CategoryFilterItem
+              name="Tất cả"
+              slug=""
+              active={activeCategorySlug === ""}
+              onClick={handleCategoryChange}
+            />
+            {categories.map((cat) => {
+              const hasChildren = (cat.children?.length ?? 0) > 0;
+              const isExpanded = expandedSlugs.has(cat.slug);
+              return (
+                <div key={cat.slug}>
+                  <div className="flex items-center">
+                    <CategoryFilterItem
+                      name={cat.name}
+                      slug={cat.slug}
+                      active={activeCategorySlug === cat.slug}
+                      onClick={handleCategoryChange}
+                      className="flex-1"
+                    />
+                    {hasChildren && (
+                      <button
+                        onClick={() => toggleExpanded(cat.slug)}
+                        className="mr-1 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    )}
+                  </div>
+                  {hasChildren && isExpanded && (
+                    <div className="ml-3 border-l border-border/50 pl-2">
+                      {cat.children!.map((child) => (
+                        <CategoryFilterItem
+                          key={child.slug}
+                          name={child.name}
+                          slug={child.slug}
+                          active={activeCategorySlug === child.slug}
+                          onClick={handleCategoryChange}
+                          isChild
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -93,7 +144,7 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
         >
           <Filter className="h-4 w-4" /> Bộ lọc
         </Button>
-        {categoryList.slice(0, 5).map((cat) => (
+        {[{ name: "Tất cả", slug: "" }, ...categories].slice(0, 5).map((cat) => (
           <button
             key={cat.slug}
             onClick={() => handleCategoryChange(cat.slug)}
@@ -140,20 +191,54 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Danh mục
               </h3>
-              <div className="grid grid-cols-1 gap-2">
-                {categoryList.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    onClick={() => handleCategoryChange(cat.slug)}
-                    className={`rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all ${
-                      activeCategorySlug === cat.slug
-                        ? "bg-primary text-white"
-                        : "text-muted-foreground bg-gray-50"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
+              <div className="grid grid-cols-1 gap-1">
+                {[{ name: "Tất cả", slug: "", children: [] as ProductFilterCategory[] }, ...categories].map((cat) => {
+                  const hasChildren = (cat.children?.length ?? 0) > 0;
+                  const isExpanded = expandedSlugs.has(cat.slug);
+                  return (
+                    <div key={cat.slug}>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleCategoryChange(cat.slug)}
+                          className={`flex-1 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all ${
+                            activeCategorySlug === cat.slug
+                              ? "bg-primary text-white"
+                              : "bg-gray-50 text-muted-foreground"
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                        {hasChildren && (
+                          <button
+                            onClick={() => toggleExpanded(cat.slug)}
+                            className="rounded-2xl bg-gray-50 p-3 text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                            />
+                          </button>
+                        )}
+                      </div>
+                      {hasChildren && isExpanded && (
+                        <div className="mt-1 ml-4 space-y-1">
+                          {cat.children!.map((child) => (
+                            <button
+                              key={child.slug}
+                              onClick={() => handleCategoryChange(child.slug)}
+                              className={`w-full rounded-xl px-4 py-2 text-left text-sm transition-all ${
+                                activeCategorySlug === child.slug
+                                  ? "bg-primary/10 font-semibold text-primary"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {child.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -168,6 +253,40 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
         </div>
       </div>
     </>
+  );
+}
+
+function CategoryFilterItem({
+  name,
+  slug,
+  active,
+  onClick,
+  isChild = false,
+  className = "",
+}: {
+  name: string;
+  slug: string;
+  active: boolean;
+  onClick: (slug: string) => void;
+  isChild?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={() => onClick(slug)}
+      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-all ${
+        isChild ? "text-xs" : "text-sm"
+      } ${
+        active
+          ? "font-semibold text-primary"
+          : "font-medium text-muted-foreground hover:text-foreground"
+      } ${className}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-primary" : "bg-transparent"}`}
+      />
+      {name}
+    </button>
   );
 }
 

@@ -105,5 +105,6 @@ export const productSchema = z.object({
   categoryId: z.string().optional().nullable(),
   basePrice: z.number().min(0, "Giá phải >= 0"),
   isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
 });
 export type ProductFormValues = z.infer<typeof productSchema>;

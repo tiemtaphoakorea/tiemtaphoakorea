@@ -22,6 +22,7 @@ export const categories = pgTable(
     }),
     displayOrder: integer("display_order").default(0),
     isActive: boolean("is_active").default(true),
+    showInNav: boolean("show_in_nav").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },

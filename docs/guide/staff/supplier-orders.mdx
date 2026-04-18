@@ -11,17 +11,31 @@ Trang Nhập hàng dùng để tạo đơn mua hàng và xác nhận nhận hàn
 
 Menu bên trái → **Nhập hàng**.
 
+## Vòng đời đơn nhập hàng
+
+| Trạng thái | Ý nghĩa |
+|-----------|---------|
+| `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
+| `ordered` — Đã đặt hàng | Đã xác nhận đặt hàng với nhà cung cấp, đang chờ hàng về |
+| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho đã được cập nhật |
+| `cancelled` — Đã hủy | Đơn nhập bị hủy |
+
 ## Các thao tác chính
 
 <Steps>
   <Step title="Tạo đơn nhập hàng">
     Nhấn **Tạo đơn nhập** → chọn nhà cung cấp → thêm sản phẩm và số lượng → nhập giá vốn → **Lưu**.
+    Đơn được tạo ở trạng thái **Chờ xác nhận**.
+  </Step>
+  <Step title="Xác nhận đã đặt hàng với nhà cung cấp">
+    Sau khi liên hệ nhà cung cấp, mở đơn nhập → nhấn **Xác nhận đặt hàng**.
+    Trạng thái chuyển sang **Đã đặt hàng**.
   </Step>
   <Step title="Xác nhận nhận hàng">
     Khi hàng về, mở đơn nhập → nhấn **Xác nhận nhận hàng**. Tồn kho được cập nhật ngay.
   </Step>
   <Step title="Theo dõi đơn nhập">
-    Danh sách hiển thị trạng thái (chờ xác nhận / đã nhận) và tổng giá trị từng đơn.
+    Danh sách hiển thị trạng thái và tổng giá trị từng đơn.
   </Step>
 </Steps>
 

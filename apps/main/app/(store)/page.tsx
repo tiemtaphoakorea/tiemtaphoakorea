@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getCategoryCards } from "@workspace/database/services/categoryCard.server";
+import { getTopCategoryCards } from "@workspace/database/services/categoryCard.server";
 import {
   getBestSellers,
   getFeaturedProducts,
@@ -33,6 +33,18 @@ function mapProduct(p: any) {
   };
 }
 
+function CategoryCardsSkeleton() {
+  return (
+    <div className="container mx-auto mt-6 px-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-700" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProductGridSkeleton() {
   return (
     <section className="py-14">
@@ -48,20 +60,8 @@ function ProductGridSkeleton() {
   );
 }
 
-function CategoryCardsSkeleton() {
-  return (
-    <div className="container mx-auto mt-6 px-4">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-700" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 async function CategoryCardsSection() {
-  const cards = await getCategoryCards();
+  const cards = await getTopCategoryCards(4);
   return (
     <div className="container mx-auto px-4">
       <CategoryCardsGrid cards={cards} />

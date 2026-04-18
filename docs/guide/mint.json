@@ -40,7 +40,9 @@
         "owner/analytics",
         "owner/expenses",
         "owner/finance",
-        "owner/users"
+        "owner/users",
+        "owner/settings",
+        "owner/permissions"
       ]
     },
     {

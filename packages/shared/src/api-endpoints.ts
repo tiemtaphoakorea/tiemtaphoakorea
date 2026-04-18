@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     },
     PRODUCTS: "/api/admin/products",
     CATEGORIES: "/api/admin/categories",
+    CATEGORY_DETAIL: (id: string) => `/api/admin/categories/${id}`,
     ORDERS: "/api/admin/orders",
     ORDER_STATS: "/api/admin/orders/stats",
     USERS: "/api/admin/users",
@@ -24,6 +25,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/api/admin/login",
     SUPPLIER_ORDERS: "/api/admin/supplier-orders",
     SUPPLIER_ORDER_DETAIL: (id: string) => `/api/admin/supplier-orders/${id}`,
+    BANNERS: "/api/admin/banners",
+    BANNER_DETAIL: (id: string) => `/api/admin/banners/${id}`,
+    BANNERS_REORDER: "/api/admin/banners/reorder",
   },
   CHAT: {
     SEND: "/api/chat",

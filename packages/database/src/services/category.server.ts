@@ -1,5 +1,5 @@
 import { ERROR_MESSAGE } from "@workspace/shared/constants";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
 
@@ -11,12 +11,24 @@ export type CategoryWithChildren = Category & {
   depth?: number;
 };
 
+type GetCategoriesOptions = {
+  search?: string;
+  /** When true, only return root categories where showInNav=true */
+  navOnly?: boolean;
+};
+
 /**
  * Fetch all categories.
- * If search is provided, returns a flat list of matches.
- * If no search, returns a hierarchical tree structure.
+ * - If search is provided, returns a flat list of matches.
+ * - If navOnly is true, returns only active root categories with showInNav=true as a tree.
+ * - Otherwise returns the full hierarchical tree.
  */
-export async function getCategories(search?: string) {
+export async function getCategories(options?: string | GetCategoriesOptions) {
+  // Backward-compatible: old callers pass a string search directly
+  const opts: GetCategoriesOptions =
+    typeof options === "string" ? { search: options } : (options ?? {});
+  const { search, navOnly } = opts;
+
   const allCategories = await db
     .select()
     .from(categories)
@@ -32,12 +44,10 @@ export async function getCategories(search?: string) {
   const categoryMap = new Map<string, CategoryWithChildren>();
   const roots: CategoryWithChildren[] = [];
 
-  // Initialize map
   allCategories.forEach((cat: Category) => {
     categoryMap.set(cat.id, { ...cat, children: [] });
   });
 
-  // Build hierarchy
   allCategories.forEach((cat: Category) => {
     const node = categoryMap.get(cat.id)!;
     if (cat.parentId) {
@@ -45,13 +55,16 @@ export async function getCategories(search?: string) {
       if (parent) {
         parent.children?.push(node);
       } else {
-        // Parent might be missing or filtered out (though here we fetched all)
         roots.push(node);
       }
     } else {
       roots.push(node);
     }
   });
+
+  if (navOnly) {
+    return roots.filter((cat) => cat.isActive && cat.showInNav);
+  }
 
   return roots;
 }

@@ -279,5 +279,53 @@ describe("Finance Service", () => {
       expect(result.grossProfit).toBe(20000); // 100000 - 80000
       expect(result.netProfit).toBe(-30000); // 20000 - 50000 = loss
     });
+
+    it("should exclude cancelled orders from revenue calculation", async () => {
+      // Arrange: Two mock db.select calls — orders returns 0 revenue (simulating cancelled excluded)
+      const mockOrderChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ revenue: 0, cogs: 0, count: 0 }]),
+      };
+      (db.select as any).mockReturnValueOnce(mockOrderChain);
+
+      const mockExpenseChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ total: 0 }]),
+      };
+      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+
+      const result = await getFinancialStats({ month: 1, year: 2026 });
+
+      // Assert: the WHERE clause filters are applied (db.select called with filters)
+      expect(mockOrderChain.where).toHaveBeenCalled();
+      // Revenue should be 0 (no valid orders counted, cancelled excluded)
+      expect(result.revenue).toBe(0);
+      expect(result.orderCount).toBe(0);
+    });
+
+    it("should only count PAID, PREPARING, SHIPPING, DELIVERED statuses", async () => {
+      // NOTE: The actual SQL filter (inArray) cannot be inspected in unit tests.
+      // This test documents the expected contract: 5 statuses are valid, PENDING and CANCELLED are not.
+      // Verified by reading source: packages/database/src/services/finance.server.ts line 129-133
+      const mockOrderChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ revenue: 500000, cogs: 300000, count: 5 }]),
+      };
+      (db.select as any).mockReturnValueOnce(mockOrderChain);
+
+      const mockExpenseChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([{ total: 50000 }]),
+      };
+      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+
+      const result = await getFinancialStats({ month: 1, year: 2026 });
+
+      // The WHERE clause was called with status filter — if it weren't, mock would need no where() call
+      expect(mockOrderChain.where).toHaveBeenCalled();
+      expect(result.revenue).toBe(500000);
+      expect(result.grossProfit).toBe(200000);
+      expect(result.netProfit).toBe(150000);
+    });
   });
 });

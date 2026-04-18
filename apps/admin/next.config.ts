@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "example.com", pathname: "/**" },
       { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
       { protocol: "https", hostname: "ecimg.cafe24img.com", pathname: "/**" },
+      { protocol: "https", hostname: "sapo.dktcdn.net", pathname: "/**" },
     ],
   },
 };

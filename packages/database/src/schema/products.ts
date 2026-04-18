@@ -24,6 +24,7 @@ export const products = pgTable(
     }),
     basePrice: decimal("base_price", { precision: 15, scale: 2 }).default("0"),
     isActive: boolean("is_active").default(true),
+    isFeatured: boolean("is_featured").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -31,6 +32,7 @@ export const products = pgTable(
     return [
       index("idx_products_category").on(table.categoryId),
       index("idx_products_slug").on(table.slug),
+      index("idx_products_featured").on(table.isFeatured),
     ];
   },
 );
