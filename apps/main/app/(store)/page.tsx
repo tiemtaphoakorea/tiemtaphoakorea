@@ -25,7 +25,7 @@ function mapProduct(p: any) {
     id: p.id,
     name: p.name,
     slug: p.slug,
-    price: p.minPrice || parseFloat(p.basePrice || "0"),
+    price: p.minPrice ?? parseFloat(p.basePrice ?? "0"),
     originalPrice: undefined,
     category: p.categoryName || "Uncategorized",
     image: p.thumbnail || "/placeholder.jpg",
@@ -62,7 +62,11 @@ function CategoryCardsSkeleton() {
 
 async function CategoryCardsSection() {
   const cards = await getCategoryCards();
-  return <CategoryCardsGrid cards={cards} />;
+  return (
+    <div className="container mx-auto px-4">
+      <CategoryCardsGrid cards={cards} />
+    </div>
+  );
 }
 
 async function FeaturedProductsSection() {

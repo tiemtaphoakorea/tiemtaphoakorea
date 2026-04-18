@@ -12,6 +12,8 @@ type FeaturedProductsProps = {
 };
 
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
+  if (products.length === 0) return null;
+
   return (
     <section id="featured-products" data-testid="featured-products" className="bg-background py-14">
       <div className="container mx-auto px-4">
