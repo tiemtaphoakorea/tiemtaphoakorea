@@ -131,8 +131,8 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
         await axios.post(API_ENDPOINTS.ADMIN.BANNERS, payload);
       }
 
-      await qc.invalidateQueries({ queryKey: queryKeys.banners.all });
       onOpenChange(false);
+      qc.invalidateQueries({ queryKey: queryKeys.banners.all });
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(
@@ -249,7 +249,9 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
               <Label className="text-xs font-black tracking-wider uppercase">
                 Badge{" "}
                 {form.type === "category" && (
-                  <span className="font-normal normal-case text-slate-400">(mặc định: "Danh mục hot")</span>
+                  <span className="font-normal normal-case text-slate-400">
+                    (mặc định: "Danh mục hot")
+                  </span>
                 )}
               </Label>
               <Input
@@ -284,7 +286,9 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
               <Label className="text-xs font-black tracking-wider uppercase">
                 Nút CTA{" "}
                 {form.type === "category" && (
-                  <span className="font-normal normal-case text-slate-400">(mặc định: "Xem tất cả")</span>
+                  <span className="font-normal normal-case text-slate-400">
+                    (mặc định: "Xem tất cả")
+                  </span>
                 )}
               </Label>
               <Input
@@ -311,7 +315,9 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-xs font-black tracking-wider uppercase">Nút phụ (tùy chọn)</Label>
+            <Label className="text-xs font-black tracking-wider uppercase">
+              Nút phụ (tùy chọn)
+            </Label>
             <Input
               value={form.ctaSecondaryLabel ?? ""}
               onChange={(e) => set("ctaSecondaryLabel", e.target.value || null)}
@@ -400,7 +406,11 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
             >
               Hủy
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="font-black shadow-lg shadow-primary/20">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="font-black shadow-lg shadow-primary/20"
+            >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEdit ? "Lưu thay đổi" : "Tạo banner"}
             </Button>

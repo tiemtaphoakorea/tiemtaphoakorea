@@ -192,7 +192,10 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
                 Danh mục
               </h3>
               <div className="grid grid-cols-1 gap-1">
-                {[{ name: "Tất cả", slug: "", children: [] as ProductFilterCategory[] }, ...categories].map((cat) => {
+                {[
+                  { name: "Tất cả", slug: "", children: [] as ProductFilterCategory[] },
+                  ...categories,
+                ].map((cat) => {
                   const hasChildren = (cat.children?.length ?? 0) > 0;
                   const isExpanded = expandedSlugs.has(cat.slug);
                   return (

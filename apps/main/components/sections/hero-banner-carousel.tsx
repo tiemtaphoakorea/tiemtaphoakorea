@@ -53,7 +53,7 @@ export function HeroBannerCarousel({ slides }: Props) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [current, isPaused, next, total]);
+  }, [isPaused, next, total]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -121,11 +121,7 @@ export function HeroBannerCarousel({ slides }: Props) {
             <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow md:text-6xl lg:text-7xl">
               {titleLines.map((line, i) => (
                 <span key={i}>
-                  {i === 1 ? (
-                    <span className="text-violet-300">{line}</span>
-                  ) : (
-                    line
-                  )}
+                  {i === 1 ? <span className="text-violet-300">{line}</span> : line}
                   {i < titleLines.length - 1 && <br />}
                 </span>
               ))}
