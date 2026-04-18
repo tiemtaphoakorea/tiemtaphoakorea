@@ -10,6 +10,7 @@ import {
   createProduct,
   deleteProduct,
   generateProductSlug,
+  getBestSellers,
   getFeaturedProducts,
   getNewArrivals,
   getProductById,
@@ -819,6 +820,92 @@ describe("Product Service", () => {
       const result = await getNewArrivals(100, 7);
       const resultIds = result.map((p: any) => p.id);
       expect(resultIds).not.toContain(oldProduct.id);
+    });
+  });
+
+  describe("getBestSellers", () => {
+    it("returns active products ordered by total units sold", async () => {
+      // Create a product with a variant
+      const [prod] = await db
+        .insert(products)
+        .values({
+          name: "Best Seller Test Product",
+          slug: "best-seller-test-product",
+          categoryId: TEST_CAT_ID,
+          isActive: true,
+          isFeatured: false,
+        })
+        .returning();
+
+      const [variant] = await db
+        .insert(productVariants)
+        .values({
+          productId: prod!.id,
+          sku: "BST-001",
+          name: "Default",
+          price: "100000",
+          stockQuantity: 50,
+        })
+        .returning();
+
+      // Insert a fake profile and order so we can add order items
+      const TEST_PROFILE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+      await db
+        .insert(profiles)
+        .values({ id: TEST_PROFILE_ID, username: "bstest-user", fullName: "BS Test", role: "customer" })
+        .onConflictDoNothing();
+
+      const [order] = await db
+        .insert(orders)
+        .values({
+          orderNumber: "ORD-BST-001",
+          customerId: TEST_PROFILE_ID,
+          status: "delivered",
+          total: "100000",
+        })
+        .returning();
+
+      await db.insert(orderItems).values({
+        orderId: order!.id,
+        variantId: variant!.id,
+        productName: prod!.name,
+        variantName: "Default",
+        sku: "BST-001",
+        quantity: 5,
+        unitPrice: "100000",
+        lineTotal: "500000",
+      });
+
+      const results = await getBestSellers(10);
+
+      expect(results.length).toBeGreaterThan(0);
+      const found = results.find((r) => r.id === prod!.id);
+      expect(found).toBeDefined();
+      expect(found!.name).toBe("Best Seller Test Product");
+
+      // Cleanup
+      await db.delete(orderItems).where(eq(orderItems.orderId, order!.id));
+      await db.delete(orders).where(eq(orders.id, order!.id));
+      await db.delete(profiles).where(eq(profiles.id, TEST_PROFILE_ID));
+      await db.delete(products).where(eq(products.id, prod!.id));
+    });
+
+    it("excludes inactive products", async () => {
+      const [prod] = await db
+        .insert(products)
+        .values({
+          name: "Inactive Best Seller",
+          slug: "inactive-best-seller-test",
+          categoryId: TEST_CAT_ID,
+          isActive: false,
+        })
+        .returning();
+
+      const results = await getBestSellers(10);
+      const found = results.find((r) => r.id === prod!.id);
+      expect(found).toBeUndefined();
+
+      await db.delete(products).where(eq(products.id, prod!.id));
     });
   });
 });

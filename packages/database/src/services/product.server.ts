@@ -5,7 +5,7 @@ import {
 } from "@workspace/shared/constants";
 import { BusinessError } from "@workspace/shared/http-status";
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { and, desc, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
 import { orderItems } from "../schema/orders";
@@ -38,6 +38,7 @@ export type CreateProductData = {
   categoryId?: string | null;
   basePrice?: number;
   isActive?: boolean;
+  isFeatured?: boolean;
   variants: {
     name: string;
     sku: string;
@@ -222,6 +223,7 @@ export async function createProduct(data: CreateProductData) {
         categoryId: data.categoryId,
         basePrice: data.basePrice?.toString() || "0",
         isActive: data.isActive ?? true,
+        isFeatured: data.isFeatured ?? false,
       })
       .returning();
 
@@ -499,37 +501,74 @@ export async function getProductsForListing(params: {
   };
 }
 
+const PRODUCT_CARD_SELECT = (productsTable: typeof products) => ({
+  id: productsTable.id,
+  name: productsTable.name,
+  slug: productsTable.slug,
+  description: productsTable.description,
+  isActive: productsTable.isActive,
+  isFeatured: productsTable.isFeatured,
+  categoryName: categories.name,
+  basePrice: productsTable.basePrice,
+  totalStock: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`,
+  minPrice: sql<number>`min(${productVariants.price})`,
+  maxPrice: sql<number>`max(${productVariants.price})`,
+  thumbnail: sql<string>`coalesce((
+    select ${variantImages.imageUrl} 
+    from ${variantImages} 
+    join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
+    where pv_img.product_id = ${productsTable.id} 
+    order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc 
+    limit 1
+  ), '')`,
+});
+
 /**
- * Get featured products (Active products, latest)
+ * Get admin-pinned "Bán chạy" products (isFeatured = true)
  */
 export async function getFeaturedProducts(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT) {
   return await db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      description: products.description,
-      isActive: products.isActive,
-      categoryName: categories.name,
-      basePrice: products.basePrice,
-      totalStock: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`,
-      minPrice: sql<number>`min(${productVariants.price})`,
-      maxPrice: sql<number>`max(${productVariants.price})`,
-      thumbnail: sql<string>`coalesce((
-        select ${variantImages.imageUrl} 
-        from ${variantImages} 
-        join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
-        where pv_img.product_id = ${products.id} 
-        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc 
-        limit 1
-      ), '')`,
-    })
+    .select(PRODUCT_CARD_SELECT(products))
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
-    .where(eq(products.isActive, true))
+    .where(and(eq(products.isActive, true), eq(products.isFeatured, true)))
+    .groupBy(products.id, categories.name)
+    .orderBy(desc(products.updatedAt))
+    .limit(limit);
+}
+
+/**
+ * Get "Hàng mới" — products created within the last N days (default 30)
+ */
+export async function getNewArrivals(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT, days = 30) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+
+  return await db
+    .select(PRODUCT_CARD_SELECT(products))
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(productVariants, eq(products.id, productVariants.productId))
+    .where(and(eq(products.isActive, true), gte(products.createdAt, since)))
     .groupBy(products.id, categories.name)
     .orderBy(desc(products.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Get best-selling products by total units sold across all orders.
+ */
+export async function getBestSellers(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT) {
+  return await db
+    .select(PRODUCT_CARD_SELECT(products))
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(productVariants, eq(products.id, productVariants.productId))
+    .leftJoin(orderItems, eq(productVariants.id, orderItems.variantId))
+    .where(eq(products.isActive, true))
+    .groupBy(products.id, categories.name)
+    .orderBy(desc(sql`coalesce(sum(${orderItems.quantity}), 0)`))
     .limit(limit);
 }
 
@@ -565,6 +604,7 @@ export async function updateProduct(id: string, data: UpdateProductData) {
         categoryId: data.categoryId,
         basePrice: data.basePrice?.toString() || "0",
         isActive: data.isActive ?? true,
+        isFeatured: data.isFeatured ?? false,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id));
