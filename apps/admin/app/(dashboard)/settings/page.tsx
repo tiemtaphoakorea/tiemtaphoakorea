@@ -285,7 +285,10 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
             const displayTitle =
               banner.title ?? (banner.categoryName ? `📂 ${banner.categoryName}` : "—");
             return (
-              <Card key={banner.id} className="overflow-hidden rounded-xl border shadow-sm">
+              <Card
+                key={banner.id}
+                className="gap-0 overflow-hidden rounded-xl border py-0 shadow-sm"
+              >
                 <div className="relative h-36 bg-muted">
                   {(banner.imageUrl ?? banner.categoryImageUrl) ? (
                     <Image
@@ -312,7 +315,7 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
                     </Badge>
                   </div>
                 </div>
-                <CardContent className="flex items-center justify-between px-3 py-2">
+                <CardContent className="flex items-center justify-between px-3 py-1.5">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {banner.type === "category" ? (
                       <span className="flex items-center gap-1">
