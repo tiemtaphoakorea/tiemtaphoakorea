@@ -8,9 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
-import { FinanceStats } from "@/components/admin/finance/finance-stats";
 import { FinanceStatsSkeleton } from "@/components/admin/finance/finance-stats-skeleton";
+
+const FinanceStats = dynamic(
+  () =>
+    import("@/components/admin/finance/finance-stats").then((m) => ({ default: m.FinanceStats })),
+  { ssr: false, loading: () => <FinanceStatsSkeleton /> },
+);
 
 export default function FinancePage() {
   const [date, setDate] = useState({
