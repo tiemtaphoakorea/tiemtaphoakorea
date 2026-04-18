@@ -5,7 +5,13 @@ import { axios } from "@workspace/shared/api-client";
 import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +59,7 @@ type BannerRow = {
   categoryId: string | null;
   categoryName: string | null;
   imageUrl: string | null;
+  categoryImageUrl: string | null;
   title: string | null;
   subtitle: string | null;
   badgeText: string | null;
@@ -119,9 +126,7 @@ function NavCategoriesSection() {
           return {
             ...old,
             categories: patch(old.categories),
-            flatCategories: old.flatCategories.map((c) =>
-              c.id === id ? { ...c, showInNav } : c,
-            ),
+            flatCategories: old.flatCategories.map((c) => (c.id === id ? { ...c, showInNav } : c)),
           };
         },
       );
@@ -160,9 +165,8 @@ function NavCategoriesSection() {
       <div className="mb-4 flex items-center gap-2">
         <Eye className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
-          Đang hiển thị{" "}
-          <span className="font-bold text-foreground">{navCount}</span> danh mục trên thanh điều
-          hướng
+          Đang hiển thị <span className="font-bold text-foreground">{navCount}</span> danh mục trên
+          thanh điều hướng
         </span>
       </div>
 
@@ -244,11 +248,13 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
     <>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {data?.length ?? 0} banner · slide theo thứ tự{" "}
-          <code className="text-xs">sortOrder</code>
+          {data?.length ?? 0} banner · slide theo thứ tự <code className="text-xs">sortOrder</code>
         </p>
         <Button
-          onClick={() => { setEditing(null); setFormOpen(true); }}
+          onClick={() => {
+            setEditing(null);
+            setFormOpen(true);
+          }}
           size="sm"
           className="font-bold"
         >
@@ -261,7 +267,10 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
           <ImageIcon className="mb-3 h-10 w-10 text-muted-foreground/40" />
           <p className="font-bold text-muted-foreground">Chưa có banner nào</p>
           <Button
-            onClick={() => { setEditing(null); setFormOpen(true); }}
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
             variant="outline"
             size="sm"
             className="mt-3 font-bold"
@@ -276,16 +285,14 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
             const displayTitle =
               banner.title ?? (banner.categoryName ? `📂 ${banner.categoryName}` : "—");
             return (
-              <Card
-                key={banner.id}
-                className="overflow-hidden rounded-xl border shadow-sm"
-              >
-                <div className="relative h-32 bg-muted">
-                  {banner.imageUrl ? (
+              <Card key={banner.id} className="overflow-hidden rounded-xl border shadow-sm">
+                <div className="relative h-36 bg-muted">
+                  {(banner.imageUrl ?? banner.categoryImageUrl) ? (
                     <Image
-                      src={banner.imageUrl}
+                      src={(banner.imageUrl ?? banner.categoryImageUrl)!}
                       alt={displayTitle}
                       fill
+                      sizes="(max-width: 640px) 100vw, 50vw"
                       className="object-cover"
                     />
                   ) : (
@@ -297,15 +304,15 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
                       )}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between gap-2">
                     <p className="line-clamp-1 text-sm font-bold text-white">{displayTitle}</p>
                     <Badge variant={status.variant} className="shrink-0 text-[10px]">
                       {status.label}
                     </Badge>
                   </div>
                 </div>
-                <CardContent className="flex items-center justify-between p-3">
+                <CardContent className="flex items-center justify-between px-3 py-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {banner.type === "category" ? (
                       <span className="flex items-center gap-1">
@@ -323,12 +330,10 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <Switch
                       checked={banner.isActive}
-                      onCheckedChange={(v) =>
-                        toggleActive.mutate({ id: banner.id, isActive: v })
-                      }
+                      onCheckedChange={(v) => toggleActive.mutate({ id: banner.id, isActive: v })}
                       className="scale-75"
                     />
                     <DropdownMenu>
@@ -339,7 +344,10 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-36 rounded-xl">
                         <DropdownMenuItem
-                          onClick={() => { setEditing(banner); setFormOpen(true); }}
+                          onClick={() => {
+                            setEditing(banner);
+                            setFormOpen(true);
+                          }}
                           className="font-bold"
                         >
                           <Edit2 className="mr-2 h-4 w-4" /> Chỉnh sửa
@@ -443,8 +451,8 @@ export default function SettingsPage() {
                 <div>
                   <CardTitle className="text-base font-bold">Banner trang chủ</CardTitle>
                   <CardDescription className="text-xs">
-                    Carousel slides hiển thị ở khu vực hero. Hỗ trợ slide từ danh mục hoặc ảnh
-                    tùy chọn.
+                    Carousel slides hiển thị ở khu vực hero. Hỗ trợ slide từ danh mục hoặc ảnh tùy
+                    chọn.
                   </CardDescription>
                 </div>
               </div>
@@ -454,7 +462,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
       </Tabs>
     </div>
   );

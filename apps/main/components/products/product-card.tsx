@@ -69,7 +69,9 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
         </Link>
         <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex flex-col">
-            <span className="text-base font-extrabold text-primary">{formatPrice(product.price)}</span>
+            <span className="text-base font-extrabold text-primary">
+              {formatPrice(product.price)}
+            </span>
             {product.originalPrice && (
               <span className="text-xs text-muted-foreground line-through">
                 {formatPrice(product.originalPrice)}

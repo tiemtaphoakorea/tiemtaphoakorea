@@ -4,14 +4,34 @@ import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Button } from "@workspace/ui/components/button";
 import { ErrorBoundary } from "@workspace/ui/components/error-boundary";
 import { Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Suspense } from "react";
-import { DashboardKPIs } from "@/components/admin/dashboard/dashboard-kpis";
 import { DashboardKPIsSkeleton } from "@/components/admin/dashboard/dashboard-kpis-skeleton";
-import { DashboardRecentOrders } from "@/components/admin/dashboard/dashboard-recent-orders";
 import { DashboardRecentOrdersSkeleton } from "@/components/admin/dashboard/dashboard-recent-orders-skeleton";
-import { DashboardTopProducts } from "@/components/admin/dashboard/dashboard-top-products";
 import { DashboardTopProductsSkeleton } from "@/components/admin/dashboard/dashboard-top-products-skeleton";
+
+const DashboardKPIs = dynamic(
+  () =>
+    import("@/components/admin/dashboard/dashboard-kpis").then((m) => ({
+      default: m.DashboardKPIs,
+    })),
+  { ssr: false, loading: () => <DashboardKPIsSkeleton /> },
+);
+const DashboardRecentOrders = dynamic(
+  () =>
+    import("@/components/admin/dashboard/dashboard-recent-orders").then((m) => ({
+      default: m.DashboardRecentOrders,
+    })),
+  { ssr: false, loading: () => <DashboardRecentOrdersSkeleton /> },
+);
+const DashboardTopProducts = dynamic(
+  () =>
+    import("@/components/admin/dashboard/dashboard-top-products").then((m) => ({
+      default: m.DashboardTopProducts,
+    })),
+  { ssr: false, loading: () => <DashboardTopProductsSkeleton /> },
+);
 
 export default function AdminDashboard() {
   return (

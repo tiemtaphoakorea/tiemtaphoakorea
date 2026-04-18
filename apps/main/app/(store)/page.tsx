@@ -38,7 +38,10 @@ function CategoryCardsSkeleton() {
     <div className="container mx-auto mt-6 px-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-700" />
+          <div
+            key={i}
+            className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-700"
+          />
         ))}
       </div>
     </div>

@@ -121,7 +121,9 @@ export function Navbar({
                         <MenubarSub>
                           <MenubarSubTrigger
                             className="w-full cursor-pointer rounded-md px-3 py-2 text-sm font-medium"
-                            onClick={() => router.push(PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(cat.slug))}
+                            onClick={() =>
+                              router.push(PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(cat.slug))
+                            }
                           >
                             {cat.name}
                           </MenubarSubTrigger>

@@ -1,8 +1,8 @@
-import { and, asc, eq, isNull, lte, gte, or, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
+import { banners } from "../schema/banners";
 import { categories } from "../schema/categories";
 import { products, productVariants, variantImages } from "../schema/products";
-import { banners } from "../schema/banners";
 
 export type { Banner, NewBanner } from "../schema/banners";
 
@@ -54,7 +54,7 @@ export type UpdateBannerData = Partial<CreateBannerData>;
  * where imageUrl is not already set, avoiding unnecessary work on custom banners.
  */
 export async function getBanners(): Promise<BannerSlide[]> {
-  const now = new Date();
+  const now = new Date().toISOString();
 
   type BannerRow = {
     id: string;
@@ -95,7 +95,9 @@ export async function getBanners(): Promise<BannerSlide[]> {
           FROM ${products} p
           JOIN ${productVariants} pv ON pv.product_id = p.id
           JOIN ${variantImages} vi ON vi.variant_id = pv.id
-          WHERE p.category_id = c.id
+          WHERE (p.category_id = c.id OR p.category_id IN (
+            SELECT id FROM ${categories} WHERE parent_id = c.id
+          ))
             AND p.is_active = true
           ORDER BY vi.is_primary DESC, vi.display_order ASC
           LIMIT 1
@@ -124,13 +126,8 @@ export async function getBanners(): Promise<BannerSlide[]> {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     imageUrl:
-      row.image_url ||
-      (row.type === "category" ? (row.category_image_url ?? "") : "") ||
-      "",
-    title:
-      row.title ||
-      (row.type === "category" ? (row.category_name ?? "") : "") ||
-      "",
+      row.image_url || (row.type === "category" ? (row.category_image_url ?? "") : "") || "",
+    title: row.title || (row.type === "category" ? (row.category_name ?? "") : "") || "",
     subtitle: row.subtitle,
     badgeText: row.badge_text || (row.type === "category" ? "Danh mục hot" : null),
     ctaLabel: row.cta_label || (row.type === "category" ? "Xem tất cả" : null),
@@ -150,33 +147,87 @@ export async function getBanners(): Promise<BannerSlide[]> {
  * Get all banners for admin (no active/date filtering).
  */
 export async function getAllBannersForAdmin() {
-  return await db
-    .select({
-      id: banners.id,
-      type: banners.type,
-      categoryId: banners.categoryId,
-      categoryName: categories.name,
-      categorySlug: categories.slug,
-      imageUrl: banners.imageUrl,
-      title: banners.title,
-      subtitle: banners.subtitle,
-      badgeText: banners.badgeText,
-      ctaLabel: banners.ctaLabel,
-      ctaUrl: banners.ctaUrl,
-      ctaSecondaryLabel: banners.ctaSecondaryLabel,
-      discountTag: banners.discountTag,
-      discountTagSub: banners.discountTagSub,
-      accentColor: banners.accentColor,
-      isActive: banners.isActive,
-      sortOrder: banners.sortOrder,
-      startsAt: banners.startsAt,
-      endsAt: banners.endsAt,
-      createdAt: banners.createdAt,
-      updatedAt: banners.updatedAt,
-    })
-    .from(banners)
-    .leftJoin(categories, eq(banners.categoryId, categories.id))
-    .orderBy(asc(banners.sortOrder));
+  type AdminBannerRow = {
+    id: string;
+    type: string;
+    category_id: string | null;
+    category_name: string | null;
+    category_slug: string | null;
+    image_url: string | null;
+    category_image_url: string | null;
+    title: string | null;
+    subtitle: string | null;
+    badge_text: string | null;
+    cta_label: string | null;
+    cta_url: string | null;
+    cta_secondary_label: string | null;
+    discount_tag: string | null;
+    discount_tag_sub: string | null;
+    accent_color: string | null;
+    is_active: boolean;
+    sort_order: number;
+    starts_at: Date | null;
+    ends_at: Date | null;
+    created_at: Date | null;
+    updated_at: Date | null;
+  };
+
+  const rows = (await db.execute(sql`
+    SELECT
+      b.id, b.type, b.category_id,
+      c.name  AS category_name,
+      c.slug  AS category_slug,
+      b.image_url,
+      CASE
+        WHEN b.type = 'category' AND b.image_url IS NULL AND c.id IS NOT NULL
+        THEN (
+          SELECT vi.image_url
+          FROM ${products} p
+          JOIN ${productVariants} pv ON pv.product_id = p.id
+          JOIN ${variantImages} vi ON vi.variant_id = pv.id
+          WHERE (p.category_id = c.id OR p.category_id IN (
+            SELECT id FROM ${categories} WHERE parent_id = c.id
+          ))
+            AND p.is_active = true
+          ORDER BY vi.is_primary DESC, vi.display_order ASC
+          LIMIT 1
+        )
+        ELSE NULL
+      END AS category_image_url,
+      b.title, b.subtitle, b.badge_text,
+      b.cta_label, b.cta_url, b.cta_secondary_label,
+      b.discount_tag, b.discount_tag_sub, b.accent_color,
+      b.is_active, b.sort_order, b.starts_at, b.ends_at,
+      b.created_at, b.updated_at
+    FROM ${banners} b
+    LEFT JOIN ${categories} c ON b.category_id = c.id
+    ORDER BY b.sort_order ASC
+  `)) as AdminBannerRow[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    type: row.type,
+    categoryId: row.category_id,
+    categoryName: row.category_name,
+    categorySlug: row.category_slug,
+    imageUrl: row.image_url,
+    categoryImageUrl: row.category_image_url,
+    title: row.title,
+    subtitle: row.subtitle,
+    badgeText: row.badge_text,
+    ctaLabel: row.cta_label,
+    ctaUrl: row.cta_url,
+    ctaSecondaryLabel: row.cta_secondary_label,
+    discountTag: row.discount_tag,
+    discountTagSub: row.discount_tag_sub,
+    accentColor: row.accent_color,
+    isActive: row.is_active,
+    sortOrder: Number(row.sort_order),
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 export async function createBanner(data: CreateBannerData) {
@@ -223,10 +274,7 @@ export async function deleteBanner(id: string) {
 export async function reorderBanners(orderedIds: string[]) {
   await Promise.all(
     orderedIds.map((id, index) =>
-      db
-        .update(banners)
-        .set({ sortOrder: index, updatedAt: new Date() })
-        .where(eq(banners.id, id)),
+      db.update(banners).set({ sortOrder: index, updatedAt: new Date() }).where(eq(banners.id, id)),
     ),
   );
 }
