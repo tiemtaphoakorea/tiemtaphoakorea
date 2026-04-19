@@ -443,94 +443,76 @@ export async function completeOrder({
   });
 }
 
-// Keep updateOrderStatus and other functions as is
-export async function updateOrderStatus(
-  orderId: string,
-  status: (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS],
-  userId: string,
-  note?: string,
-) {
+/**
+ * Transition a pending order to cancelled.
+ *
+ * Only pending orders can be cancelled in Spec 1 — once goods have physically
+ * left stock (stock_out) the customer path is `return_order` (not yet
+ * available). Returns reserved stock (`reserved -= qty`) without touching
+ * `on_hand`, sets `cancelled_at = now()`, writes a status_history row, and
+ * cancels any supplier_orders whose note references this order's number
+ * (preserving old updateOrderStatus behavior).
+ */
+export async function cancelOrder({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Lock order row first to prevent concurrent status updates
-    const lockedOrder = await lockOrderForUpdate(tx, orderId);
-    if (!lockedOrder) {
-      throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    const locked = await lockOrderForUpdate(tx, orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (locked.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(
+        `Cannot cancel after stock_out. Use return_order instead (not yet available in Spec 1).`,
+      );
     }
 
-    // CANCELLED is a terminal state — no transitions allowed out of it
-    if (lockedOrder.status === ORDER_STATUS.CANCELLED) {
-      throw new Error(`Cannot update a cancelled order`);
-    }
+    const items = await tx
+      .select({ quantity: orderItems.quantity, variantId: orderItems.variantId })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
 
-    // Prevent cancelling if status is SHIPPING or DELIVERED
-    if (status === ORDER_STATUS.CANCELLED) {
-      if (
-        lockedOrder.status === ORDER_STATUS.SHIPPING ||
-        lockedOrder.status === ORDER_STATUS.DELIVERED
-      ) {
-        throw new Error(`Cannot cancel order with status "${lockedOrder.status}"`);
+    const variantIds = items.map((i) => i.variantId);
+    if (variantIds.length > 0) {
+      await lockVariantsForUpdate(tx, variantIds);
+      for (const item of items) {
+        await tx
+          .update(productVariants)
+          .set({ reserved: sql`${productVariants.reserved} - ${item.quantity}` })
+          .where(eq(productVariants.id, item.variantId));
       }
     }
 
-    // 2. Determine updates
-    const updates: {
-      status: typeof status;
-      paidAt?: Date;
-      shippedAt?: Date;
-      deliveredAt?: Date;
-      cancelledAt?: Date;
-    } = { status };
-    if (status === ORDER_STATUS.PAID) updates.paidAt = new Date();
-    if (status === ORDER_STATUS.SHIPPING) updates.shippedAt = new Date();
-    if (status === ORDER_STATUS.DELIVERED) updates.deliveredAt = new Date();
-    if (status === ORDER_STATUS.CANCELLED) updates.cancelledAt = new Date();
-
-    // 3. Update Order
-    const [updatedOrder] = await tx
+    const now = new Date();
+    const [updated] = await tx
       .update(orders)
-      .set(updates)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+        cancelledAt: now,
+        updatedAt: now,
+      })
       .where(eq(orders.id, orderId))
       .returning();
 
-    // 4. Create History
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status,
-      note,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+      note: note ?? "Order cancelled",
       createdBy: userId,
     });
 
-    // 5. Cancel: restore stock for all items (we deduct for all when creating order)
-    if (status === ORDER_STATUS.CANCELLED) {
-      const items = await tx
-        .select({
-          quantity: orderItems.quantity,
-          variantId: orderItems.variantId,
-        })
-        .from(orderItems)
-        .where(eq(orderItems.orderId, orderId));
+    await tx
+      .update(supplierOrders)
+      .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: now })
+      .where(ilike(supplierOrders.note, `%${locked.orderNumber}%`));
 
-      const variantIds = items.map((i) => i.variantId);
-      if (variantIds.length > 0) {
-        await lockVariantsForUpdate(tx, variantIds);
-        for (const row of items) {
-          await tx
-            .update(productVariants)
-            .set({
-              stockQuantity: sql`${productVariants.stockQuantity} + ${row.quantity}`,
-            })
-            .where(eq(productVariants.id, row.variantId));
-        }
-      }
-
-      // 5b. Cancel supplier orders linked to this order (note contains [Order: <orderNumber>])
-      await tx
-        .update(supplierOrders)
-        .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: new Date() })
-        .where(ilike(supplierOrders.note, `%${lockedOrder.orderNumber}%`));
-    }
-
-    return updatedOrder;
+    return updated;
   });
 }
 

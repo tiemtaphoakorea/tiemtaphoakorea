@@ -266,9 +266,31 @@ export const adminClient = {
     ) as unknown as Promise<{ success?: boolean }>;
   },
 
+  // TODO(Task 15): remove after migrating UI to stockOutOrder/completeOrder/cancelOrder
   async updateOrderStatus(id: string, data: { status: string; note?: string }) {
     return axios.patch<{ success: boolean; order: AdminOrderDetails }>(
       `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/status`,
+      data,
+    ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async stockOutOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/stock-out`,
+      data,
+    ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async completeOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/complete`,
+      data,
+    ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async cancelOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/cancel`,
       data,
     ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
   },
