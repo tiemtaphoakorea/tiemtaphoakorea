@@ -9,6 +9,7 @@ import type {
   CreateCustomerData,
   CreateProductData,
   CreateSupplierData,
+  CustomerDebtResponse,
   CustomerStatsItem,
   DashboardKPIs,
   DashboardRecentOrder,
@@ -304,6 +305,12 @@ export const adminClient = {
     return axios.get<PaginatedResponse<DebtListItem>>(API_ENDPOINTS.ADMIN.DEBTS, {
       params,
     }) as unknown as Promise<PaginatedResponse<DebtListItem>>;
+  },
+
+  async getCustomerDebt(customerId: string) {
+    return axios.get<CustomerDebtResponse>(
+      API_ENDPOINTS.ADMIN.DEBT_DETAIL(customerId),
+    ) as unknown as Promise<CustomerDebtResponse>;
   },
 
   async recordOrderPayment(

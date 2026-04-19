@@ -1,4 +1,6 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { UserRole } from "../schema/enums";
+import type { profiles } from "../schema/profiles";
 import type { ProductVariant as DBProductVariant, Order, OrderItem } from "./order";
 
 // --- Dashboard Stats ---
@@ -307,6 +309,23 @@ export interface DebtListItem {
   oldestDebtDate: Date;
   customerName: string | null;
   customerPhone: string | null;
+}
+
+export interface CustomerDebtPaymentHistoryItem {
+  id: string;
+  orderId: string;
+  amount: string;
+  method: string;
+  referenceCode: string | null;
+  createdAt: Date | null;
+}
+
+export interface CustomerDebtResponse {
+  customer: InferSelectModel<typeof profiles>;
+  totalDebt: number;
+  unpaidOrders: Order[];
+  paymentHistory: CustomerDebtPaymentHistoryItem[];
+  allOrders: Order[];
 }
 
 // --- Order Details ---

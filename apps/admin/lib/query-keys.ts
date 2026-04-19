@@ -129,4 +129,5 @@ export const queryKeys = {
     list: (search: string, minAgeDays: number | null, page: number, limit: number) =>
       [QK.debtsRoot, search, minAgeDays, page, limit] as const,
   },
+  customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
 } as const;
