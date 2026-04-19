@@ -668,18 +668,20 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               <Button variant="destructive" className="font-bold shadow-lg" onClick={handleCancel}>
                 Hủy đơn
               </Button>
-              <PaymentDialog
-                open={paymentState.isOpen}
-                onOpenChange={(open) => {
-                  if (!open) paymentDispatch({ type: "CLOSE" });
-                }}
-                remainingAmount={remainingAmount}
-                paymentState={paymentState}
-                paymentDispatch={paymentDispatch}
-                onSubmit={handleRecordPayment}
-                orderNumber={order.orderNumber}
-                onTriggerClick={handleOpenPayment}
-              />
+              {paymentStatus !== "paid" && (
+                <PaymentDialog
+                  open={paymentState.isOpen}
+                  onOpenChange={(open) => {
+                    if (!open) paymentDispatch({ type: "CLOSE" });
+                  }}
+                  remainingAmount={remainingAmount}
+                  paymentState={paymentState}
+                  paymentDispatch={paymentDispatch}
+                  onSubmit={handleRecordPayment}
+                  orderNumber={order.orderNumber}
+                  onTriggerClick={handleOpenPayment}
+                />
+              )}
             </div>
           )}
           {fulfillmentStatus === "stock_out" && paymentStatus !== "paid" && (
