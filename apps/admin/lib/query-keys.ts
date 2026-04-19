@@ -32,6 +32,7 @@ const QK = {
   customerDetailRoot: "customer",
   usersRoot: "users",
   suppliersRoot: "suppliers",
+  debtsRoot: "debts",
 } as const;
 
 const INCLUDE_VARIANTS = { include: "variants" as const };
@@ -122,5 +123,10 @@ export const queryKeys = {
   },
   banners: {
     all: ["banners"] as const,
+  },
+  debts: {
+    all: [QK.debtsRoot] as const,
+    list: (search: string, minAgeDays: number | null, page: number, limit: number) =>
+      [QK.debtsRoot, search, minAgeDays, page, limit] as const,
   },
 } as const;

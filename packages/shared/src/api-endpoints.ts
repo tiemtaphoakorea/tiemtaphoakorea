@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
     CATEGORY_DETAIL: (id: string) => `/api/admin/categories/${id}`,
     ORDERS: "/api/admin/orders",
     ORDER_STATS: "/api/admin/orders/stats",
+    DEBTS: "/api/admin/debts",
     USERS: "/api/admin/users",
     CUSTOMERS: "/api/admin/customers",
     SUPPLIERS: "/api/admin/suppliers",

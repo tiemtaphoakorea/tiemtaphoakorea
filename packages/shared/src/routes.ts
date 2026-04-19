@@ -45,6 +45,10 @@ export const ADMIN_ROUTES = {
   CUSTOMERS: "/customers",
   CUSTOMER_DETAIL: (id: string | number) => `/customers/${id}`,
 
+  // Debts
+  DEBTS: "/debts",
+  DEBT_DETAIL: (customerId: string | number) => `/debts/${customerId}`,
+
   // Chat
   CHAT: "/chat",
   CHAT_ROOM: (roomId: string) => `/chat/${roomId}`,

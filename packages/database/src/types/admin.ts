@@ -299,6 +299,16 @@ export interface AdminOrderListItem extends Order {
   })[];
 }
 
+// --- Debt ---
+export interface DebtListItem {
+  customerId: string;
+  unpaidOrders: number;
+  debt: string; // numeric string from SQL sum
+  oldestDebtDate: Date;
+  customerName: string | null;
+  customerPhone: string | null;
+}
+
 // --- Order Details ---
 export interface AdminOrderDetails extends Order {
   customer: {

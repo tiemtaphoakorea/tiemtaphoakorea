@@ -14,6 +14,7 @@ import type {
   DashboardRecentOrder,
   DashboardStats,
   DashboardTopProduct,
+  DebtListItem,
   Expense,
   FinancialStats,
   NewCategory,
@@ -297,6 +298,12 @@ export const adminClient = {
       `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/cancel`,
       data,
     ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async getDebts(params?: { search?: string; minAgeDays?: number; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<DebtListItem>>(API_ENDPOINTS.ADMIN.DEBTS, {
+      params,
+    }) as unknown as Promise<PaginatedResponse<DebtListItem>>;
   },
 
   async recordOrderPayment(

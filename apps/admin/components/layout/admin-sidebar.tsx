@@ -17,6 +17,7 @@ import {
 import {
   BarChart3,
   Building2,
+  CircleDollarSign,
   FolderOpen,
   LayoutDashboard,
   LogOut,
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { icon: Package, label: "Sản phẩm", href: ADMIN_ROUTES.PRODUCTS },
   { icon: FolderOpen, label: "Danh mục", href: ADMIN_ROUTES.CATEGORIES },
   { icon: ShoppingCart, label: "Đơn hàng", href: ADMIN_ROUTES.ORDERS },
+  { icon: CircleDollarSign, label: "Công nợ", href: ADMIN_ROUTES.DEBTS },
   { icon: Truck, label: "Nhập hàng", href: ADMIN_ROUTES.SUPPLIER_ORDERS },
   { icon: Building2, label: "Nhà cung cấp", href: ADMIN_ROUTES.SUPPLIERS },
   { icon: Users, label: "Khách hàng", href: ADMIN_ROUTES.CUSTOMERS },
