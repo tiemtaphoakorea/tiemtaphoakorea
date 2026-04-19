@@ -510,7 +510,7 @@ export async function cancelOrder({
     await tx
       .update(supplierOrders)
       .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: now })
-      .where(ilike(supplierOrders.note, `%${locked.orderNumber}%`));
+      .where(ilike(supplierOrders.note, `%[Order: ${locked.orderNumber}]%`));
 
     return updated;
   });
