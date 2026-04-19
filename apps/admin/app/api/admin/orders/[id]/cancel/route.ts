@@ -3,6 +3,7 @@ import { cancelOrder } from "@workspace/database/services/order.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { beginOrderIdempotency } from "@/lib/order-idempotency";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {
   const user = await getInternalUser(request);
@@ -12,16 +13,27 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
 
   try {
     const body = await request.json().catch(() => ({}));
-    const { note } = body ?? {};
+    const { note, clientToken } = body ?? {};
 
     const { id } = await params;
+
+    const idem = await beginOrderIdempotency({
+      clientToken,
+      orderId: id,
+      action: "cancel",
+      payload: { note },
+    });
+    if ("replay" in idem) return idem.replay;
+
     const updated = await cancelOrder({
       orderId: id,
       userId: user.profile.id,
       note,
     });
 
-    return NextResponse.json({ success: true, order: updated });
+    const response = { success: true, order: updated };
+    await idem.finalize(response);
+    return NextResponse.json(response);
   } catch (error: any) {
     console.error("Failed to cancel order:", error);
     const message = error?.message || "Internal Server Error";
