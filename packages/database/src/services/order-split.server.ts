@@ -163,17 +163,21 @@ async function createSubOrder(
   for (const item of items) {
     const variant = variantMap.get(item.variantId)!;
 
-    if (type === STOCK_TYPE.IN_STOCK) {
-      const availableStock = variant.onHand || 0;
-      const deductQty = item.quantity; // Allow negative stock
-      await tx
-        .update(productVariants)
-        .set({
-          onHand: sql`${productVariants.onHand} - ${deductQty}`,
-        })
-        .where(eq(productVariants.id, variant.id));
-      variant.onHand = availableStock - deductQty;
-    }
+    // Every sub-order (both IN_STOCK and PRE_ORDER) is inserted with
+    // fulfillmentStatus='pending' and progresses through stockOut like any
+    // other order. Reserve stock for all item types so:
+    //   - stockOut symmetrically converts reserved→out without double-counting;
+    //   - the invariant checker holds (reserved == SUM of order_items.quantity
+    //     across pending orders);
+    //   - pre-orders block stockOut until the supplier delivery raises on_hand
+    //     (stockOut checks `on_hand >= quantity` explicitly).
+    await tx
+      .update(productVariants)
+      .set({
+        reserved: sql`${productVariants.reserved} + ${item.quantity}`,
+      })
+      .where(eq(productVariants.id, variant.id));
+    variant.reserved = (variant.reserved ?? 0) + item.quantity;
 
     await tx.insert(orderItems).values({
       orderId: subOrder.id,
