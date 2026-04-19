@@ -11,7 +11,6 @@ import {
 import {
   deliveryPreferenceEnum,
   fulfillmentStatusEnum,
-  orderStatusEnum,
   paymentMethodEnum,
   paymentStatusEnum,
   supplierOrderStatusEnum,
@@ -28,7 +27,6 @@ export const orders = pgTable(
     customerId: uuid("customer_id")
       .notNull()
       .references(() => profiles.id),
-    status: orderStatusEnum("status").default("pending"),
     paymentStatus: paymentStatusEnum("payment_status").notNull().default("unpaid"),
     fulfillmentStatus: fulfillmentStatusEnum("fulfillment_status").notNull().default("pending"),
     stockOutAt: timestamp("stock_out_at"),

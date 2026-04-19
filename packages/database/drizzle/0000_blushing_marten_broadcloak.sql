@@ -1,11 +1,34 @@
 CREATE TYPE "public"."customer_type" AS ENUM('wholesale', 'retail');--> statement-breakpoint
 CREATE TYPE "public"."delivery_preference" AS ENUM('ship_together', 'ship_available_first');--> statement-breakpoint
 CREATE TYPE "public"."expense_type" AS ENUM('fixed', 'variable');--> statement-breakpoint
+CREATE TYPE "public"."fulfillment_status" AS ENUM('pending', 'stock_out', 'completed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."message_type" AS ENUM('text', 'image', 'system');--> statement-breakpoint
-CREATE TYPE "public"."order_status" AS ENUM('pending', 'paid', 'preparing', 'shipping', 'delivered', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."payment_method" AS ENUM('cash', 'bank_transfer', 'card');--> statement-breakpoint
+CREATE TYPE "public"."payment_status" AS ENUM('unpaid', 'partial', 'paid');--> statement-breakpoint
 CREATE TYPE "public"."supplier_order_status" AS ENUM('pending', 'ordered', 'received', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('owner', 'admin', 'manager', 'staff', 'customer');--> statement-breakpoint
+CREATE TABLE "banners" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"type" varchar(20) DEFAULT 'custom' NOT NULL,
+	"category_id" uuid,
+	"image_url" text,
+	"title" varchar(200),
+	"subtitle" text,
+	"badge_text" varchar(100),
+	"cta_label" varchar(100),
+	"cta_url" text,
+	"cta_secondary_label" varchar(100),
+	"discount_tag" varchar(50),
+	"discount_tag_sub" varchar(100),
+	"accent_color" varchar(50),
+	"is_active" boolean DEFAULT true NOT NULL,
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"starts_at" timestamp,
+	"ends_at" timestamp,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(255) NOT NULL,
@@ -14,6 +37,7 @@ CREATE TABLE "categories" (
 	"parent_id" uuid,
 	"display_order" integer DEFAULT 0,
 	"is_active" boolean DEFAULT true,
+	"show_in_nav" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "categories_slug_unique" UNIQUE("slug")
@@ -94,7 +118,8 @@ CREATE TABLE "order_items" (
 CREATE TABLE "order_status_history" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid NOT NULL,
-	"status" "order_status" NOT NULL,
+	"payment_status" "payment_status" NOT NULL,
+	"fulfillment_status" "fulfillment_status" NOT NULL,
 	"note" text,
 	"created_by" uuid,
 	"created_at" timestamp DEFAULT now()
@@ -104,7 +129,10 @@ CREATE TABLE "orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_number" varchar(50) NOT NULL,
 	"customer_id" uuid NOT NULL,
-	"status" "order_status" DEFAULT 'pending',
+	"payment_status" "payment_status" DEFAULT 'unpaid' NOT NULL,
+	"fulfillment_status" "fulfillment_status" DEFAULT 'pending' NOT NULL,
+	"stock_out_at" timestamp,
+	"completed_at" timestamp,
 	"parent_order_id" uuid,
 	"split_type" varchar(20),
 	"delivery_preference" "delivery_preference" DEFAULT 'ship_together',
@@ -173,7 +201,8 @@ CREATE TABLE "product_variants" (
 	"name" varchar(255) NOT NULL,
 	"price" numeric(15, 2) DEFAULT '0' NOT NULL,
 	"cost_price" numeric(15, 2) DEFAULT '0',
-	"stock_quantity" integer DEFAULT 0,
+	"on_hand" integer DEFAULT 0 NOT NULL,
+	"reserved" integer DEFAULT 0 NOT NULL,
 	"low_stock_threshold" integer DEFAULT 5,
 	"is_active" boolean DEFAULT true,
 	"created_at" timestamp DEFAULT now(),
@@ -189,6 +218,7 @@ CREATE TABLE "products" (
 	"category_id" uuid,
 	"base_price" numeric(15, 2) DEFAULT '0',
 	"is_active" boolean DEFAULT true,
+	"is_featured" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "products_slug_unique" UNIQUE("slug")
@@ -260,6 +290,7 @@ CREATE TABLE "suppliers" (
 	CONSTRAINT "suppliers_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
+ALTER TABLE "banners" ADD CONSTRAINT "banners_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_id_categories_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_room_id_chat_rooms_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."chat_rooms"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_sender_id_profiles_id_fk" FOREIGN KEY ("sender_id") REFERENCES "public"."profiles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -297,10 +328,12 @@ CREATE INDEX "idx_order_items_order" ON "order_items" USING btree ("order_id");-
 CREATE INDEX "idx_order_items_variant" ON "order_items" USING btree ("variant_id");--> statement-breakpoint
 CREATE INDEX "idx_status_history_order" ON "order_status_history" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_orders_customer" ON "orders" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_orders_status" ON "orders" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "idx_orders_number" ON "orders" USING btree ("order_number");--> statement-breakpoint
 CREATE INDEX "idx_orders_created" ON "orders" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "idx_orders_parent" ON "orders" USING btree ("parent_order_id");--> statement-breakpoint
+CREATE INDEX "idx_orders_payment_status" ON "orders" USING btree ("payment_status");--> statement-breakpoint
+CREATE INDEX "idx_orders_fulfillment_status" ON "orders" USING btree ("fulfillment_status");--> statement-breakpoint
+CREATE INDEX "idx_orders_stock_out_at" ON "orders" USING btree ("stock_out_at");--> statement-breakpoint
 CREATE INDEX "idx_payments_order" ON "payments" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_payments_method" ON "payments" USING btree ("method");--> statement-breakpoint
 CREATE INDEX "idx_supplier_orders_supplier" ON "supplier_orders" USING btree ("supplier_id");--> statement-breakpoint
@@ -312,6 +345,7 @@ CREATE INDEX "idx_variants_product" ON "product_variants" USING btree ("product_
 CREATE INDEX "idx_variants_sku" ON "product_variants" USING btree ("sku");--> statement-breakpoint
 CREATE INDEX "idx_products_category" ON "products" USING btree ("category_id");--> statement-breakpoint
 CREATE INDEX "idx_products_slug" ON "products" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "idx_products_featured" ON "products" USING btree ("is_featured");--> statement-breakpoint
 CREATE INDEX "idx_variant_images_variant" ON "variant_images" USING btree ("variant_id");--> statement-breakpoint
 CREATE INDEX "idx_profiles_customer_code" ON "profiles" USING btree ("customer_code");--> statement-breakpoint
 CREATE INDEX "idx_profiles_role" ON "profiles" USING btree ("role");--> statement-breakpoint
