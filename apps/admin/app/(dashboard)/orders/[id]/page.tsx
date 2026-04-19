@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ProductWithVariants } from "@workspace/database/types/api";
-import { ORDER_STATUS } from "@workspace/shared/constants";
+import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
 import { formatCurrency, formatDate, formatVariantDisplayName } from "@workspace/shared/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
@@ -17,6 +17,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { NumberInput } from "@workspace/ui/components/number-input";
@@ -35,10 +41,13 @@ import { useToast } from "@workspace/ui/components/use-toast";
 import {
   AlertCircle,
   Banknote,
-  CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   Clock,
+  Copy,
   Edit2,
+  FileImage,
+  FileText,
   Loader2,
   MapPin,
   Package,
@@ -46,10 +55,8 @@ import {
   Printer,
   ShoppingBag,
   Trash2,
-  Truck,
   User,
   Wallet,
-  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -57,67 +64,10 @@ import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { ProductSelector } from "@/components/admin/orders/create/product-selector";
-import { printInvoice } from "@/lib/print-invoice";
+import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
+import { copyInvoiceImage, exportInvoiceImage, printInvoice } from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-
-type OrderStatusValue = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
-
-/** Khai báo trạng thái đơn hàng: nhãn hiển thị, màu, icon */
-const ORDER_STATUSES: Record<
-  OrderStatusValue,
-  { label: string; color: string; icon: typeof Clock }
-> = {
-  [ORDER_STATUS.PENDING]: {
-    label: "Chờ xử lý",
-    color: "bg-amber-50 text-amber-600 border-amber-100",
-    icon: Clock,
-  },
-  [ORDER_STATUS.PAID]: {
-    label: "Đã thanh toán",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    icon: CheckCircle2,
-  },
-  [ORDER_STATUS.PREPARING]: {
-    label: "Đang đóng gói",
-    color: "bg-blue-50 text-blue-600 border-blue-100",
-    icon: Package,
-  },
-  [ORDER_STATUS.SHIPPING]: {
-    label: "Đang giao hàng",
-    color: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    icon: Truck,
-  },
-  [ORDER_STATUS.DELIVERED]: {
-    label: "Giao thành công",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    icon: CheckCircle2,
-  },
-  [ORDER_STATUS.CANCELLED]: {
-    label: "Đã hủy",
-    color: "bg-red-50 text-red-600 border-red-100",
-    icon: XCircle,
-  },
-};
-
-/** Khai báo nút hành động hiển thị tại mỗi trạng thái: chuyển sang trạng thái nào + nhãn nút (hành động) */
-const ORDER_STATUS_ACTIONS: Record<
-  OrderStatusValue,
-  Array<{ nextStatus: OrderStatusValue; actionLabel: string }>
-> = {
-  [ORDER_STATUS.PENDING]: [{ nextStatus: ORDER_STATUS.CANCELLED, actionLabel: "Hủy đơn" }],
-  [ORDER_STATUS.PAID]: [{ nextStatus: ORDER_STATUS.DELIVERED, actionLabel: "Đánh dấu đã giao" }],
-  [ORDER_STATUS.PREPARING]: [
-    { nextStatus: ORDER_STATUS.DELIVERED, actionLabel: "Đánh dấu đã giao" },
-    { nextStatus: ORDER_STATUS.CANCELLED, actionLabel: "Hủy đơn" },
-  ],
-  [ORDER_STATUS.SHIPPING]: [
-    { nextStatus: ORDER_STATUS.DELIVERED, actionLabel: "Đánh dấu đã giao" },
-    { nextStatus: ORDER_STATUS.CANCELLED, actionLabel: "Hủy đơn" },
-  ],
-  [ORDER_STATUS.DELIVERED]: [],
-  [ORDER_STATUS.CANCELLED]: [],
-};
 
 // ---------------------------------------------------------------------------
 // Edit reducer
@@ -397,13 +347,16 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   const remainingAmount = Math.max(0, Number(order.total) - Number(order.paidAmount || 0));
 
-  const status: OrderStatusValue = (order.status as OrderStatusValue) || ORDER_STATUS.PENDING;
-  const statusConfig = ORDER_STATUSES[status] ?? ORDER_STATUSES[ORDER_STATUS.PENDING];
-  const statusActions = ORDER_STATUS_ACTIONS[status] ?? [];
-  const isTerminal = statusActions.length === 0;
-  const canDelete = status === ORDER_STATUS.CANCELLED;
+  const paymentStatus = order.paymentStatus as PaymentStatusValue;
+  const fulfillmentStatus = order.fulfillmentStatus as FulfillmentStatusValue;
+  const paymentBadge = PAYMENT_BADGE[paymentStatus];
+  const fulfillmentBadge = FULFILLMENT_BADGE[fulfillmentStatus];
+  const isTerminal = fulfillmentStatus === "completed" || fulfillmentStatus === "cancelled";
+  const canDelete = fulfillmentStatus === "cancelled";
   const canEditItems =
-    status === ORDER_STATUS.PENDING && !order.parentOrderId && !(order.subOrders?.length > 0);
+    fulfillmentStatus === "pending" &&
+    !order.parentOrderId &&
+    !((order.subOrders?.length ?? 0) > 0);
 
   // Handlers
   const handleOpenPayment = () => {
@@ -436,29 +389,40 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: string) => {
-    if (
-      confirm(`Bạn có chắc chắn muốn chuyển trạng thái sang "${ORDER_STATUSES[newStatus].label}"?`)
-    ) {
-      try {
-        await adminClient.updateOrderStatus(order.id, {
-          status: newStatus,
-          note: note,
-        });
-        toast({
-          title: "Thành công",
-          description: "Cập nhật trạng thái thành công",
-        });
-        setNote("");
-        await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
-      } catch (err: any) {
-        const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-        toast({
-          title: "Lỗi",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+  const handleStockOut = async () => {
+    try {
+      await adminClient.stockOutOrder(order.id, { note: note || undefined });
+      toast({ title: "Thành công", description: "Đã xuất kho đơn hàng." });
+      setNote("");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
+      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      await adminClient.completeOrder(order.id, { note: note || undefined });
+      toast({ title: "Thành công", description: "Đã hoàn tất đơn hàng." });
+      setNote("");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
+      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
+    try {
+      await adminClient.cancelOrder(order.id, { note: note || undefined });
+      toast({ title: "Thành công", description: "Đã hủy đơn hàng." });
+      setNote("");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
+      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
     }
   };
 
@@ -574,16 +538,24 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </Link>
           </Button>
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                 #{order.orderNumber}
               </h1>
-              <Badge
-                className={`${statusConfig.color} border px-2 py-1 text-xs font-black uppercase`}
-              >
-                <statusConfig.icon className="mr-1 h-3 w-3" />
-                {statusConfig.label}
-              </Badge>
+              {paymentBadge && (
+                <Badge
+                  className={`${paymentBadge.className} border px-2 py-1 text-xs font-black uppercase`}
+                >
+                  {paymentBadge.label}
+                </Badge>
+              )}
+              {fulfillmentBadge && (
+                <Badge
+                  className={`${fulfillmentBadge.className} border px-2 py-1 text-xs font-black uppercase`}
+                >
+                  {fulfillmentBadge.label}
+                </Badge>
+              )}
             </div>
             <p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-500">
               <Clock className="h-3 w-3" /> Tạo lúc: {formatDate(order.createdAt)}
@@ -591,38 +563,126 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="gap-2 font-bold"
-            onClick={() =>
-              printInvoice({
-                orderNumber: order.orderNumber,
-                createdAt: order.createdAt ?? new Date(),
-                customer: {
-                  fullName: order.customer?.fullName ?? "Khách lẻ",
-                  phone: order.customer?.phone,
-                  address: order.customer?.address,
-                },
-                items: order.items.map((item: any) => ({
-                  productName: item.productName,
-                  variantName: item.variantName,
-                  sku: item.sku,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  lineTotal: item.lineTotal,
-                })),
-                subtotal: order.subtotal ?? 0,
-                discount: order.discount,
-                total: order.total ?? 0,
-                paidAmount: order.paidAmount,
-                adminNote: order.adminNote,
-              })
-            }
-          >
-            <Printer className="h-4 w-4" /> In hóa đơn
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 font-bold">
+                <Printer className="h-4 w-4" /> Xuất hóa đơn <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() =>
+                  copyInvoiceImage({
+                    orderNumber: order.orderNumber,
+                    createdAt: order.createdAt ?? new Date(),
+                    customer: {
+                      fullName: order.customer?.fullName ?? "Khách lẻ",
+                      phone: order.customer?.phone,
+                      address: order.customer?.address,
+                    },
+                    items: order.items.map((item: any) => ({
+                      productName: item.productName,
+                      variantName: item.variantName,
+                      sku: item.sku,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice,
+                      lineTotal: item.lineTotal,
+                    })),
+                    subtotal: order.subtotal ?? 0,
+                    discount: order.discount,
+                    total: order.total ?? 0,
+                    paidAmount: order.paidAmount,
+                    adminNote: order.adminNote,
+                  })
+                }
+              >
+                <Copy className="mr-2 h-4 w-4" /> Sao chép
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  exportInvoiceImage({
+                    orderNumber: order.orderNumber,
+                    createdAt: order.createdAt ?? new Date(),
+                    customer: {
+                      fullName: order.customer?.fullName ?? "Khách lẻ",
+                      phone: order.customer?.phone,
+                      address: order.customer?.address,
+                    },
+                    items: order.items.map((item: any) => ({
+                      productName: item.productName,
+                      variantName: item.variantName,
+                      sku: item.sku,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice,
+                      lineTotal: item.lineTotal,
+                    })),
+                    subtotal: order.subtotal ?? 0,
+                    discount: order.discount,
+                    total: order.total ?? 0,
+                    paidAmount: order.paidAmount,
+                    adminNote: order.adminNote,
+                  })
+                }
+              >
+                <FileImage className="mr-2 h-4 w-4" /> Xuất file ảnh
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  printInvoice({
+                    orderNumber: order.orderNumber,
+                    createdAt: order.createdAt ?? new Date(),
+                    customer: {
+                      fullName: order.customer?.fullName ?? "Khách lẻ",
+                      phone: order.customer?.phone,
+                      address: order.customer?.address,
+                    },
+                    items: order.items.map((item: any) => ({
+                      productName: item.productName,
+                      variantName: item.variantName,
+                      sku: item.sku,
+                      quantity: item.quantity,
+                      unitPrice: item.unitPrice,
+                      lineTotal: item.lineTotal,
+                    })),
+                    subtotal: order.subtotal ?? 0,
+                    discount: order.discount,
+                    total: order.total ?? 0,
+                    paidAmount: order.paidAmount,
+                    adminNote: order.adminNote,
+                  })
+                }
+              >
+                <FileText className="mr-2 h-4 w-4" /> Xuất file PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {status !== ORDER_STATUS.PAID && (
+          {fulfillmentStatus === "pending" && (
+            <div className="flex items-center gap-2">
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg"
+                onClick={handleStockOut}
+              >
+                Xuất kho
+              </Button>
+              <Button variant="destructive" className="font-bold shadow-lg" onClick={handleCancel}>
+                Hủy đơn
+              </Button>
+              <PaymentDialog
+                open={paymentState.isOpen}
+                onOpenChange={(open) => {
+                  if (!open) paymentDispatch({ type: "CLOSE" });
+                }}
+                remainingAmount={remainingAmount}
+                paymentState={paymentState}
+                paymentDispatch={paymentDispatch}
+                onSubmit={handleRecordPayment}
+                orderNumber={order.orderNumber}
+                onTriggerClick={handleOpenPayment}
+              />
+            </div>
+          )}
+          {fulfillmentStatus === "stock_out" && paymentStatus !== "paid" && (
             <PaymentDialog
               open={paymentState.isOpen}
               onOpenChange={(open) => {
@@ -636,24 +696,13 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               onTriggerClick={handleOpenPayment}
             />
           )}
-          {/* Status Actions */}
-          {!isTerminal && statusActions.length > 0 && (
-            <div className="flex items-center gap-2">
-              {statusActions.map((action) => (
-                <Button
-                  key={action.nextStatus}
-                  variant={action.nextStatus === ORDER_STATUS.CANCELLED ? "destructive" : "default"}
-                  className={`font-bold shadow-lg ${
-                    action.nextStatus !== ORDER_STATUS.CANCELLED
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : ""
-                  }`}
-                  onClick={() => handleStatusUpdate(action.nextStatus)}
-                >
-                  {action.actionLabel}
-                </Button>
-              ))}
-            </div>
+          {fulfillmentStatus === "stock_out" && paymentStatus === "paid" && (
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg"
+              onClick={handleComplete}
+            >
+              Hoàn tất đơn
+            </Button>
           )}
         </div>
       </div>
@@ -727,17 +776,20 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </div>
                       </div>
                     </div>
-                    <div>
-                      {ORDER_STATUSES[sub.status] ? (
+                    <div className="flex flex-col items-end gap-1">
+                      {PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue] && (
                         <Badge
-                          className={`${
-                            ORDER_STATUSES[sub.status].color
-                          } border px-2 py-1 text-[10px] font-bold uppercase`}
+                          className={`${PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue].className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
                         >
-                          {ORDER_STATUSES[sub.status].label}
+                          {PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue].label}
                         </Badge>
-                      ) : (
-                        <Badge variant="secondary">{sub.status}</Badge>
+                      )}
+                      {FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue] && (
+                        <Badge
+                          className={`${FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue].className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                        >
+                          {FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue].label}
+                        </Badge>
                       )}
                     </div>
                   </div>
@@ -994,7 +1046,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </label>
                 <p className="mb-3 -mt-1 text-xs font-medium italic text-slate-400">
                   * Ghi chú này sẽ được lưu vào lịch sử khi bạn nhấn một trong các nút cập nhật
-                  trạng thái ở trên (ví dụ: "Giao thành công", "Hủy đơn").
+                  trạng thái ở trên (ví dụ: "Xuất kho", "Hoàn tất đơn", "Hủy đơn").
                 </p>
                 <div className="flex gap-4">
                   <input
@@ -1017,39 +1069,45 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="relative ml-6 space-y-8 border-l-2 border-slate-100 py-2 pl-6 dark:border-slate-800">
-              {order.statusHistory.map((history: any) => (
-                <div key={history.id} className="relative">
-                  <div
-                    className={`absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white dark:border-slate-950 ${
-                      ORDER_STATUSES[history.status]
-                        ? ORDER_STATUSES[history.status].color.split(" ")[0]
-                        : "bg-slate-500"
-                    } ${
-                      ORDER_STATUSES[history.status]
-                        ? ORDER_STATUSES[history.status].color.split(" ")[1]
-                        : "text-slate-500"
-                    }`}
-                  ></div>
-                  <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
-                      {ORDER_STATUSES[history.status]
-                        ? ORDER_STATUSES[history.status].label
-                        : history.status}
-                      <span className="ml-auto font-mono text-[10px] font-normal text-slate-400">
-                        {formatDate(history.createdAt)}
+              {order.statusHistory.map((history: any) => {
+                const historyPayment = PAYMENT_BADGE[history.paymentStatus as PaymentStatusValue];
+                const historyFulfillment =
+                  FULFILLMENT_BADGE[history.fulfillmentStatus as FulfillmentStatusValue];
+                return (
+                  <div key={history.id} className="relative">
+                    <div className="absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white bg-slate-400 dark:border-slate-950"></div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {historyPayment && (
+                          <Badge
+                            className={`${historyPayment.className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                          >
+                            {historyPayment.label}
+                          </Badge>
+                        )}
+                        {historyFulfillment && (
+                          <Badge
+                            className={`${historyFulfillment.className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                          >
+                            {historyFulfillment.label}
+                          </Badge>
+                        )}
+                        <span className="ml-auto font-mono text-[10px] font-normal text-slate-400">
+                          {formatDate(history.createdAt)}
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-500">
+                        Cập nhật bởi: {history.creator?.fullName || "Admin"}
                       </span>
-                    </span>
-                    <span className="text-xs font-medium text-slate-500">
-                      Cập nhật bởi: {history.creator?.fullName || "Admin"}
-                    </span>
-                    {history.note && (
-                      <p className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600 italic dark:bg-slate-900 dark:text-slate-400">
-                        "{history.note}"
-                      </p>
-                    )}
+                      {history.note && (
+                        <p className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600 italic dark:bg-slate-900 dark:text-slate-400">
+                          "{history.note}"
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>

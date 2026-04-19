@@ -326,7 +326,8 @@ export interface AdminOrderDetails extends Order {
   }[];
   statusHistory: {
     id: string;
-    status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
     createdAt: Date;
     note: string | null;
     creator: {
@@ -342,7 +343,8 @@ export interface AdminOrderDetails extends Order {
     orderNumber: string;
     splitType: string | null;
     total: string;
-    status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
   }[];
 }
 

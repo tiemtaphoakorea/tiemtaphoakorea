@@ -262,18 +262,6 @@ describe("admin.client", () => {
       await expect(adminClient.getOrders({})).rejects.toThrow("Network Error");
     });
 
-    it("should update order status", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      const data = { status: "paid", note: "Paid in full" };
-
-      await adminClient.updateOrderStatus("ord-1", data);
-
-      expect(axiosMock.patch).toHaveBeenCalledWith(
-        `${API_ENDPOINTS.ADMIN.ORDERS}/ord-1/status`,
-        data,
-      );
-    });
-
     it("should record order payment", async () => {
       const { adminClient } = await import("@/services/admin.client");
       const data = {
