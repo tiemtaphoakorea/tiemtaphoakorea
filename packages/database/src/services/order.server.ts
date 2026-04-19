@@ -3,11 +3,12 @@ import {
   DELIVERY_PREFERENCE,
   ERROR_MESSAGE,
   FULFILLMENT_STATUS,
+  type FulfillmentStatusValue,
   ORDER_CODE_PREFIX,
   ORDER_STATUS,
-  ORDER_STATUS_ALL,
   type PAYMENT_METHOD,
   PAYMENT_STATUS,
+  type PaymentStatusValue,
   ROLE,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
@@ -520,16 +521,20 @@ import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/paginat
 
 export async function getOrders({
   search = "",
-  status = ORDER_STATUS_ALL,
+  paymentStatus,
+  fulfillmentStatus,
   customerId,
   page = PAGINATION_DEFAULT.PAGE,
   limit = PAGINATION_DEFAULT.LIMIT,
+  debtOnly,
 }: {
   search?: string;
-  status?: string;
+  paymentStatus?: PaymentStatusValue;
+  fulfillmentStatus?: FulfillmentStatusValue;
   customerId?: string;
   page?: number;
   limit?: number;
+  debtOnly?: boolean;
 } = {}) {
   const offset = (page - 1) * limit;
   const whereConditions: SQL[] = [];
@@ -544,13 +549,17 @@ export async function getOrders({
     );
   }
 
-  if (status !== ORDER_STATUS_ALL) {
-    whereConditions.push(
-      eq(
-        orders.status,
-        status as "pending" | "paid" | "preparing" | "shipping" | "delivered" | "cancelled",
-      )!,
-    );
+  if (paymentStatus) {
+    whereConditions.push(eq(orders.paymentStatus, paymentStatus)!);
+  }
+
+  if (fulfillmentStatus) {
+    whereConditions.push(eq(orders.fulfillmentStatus, fulfillmentStatus)!);
+  }
+
+  if (debtOnly) {
+    whereConditions.push(eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.STOCK_OUT)!);
+    whereConditions.push(sql`${orders.paymentStatus} != ${PAYMENT_STATUS.PAID}`);
   }
 
   if (customerId) {
@@ -573,8 +582,10 @@ export async function getOrders({
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
-      status: orders.status,
+      paymentStatus: orders.paymentStatus,
+      fulfillmentStatus: orders.fulfillmentStatus,
       total: orders.total,
+      paidAmount: orders.paidAmount,
       createdAt: orders.createdAt,
       paidAt: orders.paidAt,
       // Select flat fields to avoid Drizzle nesting issue with groupBy
@@ -595,8 +606,10 @@ export async function getOrders({
   const results = rawResults.map((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
-    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentStatus: order.fulfillmentStatus,
     total: order.total,
+    paidAmount: order.paidAmount,
     createdAt: order.createdAt,
     paidAt: order.paidAt,
     customer: {

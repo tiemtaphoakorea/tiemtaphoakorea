@@ -98,8 +98,15 @@ export const queryKeys = {
     list: (searchTerm: string) => [QK.categoriesRoot, searchTerm] as const,
   },
   orders: {
-    list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
-      [QK.ordersRoot, searchTerm, statusFilter, page, limit] as const,
+    list: (
+      searchTerm: string,
+      paymentStatus: string,
+      fulfillmentStatus: string,
+      debtOnly: boolean,
+      page: number,
+      limit: number,
+    ) =>
+      [QK.ordersRoot, searchTerm, paymentStatus, fulfillmentStatus, debtOnly, page, limit] as const,
     stats: [QK.ordersRoot, QK.orderStatsLeaf] as const,
   },
   order: (id: string) => [QK.orderDetailRoot, id] as const,

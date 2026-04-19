@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/db.server";
-import { ORDER_STATUS } from "@/lib/constants";
 import {
   createOrder,
   deleteOrder,
@@ -236,14 +235,14 @@ describe("getOrders", () => {
     expect(totalMock.where).toHaveBeenCalled();
   });
 
-  it("should apply status filter when not All", async () => {
+  it("should apply paymentStatus filter when provided", async () => {
     const totalMock = createSelectMock([{ count: 0 }]);
     const listMock = createSelectMock([]);
     (db.select as any)
       .mockImplementationOnce(() => totalMock)
       .mockImplementationOnce(() => listMock);
 
-    await getOrders({ status: ORDER_STATUS.PENDING });
+    await getOrders({ paymentStatus: "unpaid" });
     expect(totalMock.where).toHaveBeenCalled();
   });
 
@@ -252,8 +251,10 @@ describe("getOrders", () => {
       {
         id: "order-1",
         orderNumber: "ORD-001",
-        status: "pending",
+        paymentStatus: "unpaid",
+        fulfillmentStatus: "pending",
         total: "100000",
+        paidAmount: "0",
         createdAt: new Date(),
         paidAt: null,
         customerId: "cust-1",

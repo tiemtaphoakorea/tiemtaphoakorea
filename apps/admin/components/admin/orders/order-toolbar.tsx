@@ -1,3 +1,4 @@
+import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
 import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
@@ -8,22 +9,32 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { ChevronDown, Filter, Search } from "lucide-react";
+import { AlertCircle, ChevronDown, Filter, Search } from "lucide-react";
 
 interface OrderToolbarProps {
   searchTerm: string;
   onSearchChange: (val: string) => void;
-  statusFilter: string;
-  onStatusChange: (val: string) => void;
-  statusConfig: Record<string, { label: string }>;
+  paymentStatus: string;
+  onPaymentStatusChange: (val: string) => void;
+  fulfillmentStatus: string;
+  onFulfillmentStatusChange: (val: string) => void;
+  debtOnly: boolean;
+  onDebtOnlyToggle: () => void;
+  paymentBadge: Record<PaymentStatusValue, { label: string; className: string }>;
+  fulfillmentBadge: Record<FulfillmentStatusValue, { label: string; className: string }>;
 }
 
 export function OrderToolbar({
   searchTerm,
   onSearchChange,
-  statusFilter,
-  onStatusChange,
-  statusConfig,
+  paymentStatus,
+  onPaymentStatusChange,
+  fulfillmentStatus,
+  onFulfillmentStatusChange,
+  debtOnly,
+  onDebtOnlyToggle,
+  paymentBadge,
+  fulfillmentBadge,
 }: OrderToolbarProps) {
   return (
     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -36,30 +47,64 @@ export function OrderToolbar({
           className="pl-9"
         />
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="h-10 gap-2 font-bold">
               <Filter className="h-4 w-4" />
-              {statusFilter === "All"
-                ? "Tất cả trạng thái"
-                : statusConfig[statusFilter]?.label || statusFilter}
+              {paymentStatus === "All"
+                ? "Tất cả thanh toán"
+                : paymentBadge[paymentStatus as PaymentStatusValue]?.label || paymentStatus}
               <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 font-bold">
-            <DropdownMenuLabel>Lọc theo trạng thái</DropdownMenuLabel>
+            <DropdownMenuLabel>Lọc theo thanh toán</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onStatusChange("All")}>
-              Tất cả trạng thái
+            <DropdownMenuItem onClick={() => onPaymentStatusChange("All")}>Tất cả</DropdownMenuItem>
+            {(Object.entries(paymentBadge) as [PaymentStatusValue, { label: string }][]).map(
+              ([key, config]) => (
+                <DropdownMenuItem key={key} onClick={() => onPaymentStatusChange(key)}>
+                  {config.label}
+                </DropdownMenuItem>
+              ),
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="h-10 gap-2 font-bold">
+              <Filter className="h-4 w-4" />
+              {fulfillmentStatus === "All"
+                ? "Tất cả xử lý"
+                : fulfillmentBadge[fulfillmentStatus as FulfillmentStatusValue]?.label ||
+                  fulfillmentStatus}
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 font-bold">
+            <DropdownMenuLabel>Lọc theo xử lý</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onFulfillmentStatusChange("All")}>
+              Tất cả
             </DropdownMenuItem>
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <DropdownMenuItem key={key} onClick={() => onStatusChange(key)}>
+            {(
+              Object.entries(fulfillmentBadge) as [FulfillmentStatusValue, { label: string }][]
+            ).map(([key, config]) => (
+              <DropdownMenuItem key={key} onClick={() => onFulfillmentStatusChange(key)}>
                 {config.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          variant={debtOnly ? "default" : "outline"}
+          className="h-10 gap-2 font-bold"
+          onClick={onDebtOnlyToggle}
+        >
+          <AlertCircle className="h-4 w-4 text-red-500" />
+          Công nợ
+        </Button>
       </div>
     </div>
   );

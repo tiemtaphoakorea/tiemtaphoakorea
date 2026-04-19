@@ -5,6 +5,7 @@ import {
   storeIdempotencyKey,
 } from "@workspace/database/lib/idempotency";
 import { createOrder, getOrders } from "@workspace/database/services/order.server";
+import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
-  const status = searchParams.get("status") || "All";
+  const paymentStatus = searchParams.get("paymentStatus") || undefined;
+  const fulfillmentStatus = searchParams.get("fulfillmentStatus") || undefined;
+  const debtOnly = searchParams.get("debtOnly") === "true";
   const customerId = searchParams.get("customerId") || undefined;
   const rawPage = parseInt(searchParams.get("page") || "1", 10);
   const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
@@ -24,7 +27,15 @@ export async function GET(request: Request) {
   const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
 
   try {
-    const result = await getOrders({ search, status, customerId, page, limit });
+    const result = await getOrders({
+      search,
+      paymentStatus: paymentStatus as PaymentStatusValue | undefined,
+      fulfillmentStatus: fulfillmentStatus as FulfillmentStatusValue | undefined,
+      debtOnly,
+      customerId,
+      page,
+      limit,
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch orders:", error);

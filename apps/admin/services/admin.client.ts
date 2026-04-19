@@ -32,7 +32,11 @@ import type {
 import type { Order } from "@workspace/database/types/order";
 import { axios } from "@workspace/shared/api-client";
 import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
-import { ADMIN_STATS_SECTION } from "@workspace/shared/constants";
+import {
+  ADMIN_STATS_SECTION,
+  type FulfillmentStatusValue,
+  type PaymentStatusValue,
+} from "@workspace/shared/constants";
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
@@ -214,7 +218,15 @@ export const adminClient = {
     ) as unknown as Promise<{ success: boolean; order: Order }>;
   },
 
-  async getOrders(params?: { search?: string; status?: string; page?: number; limit?: number }) {
+  async getOrders(params?: {
+    search?: string;
+    paymentStatus?: PaymentStatusValue;
+    fulfillmentStatus?: FulfillmentStatusValue;
+    customerId?: string;
+    debtOnly?: boolean;
+    page?: number;
+    limit?: number;
+  }) {
     return axios.get<PaginatedResponse<Order>>(API_ENDPOINTS.ADMIN.ORDERS, {
       params,
     }) as unknown as Promise<PaginatedResponse<Order>>;

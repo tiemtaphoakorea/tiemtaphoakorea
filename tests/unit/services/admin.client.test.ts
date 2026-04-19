@@ -216,13 +216,13 @@ describe("admin.client", () => {
 
       await adminClient.getOrders({
         search: "ORD-1",
-        status: "pending",
+        paymentStatus: "unpaid",
         page: 1,
         limit: 20,
       });
 
       expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.ORDERS, {
-        params: { search: "ORD-1", status: "pending", page: 1, limit: 20 },
+        params: { search: "ORD-1", paymentStatus: "unpaid", page: 1, limit: 20 },
       });
     });
 
