@@ -596,117 +596,12 @@ describe("deleteOrder", () => {
 });
 
 describe("recordPayment", () => {
-  const createMockTx = () => {
-    const tx: any = {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn(),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      returning: vi.fn().mockReturnThis(),
-    };
-    tx.where.mockReturnValue(tx);
-    return tx;
-  };
-
-  let mockTx: ReturnType<typeof createMockTx>;
-
+  // Order-status/DB shape behavior is covered by the integration suite in
+  // tests/unit/services/order.recordPayment.test.ts (real PGlite). The cases
+  // below only exercise the input-validation short-circuit, which runs before
+  // any DB access.
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTx = createMockTx();
-    (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
-
-    // Mock db.select for pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn(),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-  });
-
-  it("should record payment and update paidAmount", async () => {
-    // Mock pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "200", status: "pending" },
-    ]);
-    mockTx.returning.mockResolvedValueOnce([{ id: "order-1", paidAmount: "500" }]);
-
-    const result = await recordPayment({
-      orderId: "order-1",
-      amount: 300,
-      method: "cash" as any,
-      userId: "admin-1",
-    });
-
-    expect(result.success).toBe(true);
-    expect(mockTx.insert).toHaveBeenCalled();
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        paidAmount: "500",
-      }),
-    );
-  });
-
-  it("should auto-mark as paid when fully paid", async () => {
-    // Mock pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "700", status: "pending" },
-    ]);
-    mockTx.returning.mockResolvedValueOnce([{ id: "order-1", paidAmount: "1000", status: "paid" }]);
-
-    await recordPayment({
-      orderId: "order-1",
-      amount: 300,
-      method: "bank_transfer" as any,
-      userId: "admin-1",
-    });
-
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        paidAmount: "1000",
-        status: "paid",
-        paidAt: expect.any(Date),
-      }),
-    );
-    expect(mockTx.insert).toHaveBeenCalledTimes(2);
-  });
-
-  it("should throw error if order not found", async () => {
-    // Mock pre-transaction check - order not found
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    await expect(
-      recordPayment({
-        orderId: "missing",
-        amount: 100,
-        method: "cash" as any,
-        userId: "admin-1",
-      }),
-    ).rejects.toThrow("Order not found");
   });
 
   it("should throw INVALID_PAYMENT_AMOUNT for amount = 0", async () => {
@@ -740,31 +635,6 @@ describe("recordPayment", () => {
         userId: "admin-1",
       }),
     ).rejects.toThrow("INVALID_PAYMENT_AMOUNT");
-  });
-
-  it("should throw OVERPAYMENT_NOT_ALLOWED when payment exceeds remaining balance", async () => {
-    // Mock pre-transaction check - order found
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query - order with 800 paid of 1000 total
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "800", status: "pending" },
-    ]);
-
-    // 800 + 300 = 1100 > 1000 → should throw OVERPAYMENT_NOT_ALLOWED
-    await expect(
-      recordPayment({
-        orderId: "order-1",
-        amount: 300,
-        method: "cash" as any,
-        userId: "admin-1",
-      }),
-    ).rejects.toThrow("OVERPAYMENT_NOT_ALLOWED");
   });
 });
 

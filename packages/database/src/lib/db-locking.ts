@@ -79,6 +79,10 @@ export async function lockOrderForUpdate(
   total: string | null;
   paidAmount: string | null;
   customerId: string;
+  paidAt: Date | null;
+  stockOutAt: Date | null;
+  completedAt: Date | null;
+  cancelledAt: Date | null;
 } | null> {
   const [order] = await tx
     .select({
@@ -89,6 +93,10 @@ export async function lockOrderForUpdate(
       total: orders.total,
       paidAmount: orders.paidAmount,
       customerId: orders.customerId,
+      paidAt: orders.paidAt,
+      stockOutAt: orders.stockOutAt,
+      completedAt: orders.completedAt,
+      cancelledAt: orders.cancelledAt,
     })
     .from(orders)
     .where(eq(orders.id, orderId))

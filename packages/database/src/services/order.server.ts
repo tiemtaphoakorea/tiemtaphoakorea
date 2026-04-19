@@ -923,78 +923,60 @@ export async function recordPayment(data: {
     throw new Error("INVALID_PAYMENT_AMOUNT");
   }
 
-  // 1. Check if order exists BEFORE starting transaction (avoids isolation issues)
-  const [orderCheck] = await db
-    .select({ id: orders.id })
-    .from(orders)
-    .where(eq(orders.id, data.orderId))
-    .limit(1);
+  return await db.transaction(async (tx: DbTransaction) => {
+    const locked = await lockOrderForUpdate(tx, data.orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
 
-  if (!orderCheck) {
-    throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-  }
+    if (locked.fulfillmentStatus === FULFILLMENT_STATUS.CANCELLED) {
+      throw new Error("Cannot record payment on cancelled order");
+    }
+    if (locked.fulfillmentStatus === FULFILLMENT_STATUS.COMPLETED) {
+      throw new Error("Order already completed; no further payment");
+    }
 
-  // 2. Now do the actual payment recording in transaction
-  try {
-    return await db.transaction(async (tx: DbTransaction) => {
-      // Get current order state within transaction for accurate locking
-      const [order] = await tx
-        .select({
-          id: orders.id,
-          total: orders.total,
-          paidAmount: orders.paidAmount,
-          status: orders.status,
-        })
-        .from(orders)
-        .where(eq(orders.id, data.orderId));
+    const total = Number(locked.total ?? 0);
+    const newPaid = Number(locked.paidAmount ?? 0) + data.amount;
+    if (newPaid > total) throw new Error("OVERPAYMENT_NOT_ALLOWED");
 
-      if (!order) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    const nextPaymentStatus =
+      newPaid === 0
+        ? PAYMENT_STATUS.UNPAID
+        : newPaid < total
+          ? PAYMENT_STATUS.PARTIAL
+          : PAYMENT_STATUS.PAID;
 
-      // 3. Insert Payment
-      await tx.insert(payments).values({
-        orderId: data.orderId,
-        amount: data.amount.toString(),
-        method: data.method,
-        referenceCode: data.referenceCode,
-        note: data.note,
-        createdBy: data.userId,
-      });
-
-      // 4. Update Order Paid Amount
-      const currentPaid = Number(order.paidAmount || 0);
-      const newPaid = currentPaid + data.amount;
-      const total = Number(order.total);
-      if (newPaid > total) throw new Error("OVERPAYMENT_NOT_ALLOWED");
-
-      const updates: {
-        paidAmount: string;
-        status?: typeof ORDER_STATUS.PAID;
-        paidAt?: Date;
-      } = {
-        paidAmount: newPaid.toString(),
-      };
-
-      if (newPaid >= total && order.status === ORDER_STATUS.PENDING) {
-        updates.status = ORDER_STATUS.PAID;
-        updates.paidAt = new Date(); // Using JS Date for timestamp
-
-        // Log status change
-        await tx.insert(orderStatusHistory).values({
-          orderId: data.orderId,
-          status: ORDER_STATUS.PAID,
-          note: `Tự động cập nhật trạng thái "Đã thanh toán" (Đã trả: ${newPaid})`,
-          createdBy: data.userId,
-        });
-      }
-
-      await tx.update(orders).set(updates).where(eq(orders.id, data.orderId)).returning();
-
-      return { success: true };
+    await tx.insert(payments).values({
+      orderId: data.orderId,
+      amount: data.amount.toString(),
+      method: data.method,
+      referenceCode: data.referenceCode,
+      note: data.note,
+      createdBy: data.userId,
     });
-  } catch (error) {
-    console.error(`[recordPayment] Transaction error:`, error);
-    throw error;
-  }
+
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        paidAmount: newPaid.toString(),
+        paymentStatus: nextPaymentStatus,
+        paidAt: nextPaymentStatus === PAYMENT_STATUS.PAID ? now : locked.paidAt,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, data.orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId: data.orderId,
+      paymentStatus: nextPaymentStatus,
+      fulfillmentStatus:
+        locked.fulfillmentStatus as (typeof FULFILLMENT_STATUS)[keyof typeof FULFILLMENT_STATUS],
+      note: data.note ?? `Payment recorded: ${data.amount} (${data.method})`,
+      createdBy: data.userId,
+    });
+
+    return updated;
+  });
 }
 
 export async function getOrderHistory(orderId: string) {

@@ -8,9 +8,9 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
-import { orderStatusHistory, orders } from "@/db/schema/orders";
+import { orderStatusHistory } from "@/db/schema/orders";
 import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
-import { completeOrder, createOrder, stockOut } from "@/services/order.server";
+import { completeOrder, createOrder, recordPayment, stockOut } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 
 describe("completeOrder", () => {
@@ -45,13 +45,12 @@ describe("completeOrder", () => {
       userId: fx.userId,
     });
 
-    // TODO(Task 11): replace with recordPayment() once it is refactored to
-    // the payment/fulfillment-status split. recordPayment currently references
-    // the dropped `orders.status` column and throws at runtime.
-    await db
-      .update(orders)
-      .set({ paymentStatus: PAYMENT_STATUS.PAID, paidAmount: order.total })
-      .where(eq(orders.id, order.id));
+    await recordPayment({
+      orderId: order.id,
+      userId: fx.userId,
+      amount: Number(order.total),
+      method: "cash",
+    });
 
     await expect(completeOrder({ orderId: order.id, userId: fx.userId })).rejects.toThrow(
       /invalid transition/i,
@@ -67,11 +66,12 @@ describe("completeOrder", () => {
 
     await stockOut({ orderId: order.id, userId: fx.userId });
 
-    // TODO(Task 11): replace with recordPayment() once refactored.
-    await db
-      .update(orders)
-      .set({ paymentStatus: PAYMENT_STATUS.PAID, paidAmount: order.total })
-      .where(eq(orders.id, order.id));
+    await recordPayment({
+      orderId: order.id,
+      userId: fx.userId,
+      amount: Number(order.total),
+      method: "cash",
+    });
 
     const updated = await completeOrder({ orderId: order.id, userId: fx.userId });
 
@@ -89,11 +89,12 @@ describe("completeOrder", () => {
 
     await stockOut({ orderId: order.id, userId: fx.userId });
 
-    // TODO(Task 11): replace with recordPayment() once refactored.
-    await db
-      .update(orders)
-      .set({ paymentStatus: PAYMENT_STATUS.PAID, paidAmount: order.total })
-      .where(eq(orders.id, order.id));
+    await recordPayment({
+      orderId: order.id,
+      userId: fx.userId,
+      amount: Number(order.total),
+      method: "cash",
+    });
 
     await completeOrder({
       orderId: order.id,
