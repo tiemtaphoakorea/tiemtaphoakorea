@@ -48,7 +48,8 @@ export async function lockVariantsForUpdate(
       name: productVariants.name,
       price: productVariants.price,
       costPrice: productVariants.costPrice,
-      stockQuantity: productVariants.stockQuantity,
+      onHand: productVariants.onHand,
+      reserved: productVariants.reserved,
       lowStockThreshold: productVariants.lowStockThreshold,
       isActive: productVariants.isActive,
     })
@@ -73,7 +74,8 @@ export async function lockOrderForUpdate(
 ): Promise<{
   id: string;
   orderNumber: string;
-  status: string | null;
+  paymentStatus: string;
+  fulfillmentStatus: string;
   total: string | null;
   paidAmount: string | null;
   customerId: string;
@@ -82,7 +84,8 @@ export async function lockOrderForUpdate(
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
-      status: orders.status,
+      paymentStatus: orders.paymentStatus,
+      fulfillmentStatus: orders.fulfillmentStatus,
       total: orders.total,
       paidAmount: orders.paidAmount,
       customerId: orders.customerId,

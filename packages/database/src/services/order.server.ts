@@ -11,7 +11,7 @@ import {
   ROLE,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
-import { and, desc, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   generateOrderNumberOutsideTransaction,
@@ -148,34 +148,8 @@ export async function createOrder(data: {
 
   return await db.transaction(async (tx: DbTransaction) => {
     // 1. Lock Variants with SELECT FOR UPDATE to prevent race conditions.
-    // Inlined (not via lockVariantsForUpdate) because that helper still selects
-    // the removed `stockQuantity` column; the reserve-stock model reads
-    // on_hand and reserved directly.
     const variantIds = data.items.map((i) => i.variantId);
-    const whereClause =
-      variantIds.length === 1
-        ? eq(productVariants.id, variantIds[0])
-        : inArray(productVariants.id, variantIds);
-
-    const lockedVariants =
-      variantIds.length === 0
-        ? []
-        : await tx
-            .select({
-              id: productVariants.id,
-              productId: productVariants.productId,
-              sku: productVariants.sku,
-              name: productVariants.name,
-              price: productVariants.price,
-              costPrice: productVariants.costPrice,
-              onHand: productVariants.onHand,
-              reserved: productVariants.reserved,
-              lowStockThreshold: productVariants.lowStockThreshold,
-              isActive: productVariants.isActive,
-            })
-            .from(productVariants)
-            .where(whereClause)
-            .for("update");
+    const lockedVariants = await lockVariantsForUpdate(tx, variantIds);
 
     // Build variantMap using VariantWithProduct shape for downstream compat
     // (createSplitOrders, etc.). `stockQuantity` here carries the *available*
@@ -184,15 +158,8 @@ export async function createOrder(data: {
       lockedVariants.map((v) => [
         v.id,
         {
-          id: v.id,
-          productId: v.productId,
-          sku: v.sku,
-          name: v.name,
-          price: v.price,
-          costPrice: v.costPrice,
+          ...v,
           stockQuantity: (v.onHand ?? 0) - (v.reserved ?? 0),
-          lowStockThreshold: v.lowStockThreshold,
-          isActive: v.isActive,
         },
       ]),
     );
@@ -344,6 +311,86 @@ export async function createOrder(data: {
     }
 
     return { order: newOrder, itemsNeedingStock };
+  });
+}
+
+/**
+ * Transition a pending order to stock_out.
+ *
+ * Semantically: the customer arrived and we pulled their reserved units off
+ * the shelf. Deducts `on_hand -= qty` and `reserved -= qty` per order item in
+ * a single transaction. Requires `on_hand >= qty` for every item (no oversell
+ * once goods physically leave stock) and the order to currently be
+ * `fulfillment_status = 'pending'`.
+ */
+export async function stockOut({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    const lockedOrder = await lockOrderForUpdate(tx, orderId);
+    if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(`Invalid transition: cannot stock_out from ${lockedOrder.fulfillmentStatus}`);
+    }
+
+    const items = await tx
+      .select({ quantity: orderItems.quantity, variantId: orderItems.variantId })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    if (items.length === 0) throw new Error("Order has no items");
+
+    const variantIds = items.map((i) => i.variantId);
+    const variants = await lockVariantsForUpdate(tx, variantIds);
+    const byId = new Map(variants.map((v) => [v.id, v]));
+
+    for (const item of items) {
+      const v = byId.get(item.variantId);
+      if (!v) throw new Error(`Variant ${item.variantId} missing`);
+      if ((v.onHand ?? 0) < item.quantity) {
+        throw new Error(
+          `Insufficient stock for SKU ${v.sku}: on_hand=${v.onHand}, need=${item.quantity}`,
+        );
+      }
+    }
+
+    for (const item of items) {
+      await tx
+        .update(productVariants)
+        .set({
+          onHand: sql`${productVariants.onHand} - ${item.quantity}`,
+          reserved: sql`${productVariants.reserved} - ${item.quantity}`,
+        })
+        .where(eq(productVariants.id, item.variantId));
+    }
+
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
+        stockOutAt: now,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
+      note: note ?? "Stock out",
+      createdBy: userId,
+    });
+
+    return updated;
   });
 }
 

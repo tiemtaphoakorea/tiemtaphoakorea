@@ -32,7 +32,14 @@ export interface VariantWithProduct {
   name: string;
   price: string;
   costPrice: string | null;
-  stockQuantity: number | null;
+  onHand: number;
+  reserved: number;
+  /**
+   * Legacy field kept for compat with `createSplitOrders` and other callers
+   * that still read the pre-`on_hand`/`reserved` shape. New code should use
+   * `onHand - reserved` directly.
+   */
+  stockQuantity?: number | null;
   lowStockThreshold?: number | null;
   isActive?: boolean | null;
   product?: {
