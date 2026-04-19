@@ -680,12 +680,20 @@ export async function updateOrder(
   userId: string,
 ) {
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Get current order
-    const [currentOrder] = await tx.select().from(orders).where(eq(orders.id, orderId));
-
-    if (!currentOrder) {
+    // 1. Lock order and check fulfillment status (pending-only edits).
+    const locked = await lockOrderForUpdate(tx, orderId);
+    if (!locked) {
       throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
     }
+    if (locked.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(`Cannot edit order after ${locked.fulfillmentStatus}`);
+    }
+
+    // lockOrderForUpdate doesn't surface subtotal; read it on the now-locked row.
+    const [currentOrder] = await tx
+      .select({ subtotal: orders.subtotal })
+      .from(orders)
+      .where(eq(orders.id, orderId));
 
     // 2. Prepare update data
     const updates: Record<string, unknown> = {};
@@ -702,7 +710,8 @@ export async function updateOrder(
     }
 
     if (Object.keys(updates).length === 0) {
-      return currentOrder; // Nothing to update
+      const [fullOrder] = await tx.select().from(orders).where(eq(orders.id, orderId));
+      return fullOrder; // Nothing to update
     }
 
     // 3. Update order
@@ -715,7 +724,8 @@ export async function updateOrder(
     // 4. Log to status history
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status: currentOrder.status || ORDER_STATUS.PENDING,
+      paymentStatus: locked.paymentStatus,
+      fulfillmentStatus: locked.fulfillmentStatus,
       note: `Cập nhật đơn hàng: ${Object.keys(updates).join(", ")}`,
       createdBy: userId,
     });
@@ -741,7 +751,8 @@ export async function updateOrderItems(
       .select({
         id: orders.id,
         orderNumber: orders.orderNumber,
-        status: orders.status,
+        paymentStatus: orders.paymentStatus,
+        fulfillmentStatus: orders.fulfillmentStatus,
         subtotal: orders.subtotal,
         discount: orders.discount,
         parentOrderId: orders.parentOrderId,
@@ -750,7 +761,7 @@ export async function updateOrderItems(
       .where(eq(orders.id, orderId))
       .for("update");
     if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-    if (lockedOrder.status !== ORDER_STATUS.PENDING) {
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
       throw new Error("Chỉ có thể sửa sản phẩm khi đơn hàng ở trạng thái chờ xử lý.");
     }
     if (lockedOrder.parentOrderId) {
@@ -780,7 +791,7 @@ export async function updateOrderItems(
     for (const row of existingItems) {
       await tx
         .update(productVariants)
-        .set({ stockQuantity: sql`${productVariants.stockQuantity} + ${row.quantity}` })
+        .set({ reserved: sql`${productVariants.reserved} - ${row.quantity}` })
         .where(eq(productVariants.id, row.variantId));
     }
 
@@ -818,14 +829,16 @@ export async function updateOrderItems(
       subtotal += unitPrice * item.quantity;
       totalCost += costPrice * item.quantity;
 
-      // Deduct stock (allow negative for pre-order)
+      // Re-reserve stock (order still pending, so reserve rather than deduct on_hand).
       await tx
         .update(productVariants)
-        .set({ stockQuantity: sql`${productVariants.stockQuantity} - ${item.quantity}` })
+        .set({ reserved: sql`${productVariants.reserved} + ${item.quantity}` })
         .where(eq(productVariants.id, variant.id));
 
-      const currentStock = variant.stockQuantity ?? 0;
-      const shortfall = Math.max(0, item.quantity - currentStock);
+      // Shortfall = qty - available; available = on_hand - reserved at read time
+      // (reads pre-date this loop's reserve increments, which is the correct baseline).
+      const available = (variant.onHand ?? 0) - (variant.reserved ?? 0);
+      const shortfall = Math.max(0, item.quantity - available);
       if (shortfall > 0) {
         itemsNeedingStock.push({ variantId: variant.id, quantity: shortfall, sku: variant.sku });
       }
@@ -864,7 +877,8 @@ export async function updateOrderItems(
 
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status: ORDER_STATUS.PENDING,
+      paymentStatus: lockedOrder.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
       note: "Cập nhật sản phẩm đơn hàng",
       createdBy: userId,
     });

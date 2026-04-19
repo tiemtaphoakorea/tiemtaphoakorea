@@ -458,6 +458,7 @@ describe("updateOrder", () => {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn(),
+      for: vi.fn(),
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       returning: vi.fn(),
@@ -465,10 +466,25 @@ describe("updateOrder", () => {
       set: vi.fn().mockReturnThis(),
     };
     tx.where.mockReturnValue(tx);
+    tx.for.mockReturnValue(tx);
     return tx;
   };
 
   let mockTx: ReturnType<typeof createMockTx>;
+
+  const lockedPending = {
+    id: "order-1",
+    orderNumber: "ORD-1",
+    paymentStatus: "unpaid",
+    fulfillmentStatus: "pending",
+    total: "100000",
+    paidAmount: "0",
+    customerId: "customer-1",
+    paidAt: null,
+    stockOutAt: null,
+    completedAt: null,
+    cancelledAt: null,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -476,8 +492,18 @@ describe("updateOrder", () => {
     (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
   });
 
+  // Query path is:
+  //   1. lockOrderForUpdate: select.from.where(eq).for("update")    → locked row (via .for)
+  //   2. subtotal fetch:      select.from.where(eq)                 → [{ subtotal }] (via .where)
+  //   3. empty-updates branch only: select.from.where(eq)           → [full order]  (via .where)
+  // .where must stay chainable (return tx) for step 1 so the chain reaches .for.
+  // Use mockReturnValueOnce(tx) for the chainable step, then mockResolvedValueOnce
+  // for the awaited steps.
+
   it("should update adminNote successfully", async () => {
-    mockTx.where.mockResolvedValueOnce([{ id: "order-1", status: "pending", subtotal: "100000" }]);
+    mockTx.where.mockReturnValueOnce(mockTx); // step 1 — chainable
+    mockTx.for.mockResolvedValueOnce([lockedPending]); // step 1 resolves to locked row
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]); // step 2
     mockTx.returning.mockResolvedValueOnce([{ id: "order-1", adminNote: "New note" }]);
 
     const result = await updateOrder("order-1", { adminNote: "New note" }, "admin-1");
@@ -491,7 +517,9 @@ describe("updateOrder", () => {
   });
 
   it("should update discount and recalculate total", async () => {
-    mockTx.where.mockResolvedValueOnce([{ id: "order-1", status: "pending", subtotal: "100000" }]);
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([lockedPending]);
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]);
     mockTx.returning.mockResolvedValueOnce([{ id: "order-1", discount: "10000", total: "90000" }]);
 
     await updateOrder("order-1", { discount: 10000 }, "admin-1");
@@ -505,7 +533,9 @@ describe("updateOrder", () => {
   });
 
   it("should throw error if order not found", async () => {
-    mockTx.where.mockResolvedValueOnce([]);
+    // lockOrderForUpdate: .where keeps chain, .for resolves [] → null → throws
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([]);
 
     await expect(updateOrder("non-existent", { adminNote: "test" }, "admin-1")).rejects.toThrow(
       "Order not found",
@@ -513,16 +543,15 @@ describe("updateOrder", () => {
   });
 
   it("should return current order if no updates provided", async () => {
-    const current = {
-      id: "order-1",
-      status: "pending",
-      subtotal: "100000",
-    };
-    mockTx.where.mockResolvedValueOnce([current]);
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([lockedPending]);
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]);
+    const fullOrder = { id: "order-1", fulfillmentStatus: "pending", subtotal: "100000" };
+    mockTx.where.mockResolvedValueOnce([fullOrder]);
 
     const result = await updateOrder("order-1", {}, "admin-1");
 
-    expect(result).toEqual(current);
+    expect(result).toEqual(fullOrder);
     expect(mockTx.update).not.toHaveBeenCalled();
   });
 });
