@@ -1,3 +1,4 @@
+import type { StockAlertVariant } from "@workspace/database/services/analytics.server";
 import type {
   AdminOrderDetails,
   AdminProfile,
@@ -34,6 +35,8 @@ import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { ADMIN_STATS_SECTION } from "@workspace/shared/constants";
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
+
+export type { StockAlertVariant };
 
 /**
  * Service for client-side admin API calls.
@@ -94,6 +97,12 @@ export const adminClient = {
     return axios.get<AnalyticsData>(
       API_ENDPOINTS.ADMIN.ANALYTICS,
     ) as unknown as Promise<AnalyticsData>;
+  },
+
+  async getStockAlerts() {
+    return axios.get<{ lowStock: StockAlertVariant[]; outOfStock: StockAlertVariant[] }>(
+      API_ENDPOINTS.ADMIN.STOCK_ALERTS,
+    ) as unknown as Promise<{ lowStock: StockAlertVariant[]; outOfStock: StockAlertVariant[] }>;
   },
 
   /**
@@ -237,7 +246,14 @@ export const adminClient = {
     ) as unknown as Promise<{ customer: any }>;
   },
 
-  async updateOrder(id: string, data: { adminNote?: string; discount?: number }) {
+  async updateOrder(
+    id: string,
+    data: {
+      adminNote?: string;
+      discount?: number;
+      items?: Array<{ variantId: string; quantity: number; customPrice?: number }>;
+    },
+  ) {
     return axios.put<{ success: boolean; order: AdminOrderDetails }>(
       `${API_ENDPOINTS.ADMIN.ORDERS}/${id}`,
       data,

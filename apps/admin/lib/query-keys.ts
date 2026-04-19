@@ -41,6 +41,7 @@ export const queryKeys = {
   admin: {
     profile: [QK.adminRoot, QK.profile] as const,
     analytics: [QK.adminRoot, QK.analytics] as const,
+    stockAlerts: [QK.adminRoot, "stock-alerts"] as const,
     products: {
       all: [QK.adminRoot, QK.adminProducts] as const,
       withVariants: [QK.adminRoot, QK.adminProducts, INCLUDE_VARIANTS] as const,
