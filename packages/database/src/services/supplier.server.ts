@@ -216,7 +216,7 @@ export async function updateSupplierOrderStatus(
           await tx
             .update(productVariants)
             .set({
-              stockQuantity: (variant.stockQuantity || 0) + row.quantity,
+              onHand: (variant.onHand || 0) + row.quantity,
             })
             .where(eq(productVariants.id, variantId));
         }

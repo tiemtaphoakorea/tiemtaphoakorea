@@ -1,7 +1,7 @@
 import {
   DASHBOARD_DEFAULT_LIMIT,
+  FULFILLMENT_STATUS,
   LOW_STOCK_DEFAULT_THRESHOLD,
-  ORDER_STATUS,
   ROLE,
 } from "@workspace/shared/constants";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
@@ -26,7 +26,9 @@ export async function getKPIStats() {
       total: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
     })
     .from(orders)
-    .where(and(gte(orders.paidAt, today), eq(orders.status, ORDER_STATUS.DELIVERED)));
+    .where(
+      and(gte(orders.paidAt, today), eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.COMPLETED)),
+    );
 
   const todayRevenue = todayRevenueResult[0]?.total || 0;
 
@@ -56,7 +58,7 @@ export async function getKPIStats() {
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
-    .where(eq(orders.status, ORDER_STATUS.PENDING));
+    .where(eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.PENDING));
 
   const pendingOrdersCount = pendingOrdersResult[0]?.count || 0;
 
@@ -66,7 +68,7 @@ export async function getKPIStats() {
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(productVariants)
-    .where(eq(productVariants.stockQuantity, 0));
+    .where(eq(productVariants.onHand, 0));
 
   const lowStockResult = await db
     .select({
@@ -75,8 +77,8 @@ export async function getKPIStats() {
     .from(productVariants)
     .where(
       and(
-        sql`${productVariants.stockQuantity} > 0`,
-        sql`${productVariants.stockQuantity} <= coalesce(${productVariants.lowStockThreshold}, ${LOW_STOCK_DEFAULT_THRESHOLD})`,
+        sql`${productVariants.onHand} > 0`,
+        sql`${productVariants.onHand} <= coalesce(${productVariants.lowStockThreshold}, ${LOW_STOCK_DEFAULT_THRESHOLD})`,
       ),
     );
 
@@ -96,7 +98,7 @@ export async function getRecentOrders(limit = DASHBOARD_DEFAULT_LIMIT) {
       id: orders.id,
       orderNumber: orders.orderNumber,
       total: orders.total,
-      status: orders.status,
+      status: orders.fulfillmentStatus,
       createdAt: orders.createdAt,
       customerName: profiles.fullName,
     })
@@ -126,7 +128,7 @@ export async function getRecentActivities(limit = DASHBOARD_DEFAULT_LIMIT) {
     .select({
       id: orderStatusHistory.id,
       orderNumber: orders.orderNumber,
-      status: orderStatusHistory.status,
+      status: orderStatusHistory.fulfillmentStatus,
       note: orderStatusHistory.note,
       createdAt: orderStatusHistory.createdAt,
       creatorName: profiles.fullName,

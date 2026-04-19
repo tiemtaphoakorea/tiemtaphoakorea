@@ -5,7 +5,6 @@ import {
   FULFILLMENT_STATUS,
   type FulfillmentStatusValue,
   ORDER_CODE_PREFIX,
-  ORDER_STATUS,
   type PAYMENT_METHOD,
   PAYMENT_STATUS,
   type PaymentStatusValue,
@@ -737,8 +736,8 @@ export async function updateOrder(
     // 4. Log to status history
     await tx.insert(orderStatusHistory).values({
       orderId,
-      paymentStatus: locked.paymentStatus,
-      fulfillmentStatus: locked.fulfillmentStatus,
+      paymentStatus: locked.paymentStatus as PaymentStatusValue,
+      fulfillmentStatus: locked.fulfillmentStatus as FulfillmentStatusValue,
       note: `Cập nhật đơn hàng: ${Object.keys(updates).join(", ")}`,
       createdBy: userId,
     });
@@ -924,9 +923,9 @@ export async function deleteOrder(orderId: string, userId: string) {
     }
 
     // 2. Only allow deleting CANCELLED orders
-    if (orderToDelete.status !== ORDER_STATUS.CANCELLED) {
+    if (orderToDelete.fulfillmentStatus !== FULFILLMENT_STATUS.CANCELLED) {
       throw new Error(
-        `${ERROR_MESSAGE.ORDER.CANNOT_DELETE_WITH_STATUS} "${orderToDelete.status}". Only cancelled orders can be deleted.`,
+        `${ERROR_MESSAGE.ORDER.CANNOT_DELETE_WITH_STATUS} "${orderToDelete.fulfillmentStatus}". Only cancelled orders can be deleted.`,
       );
     }
 
@@ -1028,11 +1027,11 @@ export async function getOrderStats() {
     .select({
       total: sql<number>`count(*)`.mapWith(Number),
       pending:
-        sql<number>`count(*) filter (where ${orders.status} = ${ORDER_STATUS.PENDING})`.mapWith(
+        sql<number>`count(*) filter (where ${orders.fulfillmentStatus} = ${FULFILLMENT_STATUS.PENDING})`.mapWith(
           Number,
         ),
       completed:
-        sql<number>`count(*) filter (where ${orders.status} = ${ORDER_STATUS.DELIVERED})`.mapWith(
+        sql<number>`count(*) filter (where ${orders.fulfillmentStatus} = ${FULFILLMENT_STATUS.COMPLETED})`.mapWith(
           Number,
         ),
       totalRevenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),

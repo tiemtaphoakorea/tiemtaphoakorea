@@ -584,7 +584,7 @@ describe("deleteOrder", () => {
 
   it("should throw error when trying to delete pending order", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "pending" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "pending" },
     ]);
     mockTx.where.mockReturnValue(mockTx);
 
@@ -595,7 +595,7 @@ describe("deleteOrder", () => {
 
   it("should delete cancelled order successfully", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "cancelled" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "cancelled" },
     ]);
     mockTx.where.mockReturnValue(mockTx); // lockOrder and delete; items not queried when cancelled
 
@@ -608,12 +608,12 @@ describe("deleteOrder", () => {
 
   it("should throw error for non-deletable status", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "delivered" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "completed" },
     ]);
     mockTx.where.mockReturnValue(mockTx);
 
     await expect(deleteOrder("order-1", "admin-1")).rejects.toThrow(
-      'Cannot delete order with status "delivered"',
+      'Cannot delete order with status "completed"',
     );
   });
 

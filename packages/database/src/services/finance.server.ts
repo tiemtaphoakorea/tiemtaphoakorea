@@ -1,5 +1,5 @@
-import { ORDER_STATUS } from "@workspace/shared/constants";
-import { and, desc, eq, gte, inArray, lte, type SQL, sql } from "drizzle-orm";
+import { PAYMENT_STATUS } from "@workspace/shared/constants";
+import { and, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { expenses } from "../schema/expenses";
 import { orders } from "../schema/orders";
@@ -125,12 +125,7 @@ export async function getFinancialStats(params: {
       and(
         gte(orders.createdAt, startDate),
         lte(orders.createdAt, endDate),
-        inArray(orders.status, [
-          ORDER_STATUS.PAID,
-          ORDER_STATUS.PREPARING,
-          ORDER_STATUS.SHIPPING,
-          ORDER_STATUS.DELIVERED,
-        ]),
+        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
       ),
     );
 

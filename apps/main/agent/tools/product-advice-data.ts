@@ -87,13 +87,13 @@ export const getProductAdviceDataTool = tool({
         name: productVariants.name,
         sku: productVariants.sku,
         price: productVariants.price,
-        stockQuantity: productVariants.stockQuantity,
+        stockQuantity: productVariants.onHand,
       })
       .from(productVariants)
       .where(
         and(eq(productVariants.productId, resolvedProductId), eq(productVariants.isActive, true)),
       )
-      .orderBy(desc(productVariants.stockQuantity))
+      .orderBy(desc(productVariants.onHand))
       .limit(20);
 
     return JSON.stringify({

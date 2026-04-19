@@ -114,7 +114,7 @@ describe("supplier.server", () => {
         }),
       });
       mockTx.update.mockReturnValue({ set: mockSet });
-      mockTx.limit.mockResolvedValueOnce([{ id: "var-1", stockQuantity: 10 }]);
+      mockTx.limit.mockResolvedValueOnce([{ id: "var-1", onHand: 10 }]);
 
       await updateSupplierOrderStatus("so-1", "received");
 
@@ -167,7 +167,7 @@ describe("supplier.server", () => {
         },
       ]);
 
-      mockTx.limit.mockResolvedValueOnce([{ id: "var-1", stockQuantity: 10 }]);
+      mockTx.limit.mockResolvedValueOnce([{ id: "var-1", onHand: 10 }]);
 
       const mockSetStock = vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([{ id: "var-1" }]),
@@ -188,7 +188,7 @@ describe("supplier.server", () => {
       expect(mockTx.select).toHaveBeenCalled();
       expect(mockSetStock).toHaveBeenCalledWith(
         expect.objectContaining({
-          stockQuantity: 15, // 10 + 5
+          onHand: 15, // 10 + 5
         }),
       );
     });

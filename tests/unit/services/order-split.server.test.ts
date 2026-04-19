@@ -100,21 +100,21 @@ describe("createSplitOrders", () => {
     // Total 8 inserts? Let's check logic.
     // supplierOrders uses `tx.insert(supplierOrders).values(...)` which might return?
 
-    // Check Parent values
+    // Check Parent values.
+    // paymentStatus + fulfillmentStatus use schema defaults (unpaid/pending), so they
+    // aren't in the insert payload and aren't asserted here.
     expect(mockTx.values).toHaveBeenCalledWith(
       expect.objectContaining({
         customerId: "cust-1",
-        status: "preparing",
         deliveryPreference: "ship_available_first",
       }),
     );
 
-    // Check Sub-Order 1 (In Stock)
+    // Check Sub-Order 1 (In Stock). Status fields default at the schema level.
     expect(mockTx.values).toHaveBeenCalledWith(
       expect.objectContaining({
         parentOrderId: "parent-order-id",
         splitType: "in_stock",
-        status: "pending",
       }),
     );
 
