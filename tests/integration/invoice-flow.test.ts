@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { orders } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
+import { checkInventoryInvariants } from "@/db/scripts/verify-inventory-invariants";
 import {
   cancelOrder,
   completeOrder,
@@ -145,6 +146,63 @@ describe("invoice flow: cancellation", () => {
     await expect(cancelOrder({ orderId: order2.id, userId: fx.userId })).rejects.toThrow(
       /Cannot cancel after stock_out/,
     );
+  });
+});
+
+describe("invoice flow: inventory invariants", () => {
+  let fx: OrderTestFixture;
+
+  beforeEach(async () => {
+    fx = await seedOrderTest();
+  });
+
+  afterEach(async () => {
+    await cleanOrderTest(fx);
+  });
+
+  // Regression: the invariant check's SQL must only sum `order_items` that
+  // belong to a *pending* order. An earlier draft placed the
+  // `fulfillment_status = 'pending'` filter on the LEFT JOIN's ON clause,
+  // which NULLs the joined `orders` row but still aggregates the
+  // `order_items` row, so completing an order produced a false positive.
+  it("does not flag a variant whose only order is completed", async () => {
+    const { order } = await createOrder({
+      customerId: fx.customerId,
+      userId: fx.userId,
+      items: [{ variantId: fx.variantId, quantity: 1 }],
+    });
+    await stockOut({ orderId: order.id, userId: fx.userId });
+    const [stockedOut] = await db.select().from(orders).where(eq(orders.id, order.id));
+    await recordPayment({
+      orderId: order.id,
+      userId: fx.userId,
+      amount: Number(stockedOut.total),
+      method: "cash",
+    });
+    await completeOrder({ orderId: order.id, userId: fx.userId });
+
+    // The variant's reserved is 0 and the only order_item belongs to a
+    // completed order — no mismatch should be reported.
+    const report = await checkInventoryInvariants();
+    expect(report.reservedMismatches).toBe(0);
+    expect(report.negativeOnHand).toBe(0);
+  });
+
+  it("flags a variant whose reserved drifts from pending-order quantities", async () => {
+    await createOrder({
+      customerId: fx.customerId,
+      userId: fx.userId,
+      items: [{ variantId: fx.variantId, quantity: 2 }],
+    });
+
+    // Corrupt reserved out-of-band to simulate a desync.
+    await db
+      .update(productVariants)
+      .set({ reserved: 99 })
+      .where(eq(productVariants.id, fx.variantId));
+
+    const report = await checkInventoryInvariants();
+    expect(report.reservedMismatches).toBeGreaterThanOrEqual(1);
   });
 });
 
