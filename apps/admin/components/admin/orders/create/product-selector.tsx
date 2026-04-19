@@ -206,8 +206,8 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
             </SelectTrigger>
             <SelectContent>
               {selectedProduct?.variants.map((variant) => {
-                const stock = Number(variant.stockQuantity || 0);
-                const isOutOfStock = stock <= 0;
+                const available = variant.onHand - variant.reserved;
+                const isOutOfStock = available <= 0;
 
                 return (
                   <SelectItem
@@ -220,8 +220,8 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>{variant.sku}</span>
                         <span>|</span>
-                        <span className={stock > 0 ? "text-green-600" : "text-orange-600"}>
-                          {stock > 0 ? `Tồn: ${stock}` : "Hết hàng"}
+                        <span className={available > 0 ? "text-green-600" : "text-orange-600"}>
+                          {available > 0 ? `Còn lại: ${available}` : "Hết hàng"}
                         </span>
                         <span>|</span>
                         <span className="font-semibold text-primary">
