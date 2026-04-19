@@ -366,6 +366,14 @@ export interface AnalyticsTopProduct {
   growth?: number;
 }
 
+export interface AnalyticsInventory {
+  totalCostValue: number;
+  totalRetailValue: number;
+  totalUnits: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+}
+
 export interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
@@ -374,6 +382,7 @@ export interface AnalyticsData {
   monthlyRevenue: AnalyticsMonthlyRevenue[];
   categorySales: AnalyticsCategorySale[];
   topProducts: AnalyticsTopProduct[];
+  inventory: AnalyticsInventory;
 }
 
 // --- Finance & Expenses ---

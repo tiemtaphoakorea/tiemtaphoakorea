@@ -32,7 +32,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
           <div>
             <CardTitle className="text-xl font-black">Tổng quan doanh thu</CardTitle>
             <CardDescription className="font-medium">
-              Sự thay đổi doanh thu hàng tháng trong năm {currentYear}
+              Xu hướng doanh thu theo tháng năm {currentYear}
             </CardDescription>
           </div>
         </div>
@@ -56,21 +56,13 @@ export function RevenueChart({ data }: RevenueChartProps) {
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{
-                fill: "hsl(var(--slate-500))",
-                fontSize: 11,
-                fontWeight: 700,
-              }}
+              tick={{ fill: "hsl(var(--slate-500))", fontSize: 11, fontWeight: 700 }}
               dy={10}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{
-                fill: "hsl(var(--slate-500))",
-                fontSize: 11,
-                fontWeight: 700,
-              }}
+              tick={{ fill: "hsl(var(--slate-500))", fontSize: 11, fontWeight: 700 }}
               tickFormatter={(value) => `${value / 1000000}M`}
             />
             <Tooltip
@@ -81,11 +73,9 @@ export function RevenueChart({ data }: RevenueChartProps) {
                       <p className="mb-2 text-[10px] font-black text-slate-400 uppercase">
                         {payload[0].payload.month}
                       </p>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-primary text-xl font-black">
-                          {formatCurrency(payload[0].value as number)}
-                        </span>
-                      </div>
+                      <span className="text-primary text-xl font-black">
+                        {formatCurrency(payload[0].value as number)}
+                      </span>
                     </div>
                   );
                 }

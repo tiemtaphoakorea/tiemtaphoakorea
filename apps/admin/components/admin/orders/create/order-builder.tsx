@@ -49,6 +49,7 @@ export function OrderBuilder() {
         items: items.map((i) => ({
           variantId: i.variantId,
           quantity: i.quantity,
+          ...(i.customPrice != null && { customPrice: i.customPrice }),
         })),
         note,
         deliveryPreference: "ship_together", // Default for now
@@ -97,11 +98,18 @@ export function OrderBuilder() {
     setItems((prev) => prev.map((i) => (i.variantId === variantId ? { ...i, quantity } : i)));
   };
 
+  const handleUpdatePrice = (variantId: string, customPrice: number) => {
+    setItems((prev) => prev.map((i) => (i.variantId === variantId ? { ...i, customPrice } : i)));
+  };
+
   const handleRemoveItem = (variantId: string) => {
     setItems((prev) => prev.filter((i) => i.variantId !== variantId));
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = items.reduce(
+    (acc, item) => acc + (item.customPrice ?? item.price) * item.quantity,
+    0,
+  );
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 h-full">
@@ -139,6 +147,7 @@ export function OrderBuilder() {
             <OrderItemsTable
               items={items}
               onUpdateQuantity={handleUpdateQuantity}
+              onUpdatePrice={handleUpdatePrice}
               onRemoveItem={handleRemoveItem}
             />
           </CardContent>

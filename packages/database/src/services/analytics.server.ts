@@ -5,7 +5,7 @@ import {
   ANALYTICS_TOP_PRODUCTS_LIMIT,
   ROLE,
 } from "@workspace/shared/constants";
-import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories, products, productVariants } from "../schema";
 import { orderItems, orders } from "../schema/orders";
@@ -91,6 +91,29 @@ export async function getAnalyticsData() {
       .orderBy(desc(sql`sum(${orderItems.lineTotal})`))
       .limit(ANALYTICS_TOP_PRODUCTS_LIMIT);
 
+    // 5. Inventory Stats
+    const inventoryStats = await db
+      .select({
+        totalCostValue:
+          sql<number>`coalesce(sum(${productVariants.stockQuantity} * ${productVariants.costPrice}), 0)`.mapWith(
+            Number,
+          ),
+        totalRetailValue:
+          sql<number>`coalesce(sum(${productVariants.stockQuantity} * ${productVariants.price}), 0)`.mapWith(
+            Number,
+          ),
+        totalUnits: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`.mapWith(Number),
+        lowStockCount:
+          sql<number>`count(*) filter (where ${productVariants.stockQuantity} > 0 and ${productVariants.stockQuantity} <= ${productVariants.lowStockThreshold})`.mapWith(
+            Number,
+          ),
+        outOfStockCount:
+          sql<number>`count(*) filter (where ${productVariants.stockQuantity} <= 0)`.mapWith(
+            Number,
+          ),
+      })
+      .from(productVariants);
+
     return {
       totalRevenue: kpis[0]?.totalRevenue || 0,
       totalOrders: kpis[0]?.totalOrders || 0,
@@ -107,6 +130,13 @@ export async function getAnalyticsData() {
           Math.floor(Math.random() * ANALYTICS_GROWTH_RANDOM_RANGE) +
           ANALYTICS_GROWTH_RANDOM_OFFSET, // Mocked growth
       })),
+      inventory: {
+        totalCostValue: inventoryStats[0]?.totalCostValue || 0,
+        totalRetailValue: inventoryStats[0]?.totalRetailValue || 0,
+        totalUnits: inventoryStats[0]?.totalUnits || 0,
+        lowStockCount: inventoryStats[0]?.lowStockCount || 0,
+        outOfStockCount: inventoryStats[0]?.outOfStockCount || 0,
+      },
     };
   } catch (error) {
     console.error("Analytics query failed:", error);
@@ -121,4 +151,52 @@ export async function getAnalyticsData() {
       topProducts: [],
     };
   }
+}
+
+export type StockAlertVariant = {
+  id: string;
+  name: string;
+  sku: string | null;
+  stockQuantity: number;
+  productName: string;
+};
+
+export async function getStockAlerts(): Promise<{
+  lowStock: StockAlertVariant[];
+  outOfStock: StockAlertVariant[];
+}> {
+  const lowStock = await db
+    .select({
+      id: productVariants.id,
+      name: productVariants.name,
+      sku: productVariants.sku,
+      stockQuantity: sql<number>`${productVariants.stockQuantity}`.mapWith(Number),
+      productName: products.name,
+    })
+    .from(productVariants)
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .where(
+      and(
+        gt(productVariants.stockQuantity, 0),
+        lte(productVariants.stockQuantity, productVariants.lowStockThreshold),
+      ),
+    )
+    .orderBy(asc(productVariants.stockQuantity))
+    .limit(10);
+
+  const outOfStock = await db
+    .select({
+      id: productVariants.id,
+      name: productVariants.name,
+      sku: productVariants.sku,
+      stockQuantity: sql<number>`${productVariants.stockQuantity}`.mapWith(Number),
+      productName: products.name,
+    })
+    .from(productVariants)
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .where(lte(productVariants.stockQuantity, 0))
+    .orderBy(asc(products.name))
+    .limit(10);
+
+  return { lowStock, outOfStock };
 }

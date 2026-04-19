@@ -69,13 +69,13 @@ export function CustomerEditSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 px-6 pb-6 dark:border-slate-800">
           <SheetTitle className="text-2xl font-black">Chỉnh sửa khách hàng</SheetTitle>
           <SheetDescription className="font-medium text-slate-500">
             Cập nhật thông tin chi tiết cho khách hàng {customer?.fullName}.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 py-8">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 px-6 py-6">
           <div className="space-y-4">
             <div className="grid gap-2">
               <label
@@ -152,7 +152,7 @@ export function CustomerEditSheet({
               />
             </div>
           </div>
-          <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+          <SheetFooter className="border-t border-slate-100 px-6 pt-6 dark:border-slate-800">
             <div className="flex w-full items-center justify-end gap-3">
               <Button
                 type="button"

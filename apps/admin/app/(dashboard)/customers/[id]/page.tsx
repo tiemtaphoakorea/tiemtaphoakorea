@@ -1,17 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CustomerDetail } from "@workspace/database/types/admin";
 import { formatDate } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
+import { useToast } from "@workspace/ui/components/use-toast";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { CustomerFinancialStats } from "@/components/admin/customer-detail/customer-financial-stats";
 import { CustomerLocationCard } from "@/components/admin/customer-detail/customer-location-card";
 import { CustomerOrderHistoryTable } from "@/components/admin/customer-detail/customer-order-history-table";
 import { CustomerProfileHeader } from "@/components/admin/customer-detail/customer-profile-header";
 import { CustomerSecurityCard } from "@/components/admin/customer-detail/customer-security-card";
+import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -20,12 +23,43 @@ export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { data, isLoading, isError } = useQuery<{ customer?: CustomerDetail }>({
     queryKey: queryKeys.customer(id),
     queryFn: () => adminClient.getCustomer(id),
     enabled: Boolean(id),
   });
   const customer = data?.customer ?? null;
+
+  const handleEditCustomer = async (formData: FormData) => {
+    const customerId = formData.get("id") as string;
+    if (!customerId) return;
+    setIsSubmitting(true);
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? undefined,
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? undefined,
+    };
+    try {
+      await adminClient.updateCustomer(customerId, payload);
+      toast({ title: "Thành công", description: "Đã cập nhật thông tin khách hàng" });
+      setIsEditOpen(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customer(id) });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -82,7 +116,7 @@ export default function CustomerDetailPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-20">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         <Button
           variant="ghost"
           asChild
@@ -93,7 +127,18 @@ export default function CustomerDetailPage() {
             Quay lại
           </Link>
         </Button>
+        <Button onClick={() => setIsEditOpen(true)} className="font-bold">
+          Chỉnh sửa
+        </Button>
       </div>
+
+      <CustomerEditSheet
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        customer={customer}
+        isSubmitting={isSubmitting}
+        onSubmit={handleEditCustomer}
+      />
 
       <CustomerProfileHeader customer={customer} />
 

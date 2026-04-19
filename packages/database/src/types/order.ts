@@ -10,6 +10,7 @@ export type CreateOrderInput = {
   items: Array<{
     variantId: string;
     quantity: number;
+    customPrice?: number;
   }>;
   note?: string;
   userId: string;
@@ -22,6 +23,7 @@ export interface OrderBuilderItem {
   productName: string;
   sku: string;
   price: number;
+  customPrice?: number;
   quantity: number;
   stock: number;
 }

@@ -29,9 +29,9 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
   return (
     <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
       <CardHeader>
-        <CardTitle className="text-xl font-black">Danh mục hot</CardTitle>
+        <CardTitle className="text-xl font-black">Doanh số theo danh mục</CardTitle>
         <CardDescription className="font-medium">
-          Hiệu suất bán hàng theo từng danh mục.
+          Đơn hàng theo danh mục trong năm {currentYear}.
         </CardDescription>
       </CardHeader>
       <CardContent className="mt-4 h-[400px] py-0">
@@ -88,7 +88,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 border-t border-slate-100 pt-6 dark:border-slate-800">
         <div className="text-muted-foreground text-[10px] leading-none font-medium">
-          Hiển thị số lượng đơn hàng theo danh mục trong năm {currentYear}
+          Hiển thị số đơn hàng theo danh mục trong năm {currentYear}
         </div>
       </CardFooter>
     </Card>

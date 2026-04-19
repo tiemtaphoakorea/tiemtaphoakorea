@@ -158,6 +158,7 @@ export async function POST(request: Request) {
       items: items.map((item: any) => ({
         variantId: item.variantId,
         quantity: Number(item.quantity || 0),
+        ...(item.customPrice != null && { customPrice: Number(item.customPrice) }),
       })),
       note,
       userId: user.profile.id,
