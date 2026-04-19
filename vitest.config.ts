@@ -20,6 +20,7 @@ export default defineConfig({
     globals: true,
     include: [
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
+      "tests/integration/**/*.{test,spec}.{ts,tsx}",
       "tests/security/**/*.{test,spec}.{ts,tsx}",
       "tests/components/**/*.{test,spec}.{ts,tsx}",
     ],
