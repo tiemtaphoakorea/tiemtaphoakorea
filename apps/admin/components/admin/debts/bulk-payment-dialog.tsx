@@ -34,8 +34,8 @@ interface BulkPaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   unpaidOrders: UnpaidOrder[];
   totalDebt: number;
-  onSuccess: (summary: { paidAmount: number; affectedOrders: number }) => void;
-  onError: (error: { message: string; orderNumber?: string }) => void;
+  onSuccess: (summary: { paidAmount: number; affectedOrders: number }) => void | Promise<void>;
+  onError: (error: { message: string; orderNumber?: string }) => void | Promise<void>;
 }
 
 type AllocationPlan = {
@@ -44,11 +44,17 @@ type AllocationPlan = {
   allocate: number;
 };
 
+// stockOutAt arrives from the API as an ISO string (JSON serialization erases Date),
+// but Drizzle types it as Date | null. Normalize defensively.
+function stockOutMs(val: Date | string | null | undefined): number {
+  if (val == null) return Infinity;
+  const ms = val instanceof Date ? val.getTime() : new Date(val).getTime();
+  return Number.isNaN(ms) ? Infinity : ms;
+}
+
 function buildAllocationPlan(orders: UnpaidOrder[], amount: number): AllocationPlan[] {
-  // FIFO by stockOutAt. Nulls go last.
-  const sorted = [...orders].sort(
-    (a, b) => (a.stockOutAt?.getTime() ?? Infinity) - (b.stockOutAt?.getTime() ?? Infinity),
-  );
+  // FIFO by stockOutAt. Nulls (and unparsable values) go last.
+  const sorted = [...orders].sort((a, b) => stockOutMs(a.stockOutAt) - stockOutMs(b.stockOutAt));
 
   let remaining = amount;
   const plan: AllocationPlan[] = [];
@@ -97,13 +103,13 @@ export function BulkPaymentDialog({
     if (isSubmitting) return;
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      onError({ message: "Số tiền phải lớn hơn 0." });
+      await onError({ message: "Số tiền phải lớn hơn 0." });
       return;
     }
 
     if (amount > totalDebt) {
       const excess = amount - totalDebt;
-      onError({
+      await onError({
         message: `Số tiền vượt tổng nợ (còn thừa ${formatCurrency(excess)}).`,
       });
       return;
@@ -111,7 +117,7 @@ export function BulkPaymentDialog({
 
     const plan = buildAllocationPlan(unpaidOrders, amount);
     if (plan.length === 0) {
-      onError({ message: "Không có đơn hàng nào đủ điều kiện để thu tiền." });
+      await onError({ message: "Không có đơn hàng nào đủ điều kiện để thu tiền." });
       return;
     }
 
@@ -130,16 +136,15 @@ export function BulkPaymentDialog({
           paidAmount += step.allocate;
           affectedOrders += 1;
         } catch (err: any) {
-          const errorMessage =
-            err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra khi ghi nhận thanh toán.";
-          onError({
+          const errorMessage = err?.message ?? "Có lỗi xảy ra khi ghi nhận thanh toán.";
+          await onError({
             message: `Lỗi ở đơn ${step.orderNumber}: ${errorMessage}`,
             orderNumber: step.orderNumber,
           });
           return;
         }
       }
-      onSuccess({ paidAmount, affectedOrders });
+      await onSuccess({ paidAmount, affectedOrders });
       resetForm();
     } finally {
       setIsSubmitting(false);
