@@ -66,6 +66,22 @@ export const ORDER_STATUS = {
 
 export const ORDER_STATUS_ALL = "All";
 
+export const PAYMENT_STATUS = {
+  UNPAID: "unpaid",
+  PARTIAL: "partial",
+  PAID: "paid",
+} as const;
+
+export const FULFILLMENT_STATUS = {
+  PENDING: "pending",
+  STOCK_OUT: "stock_out",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+} as const;
+
+export type PaymentStatusValue = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
+export type FulfillmentStatusValue = (typeof FULFILLMENT_STATUS)[keyof typeof FULFILLMENT_STATUS];
+
 export const SUPPLIER_ORDER_STATUS = {
   PENDING: "pending",
   ORDERED: "ordered",
