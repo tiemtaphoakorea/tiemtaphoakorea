@@ -394,6 +394,55 @@ export async function stockOut({
   });
 }
 
+/**
+ * Transition a stock_out order to completed.
+ *
+ * Requires payment_status='paid' (DB CHECK constraint: completed ⇒ paid) and
+ * fulfillment_status='stock_out'. Sets completed_at=now() on success.
+ */
+export async function completeOrder({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    const lockedOrder = await lockOrderForUpdate(tx, orderId);
+    if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.STOCK_OUT) {
+      throw new Error(`Invalid transition: cannot complete from ${lockedOrder.fulfillmentStatus}`);
+    }
+    if (lockedOrder.paymentStatus !== PAYMENT_STATUS.PAID) {
+      throw new Error("Order is not fully paid; cannot complete");
+    }
+
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.COMPLETED,
+        completedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.COMPLETED,
+      note: note ?? "Order completed",
+      createdBy: userId,
+    });
+
+    return updated;
+  });
+}
+
 // Keep updateOrderStatus and other functions as is
 export async function updateOrderStatus(
   orderId: string,
