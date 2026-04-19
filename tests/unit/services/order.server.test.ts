@@ -76,7 +76,7 @@ describe("createOrder", () => {
   });
 
   it("should create an order successfully with in-stock items", async () => {
-    // Mock lockVariantsForUpdate: tx.select().from().where().for("update")
+    // Mock locked variants (reserve-stock model: onHand + reserved, no stockQuantity)
     mockTx.for.mockResolvedValueOnce([
       {
         id: "v1",
@@ -85,7 +85,8 @@ describe("createOrder", () => {
         sku: "SKU1",
         price: "100000",
         costPrice: "80000",
-        stockQuantity: 10,
+        onHand: 10,
+        reserved: 0,
       },
     ]);
 
@@ -106,11 +107,11 @@ describe("createOrder", () => {
       userId: "admin-1",
     });
 
-    // Check stock update
+    // Check stock reservation (reserve-stock model increments `reserved`, not `stockQuantity`)
     expect(mockTx.update).toHaveBeenCalled();
     expect(mockTx.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        stockQuantity: expect.anything(),
+        reserved: expect.anything(),
       }),
     );
 
@@ -123,7 +124,8 @@ describe("createOrder", () => {
       {
         id: "v1",
         productId: "p1",
-        stockQuantity: 1,
+        onHand: 1,
+        reserved: 0,
         name: "V1",
         sku: "SKU1",
         price: "100",
@@ -160,7 +162,8 @@ describe("createOrder", () => {
         productId: "p1",
         name: "Variant 2",
         price: "100",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
         sku: "SKU2",
         costPrice: "50",
       },
@@ -487,7 +490,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "PRE1",
         price: "50000",
         costPrice: "30000",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
       },
     ]);
 
@@ -523,7 +527,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "SKU1",
         price: "100",
         costPrice: "80",
-        stockQuantity: 10,
+        onHand: 10,
+        reserved: 0,
       },
       {
         id: "v2",
@@ -532,7 +537,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "SKU2",
         price: "200",
         costPrice: "120",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
       },
     ]);
 
@@ -978,9 +984,9 @@ describe("updateOrderStatus - CANCELLED terminal state", () => {
     ]);
     mockTx.where.mockReturnValue(mockTx);
 
-    await expect(
-      updateOrderStatus("order-1", ORDER_STATUS.PAID, "admin-1"),
-    ).rejects.toThrow("Cannot update a cancelled order");
+    await expect(updateOrderStatus("order-1", ORDER_STATUS.PAID, "admin-1")).rejects.toThrow(
+      "Cannot update a cancelled order",
+    );
 
     expect(mockTx.update).not.toHaveBeenCalled();
   });

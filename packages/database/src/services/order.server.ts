@@ -2,14 +2,16 @@ import {
   CUSTOMER_TYPE,
   DELIVERY_PREFERENCE,
   ERROR_MESSAGE,
+  FULFILLMENT_STATUS,
   ORDER_CODE_PREFIX,
   ORDER_STATUS,
   ORDER_STATUS_ALL,
   type PAYMENT_METHOD,
+  PAYMENT_STATUS,
   ROLE,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
-import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   generateOrderNumberOutsideTransaction,
@@ -145,13 +147,54 @@ export async function createOrder(data: {
   const orderNumber = await generateOrderNumberOutsideTransaction(ORDER_CODE_PREFIX);
 
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Lock Variants with SELECT FOR UPDATE to prevent race conditions
-    // This ensures exclusive access to variant rows during stock check and update
+    // 1. Lock Variants with SELECT FOR UPDATE to prevent race conditions.
+    // Inlined (not via lockVariantsForUpdate) because that helper still selects
+    // the removed `stockQuantity` column; the reserve-stock model reads
+    // on_hand and reserved directly.
     const variantIds = data.items.map((i) => i.variantId);
-    const lockedVariants = await lockVariantsForUpdate(tx, variantIds);
+    const whereClause =
+      variantIds.length === 1
+        ? eq(productVariants.id, variantIds[0])
+        : inArray(productVariants.id, variantIds);
 
+    const lockedVariants =
+      variantIds.length === 0
+        ? []
+        : await tx
+            .select({
+              id: productVariants.id,
+              productId: productVariants.productId,
+              sku: productVariants.sku,
+              name: productVariants.name,
+              price: productVariants.price,
+              costPrice: productVariants.costPrice,
+              onHand: productVariants.onHand,
+              reserved: productVariants.reserved,
+              lowStockThreshold: productVariants.lowStockThreshold,
+              isActive: productVariants.isActive,
+            })
+            .from(productVariants)
+            .where(whereClause)
+            .for("update");
+
+    // Build variantMap using VariantWithProduct shape for downstream compat
+    // (createSplitOrders, etc.). `stockQuantity` here carries the *available*
+    // count (on_hand - reserved) for read-only consumers.
     const variantMap = new Map<string, VariantWithProduct>(
-      lockedVariants.map((v) => [v.id, v as VariantWithProduct]),
+      lockedVariants.map((v) => [
+        v.id,
+        {
+          id: v.id,
+          productId: v.productId,
+          sku: v.sku,
+          name: v.name,
+          price: v.price,
+          costPrice: v.costPrice,
+          stockQuantity: (v.onHand ?? 0) - (v.reserved ?? 0),
+          lowStockThreshold: v.lowStockThreshold,
+          isActive: v.isActive,
+        },
+      ]),
     );
     const missingVariantIds = variantIds.filter((variantId) => !variantMap.has(variantId));
 
@@ -214,13 +257,14 @@ export async function createOrder(data: {
     const total = subtotal;
     const profit = total - totalCost;
 
-    // Create Order
+    // Create Order: no legacy `status`; use paymentStatus + fulfillmentStatus
     const [newOrder] = await tx
       .insert(orders)
       .values({
         orderNumber,
         customerId: resolvedCustomerId,
-        status: ORDER_STATUS.PENDING,
+        paymentStatus: PAYMENT_STATUS.UNPAID,
+        fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
         subtotal: subtotal.toString(),
         total: total.toString(),
         totalCost: totalCost.toString(),
@@ -231,7 +275,8 @@ export async function createOrder(data: {
       })
       .returning();
 
-    // Process Items: deduct stock for all items (allow negative); report shortage for supplier
+    // Process Items: reserve (do NOT deduct on_hand); report shortage for supplier
+    // Shortage is computed against available = on_hand - reserved (before increment).
     const itemsNeedingStock: Array<{
       sku: string;
       name: string;
@@ -242,17 +287,18 @@ export async function createOrder(data: {
     for (const item of data.items) {
       const variant = variantMap.get(item.variantId)!;
       const availableStock = variant.stockQuantity ?? 0;
-      const deductQty = item.quantity;
       const quantityNeedsSupplier = Math.max(0, item.quantity - availableStock);
 
       await tx
         .update(productVariants)
         .set({
-          stockQuantity: sql`${productVariants.stockQuantity} - ${deductQty}`,
+          reserved: sql`${productVariants.reserved} + ${item.quantity}`,
         })
         .where(eq(productVariants.id, variant.id));
 
-      variant.stockQuantity = availableStock - deductQty;
+      // Keep the map in sync for any later reads in this scope.
+      variant.stockQuantity = availableStock - item.quantity;
+
       if (quantityNeedsSupplier > 0) {
         itemsNeedingStock.push({
           sku: variant.sku,
@@ -277,10 +323,11 @@ export async function createOrder(data: {
       });
     }
 
-    // Create Status History
+    // Create Status History with both payment + fulfillment status (both NOT NULL).
     await tx.insert(orderStatusHistory).values({
       orderId: newOrder.id,
-      status: ORDER_STATUS.PENDING,
+      paymentStatus: PAYMENT_STATUS.UNPAID,
+      fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
       note: "Order created by admin",
       createdBy: data.userId,
     });
