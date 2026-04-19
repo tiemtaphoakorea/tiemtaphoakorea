@@ -46,14 +46,13 @@ export default function AdminAnalyticsPage() {
     return (
       <div className="flex flex-col gap-8 pb-10">
         <div className="h-24 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-px lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
+            <div key={i} className="h-28 animate-pulse bg-gray-200 dark:bg-slate-700" />
           ))}
         </div>
-        <div className="h-10 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="h-80 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
+          <div className="h-80 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700 lg:col-span-2" />
           <div className="h-80 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
         </div>
       </div>
@@ -64,7 +63,7 @@ export default function AdminAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
         <p className="text-destructive text-center font-medium">
-          {error instanceof Error ? error.message : "Không có dữ liệu."}
+          {error instanceof Error ? error.message : "No data available."}
         </p>
       </div>
     );
@@ -75,25 +74,40 @@ export default function AdminAnalyticsPage() {
       <AnalyticsHeader data={data} />
 
       <Tabs defaultValue="overview">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-          <TabsTrigger value="products">Sản phẩm</TabsTrigger>
-          <TabsTrigger value="inventory">Tồn kho</TabsTrigger>
+        <TabsList className="mb-6 w-full justify-start gap-1 rounded-lg border border-border p-1">
+          <TabsTrigger
+            value="overview"
+            className="flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Tổng quan
+          </TabsTrigger>
+          <TabsTrigger
+            value="products"
+            className="flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Sản phẩm
+          </TabsTrigger>
+          <TabsTrigger
+            value="inventory"
+            className="flex-1 font-bold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Tồn kho
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-6 flex flex-col gap-8">
+        <TabsContent value="overview" className="mt-8 flex flex-col gap-8">
           <AnalyticsStats data={data} />
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <RevenueChart data={data.monthlyRevenue} />
             <CategorySalesChart data={data.categorySales} />
           </div>
         </TabsContent>
 
-        <TabsContent value="products" className="mt-6">
+        <TabsContent value="products" className="mt-8">
           <TopProducts products={data.topProducts} />
         </TabsContent>
 
-        <TabsContent value="inventory" className="mt-6 flex flex-col gap-8">
+        <TabsContent value="inventory" className="mt-8 flex flex-col gap-8">
           {data.inventory && <InventoryStats data={data.inventory} />}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">

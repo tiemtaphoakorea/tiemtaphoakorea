@@ -3,6 +3,7 @@ import {
   deleteOrder,
   getOrderDetails,
   updateOrder,
+  updateOrderItems,
 } from "@workspace/database/services/order.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
@@ -38,9 +39,22 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
 
   try {
     const body = await request.json();
-    const { adminNote, discount } = body;
-
+    const { adminNote, discount, items } = body;
     const { id } = await params;
+
+    if (items !== undefined) {
+      const updated = await updateOrderItems(
+        id,
+        items.map((item: any) => ({
+          variantId: item.variantId,
+          quantity: Number(item.quantity),
+          ...(item.customPrice != null && { customPrice: Number(item.customPrice) }),
+        })),
+        user.profile.id,
+      );
+      return NextResponse.json({ success: true, order: updated });
+    }
+
     const updated = await updateOrder(
       id,
       {
@@ -54,7 +68,7 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
   } catch (error: any) {
     console.error("Failed to update order:", error);
     return NextResponse.json(
-      { error: "Đã có lỗi xảy ra khi cập nhật đơn hàng." },
+      { error: error.message ?? "Đã có lỗi xảy ra khi cập nhật đơn hàng." },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }

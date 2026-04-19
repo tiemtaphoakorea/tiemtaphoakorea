@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ProductWithVariants } from "@workspace/database/types/api";
 import { ORDER_STATUS } from "@workspace/shared/constants";
 import { formatCurrency, formatDate, formatVariantDisplayName } from "@workspace/shared/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
@@ -37,6 +38,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
+  Edit2,
   Loader2,
   MapPin,
   Package,
@@ -53,6 +55,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
+import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
+import { ProductSelector } from "@/components/admin/orders/create/product-selector";
+import { printInvoice } from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -328,6 +333,47 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [note, setNote] = useState("");
   const [editState, editDispatch] = useReducer(editReducer, initialEditState);
   const [paymentState, paymentDispatch] = useReducer(paymentReducer, initialPaymentState);
+  const [isCustomerEditOpen, setIsCustomerEditOpen] = useState(false);
+  const [isCustomerEditSubmitting, setIsCustomerEditSubmitting] = useState(false);
+
+  // Item editing state (only active for pending orders)
+  type EditableItem = {
+    variantId: string;
+    productName: string;
+    variantName: string;
+    sku: string;
+    quantity: number;
+    customPrice: number;
+  };
+  const [isItemEditing, setIsItemEditing] = useState(false);
+  const [editableItems, setEditableItems] = useState<EditableItem[]>([]);
+  const [isSavingItems, setIsSavingItems] = useState(false);
+
+  const handleEditCustomer = async (formData: FormData) => {
+    const customerId = formData.get("id") as string;
+    if (!customerId) return;
+    setIsCustomerEditSubmitting(true);
+    const payload = {
+      fullName: (formData.get("fullName") as string) ?? undefined,
+      phone: (formData.get("phone") as string) ?? undefined,
+      address: (formData.get("address") as string) ?? undefined,
+      customerType: (formData.get("customerType") as string) ?? undefined,
+    };
+    try {
+      await adminClient.updateCustomer(customerId, payload);
+      toast({ title: "Thành công", description: "Đã cập nhật thông tin khách hàng" });
+      setIsCustomerEditOpen(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCustomerEditSubmitting(false);
+    }
+  };
 
   // Loading State
   if (isLoading) {
@@ -356,6 +402,8 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const statusActions = ORDER_STATUS_ACTIONS[status] ?? [];
   const isTerminal = statusActions.length === 0;
   const canDelete = status === ORDER_STATUS.CANCELLED;
+  const canEditItems =
+    status === ORDER_STATUS.PENDING && !order.parentOrderId && !(order.subOrders?.length > 0);
 
   // Handlers
   const handleOpenPayment = () => {
@@ -436,6 +484,70 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     }
   };
 
+  const handleStartItemEdit = () => {
+    setEditableItems(
+      (order?.items ?? []).map((item: any) => ({
+        variantId: item.variantId,
+        productName: item.productName,
+        variantName: item.variantName,
+        sku: item.sku,
+        quantity: item.quantity,
+        customPrice: Number(item.unitPrice),
+      })),
+    );
+    setIsItemEditing(true);
+  };
+
+  const handleAddVariantToEdit = (
+    variant: ProductWithVariants["variants"][number],
+    product: ProductWithVariants,
+  ) => {
+    setEditableItems((prev) => {
+      const existing = prev.find((i) => i.variantId === variant.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.variantId === variant.id ? { ...i, quantity: i.quantity + 1 } : i,
+        );
+      }
+      return [
+        ...prev,
+        {
+          variantId: variant.id,
+          productName: product.name,
+          variantName: variant.name,
+          sku: variant.sku,
+          quantity: 1,
+          customPrice: Number(variant.price),
+        },
+      ];
+    });
+  };
+
+  const handleSaveItems = async () => {
+    if (editableItems.length === 0) return;
+    setIsSavingItems(true);
+    try {
+      await adminClient.updateOrder(order!.id, {
+        items: editableItems.map((i) => ({
+          variantId: i.variantId,
+          quantity: i.quantity,
+          customPrice: i.customPrice,
+        })),
+      });
+      toast({ title: "Thành công", description: "Đã cập nhật sản phẩm đơn hàng." });
+      setIsItemEditing(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi",
+        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingItems(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) return;
     try {
@@ -479,7 +591,34 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 font-bold">
+          <Button
+            variant="outline"
+            className="gap-2 font-bold"
+            onClick={() =>
+              printInvoice({
+                orderNumber: order.orderNumber,
+                createdAt: order.createdAt ?? new Date(),
+                customer: {
+                  fullName: order.customer?.fullName ?? "Khách lẻ",
+                  phone: order.customer?.phone,
+                  address: order.customer?.address,
+                },
+                items: order.items.map((item: any) => ({
+                  productName: item.productName,
+                  variantName: item.variantName,
+                  sku: item.sku,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  lineTotal: item.lineTotal,
+                })),
+                subtotal: order.subtotal ?? 0,
+                discount: order.discount,
+                total: order.total ?? 0,
+                paidAmount: order.paidAmount,
+                adminNote: order.adminNote,
+              })
+            }
+          >
             <Printer className="h-4 w-4" /> In hóa đơn
           </Button>
 
@@ -609,32 +748,61 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
           {/* Order Items */}
           <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
                 <Package className="text-primary h-5 w-5" /> Chi tiết sản phẩm
               </CardTitle>
+              {canEditItems && !isItemEditing && (
+                <Button variant="outline" size="sm" onClick={handleStartItemEdit} className="gap-1">
+                  <Edit2 className="h-3.5 w-3.5" /> Sửa
+                </Button>
+              )}
+              {isItemEditing && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsItemEditing(false)}
+                    disabled={isSavingItems}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveItems}
+                    disabled={isSavingItems || editableItems.length === 0}
+                  >
+                    {isSavingItems && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+                    Lưu
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
+              {isItemEditing && (
+                <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-800">
+                  <ProductSelector onSelectVariant={handleAddVariantToEdit} />
+                </div>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50%]">Sản phẩm</TableHead>
+                    <TableHead className="w-[45%]">Sản phẩm</TableHead>
                     <TableHead className="text-center">SL</TableHead>
                     <TableHead className="text-right">Đơn giá</TableHead>
                     <TableHead className="text-right">Tổng</TableHead>
+                    {isItemEditing && <TableHead className="w-10" />}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {order.items.map((item: any) => (
-                    <TableRow key={item.id}>
+                  {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
+                    <TableRow key={isItemEditing ? item.variantId : item.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          {item.variant.images?.[0] ? (
+                          {!isItemEditing && item.variant?.images?.[0] ? (
                             <Image
                               src={item.variant.images[0].imageUrl}
-                              alt={`${formatVariantDisplayName(
-                                item.productName,
-                              )} - ${formatVariantDisplayName(item.variantName)}`}
+                              alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
                               width={48}
                               height={48}
                               className="h-12 w-12 rounded-lg bg-slate-100 object-cover"
@@ -654,13 +822,65 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center font-bold">{item.quantity}</TableCell>
-                      <TableCell className="text-right font-medium text-slate-600">
-                        {formatCurrency(Number(item.unitPrice))}
+                      <TableCell className="text-center">
+                        {isItemEditing ? (
+                          <Input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const qty = Math.max(1, Number(e.target.value));
+                              setEditableItems((prev) =>
+                                prev.map((ei, i) => (i === idx ? { ...ei, quantity: qty } : ei)),
+                              );
+                            }}
+                            className="w-16 text-center"
+                          />
+                        ) : (
+                          <span className="font-bold">{item.quantity}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isItemEditing ? (
+                          <Input
+                            type="number"
+                            min={0}
+                            value={item.customPrice}
+                            onChange={(e) => {
+                              const price = Math.max(0, Number(e.target.value));
+                              setEditableItems((prev) =>
+                                prev.map((ei, i) =>
+                                  i === idx ? { ...ei, customPrice: price } : ei,
+                                ),
+                              );
+                            }}
+                            className="w-28 text-right"
+                          />
+                        ) : (
+                          <span className="font-medium text-slate-600">
+                            {formatCurrency(Number(item.unitPrice))}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-bold text-slate-900">
-                        {formatCurrency(Number(item.lineTotal))}
+                        {isItemEditing
+                          ? formatCurrency(item.customPrice * item.quantity)
+                          : formatCurrency(Number(item.lineTotal))}
                       </TableCell>
+                      {isItemEditing && (
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-600"
+                            onClick={() =>
+                              setEditableItems((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -668,11 +888,23 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               <div className="flex flex-col items-end gap-2 border-t border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
                 <div className="flex w-full max-w-xs justify-between text-sm font-medium text-slate-500">
                   <span>Tạm tính</span>
-                  <span>{formatCurrency(Number(order.subtotal))}</span>
+                  <span>
+                    {isItemEditing
+                      ? formatCurrency(
+                          editableItems.reduce((s, i) => s + i.customPrice * i.quantity, 0),
+                        )
+                      : formatCurrency(Number(order.subtotal))}
+                  </span>
                 </div>
                 <div className="flex w-full max-w-xs justify-between text-xl font-black text-slate-900 dark:text-white">
                   <span>Tổng cộng</span>
-                  <span className="text-primary">{formatCurrency(Number(order.total))}</span>
+                  <span className="text-primary">
+                    {isItemEditing
+                      ? formatCurrency(
+                          editableItems.reduce((s, i) => s + i.customPrice * i.quantity, 0),
+                        )
+                      : formatCurrency(Number(order.total))}
+                  </span>
                 </div>
               </div>
 
@@ -824,10 +1056,27 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Right Column: Customer & Meta */}
         <div className="space-y-6 lg:col-span-1">
+          <CustomerEditSheet
+            isOpen={isCustomerEditOpen}
+            onOpenChange={setIsCustomerEditOpen}
+            customer={order.customer}
+            isSubmitting={isCustomerEditSubmitting}
+            onSubmit={handleEditCustomer}
+          />
           <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
-                <User className="text-primary h-5 w-5" /> Khách hàng
+              <CardTitle className="flex items-center justify-between text-lg font-black tracking-tight uppercase">
+                <span className="flex items-center gap-2">
+                  <User className="text-primary h-5 w-5" /> Khách hàng
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsCustomerEditOpen(true)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

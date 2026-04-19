@@ -1,9 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
-import type { ProductListItem } from "@workspace/database/types/admin";
-import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
 import {
   AlertDialog,
@@ -18,7 +15,6 @@ import {
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { DataTable } from "@workspace/ui/components/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
 import { useToast } from "@workspace/ui/components/use-toast";
 import {
   CheckSquare,
@@ -48,7 +52,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useReducer } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -120,222 +124,6 @@ function deleteReducer(state: DeleteState, action: DeleteAction): DeleteState {
     default:
       return state;
   }
-}
-
-// ---------------------------------------------------------------------------
-// Column factory
-// ---------------------------------------------------------------------------
-
-function buildColumns(
-  selectMode: boolean,
-  selectedIds: string[],
-  products: ProductListItem[],
-  handleEdit: (id: string) => void,
-  dispatch: React.Dispatch<DeleteAction>,
-): ColumnDef<ProductListItem>[] {
-  const selectedSet = new Set(selectedIds);
-
-  const checkboxColumn: ColumnDef<ProductListItem> = {
-    id: "select",
-    header: () => {
-      const allSelected = products.length > 0 && products.every((p) => selectedSet.has(p.id));
-      const someSelected = products.some((p) => selectedSet.has(p.id));
-      return (
-        <input
-          type="checkbox"
-          checked={allSelected}
-          ref={(el) => {
-            if (el) el.indeterminate = someSelected && !allSelected;
-          }}
-          onChange={(e) => {
-            const next = e.target.checked
-              ? products.map((p) => p.id)
-              : selectedIds.filter((id) => !products.some((p) => p.id === id));
-            dispatch({ type: "SET_SELECTED_IDS", payload: next });
-          }}
-          aria-label="Chọn tất cả"
-          onClick={(e) => e.stopPropagation()}
-          className="h-4 w-4 cursor-pointer accent-primary"
-        />
-      );
-    },
-    cell: ({ row }) => (
-      <input
-        type="checkbox"
-        checked={selectedSet.has(row.original.id)}
-        onChange={() => dispatch({ type: "TOGGLE_ID", payload: row.original.id })}
-        aria-label={`Chọn ${row.original.name}`}
-        onClick={(e) => e.stopPropagation()}
-        className="h-4 w-4 cursor-pointer accent-primary"
-      />
-    ),
-  };
-
-  const baseColumns: ColumnDef<ProductListItem>[] = [
-    {
-      accessorKey: "thumbnail",
-      header: "Ảnh",
-      cell: ({ row }) => (
-        <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-          {row.original.thumbnail ? (
-            <Image
-              src={row.original.thumbnail}
-              alt={row.original.name}
-              fill
-              sizes="48px"
-              className="object-cover"
-            />
-          ) : (
-            <ImageIcon className="h-5 w-5 text-slate-300" />
-          )}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "name",
-      header: "Tên sản phẩm",
-      cell: ({ row }) => (
-        <span className="flex flex-col">
-          <span className="font-bold text-slate-700 dark:text-slate-200">{row.original.name}</span>
-          <code className="font-mono text-xs text-slate-400">/{row.original.slug}</code>
-          {row.original.skus && (
-            <span className="font-mono text-xs text-slate-500">SKU: {row.original.skus}</span>
-          )}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "categoryName",
-      header: "Danh mục",
-      cell: ({ row }) =>
-        row.original.categoryName ? (
-          <Badge
-            variant="secondary"
-            className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
-          >
-            {row.original.categoryName}
-          </Badge>
-        ) : (
-          <span className="block w-full text-center text-xs text-slate-400 italic">-</span>
-        ),
-    },
-    {
-      accessorKey: "price",
-      header: "Giá bán",
-      cell: ({ row }) => (
-        <div className="font-bold text-slate-700 dark:text-slate-200">
-          {row.original.minPrice === row.original.maxPrice
-            ? formatCurrency(row.original.minPrice)
-            : `${formatCurrency(row.original.minPrice)} - ${formatCurrency(row.original.maxPrice)}`}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "totalStock",
-      header: "Tồn kho",
-      cell: ({ row }) => {
-        const threshold = row.original.minLowStockThreshold ?? 5;
-        const isOutOfStock = row.original.totalStock === 0;
-        const isLowStock = !isOutOfStock && row.original.totalStock <= threshold;
-
-        return (
-          <div className="flex items-center gap-2">
-            <span
-              className={
-                row.original.totalStock > 0
-                  ? "font-bold text-slate-700 dark:text-slate-300"
-                  : "font-bold text-red-500"
-              }
-            >
-              {row.original.totalStock}
-            </span>
-            {isOutOfStock ? (
-              <Badge variant="destructive" className="text-[10px] font-bold">
-                Hết hàng
-              </Badge>
-            ) : isLowStock ? (
-              <Badge variant="outline" className="text-[10px] font-bold">
-                Thấp
-              </Badge>
-            ) : null}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "isActive",
-      header: "Trạng thái",
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.isActive ? "outline" : "destructive"}
-          className="text-[10px] font-black tracking-tight uppercase"
-        >
-          {row.original.isActive ? "Đang bán" : "Ngừng bán"}
-        </Badge>
-      ),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(row.original.id);
-            }}
-            aria-label="Chỉnh sửa"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              asChild
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Button
-                variant="ghost"
-                className="h-8 w-8 rounded-lg p-0 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 font-bold">
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/products/${row.original.id}/edit`}
-                  className="flex cursor-pointer items-center gap-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  dispatch({
-                    type: "SET_DELETE_TARGET",
-                    payload: { id: row.original.id, name: row.original.name },
-                  });
-                }}
-                className="cursor-pointer gap-2"
-              >
-                <Trash2 />
-                <span>Xóa</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-    },
-  ];
-
-  return selectMode ? [checkboxColumn, ...baseColumns] : baseColumns;
 }
 
 // ---------------------------------------------------------------------------
@@ -452,60 +240,63 @@ function AdminProductsContent() {
   }, [selectMode, isDeleting, exitSelectMode]);
 
   const search = searchParams.get("search") || "";
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.max(
-    1,
-    parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
-  );
   const stockStatus = searchParams.get("stockStatus") || "all";
   const updated = searchParams.get("updated") === "1";
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: queryKeys.products.list(search, page, limit, stockStatus),
-    queryFn: () =>
+  const PAGE_SIZE = 20;
+
+  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: [...queryKeys.products.all, "infinite", search, stockStatus],
+    queryFn: ({ pageParam }) =>
       adminClient.getProducts({
         search,
-        page,
-        limit,
+        page: pageParam,
+        limit: PAGE_SIZE,
         stockStatus: stockStatus === "all" ? undefined : stockStatus,
       }),
-    placeholderData: keepPreviousData,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.metadata;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 5,
   });
 
-  // API đã filter theo search + stockStatus và phân trang (LIMIT/OFFSET).
-  // Hiển thị đúng trang hiện tại từ server, không dedupe/lọc lại ở client.
-  const products = data?.data || [];
-  const metadata = data?.metadata;
+  const products = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  const totalCount = data?.pages[0]?.metadata.total ?? 0;
 
-  const updateParams = (newParams: Record<string, string | number | null>) => {
+  // Sentinel for infinite scroll
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const updateParams = (newParams: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value.toString());
-      }
+      if (value === null || value === "") params.delete(key);
+      else params.set(key, value);
     });
-
-    // Reset to page 1 if search changes
-    if (newParams.search !== undefined && newParams.page === undefined) {
-      params.set("page", "1");
-    }
-
     router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleSearch = (val: string) => {
-    updateParams({ search: val });
+    updateParams({ search: val || null });
   };
 
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/products/${id}/edit`);
-    },
-    [router],
-  );
+  const handleEdit = useCallback((id: string) => router.push(`/products/${id}/edit`), [router]);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -545,11 +336,6 @@ function AdminProductsContent() {
       dispatch({ type: "SET_DELETING", payload: false });
     }
   };
-
-  const columns = useMemo(
-    () => buildColumns(selectMode, selectedIds, products, handleEdit, dispatch),
-    [selectMode, selectedIds, products, handleEdit],
-  );
 
   return (
     <>
@@ -679,27 +465,218 @@ function AdminProductsContent() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <DataTable
-              columns={columns}
-              data={products}
-              isLoading={isLoading}
-              isFetching={isFetching}
-              pageCount={metadata?.totalPages || 1}
-              pagination={{
-                pageIndex: page - 1,
-                pageSize: limit,
-              }}
-              onRowClick={selectMode ? undefined : (row) => handleEdit(row.original.id)}
-              onPaginationChange={(newPagination) => {
-                if (selectMode) dispatch({ type: "SET_SELECTED_IDS", payload: [] });
-                updateParams({
-                  page: newPagination.pageIndex + 1,
-                  limit: newPagination.pageSize,
-                });
-              }}
-              emptyMessage="Không tìm thấy sản phẩm nào."
-              headerClassName="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800"
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16 text-slate-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : products.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                <ImageIcon className="mb-3 h-10 w-10" />
+                <p className="font-medium">Không tìm thấy sản phẩm nào.</p>
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
+                    <TableRow>
+                      {selectMode && (
+                        <TableHead className="w-10">
+                          <input
+                            type="checkbox"
+                            checked={
+                              products.length > 0 &&
+                              products.every((p) => selectedIds.includes(p.id))
+                            }
+                            ref={(el) => {
+                              if (el) {
+                                const some = products.some((p) => selectedIds.includes(p.id));
+                                const all = products.every((p) => selectedIds.includes(p.id));
+                                el.indeterminate = some && !all;
+                              }
+                            }}
+                            onChange={(e) => {
+                              const next = e.target.checked ? products.map((p) => p.id) : [];
+                              dispatch({ type: "SET_SELECTED_IDS", payload: next });
+                            }}
+                            aria-label="Chọn tất cả"
+                            className="h-4 w-4 cursor-pointer accent-primary"
+                          />
+                        </TableHead>
+                      )}
+                      <TableHead className="w-14">Ảnh</TableHead>
+                      <TableHead>Tên sản phẩm</TableHead>
+                      <TableHead>Danh mục</TableHead>
+                      <TableHead>Giá bán</TableHead>
+                      <TableHead>Tồn kho</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                      <TableHead className="w-20" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => {
+                      const threshold = product.minLowStockThreshold ?? 5;
+                      const isOutOfStock = product.totalStock === 0;
+                      const isLowStock = !isOutOfStock && product.totalStock <= threshold;
+                      return (
+                        <TableRow
+                          key={product.id}
+                          className={!selectMode ? "cursor-pointer" : undefined}
+                          onClick={() => !selectMode && handleEdit(product.id)}
+                        >
+                          {selectMode && (
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.includes(product.id)}
+                                onChange={() =>
+                                  dispatch({ type: "TOGGLE_ID", payload: product.id })
+                                }
+                                aria-label={`Chọn ${product.name}`}
+                                className="h-4 w-4 cursor-pointer accent-primary"
+                              />
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                              {product.thumbnail ? (
+                                <Image
+                                  src={product.thumbnail}
+                                  alt={product.name}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <ImageIcon className="h-5 w-5 text-slate-300" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="flex flex-col">
+                              <span className="font-bold text-slate-700 dark:text-slate-200">
+                                {product.name}
+                              </span>
+                              <code className="font-mono text-xs text-slate-400">
+                                /{product.slug}
+                              </code>
+                              {product.skus && (
+                                <span className="font-mono text-xs text-slate-500">
+                                  SKU: {product.skus}
+                                </span>
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {product.categoryName ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
+                              >
+                                {product.categoryName}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs italic text-slate-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-700 dark:text-slate-200">
+                            {product.minPrice === product.maxPrice
+                              ? formatCurrency(product.minPrice)
+                              : `${formatCurrency(product.minPrice)} – ${formatCurrency(product.maxPrice)}`}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={
+                                  product.totalStock > 0
+                                    ? "font-bold text-slate-700 dark:text-slate-300"
+                                    : "font-bold text-red-500"
+                                }
+                              >
+                                {product.totalStock}
+                              </span>
+                              {isOutOfStock ? (
+                                <Badge variant="destructive" className="text-[10px] font-bold">
+                                  Hết hàng
+                                </Badge>
+                              ) : isLowStock ? (
+                                <Badge variant="outline" className="text-[10px] font-bold">
+                                  Thấp
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={product.isActive ? "outline" : "destructive"}
+                              className="text-[10px] font-black tracking-tight uppercase"
+                            >
+                              {product.isActive ? "Đang bán" : "Ngừng bán"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEdit(product.id)}
+                                aria-label="Chỉnh sửa"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40 font-bold">
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      href={`/products/${product.id}/edit`}
+                                      className="flex cursor-pointer items-center gap-2"
+                                    >
+                                      <Edit2 className="h-4 w-4 shrink-0" /> Chỉnh sửa
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    className="cursor-pointer gap-2"
+                                    onClick={() =>
+                                      dispatch({
+                                        type: "SET_DELETE_TARGET",
+                                        payload: { id: product.id, name: product.name },
+                                      })
+                                    }
+                                  >
+                                    <Trash2 /> <span>Xóa</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} className="flex items-center justify-center py-6">
+                  {isFetchingNextPage && (
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                  )}
+                  {!hasNextPage && (
+                    <p className="text-xs text-slate-400">
+                      Đã hiển thị tất cả {totalCount} sản phẩm
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -17,10 +17,16 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 interface OrderItemsTableProps {
   items: OrderBuilderItem[];
   onUpdateQuantity: (variantId: string, quantity: number) => void;
+  onUpdatePrice: (variantId: string, price: number) => void;
   onRemoveItem: (variantId: string) => void;
 }
 
-export function OrderItemsTable({ items, onUpdateQuantity, onRemoveItem }: OrderItemsTableProps) {
+export function OrderItemsTable({
+  items,
+  onUpdateQuantity,
+  onUpdatePrice,
+  onRemoveItem,
+}: OrderItemsTableProps) {
   if (items.length === 0) {
     return (
       <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-8 text-center animate-in fade-in-50">
@@ -59,7 +65,20 @@ export function OrderItemsTable({ items, onUpdateQuantity, onRemoveItem }: Order
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+              <TableCell className="text-right">
+                <Input
+                  className="h-8 w-28 text-right ml-auto"
+                  type="number"
+                  min={0}
+                  value={item.customPrice ?? item.price}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!Number.isNaN(val) && val >= 0) {
+                      onUpdatePrice(item.variantId, val);
+                    }
+                  }}
+                />
+              </TableCell>
               <TableCell className="text-center text-muted-foreground">{item.stock}</TableCell>
               <TableCell>
                 <div className="flex flex-col items-center gap-1">
@@ -100,7 +119,7 @@ export function OrderItemsTable({ items, onUpdateQuantity, onRemoveItem }: Order
                 </div>
               </TableCell>
               <TableCell className="text-right font-medium">
-                {formatCurrency(item.price * item.quantity)}
+                {formatCurrency((item.customPrice ?? item.price) * item.quantity)}
               </TableCell>
               <TableCell>
                 <Button

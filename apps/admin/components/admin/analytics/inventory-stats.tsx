@@ -13,7 +13,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase dark:text-white">
-        Báo cáo tồn kho
+        Inventory Report
       </h2>
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">

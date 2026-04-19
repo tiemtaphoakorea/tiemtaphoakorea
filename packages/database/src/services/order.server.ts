@@ -123,6 +123,7 @@ export async function createOrder(data: {
   items: Array<{
     variantId: string;
     quantity: number;
+    customPrice?: number;
   }>;
   note?: string;
   userId: string; // Admin creating the order
@@ -205,7 +206,8 @@ export async function createOrder(data: {
 
     data.items.forEach((item) => {
       const variant = variantMap.get(item.variantId)!;
-      subtotal += Number(variant.price) * item.quantity;
+      const unitPrice = item.customPrice ?? Number(variant.price);
+      subtotal += unitPrice * item.quantity;
       totalCost += Number(variant.costPrice || 0) * item.quantity;
     });
 
@@ -259,6 +261,7 @@ export async function createOrder(data: {
           variantId: variant.id,
         });
       }
+      const unitPrice = item.customPrice ?? Number(variant.price);
       await tx.insert(orderItems).values({
         orderId: newOrder.id,
         variantId: variant.id,
@@ -266,14 +269,11 @@ export async function createOrder(data: {
         variantName: variant.name,
         sku: variant.sku,
         quantity: item.quantity,
-        unitPrice: variant.price,
+        unitPrice: unitPrice.toString(),
         costPriceAtOrderTime: variant.costPrice,
-        lineTotal: (Number(variant.price) * item.quantity).toString(),
+        lineTotal: (unitPrice * item.quantity).toString(),
         lineCost: (Number(variant.costPrice || 0) * item.quantity).toString(),
-        lineProfit: (
-          (Number(variant.price) - Number(variant.costPrice || 0)) *
-          item.quantity
-        ).toString(),
+        lineProfit: ((unitPrice - Number(variant.costPrice || 0)) * item.quantity).toString(),
       });
     }
 
@@ -594,6 +594,165 @@ export async function updateOrder(
       note: `Cập nhật đơn hàng: ${Object.keys(updates).join(", ")}`,
       createdBy: userId,
     });
+
+    return updatedOrder;
+  });
+}
+
+/**
+ * Replace all items on a PENDING order.
+ * - Restores stock for old items, deducts for new items.
+ * - Cancels supplier orders linked to the old order number, creates new ones as needed.
+ * - Blocked if the order has sub-orders or is a child of another order.
+ */
+export async function updateOrderItems(
+  orderId: string,
+  newItems: Array<{ variantId: string; quantity: number; customPrice?: number }>,
+  userId: string,
+) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    // 1. Lock and validate order (fetch full fields needed)
+    const [lockedOrder] = await tx
+      .select({
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        status: orders.status,
+        subtotal: orders.subtotal,
+        discount: orders.discount,
+        parentOrderId: orders.parentOrderId,
+      })
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .for("update");
+    if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    if (lockedOrder.status !== ORDER_STATUS.PENDING) {
+      throw new Error("Chỉ có thể sửa sản phẩm khi đơn hàng ở trạng thái chờ xử lý.");
+    }
+    if (lockedOrder.parentOrderId) {
+      throw new Error("Không thể sửa đơn hàng con.");
+    }
+
+    // Check for sub-orders
+    const subOrderRows = await tx
+      .select({ id: orders.id })
+      .from(orders)
+      .where(eq(orders.parentOrderId, orderId));
+    if (subOrderRows.length > 0) {
+      throw new Error("Không thể sửa đơn hàng đã được tách.");
+    }
+
+    // 2. Restore stock for existing items
+    const existingItems = await tx
+      .select({ variantId: orderItems.variantId, quantity: orderItems.quantity })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    const allVariantIds = [
+      ...new Set([...existingItems.map((i) => i.variantId), ...newItems.map((i) => i.variantId)]),
+    ];
+    await lockVariantsForUpdate(tx, allVariantIds);
+
+    for (const row of existingItems) {
+      await tx
+        .update(productVariants)
+        .set({ stockQuantity: sql`${productVariants.stockQuantity} + ${row.quantity}` })
+        .where(eq(productVariants.id, row.variantId));
+    }
+
+    // 3. Cancel supplier orders linked to this order
+    await tx
+      .update(supplierOrders)
+      .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: new Date() })
+      .where(ilike(supplierOrders.note, `%[Order: ${lockedOrder.orderNumber}]%`));
+
+    // 4. Delete existing order items
+    await tx.delete(orderItems).where(eq(orderItems.orderId, orderId));
+
+    // 5. Fetch new variant data and deduct stock
+    const newVariantRows = await tx
+      .select()
+      .from(productVariants)
+      .where(
+        sql`${productVariants.id} = ANY(ARRAY[${sql.join(
+          newItems.map((i) => sql`${i.variantId}`),
+          sql`, `,
+        )}]::uuid[])`,
+      );
+    const newVariantMap = new Map(newVariantRows.map((v) => [v.id, v]));
+
+    let subtotal = 0;
+    let totalCost = 0;
+    const itemsNeedingStock: Array<{ variantId: string; quantity: number; sku: string }> = [];
+
+    for (const item of newItems) {
+      const variant = newVariantMap.get(item.variantId);
+      if (!variant) throw new Error(`Không tìm thấy biến thể: ${item.variantId}`);
+
+      const unitPrice = item.customPrice ?? Number(variant.price);
+      const costPrice = Number(variant.costPrice || 0);
+      subtotal += unitPrice * item.quantity;
+      totalCost += costPrice * item.quantity;
+
+      // Deduct stock (allow negative for pre-order)
+      await tx
+        .update(productVariants)
+        .set({ stockQuantity: sql`${productVariants.stockQuantity} - ${item.quantity}` })
+        .where(eq(productVariants.id, variant.id));
+
+      const currentStock = variant.stockQuantity ?? 0;
+      const shortfall = Math.max(0, item.quantity - currentStock);
+      if (shortfall > 0) {
+        itemsNeedingStock.push({ variantId: variant.id, quantity: shortfall, sku: variant.sku });
+      }
+
+      await tx.insert(orderItems).values({
+        orderId,
+        variantId: variant.id,
+        productName: variant.name,
+        variantName: variant.name,
+        sku: variant.sku,
+        quantity: item.quantity,
+        unitPrice: unitPrice.toString(),
+        costPriceAtOrderTime: variant.costPrice,
+        lineTotal: (unitPrice * item.quantity).toString(),
+        lineCost: (costPrice * item.quantity).toString(),
+        lineProfit: ((unitPrice - costPrice) * item.quantity).toString(),
+      });
+    }
+
+    // 6. Update order totals
+    const discount = Number(lockedOrder.discount || 0);
+    const total = subtotal - discount;
+    const profit = total - totalCost;
+
+    const [updatedOrder] = await tx
+      .update(orders)
+      .set({
+        subtotal: subtotal.toString(),
+        total: total.toString(),
+        totalCost: totalCost.toString(),
+        profit: profit.toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      status: ORDER_STATUS.PENDING,
+      note: "Cập nhật sản phẩm đơn hàng",
+      createdBy: userId,
+    });
+
+    // 7. Auto-create supplier orders for new shortfalls
+    if (itemsNeedingStock.length > 0) {
+      await createSupplierOrdersForItems(
+        tx,
+        itemsNeedingStock,
+        userId,
+        lockedOrder.orderNumber ?? undefined,
+      );
+    }
 
     return updatedOrder;
   });

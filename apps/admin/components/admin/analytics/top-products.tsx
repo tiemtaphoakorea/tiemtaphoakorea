@@ -21,9 +21,9 @@ export function TopProducts({ products }: TopProductsProps) {
     <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-xl font-black">Top sản phẩm bán chạy</CardTitle>
+          <CardTitle className="text-xl font-black">Sản phẩm bán chạy</CardTitle>
           <CardDescription className="font-medium">
-            Những sản phẩm mang lại doanh thu cao nhất cho cửa hàng.
+            Những sản phẩm mang lại doanh thu cao nhất trong năm.
           </CardDescription>
         </div>
         <Button
