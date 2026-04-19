@@ -79,7 +79,9 @@ export function OrderItemsTable({
                   }}
                 />
               </TableCell>
-              <TableCell className="text-center text-muted-foreground">{item.available}</TableCell>
+              <TableCell className="text-center text-muted-foreground">
+                {Math.max(0, item.available)}
+              </TableCell>
               <TableCell>
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex items-center gap-2">
@@ -113,7 +115,8 @@ export function OrderItemsTable({
                   </div>
                   {item.quantity > item.available && (
                     <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700">
-                      Sắp thiếu hàng, cần nhập thêm {item.quantity - item.available} cái
+                      Sắp thiếu hàng, cần nhập thêm {item.quantity - Math.max(0, item.available)}{" "}
+                      cái
                     </div>
                   )}
                 </div>

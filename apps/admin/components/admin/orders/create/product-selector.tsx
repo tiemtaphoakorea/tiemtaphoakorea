@@ -207,14 +207,9 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
             <SelectContent>
               {selectedProduct?.variants.map((variant) => {
                 const available = variant.onHand - variant.reserved;
-                const isOutOfStock = available <= 0;
 
                 return (
-                  <SelectItem
-                    key={variant.id}
-                    value={variant.id}
-                    disabled={isOutOfStock} // Optionally disable out of stock
-                  >
+                  <SelectItem key={variant.id} value={variant.id}>
                     <div className="flex items-center justify-between w-full gap-4">
                       <span className="font-medium">{variant.name || "Default"}</span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
