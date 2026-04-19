@@ -24,6 +24,9 @@ export type ProductListItem = {
   categoryName: string | null;
   basePrice: string | null;
   totalStock: number;
+  totalOnHand: number;
+  totalReserved: number;
+  totalAvailable: number;
   minPrice: number;
   maxPrice: number;
   thumbnail: string;
@@ -44,6 +47,8 @@ export type CreateProductData = {
     sku: string;
     price: number;
     costPrice?: number;
+    onHand?: number;
+    /** @deprecated use onHand */
     stockQuantity?: number;
     lowStockThreshold?: number;
     images?: string[]; // Array of image URLs
@@ -72,7 +77,9 @@ export async function getProducts({
 } = {}) {
   const offset = (page - 1) * limit;
   const stockThresholdExpr = sql`coalesce(min(${productVariants.lowStockThreshold}), 5)`;
-  const totalStockExpr = sql`coalesce(sum(${productVariants.stockQuantity}), 0)`;
+  const totalOnHandExpr = sql`coalesce(sum(${productVariants.onHand}), 0)`;
+  const totalReservedExpr = sql`coalesce(sum(${productVariants.reserved}), 0)`;
+  const totalAvailableExpr = sql`coalesce(sum(${productVariants.onHand} - ${productVariants.reserved}), 0)`;
 
   const baseWhere = and(
     eq(products.isActive, true),
@@ -96,9 +103,11 @@ export async function getProducts({
       .where(baseWhere)
       .groupBy(products.id, categories.name);
     if (stockStatus === "low_stock") {
-      filteredSubquery.having(sql`${totalStockExpr} <= ${stockThresholdExpr}`);
+      filteredSubquery.having(
+        sql`${totalAvailableExpr} > 0 AND ${totalAvailableExpr} <= ${stockThresholdExpr}`,
+      );
     } else {
-      filteredSubquery.having(sql`${totalStockExpr} = 0`);
+      filteredSubquery.having(sql`${totalAvailableExpr} <= 0`);
     }
     const countRows = await db
       .select({ count: sql<number>`count(*)` })
@@ -123,17 +132,20 @@ export async function getProducts({
       isActive: products.isActive,
       categoryName: categories.name,
       basePrice: products.basePrice,
-      totalStock: totalStockExpr,
+      totalStock: totalOnHandExpr,
+      totalOnHand: totalOnHandExpr,
+      totalReserved: totalReservedExpr,
+      totalAvailable: totalAvailableExpr,
       minPrice: sql<number>`min(${productVariants.price})`,
       maxPrice: sql<number>`max(${productVariants.price})`,
       minLowStockThreshold: stockThresholdExpr,
       skus: sql<string>`string_agg(distinct ${productVariants.sku}, ', ')`,
       thumbnail: sql<string>`(
-        select ${variantImages.imageUrl} 
-        from ${variantImages} 
+        select ${variantImages.imageUrl}
+        from ${variantImages}
         join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
-        where pv_img.product_id = ${products.id} 
-        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc 
+        where pv_img.product_id = ${products.id}
+        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
         limit 1
       )`,
     })
@@ -148,9 +160,9 @@ export async function getProducts({
 
   // Apply HAVING clause for stock status if requested
   if (stockStatus === "low_stock") {
-    query.having(sql`${totalStockExpr} <= ${stockThresholdExpr}`);
+    query.having(sql`${totalAvailableExpr} > 0 AND ${totalAvailableExpr} <= ${stockThresholdExpr}`);
   } else if (stockStatus === "out_of_stock") {
-    query.having(sql`${totalStockExpr} = 0`);
+    query.having(sql`${totalAvailableExpr} <= 0`);
   }
 
   const results = await query;
@@ -232,7 +244,8 @@ export async function createProduct(data: CreateProductData) {
 
     if (data.variants && data.variants.length > 0) {
       for (const variant of data.variants) {
-        if ((variant.stockQuantity || 0) < 0) {
+        const onHand = variant.onHand ?? variant.stockQuantity ?? 0;
+        if (onHand < 0) {
           throw new Error("Quantity cannot be negative");
         }
         const [newVariant] = await tx
@@ -243,7 +256,8 @@ export async function createProduct(data: CreateProductData) {
             sku: variant.sku,
             price: variant.price.toString(),
             costPrice: variant.costPrice?.toString() || "0",
-            stockQuantity: variant.stockQuantity || 0,
+            onHand,
+            reserved: 0,
             lowStockThreshold: variant.lowStockThreshold,
           })
           .returning();
@@ -463,15 +477,15 @@ export async function getProductsForListing(params: {
       isActive: products.isActive,
       categoryName: categories.name,
       basePrice: products.basePrice,
-      totalStock: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`,
+      totalStock: sql<number>`coalesce(sum(${productVariants.onHand}), 0)`,
       minPrice: sql<number>`min(${productVariants.price})`,
       maxPrice: sql<number>`max(${productVariants.price})`,
       thumbnail: sql<string>`coalesce((
-        select ${variantImages.imageUrl} 
-        from ${variantImages} 
+        select ${variantImages.imageUrl}
+        from ${variantImages}
         join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
-        where pv_img.product_id = ${products.id} 
-        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc 
+        where pv_img.product_id = ${products.id}
+        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
         limit 1
       ), '')`,
     })
@@ -510,15 +524,15 @@ const PRODUCT_CARD_SELECT = (productsTable: typeof products) => ({
   isFeatured: productsTable.isFeatured,
   categoryName: categories.name,
   basePrice: productsTable.basePrice,
-  totalStock: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`,
+  totalStock: sql<number>`coalesce(sum(${productVariants.onHand}), 0)`,
   minPrice: sql<number>`min(${productVariants.price})`,
   maxPrice: sql<number>`max(${productVariants.price})`,
   thumbnail: sql<string>`coalesce((
-    select ${variantImages.imageUrl} 
-    from ${variantImages} 
+    select ${variantImages.imageUrl}
+    from ${variantImages}
     join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
-    where pv_img.product_id = ${productsTable.id} 
-    order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc 
+    where pv_img.product_id = ${productsTable.id}
+    order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
     limit 1
   ), '')`,
 });
@@ -565,7 +579,7 @@ export async function getBestSellers(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT) {
       ...PRODUCT_CARD_SELECT(products),
       // Override totalStock with a correlated subquery to avoid inflation from orderItems join
       totalStock: sql<number>`coalesce((
-        select sum(pv2.stock_quantity)
+        select sum(pv2.on_hand)
         from ${productVariants} as pv2
         where pv2.product_id = ${products.id}
       ), 0)`,
@@ -665,13 +679,13 @@ export async function updateProduct(id: string, data: UpdateProductData) {
           (incomingVariantId ? `GEN-${incomingVariantId.slice(0, 8)}` : `GEN-${Date.now()}`),
         price: (v.price ?? Number(previousVariant?.price ?? 0)) as number,
         costPrice: (v.costPrice ?? Number(previousVariant?.costPrice ?? 0)) as number,
-        stockQuantity: (v.stockQuantity ?? previousVariant?.stockQuantity ?? 0) as number,
+        onHand: (v.onHand ?? v.stockQuantity ?? previousVariant?.onHand ?? 0) as number,
         lowStockThreshold: v.lowStockThreshold ?? previousVariant?.lowStockThreshold,
         isActive: true,
         updatedAt: new Date(),
       };
 
-      if ((resolvedVariant.stockQuantity || 0) < 0) {
+      if ((resolvedVariant.onHand || 0) < 0) {
         throw new Error("Quantity cannot be negative");
       }
 

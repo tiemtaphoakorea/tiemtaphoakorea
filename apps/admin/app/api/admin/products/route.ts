@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         ...v,
         price: Number(v.price),
         costPrice: Number(v.costPrice || 0),
-        stockQuantity: Number(v.stockQuantity || 0),
+        onHand: Number(v.onHand ?? v.stockQuantity ?? 0),
         lowStockThreshold:
           v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
       })),

@@ -515,8 +515,10 @@ function AdminProductsContent() {
                   <TableBody>
                     {products.map((product) => {
                       const threshold = product.minLowStockThreshold ?? 5;
-                      const isOutOfStock = product.totalStock === 0;
-                      const isLowStock = !isOutOfStock && product.totalStock <= threshold;
+                      const onHand = product.totalOnHand ?? product.totalStock;
+                      const available = product.totalAvailable ?? onHand;
+                      const isOutOfStock = available <= 0;
+                      const isLowStock = !isOutOfStock && available <= threshold;
                       return (
                         <TableRow
                           key={product.id}
@@ -585,14 +587,17 @@ function AdminProductsContent() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {onHand}
+                              </span>
                               <span
                                 className={
-                                  product.totalStock > 0
-                                    ? "font-bold text-slate-700 dark:text-slate-300"
-                                    : "font-bold text-red-500"
+                                  available < 0
+                                    ? "text-xs font-medium text-red-600"
+                                    : "text-xs font-medium text-slate-500"
                                 }
                               >
-                                {product.totalStock}
+                                (còn bán được: {available})
                               </span>
                               {isOutOfStock ? (
                                 <Badge variant="destructive" className="text-[10px] font-bold">

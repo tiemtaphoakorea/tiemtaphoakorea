@@ -102,6 +102,9 @@ export interface ProductListItem {
   categoryName: string | null;
   basePrice: string | null; // Decimal string
   totalStock: number;
+  totalOnHand: number;
+  totalReserved: number;
+  totalAvailable: number;
   minPrice: number;
   maxPrice: number;
   thumbnail: string;
