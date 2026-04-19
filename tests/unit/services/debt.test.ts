@@ -65,6 +65,29 @@ describe("getDebtSummary", () => {
     expect(miss.metadata.total).toBe(0);
   });
 
+  it("applies minAgeDays to both data and metadata.total (regression)", async () => {
+    const { order } = await createOrder({
+      customerId: fx.customerId,
+      userId: fx.userId,
+      items: [{ variantId: fx.variantId, quantity: 1 }],
+    });
+    await stockOut({ orderId: order.id, userId: fx.userId });
+    // Backdate so oldestDebtDate is 40 days ago.
+    const past = new Date(Date.now() - 40 * 86400000);
+    await db.update(orders).set({ stockOutAt: past }).where(eq(orders.id, order.id));
+
+    // minAgeDays=30 ⇒ customer included; count must also include them.
+    const hit = await getDebtSummary({ minAgeDays: 30 });
+    expect(hit.data.find((r) => r.customerId === fx.customerId)).toBeDefined();
+    expect(hit.metadata.total).toBeGreaterThanOrEqual(1);
+
+    // minAgeDays=60 ⇒ customer excluded; count must also exclude them.
+    const miss = await getDebtSummary({ minAgeDays: 60 });
+    expect(miss.data.find((r) => r.customerId === fx.customerId)).toBeUndefined();
+    // Regression: count query previously ignored minAgeDays and returned 1 here.
+    expect(miss.metadata.total).toBe(0);
+  });
+
   it("excludes customers with all paid", async () => {
     const { order } = await createOrder({
       customerId: fx.customerId,

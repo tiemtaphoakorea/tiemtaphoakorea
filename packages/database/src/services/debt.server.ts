@@ -66,12 +66,16 @@ export async function getDebtSummary({
 
   const rows = await query.orderBy(sql`${subquery.oldestDebtDate} ASC`).limit(limit).offset(offset);
 
-  // Count total customers with debt
-  const [countRow] = await db
-    .select({ c: sql<number>`count(distinct ${orders.customerId})`.mapWith(Number) })
-    .from(orders)
-    .innerJoin(profiles, eq(orders.customerId, profiles.id))
-    .where(and(...conditions));
+  // Count total customers with debt (must apply minAgeDays filter to match the data query)
+  let countQuery = db
+    .select({ c: sql<number>`count(*)`.mapWith(Number) })
+    .from(subquery)
+    .$dynamic();
+  if (minAgeDays != null) {
+    const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000);
+    countQuery = countQuery.where(sql`${subquery.oldestDebtDate} <= ${cutoff}`);
+  }
+  const [countRow] = await countQuery;
 
   return { data: rows, metadata: calculateMetadata(Number(countRow?.c ?? 0), page, limit) };
 }
