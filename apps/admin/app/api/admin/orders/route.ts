@@ -5,9 +5,19 @@ import {
   storeIdempotencyKey,
 } from "@workspace/database/lib/idempotency";
 import { createOrder, getOrders } from "@workspace/database/services/order.server";
-import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
+import {
+  FULFILLMENT_STATUS,
+  type FulfillmentStatusValue,
+  PAYMENT_STATUS,
+  type PaymentStatusValue,
+} from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
+
+const PAYMENT_STATUS_VALUES = Object.values(PAYMENT_STATUS) as readonly PaymentStatusValue[];
+const FULFILLMENT_STATUS_VALUES = Object.values(
+  FULFILLMENT_STATUS,
+) as readonly FulfillmentStatusValue[];
 
 export async function GET(request: Request) {
   const user = await getInternalUser(request);
@@ -17,8 +27,17 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
-  const paymentStatus = searchParams.get("paymentStatus") || undefined;
-  const fulfillmentStatus = searchParams.get("fulfillmentStatus") || undefined;
+  const rawPaymentStatus = searchParams.get("paymentStatus");
+  const paymentStatus =
+    rawPaymentStatus && PAYMENT_STATUS_VALUES.includes(rawPaymentStatus as PaymentStatusValue)
+      ? (rawPaymentStatus as PaymentStatusValue)
+      : undefined;
+  const rawFulfillmentStatus = searchParams.get("fulfillmentStatus");
+  const fulfillmentStatus =
+    rawFulfillmentStatus &&
+    FULFILLMENT_STATUS_VALUES.includes(rawFulfillmentStatus as FulfillmentStatusValue)
+      ? (rawFulfillmentStatus as FulfillmentStatusValue)
+      : undefined;
   const debtOnly = searchParams.get("debtOnly") === "true";
   const customerId = searchParams.get("customerId") || undefined;
   const rawPage = parseInt(searchParams.get("page") || "1", 10);
@@ -29,8 +48,8 @@ export async function GET(request: Request) {
   try {
     const result = await getOrders({
       search,
-      paymentStatus: paymentStatus as PaymentStatusValue | undefined,
-      fulfillmentStatus: fulfillmentStatus as FulfillmentStatusValue | undefined,
+      paymentStatus,
+      fulfillmentStatus,
       debtOnly,
       customerId,
       page,

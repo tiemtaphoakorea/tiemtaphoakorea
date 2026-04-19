@@ -22,7 +22,7 @@ export async function getDebtSummary({
 
   const conditions = [
     eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.STOCK_OUT),
-    sql`${orders.paymentStatus} != 'paid'`,
+    sql`${orders.paymentStatus} != ${PAYMENT_STATUS.PAID}`,
   ];
 
   if (search) {
