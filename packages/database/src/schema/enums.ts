@@ -29,3 +29,14 @@ export const deliveryPreferenceEnum = pgEnum("delivery_preference", [
 export const paymentMethodEnum = pgEnum("payment_method", ["cash", "bank_transfer", "card"]);
 
 export const expenseTypeEnum = pgEnum("expense_type", ["fixed", "variable"]);
+
+export const paymentStatusEnum = pgEnum("payment_status", ["unpaid", "partial", "paid"]);
+export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];
+
+export const fulfillmentStatusEnum = pgEnum("fulfillment_status", [
+  "pending",
+  "stock_out",
+  "completed",
+  "cancelled",
+]);
+export type FulfillmentStatus = (typeof fulfillmentStatusEnum.enumValues)[number];
