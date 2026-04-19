@@ -70,6 +70,7 @@ export async function getDebtSummary({
   const [countRow] = await db
     .select({ c: sql<number>`count(distinct ${orders.customerId})`.mapWith(Number) })
     .from(orders)
+    .innerJoin(profiles, eq(orders.customerId, profiles.id))
     .where(and(...conditions));
 
   return { data: rows, metadata: calculateMetadata(Number(countRow?.c ?? 0), page, limit) };

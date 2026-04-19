@@ -45,6 +45,26 @@ describe("getDebtSummary", () => {
     expect(entry!.unpaidOrders).toBe(1);
   });
 
+  it("filters by search on customer name/phone", async () => {
+    const { order } = await createOrder({
+      customerId: fx.customerId,
+      userId: fx.userId,
+      items: [{ variantId: fx.variantId, quantity: 1 }],
+    });
+    await stockOut({ orderId: order.id, userId: fx.userId });
+
+    // Search by a substring of the seeded customer's fullName ("Customer <testId>").
+    // Using fx.testId keeps the match specific to this fixture under parallel runs.
+    const match = await getDebtSummary({ search: fx.testId });
+    const entry = match.data.find((r) => r.customerId === fx.customerId);
+    expect(entry).toBeDefined();
+    expect(match.metadata.total).toBeGreaterThanOrEqual(1);
+
+    const miss = await getDebtSummary({ search: "definitely-no-match-xyz" });
+    expect(miss.data.length).toBe(0);
+    expect(miss.metadata.total).toBe(0);
+  });
+
   it("excludes customers with all paid", async () => {
     const { order } = await createOrder({
       customerId: fx.customerId,
