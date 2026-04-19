@@ -353,4 +353,9 @@ CREATE UNIQUE INDEX "idx_profiles_role_phone_unique" ON "profiles" USING btree (
 CREATE INDEX "idx_daily_reports_date" ON "daily_reports" USING btree ("report_date");--> statement-breakpoint
 CREATE INDEX "idx_suppliers_code" ON "suppliers" USING btree ("code");--> statement-breakpoint
 CREATE INDEX "idx_suppliers_name" ON "suppliers" USING btree ("name");--> statement-breakpoint
-CREATE INDEX "idx_suppliers_is_active" ON "suppliers" USING btree ("is_active");
+CREATE INDEX "idx_suppliers_is_active" ON "suppliers" USING btree ("is_active");--> statement-breakpoint
+ALTER TABLE "product_variants" ADD CONSTRAINT "on_hand_non_negative" CHECK ("on_hand" >= 0);--> statement-breakpoint
+ALTER TABLE "product_variants" ADD CONSTRAINT "reserved_non_negative" CHECK ("reserved" >= 0);--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "completed_requires_paid" CHECK ("fulfillment_status" != 'completed' OR "payment_status" = 'paid');--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "stock_out_at_consistency" CHECK (("fulfillment_status" IN ('stock_out', 'completed')) = ("stock_out_at" IS NOT NULL));--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "completed_at_consistency" CHECK (("fulfillment_status" = 'completed') = ("completed_at" IS NOT NULL));
