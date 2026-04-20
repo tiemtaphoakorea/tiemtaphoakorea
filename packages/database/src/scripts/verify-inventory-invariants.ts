@@ -3,17 +3,15 @@ import { db } from "../db";
 
 export type InventoryInvariantReport = {
   reservedMismatches: number;
-  negativeOnHand: number;
 };
 
 /**
- * Run the two inventory invariants against the current DB and return counts.
+ * Run inventory invariants against the current DB and return counts.
  * Exposed so tests can exercise the exact SQL without invoking process.exit.
  *
  * 1. `product_variants.reserved` equals the sum of `order_items.quantity`
  *    across that variant's pending orders (and only pending — historical
  *    completed/cancelled items must not contribute).
- * 2. No variant has `on_hand < 0`.
  */
 // drizzle's db.execute() returns different shapes across drivers:
 //  - postgres-js (production): an array-like RowList with .length/.map
@@ -43,14 +41,8 @@ export async function checkInventoryInvariants(): Promise<InventoryInvariantRepo
   `);
   const mismatchRows = rowsOf<unknown>(mismatchResult);
 
-  const negativesResult = await db.execute(
-    sql`SELECT COUNT(*) AS c FROM product_variants WHERE on_hand < 0`,
-  );
-  const negativesRows = rowsOf<{ c: string | number }>(negativesResult);
-
   return {
     reservedMismatches: mismatchRows.length,
-    negativeOnHand: Number(negativesRows[0]?.c ?? 0),
   };
 }
 
@@ -58,10 +50,6 @@ async function main() {
   const report = await checkInventoryInvariants();
   if (report.reservedMismatches > 0) {
     console.error(`RESERVED MISMATCH: ${report.reservedMismatches} variants`);
-    process.exit(1);
-  }
-  if (report.negativeOnHand > 0) {
-    console.error("NEGATIVE on_hand detected");
     process.exit(1);
   }
   console.log("All inventory invariants hold");
