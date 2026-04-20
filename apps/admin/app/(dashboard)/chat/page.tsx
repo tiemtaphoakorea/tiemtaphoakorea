@@ -18,7 +18,6 @@ import { CustomerInfoSheet } from "@/components/admin/chat-room/customer-info-sh
 import { MessageList } from "@/components/admin/chat-room/message-list";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-import { chatClient } from "@/services/chat.client";
 
 export default function ChatPage() {
   const queryClient = useQueryClient();
@@ -82,7 +81,7 @@ export default function ChatPage() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: chatClient.sendMessage,
+    mutationFn: adminClient.sendChatMessage,
     onMutate: async (variables) => {
       if (!selectedRoomId || !user) return undefined;
 
@@ -164,7 +163,17 @@ export default function ChatPage() {
     await sendMessageMutation.mutateAsync({
       roomId: selectedRoomId,
       content,
-      messageType: CHAT_MESSAGE_TYPE.TEXT,
+    });
+  };
+
+  const handleUploadImage = async (file: File) => {
+    if (!selectedRoomId) return;
+    await adminClient.uploadChatImage({ roomId: selectedRoomId, file });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.admin.chat.messages(selectedRoomId),
+    });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.admin.chat.rooms.all,
     });
   };
 
@@ -269,6 +278,7 @@ export default function ChatPage() {
                 senderId={user?.id || ""}
                 senderName={user?.fullName || "Agent"}
                 onSendMessage={handleSendMessage}
+                onUploadImage={handleUploadImage}
                 isSending={sendMessageMutation.isPending}
               />
 
