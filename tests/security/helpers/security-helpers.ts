@@ -27,7 +27,7 @@ export const SENSITIVE_ENV_KEYS = [
 // Keys that are safe to expose to client
 export const ALLOWED_CLIENT_ENV_KEYS = [
   "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
 ] as const;
 
 // ============================================================================

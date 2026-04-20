@@ -119,7 +119,7 @@ export interface ProductVariant {
   sku: string;
   price: string;
   costPrice: string | null;
-  stockQuantity: number;
+  onHand: number;
   stockType: string;
   isActive: boolean | null;
   createdAt: Date | null;
@@ -131,7 +131,7 @@ export interface CreateProductVariant {
   sku: string;
   price: number;
   costPrice?: number;
-  stockQuantity?: number;
+  onHand?: number;
   stockType?: string;
   images?: string[];
 }

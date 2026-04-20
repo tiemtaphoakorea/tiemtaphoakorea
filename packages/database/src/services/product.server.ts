@@ -48,8 +48,6 @@ export type CreateProductData = {
     price: number;
     costPrice?: number;
     onHand?: number;
-    /** @deprecated use onHand */
-    stockQuantity?: number;
     lowStockThreshold?: number;
     images?: string[]; // Array of image URLs
   }[];
@@ -244,7 +242,7 @@ export async function createProduct(data: CreateProductData) {
 
     if (data.variants && data.variants.length > 0) {
       for (const variant of data.variants) {
-        const onHand = variant.onHand ?? variant.stockQuantity ?? 0;
+        const onHand = variant.onHand ?? variant.onHand ?? 0;
         if (onHand < 0) {
           throw new Error("Quantity cannot be negative");
         }
@@ -679,7 +677,7 @@ export async function updateProduct(id: string, data: UpdateProductData) {
           (incomingVariantId ? `GEN-${incomingVariantId.slice(0, 8)}` : `GEN-${Date.now()}`),
         price: (v.price ?? Number(previousVariant?.price ?? 0)) as number,
         costPrice: (v.costPrice ?? Number(previousVariant?.costPrice ?? 0)) as number,
-        onHand: (v.onHand ?? v.stockQuantity ?? previousVariant?.onHand ?? 0) as number,
+        onHand: (v.onHand ?? v.onHand ?? previousVariant?.onHand ?? 0) as number,
         lowStockThreshold: v.lowStockThreshold ?? previousVariant?.lowStockThreshold,
         isActive: true,
         updatedAt: new Date(),

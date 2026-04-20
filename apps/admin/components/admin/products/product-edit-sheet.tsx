@@ -137,7 +137,7 @@ export function ProductEditSheet({
                   <NumberInput
                     id="edit-product-stock"
                     name="stock"
-                    defaultValue={editingProduct.variants[0]?.stockQuantity}
+                    defaultValue={editingProduct.variants[0]?.onHand}
                     placeholder="0"
                     decimalScale={0}
                     className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"

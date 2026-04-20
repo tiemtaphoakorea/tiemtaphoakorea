@@ -152,14 +152,14 @@ export async function createOrder(data: {
     const lockedVariants = await lockVariantsForUpdate(tx, variantIds);
 
     // Build variantMap using VariantWithProduct shape for downstream compat
-    // (createSplitOrders, etc.). `stockQuantity` here carries the *available*
+    // (createSplitOrders, etc.). `onHand` here carries the *available*
     // count (on_hand - reserved) for read-only consumers.
     const variantMap = new Map<string, VariantWithProduct>(
       lockedVariants.map((v) => [
         v.id,
         {
           ...v,
-          stockQuantity: (v.onHand ?? 0) - (v.reserved ?? 0),
+          onHand: (v.onHand ?? 0) - (v.reserved ?? 0),
         },
       ]),
     );
@@ -180,7 +180,7 @@ export async function createOrder(data: {
     for (const item of data.items) {
       const variant = variantMap.get(item.variantId);
       if (!variant) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-      const available = variant.stockQuantity ?? 0;
+      const available = variant.onHand ?? 0;
       if (available >= item.quantity) {
         inStockItems.push(item);
       } else {
@@ -253,7 +253,7 @@ export async function createOrder(data: {
 
     for (const item of data.items) {
       const variant = variantMap.get(item.variantId)!;
-      const availableStock = variant.stockQuantity ?? 0;
+      const availableStock = variant.onHand ?? 0;
       const quantityNeedsSupplier = Math.max(0, item.quantity - availableStock);
 
       await tx
@@ -264,7 +264,7 @@ export async function createOrder(data: {
         .where(eq(productVariants.id, variant.id));
 
       // Keep the map in sync for any later reads in this scope.
-      variant.stockQuantity = availableStock - item.quantity;
+      variant.onHand = availableStock - item.quantity;
 
       if (quantityNeedsSupplier > 0) {
         itemsNeedingStock.push({

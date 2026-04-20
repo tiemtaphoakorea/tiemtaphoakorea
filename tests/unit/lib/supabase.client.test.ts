@@ -31,7 +31,7 @@ describe("supabase client", () => {
 
   it("should create browser client using NEXT_PUBLIC env", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://supabase.test";
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY = "public-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-key";
 
     const client = createClient();
     expect(client).toEqual({ mock: true });
@@ -39,9 +39,9 @@ describe("supabase client", () => {
 
   it("should throw when missing env", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY;
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     expect(() => createClient()).toThrow(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY",
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     );
   });
 });

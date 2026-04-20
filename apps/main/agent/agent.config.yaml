@@ -1,0 +1,17 @@
+enabled: false
+
+identity:
+  username: ai_agent_bot
+  displayName: AI Agent
+
+model:
+  name: gpt-4o-mini
+  temperature: 0.4
+  maxTokens: 220
+
+limits:
+  maxContextMessages: 12
+  maxTurns: 4
+  timeoutMs: 15000
+
+safeMode: true

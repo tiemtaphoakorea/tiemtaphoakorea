@@ -77,9 +77,7 @@ export function OrderProductSheet({
                         <div className="text-primary text-sm font-bold">
                           {formatCurrency(Number(variant.price))}
                         </div>
-                        <div className="text-[10px] text-slate-500">
-                          Kho: {variant.stockQuantity}
-                        </div>
+                        <div className="text-[10px] text-slate-500">Kho: {variant.onHand}</div>
                       </div>
                       <Button
                         size="sm"

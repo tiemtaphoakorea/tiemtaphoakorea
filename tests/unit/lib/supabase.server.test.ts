@@ -20,7 +20,7 @@ describe("lib/supabase/server", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY = "publishable-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key";
     process.env.SUPABASE_SECRET_KEY = "secret-key";
   });
 
@@ -36,10 +36,10 @@ describe("lib/supabase/server", () => {
     });
 
     it("throws when publishable key is missing", async () => {
-      delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY;
+      delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
       await expect(createClient()).rejects.toThrow(
-        /Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY/i,
+        /Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY/i,
       );
     });
 

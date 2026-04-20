@@ -112,7 +112,7 @@ export function ProductTable({
               products.map((product) => {
                 const totalStock =
                   product.variants?.reduce(
-                    (acc: number, v: any) => acc + (Number(v.stockQuantity) || 0),
+                    (acc: number, v: any) => acc + (Number(v.onHand) || 0),
                     0,
                   ) || 0;
 

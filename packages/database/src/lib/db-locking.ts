@@ -162,7 +162,7 @@ export function validateStockAvailability(
     id: string;
     name: string;
     sku: string;
-    stockQuantity: number | null;
+    onHand: number | null;
   }>,
   requestedItems: Array<{ variantId: string; quantity: number }>,
 ): void {

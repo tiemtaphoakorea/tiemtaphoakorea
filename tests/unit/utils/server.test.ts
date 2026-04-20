@@ -45,7 +45,7 @@ describe("utils/supabase/server", () => {
     createServerClientMock.mockReturnValue({ mock: true });
     process.env = { ...originalEnv };
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://supabase.test";
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY = "public-key";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-key";
   });
 
   afterEach(() => {

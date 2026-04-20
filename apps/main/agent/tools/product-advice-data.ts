@@ -87,7 +87,7 @@ export const getProductAdviceDataTool = tool({
         name: productVariants.name,
         sku: productVariants.sku,
         price: productVariants.price,
-        stockQuantity: productVariants.onHand,
+        onHand: productVariants.onHand,
       })
       .from(productVariants)
       .where(
@@ -109,8 +109,8 @@ export const getProductAdviceDataTool = tool({
         name: variant.name,
         sku: variant.sku,
         price: toNumber(variant.price),
-        stockQuantity: variant.stockQuantity ?? 0,
-        inStock: (variant.stockQuantity ?? 0) > 0,
+        onHand: variant.onHand ?? 0,
+        inStock: (variant.onHand ?? 0) > 0,
       })),
     });
   },
