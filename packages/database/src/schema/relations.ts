@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { categories } from "./categories";
 import { expenses } from "./expenses";
+import { inventoryMovements } from "./inventory";
 import { orderItems, orderStatusHistory, orders, payments, supplierOrders } from "./orders";
 import { costPriceHistory, products, productVariants, variantImages } from "./products";
 import { profiles } from "./profiles";
@@ -97,6 +98,7 @@ export const productVariantsRelations = relations(productVariants, ({ one, many 
   }),
   images: many(variantImages),
   costHistory: many(costPriceHistory),
+  movements: many(inventoryMovements),
 }));
 
 export const variantImagesRelations = relations(variantImages, ({ one }) => ({
@@ -136,5 +138,16 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   }),
   children: many(categories, {
     relationName: "category_parent",
+  }),
+}));
+
+export const inventoryMovementsRelations = relations(inventoryMovements, ({ one }) => ({
+  variant: one(productVariants, {
+    fields: [inventoryMovements.variantId],
+    references: [productVariants.id],
+  }),
+  createdByUser: one(profiles, {
+    fields: [inventoryMovements.createdBy],
+    references: [profiles.id],
   }),
 }));
