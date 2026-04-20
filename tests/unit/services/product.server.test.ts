@@ -682,8 +682,7 @@ describe("Product Service", () => {
 
         // NOTE: Two rows are written per cost change:
         //   1. App-level insert (product.server.ts) records OLD cost price
-        //   2. DB trigger (trigger_funtion.sql log_cost_price_trigger) records NEW cost price
-        // This is existing system behavior. The dual-write may warrant future consolidation.
+        //   2. App-level insert after update records NEW cost price
         expect(historyRows.length).toBe(2);
         const costs = historyRows.map((r) => Number(r.costPrice)).sort((a, b) => a - b);
         expect(costs).toEqual([100, 200]);

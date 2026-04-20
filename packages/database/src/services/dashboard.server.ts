@@ -26,9 +26,7 @@ export async function getKPIStats() {
       total: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
     })
     .from(orders)
-    .where(
-      and(gte(orders.paidAt, today), eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.COMPLETED)),
-    );
+    .where(gte(orders.completedAt, today));
 
   const todayRevenue = todayRevenueResult[0]?.total || 0;
 
