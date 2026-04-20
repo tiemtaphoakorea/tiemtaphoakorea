@@ -1,13 +1,14 @@
-import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { inventoryMovements } from "../schema/inventory";
 import { productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
+import type { DbTransaction } from "../types/database";
 
 export type MovementType = "stock_out" | "supplier_receipt" | "manual_adjustment" | "cancellation";
 
 export async function insertInventoryMovement(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: DbTransaction,
   {
     variantId,
     type,
@@ -97,7 +98,7 @@ export async function getInventoryMovements({
   page?: number;
   limit?: number;
 }) {
-  const conditions = [];
+  const conditions: SQL[] = [];
   if (variantId) conditions.push(eq(inventoryMovements.variantId, variantId));
   if (type) conditions.push(eq(inventoryMovements.type, type));
   if (startDate) conditions.push(gte(inventoryMovements.createdAt, startDate));
@@ -150,7 +151,7 @@ export async function getInventoryDailySummary({
   startDate?: Date;
   endDate?: Date;
 } = {}) {
-  const conditions = [];
+  const conditions: SQL[] = [];
   if (variantId) conditions.push(eq(inventoryMovements.variantId, variantId));
   if (startDate) conditions.push(gte(inventoryMovements.createdAt, startDate));
   if (endDate) conditions.push(lte(inventoryMovements.createdAt, endDate));
