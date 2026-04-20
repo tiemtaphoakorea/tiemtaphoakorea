@@ -172,6 +172,7 @@ export const ADMIN_ROUTE_NAMES: Record<string, string> = {
   settings: "Cài đặt",
   new: "Tạo mới",
   edit: "Chỉnh sửa",
+  detail: "Chi tiết",
 };
 
 export const ADMIN_TITLE = "K-SMART Admin";

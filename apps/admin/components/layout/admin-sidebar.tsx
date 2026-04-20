@@ -127,31 +127,32 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                    className="h-11 px-4"
-                  >
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon
-                        className={`h-5 w-5 ${
-                          pathname === item.href ? "text-primary" : "text-muted-foreground"
-                        }`}
-                      />
-                      <span
-                        className={`text-sm font-bold ${
-                          pathname === item.href ? "text-primary" : "text-foreground"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {filteredNavItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.label}
+                      className="h-11 px-4"
+                    >
+                      <Link href={item.href} className="flex items-center gap-3">
+                        <item.icon
+                          className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                        />
+                        <span
+                          className={`text-sm font-bold ${isActive ? "text-primary" : "text-foreground"}`}
+                        >
+                          {item.label}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

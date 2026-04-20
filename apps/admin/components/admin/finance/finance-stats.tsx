@@ -5,6 +5,7 @@ import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { ArrowUpRight, DollarSign, PieChart, TrendingUp, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -16,6 +17,8 @@ interface FinanceStatsProps {
 }
 
 export function FinanceStats({ date }: FinanceStatsProps) {
+  const router = useRouter();
+
   const { data } = useSuspenseQuery({
     queryKey: queryKeys.admin.finance.stats(date),
     queryFn: () => adminClient.getFinancialStats(date),
@@ -237,7 +240,10 @@ export function FinanceStats({ date }: FinanceStatsProps) {
           </div>
 
           <div className="z-10 p-6 pt-0">
-            <Button className="shadow-primary/20 hover:shadow-primary/30 h-12 w-full rounded-xl font-bold shadow-lg transition-all">
+            <Button
+              className="shadow-primary/20 hover:shadow-primary/30 h-12 w-full rounded-xl font-bold shadow-lg transition-all"
+              onClick={() => router.push(`/finance/detail?month=${date.month}&year=${date.year}`)}
+            >
               Xem báo cáo chi tiết
             </Button>
           </div>

@@ -17,6 +17,7 @@ import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 import { Fragment, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { ChatNotificationBell } from "@/components/layout/chat-notification-bell";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -63,7 +64,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
         <header className="glass-header flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground -ml-1 h-10 w-10 rounded-lg transition-colors" />
           <Separator orientation="vertical" className="mr-2 h-full" />
-          <Breadcrumb>
+          <Breadcrumb className="flex-1">
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink
@@ -108,6 +109,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
               })}
             </BreadcrumbList>
           </Breadcrumb>
+          <ChatNotificationBell />
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:p-8">
           <div key={pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
