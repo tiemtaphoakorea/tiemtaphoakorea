@@ -28,6 +28,10 @@ export default defineConfig({
     alias: {
       "@supabase/ssr": supabaseSsr,
       "next/headers": nextHeaders,
+      // Admin-side helpers import the canonical workspace package path
+      // (@workspace/database/lib/idempotency). Alias it so vi.mock() can
+      // intercept tests that exercise those helpers.
+      "@workspace/database/lib/idempotency": db("lib/idempotency"),
       "@/db/db.server": db("db"),
       "@/db": db(""),
       "@/lib/security.server": db("lib/security"),
@@ -93,6 +97,10 @@ export default defineConfig({
     alias: {
       "@supabase/ssr": supabaseSsr,
       "next/headers": nextHeaders,
+      // Admin-side helpers import the canonical workspace package path
+      // (@workspace/database/lib/idempotency). Alias it so vi.mock() can
+      // intercept tests that exercise those helpers.
+      "@workspace/database/lib/idempotency": db("lib/idempotency"),
       "@/db/db.server": db("db"),
       "@/db": db(""),
       "@/lib/security.server": db("lib/security"),
