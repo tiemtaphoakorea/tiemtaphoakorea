@@ -31,6 +31,11 @@ export const API_ENDPOINTS = {
     BANNERS: "/api/admin/banners",
     BANNER_DETAIL: (id: string) => `/api/admin/banners/${id}`,
     BANNERS_REORDER: "/api/admin/banners/reorder",
+    INVENTORY: {
+      MOVEMENTS: "/api/admin/inventory/movements",
+      ADJUST: "/api/admin/inventory/movements/adjust",
+      DAILY_SUMMARY: "/api/admin/inventory/movements/daily-summary",
+    },
   },
   CHAT: {
     SEND: "/api/chat",
