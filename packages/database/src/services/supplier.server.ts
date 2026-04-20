@@ -8,6 +8,7 @@ import { db } from "../db";
 import { supplierOrders } from "../schema/orders";
 import { products, productVariants } from "../schema/products";
 import type { DbTransaction } from "../types/database";
+import { insertInventoryMovement } from "./inventory.server";
 
 /** Đơn nhập hàng và đơn bán tạo riêng, không kết nối với nhau. Supplier order chỉ gắn variantId. */
 export async function getSupplierOrders({
@@ -219,6 +220,15 @@ export async function updateSupplierOrderStatus(
               onHand: (variant.onHand || 0) + row.quantity,
             })
             .where(eq(productVariants.id, variantId));
+
+          await insertInventoryMovement(tx, {
+            variantId,
+            type: "supplier_receipt",
+            quantity: row.quantity,
+            onHandBefore: variant.onHand ?? 0,
+            referenceId: id,
+            createdBy: undefined,
+          });
         }
       }
     }
