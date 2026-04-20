@@ -204,7 +204,7 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Chọn phân loại / Biến thể..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               {selectedProduct?.variants.map((variant) => {
                 const available = variant.onHand - variant.reserved;
 
