@@ -94,9 +94,9 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1.5fr_1.5fr_auto]">
-        {/* Step 1: Select Product */}
-        <div className="flex flex-col gap-2">
+      <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)_auto]">
+        {/* Step 1: Select Product — min-w-0 + shrink so long names ellipsis instead of growing the grid */}
+        <div className="flex min-w-0 flex-col gap-2">
           <Popover open={openProduct} onOpenChange={setOpenProduct}>
             <PopoverTrigger asChild>
               <Button
@@ -104,14 +104,18 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
                 role="combobox"
                 aria-expanded={openProduct}
                 aria-controls="product-combobox-list"
-                className="justify-between w-full"
+                className="min-w-0 shrink justify-between gap-2 overflow-hidden w-full"
               >
                 {selectedProduct ? (
-                  <span className="truncate font-medium">{selectedProduct.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-left font-medium">
+                    {selectedProduct.name}
+                  </span>
                 ) : (
-                  <span className="text-muted-foreground">Chọn sản phẩm gốc...</span>
+                  <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">
+                    Chọn sản phẩm gốc...
+                  </span>
                 )}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0" align="start">
@@ -195,13 +199,13 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
         </div>
 
         {/* Step 2: Select Variant */}
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <Select
             value={selectedVariantId}
             onValueChange={setSelectedVariantId}
             disabled={!selectedProduct}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full min-w-0 max-w-full">
               <SelectValue placeholder="Chọn phân loại / Biến thể..." />
             </SelectTrigger>
             <SelectContent position="popper">

@@ -476,7 +476,7 @@ function AdminProductsContent() {
               </div>
             ) : (
               <>
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
                     <TableRow>
                       {selectMode && (
@@ -504,8 +504,8 @@ function AdminProductsContent() {
                         </TableHead>
                       )}
                       <TableHead className="w-14">Ảnh</TableHead>
-                      <TableHead>Tên sản phẩm</TableHead>
-                      <TableHead>Danh mục</TableHead>
+                      <TableHead className="min-w-0 w-[40%]">Tên sản phẩm</TableHead>
+                      <TableHead className="min-w-0">Danh mục</TableHead>
                       <TableHead>Giá bán</TableHead>
                       <TableHead>Tồn kho</TableHead>
                       <TableHead>Trạng thái</TableHead>
@@ -553,29 +553,34 @@ function AdminProductsContent() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <span className="flex flex-col">
-                              <span className="font-bold text-slate-700 dark:text-slate-200">
+                          <TableCell className="min-w-0 whitespace-normal">
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                              <span
+                                className="truncate font-bold text-slate-700 dark:text-slate-200"
+                                title={product.name}
+                              >
                                 {product.name}
                               </span>
-                              <code className="font-mono text-xs text-slate-400">
+                              <code className="block truncate font-mono text-xs text-slate-400">
                                 /{product.slug}
                               </code>
                               {product.skus && (
-                                <span className="font-mono text-xs text-slate-500">
+                                <span className="block truncate font-mono text-xs text-slate-500">
                                   SKU: {product.skus}
                                 </span>
                               )}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="min-w-0 whitespace-normal">
                             {product.categoryName ? (
-                              <Badge
-                                variant="secondary"
-                                className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
-                              >
-                                {product.categoryName}
-                              </Badge>
+                              <div className="min-w-0 max-w-[12rem] lg:max-w-[16rem]">
+                                <Badge
+                                  variant="secondary"
+                                  className="max-w-full bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
+                                >
+                                  <span className="block truncate">{product.categoryName}</span>
+                                </Badge>
+                              </div>
                             ) : (
                               <span className="text-xs italic text-slate-400">-</span>
                             )}
