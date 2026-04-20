@@ -48,12 +48,18 @@ export default function AdminLoginPage() {
       responseData = await adminClient.login(data);
     } catch (err) {
       console.error(err);
-      setError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+      if (err instanceof TypeError || !navigator.onLine) {
+        setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.");
+      } else {
+        setError("Đã có lỗi hệ thống xảy ra. Vui lòng thử lại sau hoặc liên hệ hỗ trợ kỹ thuật.");
+      }
       return;
     }
 
     if (!responseData?.success) {
-      setError(responseData?.error || "Đăng nhập thất bại");
+      setError(
+        responseData?.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.",
+      );
       return;
     }
 

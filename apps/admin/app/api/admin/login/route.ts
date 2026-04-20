@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     if (!userProfile.isActive) {
       return NextResponse.json(
         {
-          error: "Tài khoản của bạn đã bị khóa",
+          error: "Tài khoản của bạn đã bị tạm khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.",
           success: false,
         },
         { status: HTTP_STATUS.UNAUTHORIZED },
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     console.error("Unexpected login error:", error);
     return NextResponse.json(
       {
-        error: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+        error: "Đã có lỗi hệ thống xảy ra. Vui lòng thử lại sau hoặc liên hệ hỗ trợ kỹ thuật.",
         success: false,
       },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
