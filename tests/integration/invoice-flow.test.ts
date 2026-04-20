@@ -204,7 +204,6 @@ describe("invoice flow: inventory invariants", () => {
     // completed order — no mismatch should be reported.
     const report = await checkInventoryInvariants();
     expect(report.reservedMismatches).toBe(0);
-    expect(report.negativeOnHand).toBe(0);
   });
 
   it("flags a variant whose reserved drifts from pending-order quantities", async () => {
@@ -225,7 +224,7 @@ describe("invoice flow: inventory invariants", () => {
   });
 });
 
-describe("invoice flow: oversell protection", () => {
+describe("invoice flow: negative inventory", () => {
   let fx: OrderTestFixture;
 
   beforeEach(async () => {
@@ -236,33 +235,24 @@ describe("invoice flow: oversell protection", () => {
     await cleanOrderTest(fx);
   });
 
-  it("stock_out blocked when on_hand=0; succeeds after stock received", async () => {
-    // Arrange: set on_hand to 0 so stock_out will fail
+  it("stock_out succeeds when on_hand=0, leaving onHand negative", async () => {
+    // Arrange: set on_hand to 0
     await db.update(productVariants).set({ onHand: 0 }).where(eq(productVariants.id, fx.variantId));
 
-    // Create order — reserved increments, but on_hand is 0
     const { order } = await createOrder({
       customerId: fx.customerId,
       userId: fx.userId,
       items: [{ variantId: fx.variantId, quantity: 1 }],
     });
 
-    // Act: stock_out should fail (on_hand=0, need 1)
-    await expect(stockOut({ orderId: order.id, userId: fx.userId })).rejects.toThrow(
-      /Insufficient stock/,
-    );
-
-    // Simulate receiving stock: set on_hand to qty needed
-    await db.update(productVariants).set({ onHand: 1 }).where(eq(productVariants.id, fx.variantId));
-
-    // Act: stock_out should now succeed
+    // Act: stock_out succeeds even though on_hand=0
     await stockOut({ orderId: order.id, userId: fx.userId });
 
     const [variantAfter] = await db
       .select()
       .from(productVariants)
       .where(eq(productVariants.id, fx.variantId));
-    expect(variantAfter.onHand).toBe(0);
+    expect(variantAfter.onHand).toBe(-1);
     expect(variantAfter.reserved).toBe(0);
 
     const [orderAfter] = await db.select().from(orders).where(eq(orders.id, order.id));
@@ -326,7 +316,6 @@ describe("invoice flow: split orders (ship_available_first)", () => {
     // Invariant check must pass even with split orders present.
     const report = await checkInventoryInvariants();
     expect(report.reservedMismatches).toBe(0);
-    expect(report.negativeOnHand).toBe(0);
 
     // Act: stockOut the in-stock sub-order. Find it by splitType.
     const subOrders = await db.select().from(orders).where(eq(orders.splitType, "in_stock"));

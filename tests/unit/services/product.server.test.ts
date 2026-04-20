@@ -91,7 +91,7 @@ describe("Product Service", () => {
             sku: `TEST-RED-S-${Date.now()}`,
             price: 100,
             costPrice: 50,
-            stockQuantity: 10,
+            onHand: 10,
             images: ["http://test.com/img1.jpg"],
           },
         ],
@@ -132,7 +132,7 @@ describe("Product Service", () => {
             sku: `NEGATIVE-SKU-${Date.now()}`,
             price: 100,
             costPrice: 50,
-            stockQuantity: -1, // Invalid: negative stock
+            onHand: -1, // Invalid: negative stock
           },
         ],
       };
@@ -148,8 +148,8 @@ describe("Product Service", () => {
         categoryId: TEST_CAT_ID,
         basePrice: 100,
         variants: [
-          { name: "Variant A", sku, price: 100, costPrice: 50, stockQuantity: 5 },
-          { name: "Variant B", sku, price: 120, costPrice: 60, stockQuantity: 3 }, // same SKU
+          { name: "Variant A", sku, price: 100, costPrice: 50, onHand: 5 },
+          { name: "Variant B", sku, price: 120, costPrice: 60, onHand: 3 }, // same SKU
         ],
       };
 
@@ -165,7 +165,7 @@ describe("Product Service", () => {
         slug: `first-product-${Date.now()}`,
         categoryId: TEST_CAT_ID,
         basePrice: 100,
-        variants: [{ name: "V1", sku, price: 100, costPrice: 50, stockQuantity: 5 }],
+        variants: [{ name: "V1", sku, price: 100, costPrice: 50, onHand: 5 }],
       });
 
       // Now try to create another product with the same SKU
@@ -175,7 +175,7 @@ describe("Product Service", () => {
         categoryId: TEST_CAT_ID,
         basePrice: 100,
         variants: [
-          { name: "V2", sku, price: 100, costPrice: 50, stockQuantity: 3 }, // same SKU as above
+          { name: "V2", sku, price: 100, costPrice: 50, onHand: 3 }, // same SKU as above
         ],
       };
 
@@ -192,8 +192,8 @@ describe("Product Service", () => {
         categoryId: TEST_CAT_ID,
         basePrice: 200,
         variants: [
-          { name: "V1", sku: `V1-${timestamp}`, price: 200, stockQuantity: 5 },
-          { name: "V2", sku: `V2-${timestamp}`, price: 200, stockQuantity: 15 },
+          { name: "V1", sku: `V1-${timestamp}`, price: 200, onHand: 5 },
+          { name: "V2", sku: `V2-${timestamp}`, price: 200, onHand: 15 },
         ],
       };
       await createProduct(input as any);
@@ -469,7 +469,13 @@ describe("Product Service", () => {
 
       const result = await getFeaturedProducts(2);
       expect(result.length).toBeLessThanOrEqual(2);
-      expect(result.some((p) => p.slug.includes(`featured-1-${timestamp}`) || p.slug.includes(`featured-2-${timestamp}`))).toBe(true);
+      expect(
+        result.some(
+          (p) =>
+            p.slug.includes(`featured-1-${timestamp}`) ||
+            p.slug.includes(`featured-2-${timestamp}`),
+        ),
+      ).toBe(true);
       expect(result.some((p) => p.slug.includes("featured-inactive"))).toBe(false);
     });
   });
@@ -684,7 +690,9 @@ describe("Product Service", () => {
 
         // Application-level insert records the OLD cost; trigger records the NEW cost.
         const appRow = historyRows.find((r: any) => r.note === null || r.note === undefined);
-        const triggerRow = historyRows.find((r: any) => r.note === "Auto-logged from variant update");
+        const triggerRow = historyRows.find(
+          (r: any) => r.note === "Auto-logged from variant update",
+        );
         expect(appRow).toBeDefined();
         expect(triggerRow).toBeDefined();
         expect(Number(appRow!.costPrice)).toBe(100); // old cost from app insert
@@ -848,7 +856,7 @@ describe("Product Service", () => {
           sku: "BST-001",
           name: "Default",
           price: "100000",
-          stockQuantity: 50,
+          onHand: 50,
         })
         .returning();
 
@@ -856,7 +864,12 @@ describe("Product Service", () => {
       const TEST_PROFILE_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
       await db
         .insert(profiles)
-        .values({ id: TEST_PROFILE_ID, username: "bstest-user", fullName: "BS Test", role: "customer" })
+        .values({
+          id: TEST_PROFILE_ID,
+          username: "bstest-user",
+          fullName: "BS Test",
+          role: "customer",
+        })
         .onConflictDoNothing();
 
       const [order] = await db
@@ -888,7 +901,7 @@ describe("Product Service", () => {
           sku: "LST-001",
           name: "Default",
           price: "100000",
-          stockQuantity: 50,
+          onHand: 50,
         })
         .returning();
 

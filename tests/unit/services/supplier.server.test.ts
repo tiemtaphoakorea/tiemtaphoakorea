@@ -57,6 +57,7 @@ const mockTx = {
   set: vi.fn().mockReturnThis(),
   returning: vi.fn(),
   delete: vi.fn(),
+  insert: vi.fn(),
 };
 
 vi.mock("@/db/db.server", () => ({
@@ -84,6 +85,7 @@ describe("supplier.server", () => {
     mockTx.update.mockReset().mockReturnThis();
     mockTx.returning.mockReset();
     mockTx.delete.mockReset();
+    mockTx.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
   });
 
   describe("updateSupplierOrderStatus", () => {
