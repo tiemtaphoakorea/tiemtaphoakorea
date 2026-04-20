@@ -28,6 +28,7 @@ import type {
   VariantWithProduct,
 } from "../types/database";
 import { createCustomer } from "./customer.server";
+import { insertInventoryMovement } from "./inventory.server";
 import { createSplitOrders } from "./order-split.server";
 
 /**
@@ -349,7 +350,7 @@ export async function stockOut({
 
     const variantIds = items.map((i) => i.variantId);
     const variants = await lockVariantsForUpdate(tx, variantIds);
-    const _byId = new Map(variants.map((v) => [v.id, v]));
+    const byId = new Map(variants.map((v) => [v.id, v]));
 
     for (const item of items) {
       await tx
@@ -359,6 +360,18 @@ export async function stockOut({
           reserved: sql`${productVariants.reserved} - ${item.quantity}`,
         })
         .where(eq(productVariants.id, item.variantId));
+    }
+
+    for (const item of items) {
+      const v = byId.get(item.variantId)!;
+      await insertInventoryMovement(tx, {
+        variantId: item.variantId,
+        type: "stock_out",
+        quantity: -item.quantity,
+        onHandBefore: v.onHand ?? 0,
+        referenceId: orderId,
+        createdBy: userId,
+      });
     }
 
     const now = new Date();

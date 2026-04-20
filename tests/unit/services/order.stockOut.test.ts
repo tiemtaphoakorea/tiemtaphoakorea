@@ -8,6 +8,7 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
+import { inventoryMovements } from "@/db/schema/inventory";
 import { orders } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
 import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
@@ -118,5 +119,27 @@ describe("stockOut", () => {
     expect(stockOutEntry).toBeDefined();
     expect(stockOutEntry?.paymentStatus).toBe(PAYMENT_STATUS.UNPAID);
     expect(stockOutEntry?.note).toBe("Customer picked up goods");
+  });
+
+  it("records a stock_out movement in inventory_movements", async () => {
+    const { order } = await createOrder({
+      customerId: fx.customerId,
+      items: [{ variantId: fx.variantId, quantity: 2 }],
+      userId: fx.userId,
+    });
+
+    await stockOut({ orderId: order.id, userId: fx.userId });
+
+    const movements = await db
+      .select()
+      .from(inventoryMovements)
+      .where(eq(inventoryMovements.variantId, fx.variantId));
+
+    expect(movements).toHaveLength(1);
+    expect(movements[0].type).toBe("stock_out");
+    expect(movements[0].quantity).toBe(-2);
+    expect(movements[0].onHandBefore).toBe(5);
+    expect(movements[0].onHandAfter).toBe(3);
+    expect(movements[0].referenceId).toBe(order.id);
   });
 });
