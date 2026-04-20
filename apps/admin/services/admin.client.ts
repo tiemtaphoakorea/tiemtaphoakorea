@@ -44,6 +44,27 @@ import type { LoginFormValues } from "@workspace/shared/schemas";
 
 export type { StockAlertVariant };
 
+export type InventoryMovement = {
+  id: string;
+  variantId: string;
+  variantSku: string;
+  variantName: string;
+  type: "stock_out" | "supplier_receipt" | "manual_adjustment" | "cancellation";
+  quantity: number;
+  onHandBefore: number;
+  onHandAfter: number;
+  referenceId: string | null;
+  note: string | null;
+  createdAt: string;
+  createdByName: string | null;
+};
+
+export type DailySummaryRow = {
+  date: string;
+  totalIn: number;
+  totalOut: number;
+};
+
 /**
  * Service for client-side admin API calls.
  */
@@ -533,5 +554,39 @@ export const adminClient = {
       API_ENDPOINTS.ADMIN.SUPPLIER_ORDER_DETAIL(id),
       data,
     ) as unknown as Promise<any>;
+  },
+
+  async getInventoryMovements(params?: {
+    variantId?: string;
+    type?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      data: InventoryMovement[];
+      metadata: { total: number; page: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.INVENTORY.MOVEMENTS, { params }) as unknown as Promise<{
+      data: InventoryMovement[];
+      metadata: { total: number; page: number; totalPages: number };
+    }>;
+  },
+
+  async getInventoryDailySummary(params?: {
+    variantId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    return axios.get<{ data: DailySummaryRow[] }>(API_ENDPOINTS.ADMIN.INVENTORY.DAILY_SUMMARY, {
+      params,
+    }) as unknown as Promise<{ data: DailySummaryRow[] }>;
+  },
+
+  async adjustInventory(body: { variantId: string; quantity: number; note?: string }) {
+    return axios.post<InventoryMovement>(
+      API_ENDPOINTS.ADMIN.INVENTORY.ADJUST,
+      body,
+    ) as unknown as Promise<InventoryMovement>;
   },
 };

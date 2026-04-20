@@ -71,6 +71,12 @@ export const queryKeys = {
       messages: (roomId: string | null) =>
         [QK.adminRoot, QK.chat, QK.chatMessages, roomId] as const,
     },
+    inventory: {
+      movements: (params: Record<string, unknown>) =>
+        ["admin", "inventory", "movements", params] as const,
+      dailySummary: (params: Record<string, unknown>) =>
+        ["admin", "inventory", "daily-summary", params] as const,
+    },
   },
   dashboard: {
     topProducts: [QK.dashboardRoot, QK.topProducts] as const,
