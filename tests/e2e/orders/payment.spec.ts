@@ -1,18 +1,18 @@
-import { ORDER_STATUS } from "@/lib/constants";
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
+  cancelOrder,
   createOrder,
   findVariantIdBySku,
   getCustomerByPhone,
   getOrderDetails,
   recordPayment,
-  updateOrderStatus,
 } from "../helpers/api";
 
 /**
  * Order - Payment
- * Test cases: TC-ORD-006, TC-ORD-022
+ * Test cases: TC-ORD-006, TC-ORD-022, TC-ORD-024
  */
 test.describe("Order - Payment", () => {
   test.beforeEach(async ({ page }) => {
@@ -51,11 +51,12 @@ test.describe("Order - Payment", () => {
       amount: Number(result.order.total),
       method: "cash",
     });
-    const cancelRes = await updateOrderStatus(page, result.order.id, ORDER_STATUS.CANCELLED);
+    const { response: cancelRes } = await cancelOrder(page, result.order.id);
     expect(cancelRes.status()).toBe(200);
 
     const updated = await getOrderDetails(page, result.order.id);
-    expect(updated.status).toBe(ORDER_STATUS.CANCELLED);
+    expect(updated.paymentStatus).toBe(PAYMENT_STATUS.PAID);
+    expect(updated.fulfillmentStatus).toBe(FULFILLMENT_STATUS.CANCELLED);
     expect(updated.payments?.length || 0).toBeGreaterThan(0);
   });
 
@@ -73,7 +74,7 @@ test.describe("Order - Payment", () => {
     });
 
     const updated = await getOrderDetails(page, result.order.id);
-    expect(updated.status).toBe(ORDER_STATUS.PAID);
+    expect(updated.paymentStatus).toBe(PAYMENT_STATUS.PAID);
     expect(Number(updated.paidAmount)).toBe(Number(updated.total));
   });
 });

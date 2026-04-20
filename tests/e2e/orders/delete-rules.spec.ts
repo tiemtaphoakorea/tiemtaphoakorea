@@ -1,8 +1,8 @@
-import { ORDER_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
   apiPost,
+  cancelOrder,
   createOrder,
   createProductWithVariants,
   deleteOrder,
@@ -11,7 +11,6 @@ import {
   getCustomers,
   getProductsWithVariants,
   recordPayment,
-  updateOrderStatus,
 } from "../helpers/api";
 
 /**
@@ -85,7 +84,7 @@ test.describe("Order - Delete Rules", () => {
       customerId: customer.id,
       items: [{ variantId: variantId!, quantity: 1 }],
     });
-    await updateOrderStatus(page, cancelled.order.id, ORDER_STATUS.CANCELLED);
+    await cancelOrder(page, cancelled.order.id);
 
     // Check UI button visibility for CANCELLED order
     await page.goto(`/orders/${cancelled.order.id}`);

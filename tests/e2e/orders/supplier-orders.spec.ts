@@ -1,8 +1,9 @@
-import { ORDER_STATUS } from "@/lib/constants";
+import { SUPPLIER_ORDER_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
   apiPost,
+  cancelOrder,
   createOrder,
   createProductWithVariants,
   createSupplierOrder,
@@ -13,7 +14,6 @@ import {
   getProductsWithVariants,
   getSupplierOrderDetails,
   getSupplierOrders,
-  updateOrderStatus,
   updateSupplierOrderStatus,
 } from "../helpers/api";
 
@@ -185,7 +185,7 @@ test.describe("Order - Supplier Orders", () => {
     });
 
     // Cancel the order
-    await updateOrderStatus(page, result.order.id, ORDER_STATUS.CANCELLED);
+    await cancelOrder(page, result.order.id);
 
     // Check if supplier orders are cancelled/removed
     const supplierOrdersAfter = await getSupplierOrders(page, {
@@ -195,7 +195,7 @@ test.describe("Order - Supplier Orders", () => {
     // Either removed or marked as cancelled
     if (supplierOrdersAfter.length > 0) {
       const hasAllCancelled = supplierOrdersAfter.every(
-        (so: any) => so.status === ORDER_STATUS.CANCELLED,
+        (so: any) => so.status === SUPPLIER_ORDER_STATUS.CANCELLED,
       );
       expect(hasAllCancelled).toBe(true);
     }
