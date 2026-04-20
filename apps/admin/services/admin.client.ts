@@ -162,6 +162,24 @@ export const adminClient = {
     ) as unknown as Promise<ChatRoomWithDetails>;
   },
 
+  async sendChatMessage(data: { roomId: string; content: string }) {
+    return axios.post<{ success: boolean; message: ChatMessage }>(
+      API_ENDPOINTS.ADMIN.CHAT.ROOMS,
+      data,
+    ) as unknown as Promise<{ success: boolean; message: ChatMessage }>;
+  },
+
+  async uploadChatImage(payload: { roomId: string; file: File }) {
+    const formData = new FormData();
+    formData.append("roomId", payload.roomId);
+    formData.append("file", payload.file);
+    formData.append("sendAsMessage", "true");
+    return axios.post<{ success: boolean; url: string; message: ChatMessage }>(
+      API_ENDPOINTS.ADMIN.CHAT.ROOMS,
+      formData,
+    ) as unknown as Promise<{ success: boolean; url: string; message: ChatMessage }>;
+  },
+
   /**
    * Fetch admin categories.
    */

@@ -80,8 +80,8 @@ export function MessageList({ roomId, messages, currentUserId }: MessageListProp
   };
 
   return (
-    <ScrollArea className="flex-1 h-0 bg-slate-50/30 px-6 py-4 dark:bg-slate-900/10">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <ScrollArea className="flex-1 h-0 bg-slate-50/30 dark:bg-slate-900/10">
+      <div className="mx-auto max-w-4xl space-y-6 px-6 py-4">
         {Object.entries(groupedMessages).map(([dateStr, msgs]) => (
           <div key={dateStr}>
             {/* Date Separator */}
