@@ -56,31 +56,24 @@ describe("stockOut", () => {
     expect(updated.stockOutAt).toBeInstanceOf(Date);
   });
 
-  it("rejects when on_hand is below the ordered quantity", async () => {
-    // Oversell: quantity 10 against on_hand=5 is allowed at createOrder time
-    // (reserved becomes 10). stockOut must refuse because on_hand < 10.
+  it("allows stock-out when quantity exceeds on_hand, leaving onHand negative", async () => {
+    // fx.variantId has onHand=5 by default from seedOrderTest
     const { order } = await createOrder({
       customerId: fx.customerId,
       items: [{ variantId: fx.variantId, quantity: 10 }],
       userId: fx.userId,
     });
 
-    await expect(stockOut({ orderId: order.id, userId: fx.userId })).rejects.toThrow(
-      /Insufficient stock for SKU/,
-    );
+    const updated = await stockOut({ orderId: order.id, userId: fx.userId });
 
-    // Stock untouched, order still pending.
-    const after = await db
+    const [after] = await db
       .select({ onHand: productVariants.onHand, reserved: productVariants.reserved })
       .from(productVariants)
       .where(eq(productVariants.id, fx.variantId));
-    expect(after[0]).toEqual({ onHand: 5, reserved: 10 });
 
-    const [row] = await db
-      .select({ fulfillmentStatus: orders.fulfillmentStatus })
-      .from(orders)
-      .where(eq(orders.id, order.id));
-    expect(row.fulfillmentStatus).toBe(FULFILLMENT_STATUS.PENDING);
+    expect(after.onHand).toBe(-5); // 5 - 10 = -5
+    expect(after.reserved).toBe(0);
+    expect(updated.fulfillmentStatus).toBe(FULFILLMENT_STATUS.STOCK_OUT);
   });
 
   it("rejects when order is not in pending fulfillment state", async () => {

@@ -349,17 +349,7 @@ export async function stockOut({
 
     const variantIds = items.map((i) => i.variantId);
     const variants = await lockVariantsForUpdate(tx, variantIds);
-    const byId = new Map(variants.map((v) => [v.id, v]));
-
-    for (const item of items) {
-      const v = byId.get(item.variantId);
-      if (!v) throw new Error(`Variant ${item.variantId} missing`);
-      if ((v.onHand ?? 0) < item.quantity) {
-        throw new Error(
-          `Insufficient stock for SKU ${v.sku}: on_hand=${v.onHand}, need=${item.quantity}`,
-        );
-      }
-    }
+    const _byId = new Map(variants.map((v) => [v.id, v]));
 
     for (const item of items) {
       await tx
