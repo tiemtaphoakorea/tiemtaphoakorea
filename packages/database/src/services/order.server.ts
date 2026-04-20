@@ -320,8 +320,9 @@ export async function createOrder(data: {
  *
  * Semantically: the customer arrived and we pulled their reserved units off
  * the shelf. Deducts `on_hand -= qty` and `reserved -= qty` per order item in
- * a single transaction. Requires `on_hand >= qty` for every item (no oversell
- * once goods physically leave stock) and the order to currently be
+ * a single transaction. `on_hand` may go negative if stock was not available
+ * (oversell is allowed once goods physically leave). A movement record is
+ * written for each item. Requires the order to currently be
  * `fulfillment_status = 'pending'`.
  */
 export async function stockOut({
