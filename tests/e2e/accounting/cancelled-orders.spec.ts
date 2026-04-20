@@ -2,6 +2,7 @@ import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
   apiPost,
+  cancelOrder,
   cleanupTestProducts,
   createOrder,
   createProductWithVariants,
@@ -10,7 +11,6 @@ import {
   getCustomers,
   getFinanceSummary,
   getProductsWithVariants,
-  updateOrderStatus,
 } from "../helpers/api";
 
 /**
@@ -73,7 +73,7 @@ test.describe("Accounting - Cancelled Orders", () => {
       items: [{ variantId: variantId!, quantity: 20 }],
     });
     const cancelledTotal = Number(order.order.total || 0);
-    await updateOrderStatus(page, order.order.id, "cancelled");
+    await cancelOrder(page, order.order.id);
 
     const statsAfter = await getFinanceSummary(page, { month, year });
 

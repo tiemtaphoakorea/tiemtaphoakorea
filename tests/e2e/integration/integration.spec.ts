@@ -1,9 +1,11 @@
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import {
   apiGet,
   apiPatch,
   apiPost,
   apiPut,
+  cancelOrder,
   createOrder,
   createProductWithVariants,
   getCustomerByPhone,
@@ -13,7 +15,6 @@ import {
   getSupplierOrderDetails,
   getSupplierOrders,
   recordPayment,
-  updateOrderStatus,
   updateSupplierOrderStatus,
 } from "../helpers/api";
 
@@ -579,15 +580,13 @@ test.describe("Integration", () => {
         supplierOrderId = relatedSO.id;
       });
 
-      // Execute: Deliver order independently
-      await test.step("Mark order as delivered independently", async () => {
-        // Per TC-INT-006 spec: "Order status can move to delivered independently of supplier_orders"
-        const deliveredResponse = await updateOrderStatus(page, orderId, "delivered");
-        expect(deliveredResponse.ok()).toBe(true);
-
-        // Verify order is delivered
+      // Verify: Payment progresses independently of supplier orders
+      await test.step("Verify payment independent of supplier orders", async () => {
+        // Pre-order variant has no stock, so fulfillment stays pending; payment
+        // still reaches "paid", proving payment moves independently.
         const updatedOrder = await getOrderDetails(page, orderId);
-        expect(updatedOrder.status).toBe("delivered");
+        expect(updatedOrder.paymentStatus).toBe(PAYMENT_STATUS.PAID);
+        expect(updatedOrder.fulfillmentStatus).toBe(FULFILLMENT_STATUS.PENDING);
       });
 
       // Verify: Supplier order still pending
@@ -695,7 +694,7 @@ test.describe("Integration", () => {
 
       // Execute: Cancel order
       await test.step("Cancel order", async () => {
-        await updateOrderStatus(page, orderId, "cancelled");
+        await cancelOrder(page, orderId);
       });
 
       // Verify: Stock restored
@@ -771,7 +770,7 @@ test.describe("Integration", () => {
 
       // Execute: Cancel the paid order
       await test.step("Cancel the paid order", async () => {
-        await updateOrderStatus(page, orderId, "cancelled");
+        await cancelOrder(page, orderId);
       });
 
       // Verify: Accounting reflects cancellation
@@ -1349,13 +1348,13 @@ test.describe("Integration", () => {
 
       // Execute: First cancellation
       await test.step("Cancel order first time", async () => {
-        const result1 = await updateOrderStatus(page, orderId, "cancelled");
+        const { response: result1 } = await cancelOrder(page, orderId);
         expect(result1.ok()).toBe(true);
       });
 
       // Execute: Second cancellation (should be idempotent)
       await test.step("Cancel order second time", async () => {
-        const result2 = await updateOrderStatus(page, orderId, "cancelled");
+        const { response: result2 } = await cancelOrder(page, orderId);
         // Should succeed (idempotent) or return 400 if already cancelled
         expect([200, 400]).toContain(result2.status());
       });
@@ -1363,7 +1362,7 @@ test.describe("Integration", () => {
       // Verify: Order is cancelled
       await test.step("Verify order is cancelled", async () => {
         const order = await getOrderDetails(page, orderId);
-        expect(order.status).toBe("cancelled");
+        expect(order.fulfillmentStatus).toBe(FULFILLMENT_STATUS.CANCELLED);
       });
     });
   });

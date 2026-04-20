@@ -55,17 +55,6 @@ export const DELIVERY_PREFERENCE = {
   SHIP_AVAILABLE_FIRST: "ship_available_first",
 } as const;
 
-export const ORDER_STATUS = {
-  PENDING: "pending",
-  PAID: "paid",
-  PREPARING: "preparing",
-  SHIPPING: "shipping",
-  DELIVERED: "delivered",
-  CANCELLED: "cancelled",
-} as const;
-
-export const ORDER_STATUS_ALL = "All";
-
 export const PAYMENT_STATUS = {
   UNPAID: "unpaid",
   PARTIAL: "partial",
