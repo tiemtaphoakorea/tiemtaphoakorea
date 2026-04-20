@@ -162,7 +162,9 @@ function parseSafeHTML(html: string): DocumentFragment {
   return document.importNode(clean, true) as unknown as DocumentFragment;
 }
 
-export async function printInvoice(order: InvoiceOrder): Promise<void> {
+async function renderInvoiceCanvas(
+  order: InvoiceOrder,
+): Promise<{ canvas: HTMLCanvasElement; cleanup: () => void }> {
   const styleEl = document.createElement("style");
   styleEl.textContent = INVOICE_CSS;
   document.head.appendChild(styleEl);
@@ -172,24 +174,61 @@ export async function printInvoice(order: InvoiceOrder): Promise<void> {
   container.appendChild(parseSafeHTML(buildInvoiceHTML(order)));
   document.body.appendChild(container);
 
+  await new Promise<void>((r) => requestAnimationFrame(() => r()));
+  await new Promise((r) => setTimeout(r, 150));
+
+  const pageEl = container.querySelector<HTMLElement>(".inv-page")!;
+  const canvas = await html2canvas(pageEl, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+  });
+
+  return {
+    canvas,
+    cleanup: () => {
+      document.body.removeChild(container);
+      document.head.removeChild(styleEl);
+    },
+  };
+}
+
+export async function printInvoice(order: InvoiceOrder): Promise<void> {
+  const { canvas, cleanup } = await renderInvoiceCanvas(order);
   try {
-    await new Promise<void>((r) => requestAnimationFrame(() => r()));
-    await new Promise((r) => setTimeout(r, 150));
-
-    const pageEl = container.querySelector<HTMLElement>(".inv-page")!;
-    const canvas = await html2canvas(pageEl, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-    });
-
     const mmW = 80;
     const mmH = (canvas.height * mmW) / canvas.width;
     const pdf = new jsPDF({ unit: "mm", format: [mmW, mmH] });
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, mmW, mmH);
     pdf.save(`hoa-don-${order.orderNumber}.pdf`);
   } finally {
-    document.body.removeChild(container);
-    document.head.removeChild(styleEl);
+    cleanup();
+  }
+}
+
+export async function exportInvoiceImage(order: InvoiceOrder): Promise<void> {
+  const { canvas, cleanup } = await renderInvoiceCanvas(order);
+  try {
+    const link = document.createElement("a");
+    link.download = `hoa-don-${order.orderNumber}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  } finally {
+    cleanup();
+  }
+}
+
+export async function copyInvoiceImage(order: InvoiceOrder): Promise<void> {
+  const { canvas, cleanup } = await renderInvoiceCanvas(order);
+  try {
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))),
+        "image/png",
+      ),
+    );
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+  } finally {
+    cleanup();
   }
 }

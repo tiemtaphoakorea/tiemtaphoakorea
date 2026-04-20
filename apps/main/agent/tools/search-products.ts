@@ -37,7 +37,7 @@ export const searchProductsTool = tool({
         categoryName: categories.name,
         minPrice: sql<string>`min(${productVariants.price})`,
         maxPrice: sql<string>`max(${productVariants.price})`,
-        totalStock: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)::int`,
+        totalStock: sql<number>`coalesce(sum(${productVariants.onHand}), 0)::int`,
       })
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))

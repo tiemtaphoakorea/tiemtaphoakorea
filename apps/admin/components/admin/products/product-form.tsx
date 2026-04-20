@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { type ApiError, axios } from "@workspace/shared/api-client";
 import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
 import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { CategoryTreeSelector } from "@/components/admin/products/category-tree-selector";
 import { Switch } from "@workspace/ui/components/switch";
 import {
   Table,
@@ -36,12 +36,12 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { type ApiError, axios } from "@workspace/shared/api-client";
 import { ArrowLeft, Loader2, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { CategoryTreeSelector } from "@/components/admin/products/category-tree-selector";
 import { ImageUploader } from "@/components/image-uploader";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -178,7 +178,7 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                   sku: "",
                   price: basePrice,
                   costPrice: 0,
-                  stockQuantity: 0,
+                  onHand: 0,
                   lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
                   images: [],
                 },
@@ -268,16 +268,16 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                 </TableCell>
                 <TableCell>
                   <NumberInput
-                    name={`variants.${idx}.stockQuantity`}
+                    name={`variants.${idx}.onHand`}
                     data-testid={`variant-stock-${idx}`}
                     aria-label="Tồn kho biến thể"
                     decimalScale={0}
-                    value={variant.stockQuantity}
+                    value={variant.onHand}
                     onValueChange={(values) => {
                       const newV = [...variants];
                       newV[idx] = {
                         ...newV[idx],
-                        stockQuantity: Math.max(0, values.floatValue ?? 0),
+                        onHand: Math.max(0, values.floatValue ?? 0),
                       };
                       dispatch({ type: "SET_VARIANTS", payload: newV });
                     }}
@@ -287,7 +287,7 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                       const parsed = Number.parseFloat(normalized) || 0;
                       if (parsed < 0) {
                         const newV = [...variants];
-                        newV[idx] = { ...newV[idx], stockQuantity: 0 };
+                        newV[idx] = { ...newV[idx], onHand: 0 };
                         dispatch({ type: "SET_VARIANTS", payload: newV });
                       }
                     }}
@@ -382,7 +382,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         sku: "",
         price: 0,
         costPrice: 0,
-        stockQuantity: 0,
+        onHand: 0,
         lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
         images: [],
       },
@@ -438,7 +438,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         sku: autoSku,
         price: basePrice,
         costPrice: 0,
-        stockQuantity: 0,
+        onHand: 0,
         lowStockThreshold: LOW_STOCK_DEFAULT_THRESHOLD,
         images: [],
       };
@@ -476,7 +476,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       }
       const price = Number(v.price);
       const costPrice = Number(v.costPrice ?? 0);
-      const stock = Number(v.stockQuantity ?? 0);
+      const stock = Number(v.onHand ?? 0);
       const lowTh = Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD);
       if (price < 0 || costPrice < 0 || stock < 0 || lowTh < 0 || !Number.isFinite(lowTh)) {
         dispatch({
@@ -500,7 +500,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         sku: v.sku,
         price: Number(v.price),
         costPrice: Number(v.costPrice ?? 0),
-        stockQuantity: Number(v.stockQuantity ?? 0),
+        onHand: Number(v.onHand ?? 0),
         lowStockThreshold: Math.floor(Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD)),
         images: v.images ?? [],
       })),
@@ -515,7 +515,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         sku: v.sku,
         price: Number(v.price),
         costPrice: Number(v.costPrice ?? 0),
-        stockQuantity: Number(v.stockQuantity ?? 0),
+        onHand: Number(v.onHand ?? 0),
         lowStockThreshold: Math.floor(Number(v.lowStockThreshold ?? LOW_STOCK_DEFAULT_THRESHOLD)),
         images: v.images ?? [],
       })),

@@ -48,7 +48,7 @@ export function OrderItemsTable({
           <TableRow>
             <TableHead className="w-[35%]">Sản phẩm</TableHead>
             <TableHead className="text-right">Đơn giá</TableHead>
-            <TableHead className="text-center w-[80px]">Tồn kho</TableHead>
+            <TableHead className="text-center w-[80px]">Có thể bán</TableHead>
             <TableHead className="text-center w-[150px]">Số lượng</TableHead>
             <TableHead className="text-right">Thành tiền</TableHead>
             <TableHead className="w-[50px]"></TableHead>
@@ -79,7 +79,9 @@ export function OrderItemsTable({
                   }}
                 />
               </TableCell>
-              <TableCell className="text-center text-muted-foreground">{item.stock}</TableCell>
+              <TableCell className="text-center text-muted-foreground">
+                {Math.max(0, item.available)}
+              </TableCell>
               <TableCell>
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex items-center gap-2">
@@ -111,10 +113,11 @@ export function OrderItemsTable({
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
-                  {item.quantity > item.stock && (
-                    <span className="text-xs text-amber-600 font-medium">
-                      Vượt tồn kho (tối đa {item.stock})
-                    </span>
+                  {item.quantity > item.available && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700">
+                      Sắp thiếu hàng, cần nhập thêm {item.quantity - Math.max(0, item.available)}{" "}
+                      cái
+                    </div>
                   )}
                 </div>
               </TableCell>

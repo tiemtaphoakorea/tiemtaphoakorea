@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/db.server";
-import { ORDER_STATUS } from "@/lib/constants";
 import {
   createOrder,
   deleteOrder,
@@ -76,7 +75,7 @@ describe("createOrder", () => {
   });
 
   it("should create an order successfully with in-stock items", async () => {
-    // Mock lockVariantsForUpdate: tx.select().from().where().for("update")
+    // Mock locked variants (reserve-stock model: onHand + reserved, no stockQuantity)
     mockTx.for.mockResolvedValueOnce([
       {
         id: "v1",
@@ -85,7 +84,8 @@ describe("createOrder", () => {
         sku: "SKU1",
         price: "100000",
         costPrice: "80000",
-        stockQuantity: 10,
+        onHand: 10,
+        reserved: 0,
       },
     ]);
 
@@ -106,11 +106,11 @@ describe("createOrder", () => {
       userId: "admin-1",
     });
 
-    // Check stock update
+    // Check stock reservation (reserve-stock model increments `reserved`, not `stockQuantity`)
     expect(mockTx.update).toHaveBeenCalled();
     expect(mockTx.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        stockQuantity: expect.anything(),
+        reserved: expect.anything(),
       }),
     );
 
@@ -123,7 +123,8 @@ describe("createOrder", () => {
       {
         id: "v1",
         productId: "p1",
-        stockQuantity: 1,
+        onHand: 1,
+        reserved: 0,
         name: "V1",
         sku: "SKU1",
         price: "100",
@@ -160,7 +161,8 @@ describe("createOrder", () => {
         productId: "p1",
         name: "Variant 2",
         price: "100",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
         sku: "SKU2",
         costPrice: "50",
       },
@@ -183,115 +185,9 @@ describe("createOrder", () => {
     // insert: Orders, OrderItems, StatusHistory, SupplierOrder
     expect(mockTx.insert).toHaveBeenCalledTimes(4);
   });
-
-  it("should update order status and history", async () => {
-    mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "pending" },
-    ]);
-
-    mockTx.returning.mockResolvedValueOnce([{ id: "order-1", status: "paid" }]);
-
-    await updateOrderStatus("order-1", ORDER_STATUS.PAID, "admin-1", "Payment received");
-
-    expect(mockTx.update).toHaveBeenCalled();
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "paid",
-        paidAt: expect.any(Date),
-      }),
-    );
-
-    expect(mockTx.insert).toHaveBeenCalled(); // History insert
-    // Check history values
-    expect(mockTx.values).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderId: "order-1",
-        status: "paid",
-        note: "Payment received",
-      }),
-    );
-  });
-
-  it("should restore stock on cancellation (all items)", async () => {
-    mockTx.for
-      .mockResolvedValueOnce([{ id: "order-1", orderNumber: "ORD-001", status: "pending" }])
-      .mockResolvedValueOnce([
-        { id: "v1", stockQuantity: 10 },
-        { id: "v2", stockQuantity: 0 },
-      ]);
-
-    const itemsQueryResult = [
-      { id: "item-1", variantId: "v1", quantity: 2 },
-      { id: "item-2", variantId: "v2", quantity: 5 },
-    ];
-    const updateReturning = vi.fn().mockResolvedValue([{ id: "order-1", status: "cancelled" }]);
-    let whereCallCount = 0;
-    mockTx.where.mockImplementation(() => {
-      whereCallCount++;
-      if (whereCallCount === 1) return mockTx; // lockOrderForUpdate chain
-      if (whereCallCount === 2) return { returning: updateReturning }; // update().set().where().returning()
-      if (whereCallCount === 3) return Promise.resolve(itemsQueryResult); // items select
-      return mockTx; // lockVariantsForUpdate, update stock where
-    });
-
-    await updateOrderStatus("order-1", ORDER_STATUS.CANCELLED, "admin-1");
-
-    expect(mockTx.update).toHaveBeenCalledTimes(4); // 1 for order status, 2 for stock restore (both items), 1 for supplier orders
-    const stockRestores = mockTx.set.mock.calls.filter(
-      (call) => call[0] && typeof call[0] === "object" && "stockQuantity" in call[0],
-    );
-    expect(stockRestores).toHaveLength(2);
-  });
-
-  it("should cancel pending supplier orders on order cancellation", async () => {
-    mockTx.for
-      .mockResolvedValueOnce([{ id: "order-1", orderNumber: "ORD-001", status: "pending" }])
-      .mockResolvedValueOnce([{ id: "v1", stockQuantity: 0 }]);
-
-    const itemsQueryResult = [{ id: "item-1", variantId: "v1", quantity: 5 }];
-    const updateReturning = vi.fn().mockResolvedValue([{ id: "order-1", status: "cancelled" }]);
-
-    let whereCallCount = 0;
-    mockTx.where.mockImplementation(() => {
-      whereCallCount++;
-      // 1. lockOrderForUpdate
-      if (whereCallCount === 1) return mockTx;
-      // 2. update order status
-      if (whereCallCount === 2) return { returning: updateReturning };
-      // 3. Select items
-      if (whereCallCount === 3) return Promise.resolve(itemsQueryResult);
-      // 4. lockVariantsForUpdate
-      if (whereCallCount === 4) return mockTx;
-
-      // 5. Select supplier orders
-      if (whereCallCount === 5) {
-        return {
-          orderBy: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([{ id: "so-1", note: "Auto" }]),
-        };
-      }
-
-      // 6. Update supplier order
-      if (whereCallCount === 6) return mockTx;
-
-      return mockTx;
-    });
-
-    await updateOrderStatus("order-1", ORDER_STATUS.CANCELLED, "admin-1");
-
-    // 1st update: Order status; 2nd update: Stock restore (all items); 3rd update: supplier orders
-    expect(mockTx.update).toHaveBeenCalledTimes(3);
-
-    expect(mockTx.set).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        status: "cancelled",
-      }),
-    );
-  });
 });
 
-import { getOrderDetails, getOrders, updateOrderStatus } from "@/services/order.server";
+import { getOrderDetails, getOrders } from "@/services/order.server";
 
 // Actually db.select...where is mocked.
 
@@ -339,14 +235,14 @@ describe("getOrders", () => {
     expect(totalMock.where).toHaveBeenCalled();
   });
 
-  it("should apply status filter when not All", async () => {
+  it("should apply paymentStatus filter when provided", async () => {
     const totalMock = createSelectMock([{ count: 0 }]);
     const listMock = createSelectMock([]);
     (db.select as any)
       .mockImplementationOnce(() => totalMock)
       .mockImplementationOnce(() => listMock);
 
-    await getOrders({ status: ORDER_STATUS.PENDING });
+    await getOrders({ paymentStatus: "unpaid" });
     expect(totalMock.where).toHaveBeenCalled();
   });
 
@@ -355,8 +251,10 @@ describe("getOrders", () => {
       {
         id: "order-1",
         orderNumber: "ORD-001",
-        status: "pending",
+        paymentStatus: "unpaid",
+        fulfillmentStatus: "pending",
         total: "100000",
+        paidAmount: "0",
         createdAt: new Date(),
         paidAt: null,
         customerId: "cust-1",
@@ -487,7 +385,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "PRE1",
         price: "50000",
         costPrice: "30000",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
       },
     ]);
 
@@ -523,7 +422,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "SKU1",
         price: "100",
         costPrice: "80",
-        stockQuantity: 10,
+        onHand: 10,
+        reserved: 0,
       },
       {
         id: "v2",
@@ -532,7 +432,8 @@ describe("createOrder - Error Scenarios", () => {
         sku: "SKU2",
         price: "200",
         costPrice: "120",
-        stockQuantity: 0,
+        onHand: 0,
+        reserved: 0,
       },
     ]);
 
@@ -552,88 +453,13 @@ describe("createOrder - Error Scenarios", () => {
   });
 });
 
-describe("updateOrderStatus - Error Scenarios", () => {
-  const createMockTx = () => {
-    const tx: any = {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      for: vi.fn(),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      returning: vi.fn(),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      innerJoin: vi.fn().mockReturnThis(),
-      leftJoin: vi.fn().mockReturnThis(),
-      execute: vi.fn(),
-    };
-    tx.returning.mockResolvedValue([{ id: "order-1", status: "delivered" }]);
-    return tx;
-  };
-
-  let mockTx: ReturnType<typeof createMockTx>;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockTx = createMockTx();
-    (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
-  });
-
-  it("should handle status update to delivered", async () => {
-    mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "shipping" },
-    ]);
-
-    mockTx.returning.mockResolvedValue([{ id: "order-1", status: "delivered" }]);
-    mockTx.where.mockReturnValue(mockTx);
-
-    await updateOrderStatus("order-1", "delivered", "admin-1", "Delivered to customer");
-
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "delivered",
-      }),
-    );
-  });
-
-  it("should handle status update to shipping", async () => {
-    mockTx.for.mockResolvedValueOnce([{ id: "order-1", orderNumber: "ORD-001", status: "paid" }]);
-
-    mockTx.returning.mockResolvedValue([{ id: "order-1", status: "shipping" }]);
-    mockTx.where.mockReturnValue(mockTx);
-
-    await updateOrderStatus("order-1", ORDER_STATUS.SHIPPING, "admin-1");
-
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "shipping",
-      }),
-    );
-  });
-
-  it("should throw error when cancelling a shipping/delivered order", async () => {
-    // Mock locking order that is already SHIPPING
-    mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "shipping" },
-    ]);
-    mockTx.where.mockReturnValue(mockTx);
-
-    await expect(updateOrderStatus("order-1", ORDER_STATUS.CANCELLED, "admin-1")).rejects.toThrow(
-      'Cannot cancel order with status "shipping"',
-    );
-
-    // Ensure no update occurred
-    expect(mockTx.update).not.toHaveBeenCalled();
-  });
-});
-
 describe("updateOrder", () => {
   const createMockTx = () => {
     const tx: any = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn(),
+      for: vi.fn(),
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       returning: vi.fn(),
@@ -641,10 +467,25 @@ describe("updateOrder", () => {
       set: vi.fn().mockReturnThis(),
     };
     tx.where.mockReturnValue(tx);
+    tx.for.mockReturnValue(tx);
     return tx;
   };
 
   let mockTx: ReturnType<typeof createMockTx>;
+
+  const lockedPending = {
+    id: "order-1",
+    orderNumber: "ORD-1",
+    paymentStatus: "unpaid",
+    fulfillmentStatus: "pending",
+    total: "100000",
+    paidAmount: "0",
+    customerId: "customer-1",
+    paidAt: null,
+    stockOutAt: null,
+    completedAt: null,
+    cancelledAt: null,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -652,8 +493,18 @@ describe("updateOrder", () => {
     (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
   });
 
+  // Query path is:
+  //   1. lockOrderForUpdate: select.from.where(eq).for("update")    → locked row (via .for)
+  //   2. subtotal fetch:      select.from.where(eq)                 → [{ subtotal }] (via .where)
+  //   3. empty-updates branch only: select.from.where(eq)           → [full order]  (via .where)
+  // .where must stay chainable (return tx) for step 1 so the chain reaches .for.
+  // Use mockReturnValueOnce(tx) for the chainable step, then mockResolvedValueOnce
+  // for the awaited steps.
+
   it("should update adminNote successfully", async () => {
-    mockTx.where.mockResolvedValueOnce([{ id: "order-1", status: "pending", subtotal: "100000" }]);
+    mockTx.where.mockReturnValueOnce(mockTx); // step 1 — chainable
+    mockTx.for.mockResolvedValueOnce([lockedPending]); // step 1 resolves to locked row
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]); // step 2
     mockTx.returning.mockResolvedValueOnce([{ id: "order-1", adminNote: "New note" }]);
 
     const result = await updateOrder("order-1", { adminNote: "New note" }, "admin-1");
@@ -667,7 +518,9 @@ describe("updateOrder", () => {
   });
 
   it("should update discount and recalculate total", async () => {
-    mockTx.where.mockResolvedValueOnce([{ id: "order-1", status: "pending", subtotal: "100000" }]);
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([lockedPending]);
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]);
     mockTx.returning.mockResolvedValueOnce([{ id: "order-1", discount: "10000", total: "90000" }]);
 
     await updateOrder("order-1", { discount: 10000 }, "admin-1");
@@ -681,7 +534,9 @@ describe("updateOrder", () => {
   });
 
   it("should throw error if order not found", async () => {
-    mockTx.where.mockResolvedValueOnce([]);
+    // lockOrderForUpdate: .where keeps chain, .for resolves [] → null → throws
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([]);
 
     await expect(updateOrder("non-existent", { adminNote: "test" }, "admin-1")).rejects.toThrow(
       "Order not found",
@@ -689,16 +544,15 @@ describe("updateOrder", () => {
   });
 
   it("should return current order if no updates provided", async () => {
-    const current = {
-      id: "order-1",
-      status: "pending",
-      subtotal: "100000",
-    };
-    mockTx.where.mockResolvedValueOnce([current]);
+    mockTx.where.mockReturnValueOnce(mockTx);
+    mockTx.for.mockResolvedValueOnce([lockedPending]);
+    mockTx.where.mockResolvedValueOnce([{ subtotal: "100000" }]);
+    const fullOrder = { id: "order-1", fulfillmentStatus: "pending", subtotal: "100000" };
+    mockTx.where.mockResolvedValueOnce([fullOrder]);
 
     const result = await updateOrder("order-1", {}, "admin-1");
 
-    expect(result).toEqual(current);
+    expect(result).toEqual(fullOrder);
     expect(mockTx.update).not.toHaveBeenCalled();
   });
 });
@@ -730,7 +584,7 @@ describe("deleteOrder", () => {
 
   it("should throw error when trying to delete pending order", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "pending" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "pending" },
     ]);
     mockTx.where.mockReturnValue(mockTx);
 
@@ -741,7 +595,7 @@ describe("deleteOrder", () => {
 
   it("should delete cancelled order successfully", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "cancelled" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "cancelled" },
     ]);
     mockTx.where.mockReturnValue(mockTx); // lockOrder and delete; items not queried when cancelled
 
@@ -754,12 +608,12 @@ describe("deleteOrder", () => {
 
   it("should throw error for non-deletable status", async () => {
     mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "delivered" },
+      { id: "order-1", orderNumber: "ORD-001", fulfillmentStatus: "completed" },
     ]);
     mockTx.where.mockReturnValue(mockTx);
 
     await expect(deleteOrder("order-1", "admin-1")).rejects.toThrow(
-      'Cannot delete order with status "delivered"',
+      'Cannot delete order with status "completed"',
     );
   });
 
@@ -772,117 +626,12 @@ describe("deleteOrder", () => {
 });
 
 describe("recordPayment", () => {
-  const createMockTx = () => {
-    const tx: any = {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn(),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      returning: vi.fn().mockReturnThis(),
-    };
-    tx.where.mockReturnValue(tx);
-    return tx;
-  };
-
-  let mockTx: ReturnType<typeof createMockTx>;
-
+  // Order-status/DB shape behavior is covered by the integration suite in
+  // tests/unit/services/order.recordPayment.test.ts (real PGlite). The cases
+  // below only exercise the input-validation short-circuit, which runs before
+  // any DB access.
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTx = createMockTx();
-    (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
-
-    // Mock db.select for pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn(),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-  });
-
-  it("should record payment and update paidAmount", async () => {
-    // Mock pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "200", status: "pending" },
-    ]);
-    mockTx.returning.mockResolvedValueOnce([{ id: "order-1", paidAmount: "500" }]);
-
-    const result = await recordPayment({
-      orderId: "order-1",
-      amount: 300,
-      method: "cash" as any,
-      userId: "admin-1",
-    });
-
-    expect(result.success).toBe(true);
-    expect(mockTx.insert).toHaveBeenCalled();
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        paidAmount: "500",
-      }),
-    );
-  });
-
-  it("should auto-mark as paid when fully paid", async () => {
-    // Mock pre-transaction check
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "700", status: "pending" },
-    ]);
-    mockTx.returning.mockResolvedValueOnce([{ id: "order-1", paidAmount: "1000", status: "paid" }]);
-
-    await recordPayment({
-      orderId: "order-1",
-      amount: 300,
-      method: "bank_transfer" as any,
-      userId: "admin-1",
-    });
-
-    expect(mockTx.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        paidAmount: "1000",
-        status: "paid",
-        paidAt: expect.any(Date),
-      }),
-    );
-    expect(mockTx.insert).toHaveBeenCalledTimes(2);
-  });
-
-  it("should throw error if order not found", async () => {
-    // Mock pre-transaction check - order not found
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    await expect(
-      recordPayment({
-        orderId: "missing",
-        amount: 100,
-        method: "cash" as any,
-        userId: "admin-1",
-      }),
-    ).rejects.toThrow("Order not found");
   });
 
   it("should throw INVALID_PAYMENT_AMOUNT for amount = 0", async () => {
@@ -916,73 +665,6 @@ describe("recordPayment", () => {
         userId: "admin-1",
       }),
     ).rejects.toThrow("INVALID_PAYMENT_AMOUNT");
-  });
-
-  it("should throw OVERPAYMENT_NOT_ALLOWED when payment exceeds remaining balance", async () => {
-    // Mock pre-transaction check - order found
-    const selectMock: any = {
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([{ id: "order-1" }]),
-    };
-    (db.select as any).mockReturnValue(selectMock);
-
-    // Mock transaction query - order with 800 paid of 1000 total
-    mockTx.where.mockResolvedValueOnce([
-      { id: "order-1", total: "1000", paidAmount: "800", status: "pending" },
-    ]);
-
-    // 800 + 300 = 1100 > 1000 → should throw OVERPAYMENT_NOT_ALLOWED
-    await expect(
-      recordPayment({
-        orderId: "order-1",
-        amount: 300,
-        method: "cash" as any,
-        userId: "admin-1",
-      }),
-    ).rejects.toThrow("OVERPAYMENT_NOT_ALLOWED");
-  });
-});
-
-describe("updateOrderStatus - CANCELLED terminal state", () => {
-  const createMockTx = () => {
-    const tx: any = {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      for: vi.fn(),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      returning: vi.fn(),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      innerJoin: vi.fn().mockReturnThis(),
-      leftJoin: vi.fn().mockReturnThis(),
-      execute: vi.fn(),
-    };
-    tx.returning.mockResolvedValue([{ id: "order-1", status: "paid" }]);
-    return tx;
-  };
-
-  let mockTx: ReturnType<typeof createMockTx>;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockTx = createMockTx();
-    (db.transaction as any).mockImplementation((cb: any) => cb(mockTx));
-  });
-
-  it("should throw when transitioning from CANCELLED to any other status", async () => {
-    mockTx.for.mockResolvedValueOnce([
-      { id: "order-1", orderNumber: "ORD-001", status: "cancelled" },
-    ]);
-    mockTx.where.mockReturnValue(mockTx);
-
-    await expect(
-      updateOrderStatus("order-1", ORDER_STATUS.PAID, "admin-1"),
-    ).rejects.toThrow("Cannot update a cancelled order");
-
-    expect(mockTx.update).not.toHaveBeenCalled();
   });
 });
 

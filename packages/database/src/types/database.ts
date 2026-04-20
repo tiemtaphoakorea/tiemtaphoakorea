@@ -32,7 +32,8 @@ export interface VariantWithProduct {
   name: string;
   price: string;
   costPrice: string | null;
-  stockQuantity: number | null;
+  onHand: number;
+  reserved: number;
   lowStockThreshold?: number | null;
   isActive?: boolean | null;
   product?: {

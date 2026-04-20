@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  FULFILLMENT_STATUS,
   INTERNAL_CHAT_ROLES,
   INTERNAL_ROLES,
-  ORDER_STATUS,
   PRODUCT_SORT,
   ROLE,
   VARIANT_ID_PREFIX,
@@ -20,7 +20,7 @@ describe("constants", () => {
   });
 
   it("should expose order and product constants", () => {
-    expect(ORDER_STATUS.PENDING).toBe("pending");
+    expect(FULFILLMENT_STATUS.PENDING).toBe("pending");
     expect(PRODUCT_SORT.PRICE_DESC).toBe("price-desc");
   });
 

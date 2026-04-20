@@ -25,7 +25,7 @@ export interface OrderBuilderItem {
   price: number;
   customPrice?: number;
   quantity: number;
-  stock: number;
+  available: number;
 }
 
 export interface OrderItemTableItem extends OrderBuilderItem {
@@ -38,7 +38,8 @@ export interface OrderProductVariant {
   name: string;
   sku: string;
   price: string;
-  stockQuantity: number;
+  onHand: number;
+  reserved: number;
   images: Array<{
     imageUrl: string;
   }>;

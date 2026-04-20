@@ -1,4 +1,4 @@
-import { ORDER_STATUS } from "@/lib/constants";
+import { FULFILLMENT_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 
 /**
@@ -20,7 +20,7 @@ test.describe("Order - Filters & Pagination", () => {
     await statusFilterBtn.click();
     // Select "Chờ xử lý" (pending) from dropdown
     await page.getByRole("menuitem", { name: "Chờ xử lý" }).click();
-    await expect(page).toHaveURL(new RegExp(`status=${ORDER_STATUS.PENDING}`));
+    await expect(page).toHaveURL(new RegExp(`status=${FULFILLMENT_STATUS.PENDING}`));
 
     // Pagination: when multiple pages exist, go to page 2
     await page.goto("/orders?limit=2");

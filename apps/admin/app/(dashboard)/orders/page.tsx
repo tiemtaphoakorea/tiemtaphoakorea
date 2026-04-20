@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { AdminOrderListItem } from "@workspace/database/types/admin";
+import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
 import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { formatCurrency, formatDate } from "@workspace/shared/utils";
@@ -10,7 +11,7 @@ import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import { DataTable } from "@workspace/ui/components/data-table";
-import { CheckCircle2, Clock, Eye, ShoppingBag, Smartphone, Truck, XCircle } from "lucide-react";
+import { Eye, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
@@ -18,41 +19,9 @@ import { Suspense, useMemo } from "react";
 import { OrderHeader } from "@/components/admin/orders/order-header";
 import { OrderStats } from "@/components/admin/orders/order-stats";
 import { OrderToolbar } from "@/components/admin/orders/order-toolbar";
+import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  pending: {
-    label: "Chờ xử lý",
-    color: "bg-amber-50 text-amber-600 border-amber-100",
-    icon: Clock,
-  },
-  paid: {
-    label: "Đã thanh toán",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    icon: CheckCircle2,
-  },
-  preparing: {
-    label: "Đang đóng gói",
-    color: "bg-blue-50 text-blue-600 border-blue-100",
-    icon: ShoppingBag,
-  },
-  shipping: {
-    label: "Đang giao",
-    color: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    icon: Truck,
-  },
-  delivered: {
-    label: "Đã giao",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    icon: CheckCircle2,
-  },
-  cancelled: {
-    label: "Đã hủy",
-    color: "bg-red-50 text-red-600 border-red-100",
-    icon: XCircle,
-  },
-};
 
 export default function AdminOrders() {
   return (
@@ -68,7 +37,9 @@ function AdminOrdersContent() {
   const pathname = usePathname();
 
   const searchTerm = searchParams.get("search") || "";
-  const statusFilter = searchParams.get("status") || "All";
+  const paymentStatusFilter = searchParams.get("paymentStatus") || "All";
+  const fulfillmentStatusFilter = searchParams.get("fulfillmentStatus") || "All";
+  const debtOnly = searchParams.get("debtOnly") === "true";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.max(
     1,
@@ -76,11 +47,24 @@ function AdminOrdersContent() {
   );
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: queryKeys.orders.list(searchTerm, statusFilter, page, limit),
+    queryKey: queryKeys.orders.list(
+      searchTerm,
+      paymentStatusFilter,
+      fulfillmentStatusFilter,
+      debtOnly,
+      page,
+      limit,
+    ),
     queryFn: () =>
       adminClient.getOrders({
         search: searchTerm,
-        status: statusFilter !== "All" ? statusFilter : undefined,
+        paymentStatus:
+          paymentStatusFilter !== "All" ? (paymentStatusFilter as PaymentStatusValue) : undefined,
+        fulfillmentStatus:
+          fulfillmentStatusFilter !== "All"
+            ? (fulfillmentStatusFilter as FulfillmentStatusValue)
+            : undefined,
+        debtOnly: debtOnly || undefined,
         page,
         limit,
       }),
@@ -91,10 +75,10 @@ function AdminOrdersContent() {
   const orders = (data?.data as AdminOrderListItem[]) || [];
   const metadata = data?.metadata;
 
-  const updateParams = (newParams: Record<string, string | number | null>) => {
+  const updateParams = (newParams: Record<string, string | number | boolean | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === "") {
+      if (value === null || value === undefined || value === "" || value === false) {
         params.delete(key);
       } else {
         params.set(key, value.toString());
@@ -103,7 +87,10 @@ function AdminOrdersContent() {
 
     // Reset to page 1 if filters change
     if (
-      (newParams.search !== undefined || newParams.status !== undefined) &&
+      (newParams.search !== undefined ||
+        newParams.paymentStatus !== undefined ||
+        newParams.fulfillmentStatus !== undefined ||
+        newParams.debtOnly !== undefined) &&
       newParams.page === undefined
     ) {
       params.set("page", "1");
@@ -116,8 +103,16 @@ function AdminOrdersContent() {
     updateParams({ search: val });
   };
 
-  const handleStatusChange = (val: string) => {
-    updateParams({ status: val });
+  const handlePaymentStatusChange = (val: string) => {
+    updateParams({ paymentStatus: val === "All" ? null : val });
+  };
+
+  const handleFulfillmentStatusChange = (val: string) => {
+    updateParams({ fulfillmentStatus: val === "All" ? null : val });
+  };
+
+  const handleDebtOnlyToggle = () => {
+    updateParams({ debtOnly: !debtOnly });
   };
 
   const { data: statsContent } = useQuery({
@@ -162,19 +157,26 @@ function AdminOrdersContent() {
       ),
     },
     {
-      accessorKey: "status",
+      id: "status",
       header: "Trạng thái",
       cell: ({ row }) => {
-        const status = row.original.status || "pending";
-        const config = STATUS_CONFIG[status];
-        const StatusIcon = config?.icon;
+        const payment = row.original.paymentStatus as PaymentStatusValue;
+        const fulfillment = row.original.fulfillmentStatus as FulfillmentStatusValue;
+        const paymentCfg = PAYMENT_BADGE[payment];
+        const fulfillmentCfg = FULFILLMENT_BADGE[fulfillment];
         return (
-          <Badge
-            className={`${config?.color || ""} pointer-events-none flex w-fit items-center gap-1 border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-          >
-            {StatusIcon && <StatusIcon className="h-3 w-3" />}
-            {config?.label || status}
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge
+              className={`${paymentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
+            >
+              {paymentCfg?.label || payment}
+            </Badge>
+            <Badge
+              className={`${fulfillmentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
+            >
+              {fulfillmentCfg?.label || fulfillment}
+            </Badge>
+          </div>
         );
       },
     },
@@ -225,9 +227,14 @@ function AdminOrdersContent() {
           <OrderToolbar
             searchTerm={searchTerm}
             onSearchChange={handleSearch}
-            statusFilter={statusFilter}
-            onStatusChange={handleStatusChange}
-            statusConfig={STATUS_CONFIG}
+            paymentStatus={paymentStatusFilter}
+            onPaymentStatusChange={handlePaymentStatusChange}
+            fulfillmentStatus={fulfillmentStatusFilter}
+            onFulfillmentStatusChange={handleFulfillmentStatusChange}
+            debtOnly={debtOnly}
+            onDebtOnlyToggle={handleDebtOnlyToggle}
+            paymentBadge={PAYMENT_BADGE}
+            fulfillmentBadge={FULFILLMENT_BADGE}
           />
         </CardHeader>
         <CardContent className="p-0">

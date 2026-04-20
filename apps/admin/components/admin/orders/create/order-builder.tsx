@@ -87,7 +87,7 @@ export function OrderBuilder() {
           sku: variant.sku,
           price: Number(variant.price),
           quantity: 1,
-          stock: Number(variant.stockQuantity),
+          available: variant.onHand - variant.reserved,
         },
       ];
     });

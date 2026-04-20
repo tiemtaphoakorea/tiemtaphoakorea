@@ -1,4 +1,6 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { UserRole } from "../schema/enums";
+import type { profiles } from "../schema/profiles";
 import type { ProductVariant as DBProductVariant, Order, OrderItem } from "./order";
 
 // --- Dashboard Stats ---
@@ -100,6 +102,9 @@ export interface ProductListItem {
   categoryName: string | null;
   basePrice: string | null; // Decimal string
   totalStock: number;
+  totalOnHand: number;
+  totalReserved: number;
+  totalAvailable: number;
   minPrice: number;
   maxPrice: number;
   thumbnail: string;
@@ -114,7 +119,7 @@ export interface ProductVariant {
   sku: string;
   price: string;
   costPrice: string | null;
-  stockQuantity: number;
+  onHand: number;
   stockType: string;
   isActive: boolean | null;
   createdAt: Date | null;
@@ -126,7 +131,7 @@ export interface CreateProductVariant {
   sku: string;
   price: number;
   costPrice?: number;
-  stockQuantity?: number;
+  onHand?: number;
   stockType?: string;
   images?: string[];
 }
@@ -299,6 +304,33 @@ export interface AdminOrderListItem extends Order {
   })[];
 }
 
+// --- Debt ---
+export interface DebtListItem {
+  customerId: string;
+  unpaidOrders: number;
+  debt: string; // numeric string from SQL sum
+  oldestDebtDate: Date;
+  customerName: string | null;
+  customerPhone: string | null;
+}
+
+export interface CustomerDebtPaymentHistoryItem {
+  id: string;
+  orderId: string;
+  amount: string;
+  method: string;
+  referenceCode: string | null;
+  createdAt: Date | null;
+}
+
+export interface CustomerDebtResponse {
+  customer: InferSelectModel<typeof profiles>;
+  totalDebt: number;
+  unpaidOrders: Order[];
+  paymentHistory: CustomerDebtPaymentHistoryItem[];
+  allOrders: Order[];
+}
+
 // --- Order Details ---
 export interface AdminOrderDetails extends Order {
   customer: {
@@ -326,7 +358,8 @@ export interface AdminOrderDetails extends Order {
   }[];
   statusHistory: {
     id: string;
-    status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
     createdAt: Date;
     note: string | null;
     creator: {
@@ -342,7 +375,8 @@ export interface AdminOrderDetails extends Order {
     orderNumber: string;
     splitType: string | null;
     total: string;
-    status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
   }[];
 }
 

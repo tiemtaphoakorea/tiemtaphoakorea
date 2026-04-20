@@ -216,13 +216,13 @@ describe("admin.client", () => {
 
       await adminClient.getOrders({
         search: "ORD-1",
-        status: "pending",
+        paymentStatus: "unpaid",
         page: 1,
         limit: 20,
       });
 
       expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.ORDERS, {
-        params: { search: "ORD-1", status: "pending", page: 1, limit: 20 },
+        params: { search: "ORD-1", paymentStatus: "unpaid", page: 1, limit: 20 },
       });
     });
 
@@ -260,18 +260,6 @@ describe("admin.client", () => {
       axiosMock.get.mockRejectedValue(new Error("Network Error"));
 
       await expect(adminClient.getOrders({})).rejects.toThrow("Network Error");
-    });
-
-    it("should update order status", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      const data = { status: "paid", note: "Paid in full" };
-
-      await adminClient.updateOrderStatus("ord-1", data);
-
-      expect(axiosMock.patch).toHaveBeenCalledWith(
-        `${API_ENDPOINTS.ADMIN.ORDERS}/ord-1/status`,
-        data,
-      );
     });
 
     it("should record order payment", async () => {

@@ -4,6 +4,7 @@ export * from "./chat";
 export * from "./enums";
 export * from "./expenses";
 export * from "./idempotency";
+export * from "./inventory";
 export * from "./notifications";
 export * from "./orders";
 export * from "./products";

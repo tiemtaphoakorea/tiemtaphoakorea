@@ -1,15 +1,14 @@
-import { ORDER_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
   apiPost,
+  cancelOrder,
   createOrder,
   createProductWithVariants,
   findVariantIdBySku,
   getCustomerByPhone,
   getCustomers,
   getProductsWithVariants,
-  updateOrderStatus,
 } from "../helpers/api";
 
 /**
@@ -90,7 +89,7 @@ test.describe("Order - Stock", () => {
       items: [{ variantId: variantId!, quantity: 1 }],
     });
 
-    await updateOrderStatus(page, result.order.id, ORDER_STATUS.CANCELLED);
+    await cancelOrder(page, result.order.id);
 
     const productsAfter = await getProductsWithVariants(page);
     const variantAfter = productsAfter

@@ -3,15 +3,6 @@ import { pgEnum } from "drizzle-orm/pg-core";
 export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "manager", "staff", "customer"]);
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 export const customerTypeEnum = pgEnum("customer_type", ["wholesale", "retail"]);
-export const orderStatusEnum = pgEnum("order_status", [
-  "pending",
-  "paid",
-  "preparing",
-  "shipping",
-  "delivered",
-  "cancelled",
-]);
-
 export const supplierOrderStatusEnum = pgEnum("supplier_order_status", [
   "pending",
   "ordered",
@@ -29,3 +20,21 @@ export const deliveryPreferenceEnum = pgEnum("delivery_preference", [
 export const paymentMethodEnum = pgEnum("payment_method", ["cash", "bank_transfer", "card"]);
 
 export const expenseTypeEnum = pgEnum("expense_type", ["fixed", "variable"]);
+
+export const paymentStatusEnum = pgEnum("payment_status", ["unpaid", "partial", "paid"]);
+export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];
+
+export const fulfillmentStatusEnum = pgEnum("fulfillment_status", [
+  "pending",
+  "stock_out",
+  "completed",
+  "cancelled",
+]);
+export type FulfillmentStatus = (typeof fulfillmentStatusEnum.enumValues)[number];
+
+export const movementTypeEnum = pgEnum("movement_type", [
+  "stock_out",
+  "supplier_receipt",
+  "manual_adjustment",
+  "cancellation",
+]);

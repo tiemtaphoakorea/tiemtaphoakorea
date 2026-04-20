@@ -32,6 +32,7 @@ const QK = {
   customerDetailRoot: "customer",
   usersRoot: "users",
   suppliersRoot: "suppliers",
+  debtsRoot: "debts",
 } as const;
 
 const INCLUDE_VARIANTS = { include: "variants" as const };
@@ -70,6 +71,12 @@ export const queryKeys = {
       messages: (roomId: string | null) =>
         [QK.adminRoot, QK.chat, QK.chatMessages, roomId] as const,
     },
+    inventory: {
+      movements: (params: Record<string, unknown>) =>
+        ["admin", "inventory", "movements", params] as const,
+      dailySummary: (params: Record<string, unknown>) =>
+        ["admin", "inventory", "daily-summary", params] as const,
+    },
   },
   dashboard: {
     topProducts: [QK.dashboardRoot, QK.topProducts] as const,
@@ -98,8 +105,15 @@ export const queryKeys = {
     list: (searchTerm: string) => [QK.categoriesRoot, searchTerm] as const,
   },
   orders: {
-    list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
-      [QK.ordersRoot, searchTerm, statusFilter, page, limit] as const,
+    list: (
+      searchTerm: string,
+      paymentStatus: string,
+      fulfillmentStatus: string,
+      debtOnly: boolean,
+      page: number,
+      limit: number,
+    ) =>
+      [QK.ordersRoot, searchTerm, paymentStatus, fulfillmentStatus, debtOnly, page, limit] as const,
     stats: [QK.ordersRoot, QK.orderStatsLeaf] as const,
   },
   order: (id: string) => [QK.orderDetailRoot, id] as const,
@@ -116,4 +130,10 @@ export const queryKeys = {
   banners: {
     all: ["banners"] as const,
   },
+  debts: {
+    all: [QK.debtsRoot] as const,
+    list: (search: string, minAgeDays: number | null, page: number, limit: number) =>
+      [QK.debtsRoot, search, minAgeDays, page, limit] as const,
+  },
+  customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
 } as const;

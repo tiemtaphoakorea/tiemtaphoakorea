@@ -46,7 +46,8 @@ export interface ProductWithVariants {
     name: string;
     price: string;
     costPrice: string | null;
-    stockQuantity: number;
+    onHand: number;
+    reserved: number;
     images: Array<{
       imageUrl: string;
     }>;

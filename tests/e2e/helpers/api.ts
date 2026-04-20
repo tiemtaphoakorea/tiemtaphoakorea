@@ -303,13 +303,43 @@ export async function createOrder(
   return { success: false, order: null };
 }
 
-export async function updateOrderStatus(page: Page, orderId: string, status: string) {
-  const { response } = await apiPatch<{ success: boolean }>(
+export async function stockOut(
+  page: Page,
+  orderId: string,
+  opts?: { note?: string; clientToken?: string },
+) {
+  const { response, data } = await apiPost<{ success: boolean; order: any }>(
     page,
-    `/api/admin/orders/${orderId}/status`,
-    { status },
+    `/api/admin/orders/${orderId}/stock-out`,
+    opts ?? {},
   );
-  return response;
+  return { response, data };
+}
+
+export async function completeOrder(
+  page: Page,
+  orderId: string,
+  opts?: { note?: string; clientToken?: string },
+) {
+  const { response, data } = await apiPost<{ success: boolean; order: any }>(
+    page,
+    `/api/admin/orders/${orderId}/complete`,
+    opts ?? {},
+  );
+  return { response, data };
+}
+
+export async function cancelOrder(
+  page: Page,
+  orderId: string,
+  opts?: { note?: string; clientToken?: string },
+) {
+  const { response, data } = await apiPost<{ success: boolean; order: any }>(
+    page,
+    `/api/admin/orders/${orderId}/cancel`,
+    opts ?? {},
+  );
+  return { response, data };
 }
 
 export async function updateOrder(page: Page, orderId: string, payload: Record<string, any>) {

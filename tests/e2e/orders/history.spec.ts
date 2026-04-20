@@ -1,4 +1,4 @@
-import { ORDER_STATUS } from "@/lib/constants";
+import { FULFILLMENT_STATUS } from "@/lib/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {
@@ -6,7 +6,7 @@ import {
   createOrder,
   findVariantIdBySku,
   getCustomerByPhone,
-  updateOrderStatus,
+  stockOut,
 } from "../helpers/api";
 
 /**
@@ -20,7 +20,6 @@ test.describe("Order - Status History", () => {
 
   test("TC-ORD-019 should log order status history", async ({ page }) => {
     test.setTimeout(60000);
-    // Use fixtures to create order quickly (avoids createOrder retries / timeout)
     const customer = await getCustomerByPhone(page, TEST_CUSTOMERS.primary.phone);
     const variantId = await findVariantIdBySku(page, TEST_PRODUCTS.testTshirt.sku);
     expect(customer?.id).toBeTruthy();
@@ -32,9 +31,9 @@ test.describe("Order - Status History", () => {
     expect(orderData.success).toBe(true);
     expect(orderData.order?.id).toBeTruthy();
 
-    // Update status so history has at least one change (PREPARING is always logged by updateOrderStatus)
-    const preparingRes = await updateOrderStatus(page, orderData.order!.id, ORDER_STATUS.PREPARING);
-    expect(preparingRes.ok()).toBe(true);
+    // Stock out so history has at least one fulfillment change
+    const { response: stockOutRes } = await stockOut(page, orderData.order!.id);
+    expect(stockOutRes.ok()).toBe(true);
 
     // Fetch order history
     const { data: historyData } = await apiGet<any>(
@@ -44,11 +43,11 @@ test.describe("Order - Status History", () => {
 
     expect(historyData.history).toBeDefined();
     expect(Array.isArray(historyData.history)).toBe(true);
-    expect(historyData.history.length).toBeGreaterThanOrEqual(2); // pending (create) + preparing
+    expect(historyData.history.length).toBeGreaterThanOrEqual(2); // create (pending) + stock_out
 
-    // Verify history contains initial and updated status
-    const statuses = historyData.history.map((h: any) => h.status);
-    expect(statuses).toContain(ORDER_STATUS.PENDING);
-    expect(statuses).toContain(ORDER_STATUS.PREPARING);
+    // History rows expose paymentStatus + fulfillmentStatus (no single `status`).
+    const fulfillmentStatuses = historyData.history.map((h: any) => h.fulfillmentStatus);
+    expect(fulfillmentStatuses).toContain(FULFILLMENT_STATUS.PENDING);
+    expect(fulfillmentStatuses).toContain(FULFILLMENT_STATUS.STOCK_OUT);
   });
 });

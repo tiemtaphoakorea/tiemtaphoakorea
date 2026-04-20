@@ -87,13 +87,13 @@ export const getProductAdviceDataTool = tool({
         name: productVariants.name,
         sku: productVariants.sku,
         price: productVariants.price,
-        stockQuantity: productVariants.stockQuantity,
+        onHand: productVariants.onHand,
       })
       .from(productVariants)
       .where(
         and(eq(productVariants.productId, resolvedProductId), eq(productVariants.isActive, true)),
       )
-      .orderBy(desc(productVariants.stockQuantity))
+      .orderBy(desc(productVariants.onHand))
       .limit(20);
 
     return JSON.stringify({
@@ -109,8 +109,8 @@ export const getProductAdviceDataTool = tool({
         name: variant.name,
         sku: variant.sku,
         price: toNumber(variant.price),
-        stockQuantity: variant.stockQuantity ?? 0,
-        inStock: (variant.stockQuantity ?? 0) > 0,
+        onHand: variant.onHand ?? 0,
+        inStock: (variant.onHand ?? 0) > 0,
       })),
     });
   },

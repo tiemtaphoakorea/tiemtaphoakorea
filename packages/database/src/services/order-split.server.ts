@@ -1,8 +1,9 @@
 import {
   type DELIVERY_PREFERENCE,
+  FULFILLMENT_STATUS,
   ORDER_CODE_PREFIX,
   ORDER_SPLIT_SUFFIX,
-  ORDER_STATUS,
+  PAYMENT_STATUS,
   STOCK_TYPE,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
@@ -53,7 +54,7 @@ export async function createSplitOrders(
     .values({
       orderNumber: parentOrderNumber,
       customerId: data.customerId,
-      status: ORDER_STATUS.PREPARING, // Parent stays "preparing" while subs are active
+      // Parent uses default paymentStatus=unpaid + fulfillmentStatus=pending while subs are active.
       subtotal: parentSubtotal.toString(),
       total: parentTotal.toString(),
       totalCost: parentTotalCost.toString(),
@@ -146,7 +147,7 @@ async function createSubOrder(
       splitType: type,
       orderNumber: subOrderNumber,
       customerId: parentOrder.customerId,
-      status: ORDER_STATUS.PENDING, // Initial status for sub-order
+      // Sub-order uses default paymentStatus=unpaid + fulfillmentStatus=pending.
       subtotal: subtotal.toString(),
       total: total.toString(),
       totalCost: totalCost.toString(),
@@ -162,17 +163,21 @@ async function createSubOrder(
   for (const item of items) {
     const variant = variantMap.get(item.variantId)!;
 
-    if (type === STOCK_TYPE.IN_STOCK) {
-      const availableStock = variant.stockQuantity || 0;
-      const deductQty = item.quantity; // Allow negative stock
-      await tx
-        .update(productVariants)
-        .set({
-          stockQuantity: sql`${productVariants.stockQuantity} - ${deductQty}`,
-        })
-        .where(eq(productVariants.id, variant.id));
-      variant.stockQuantity = availableStock - deductQty;
-    }
+    // Every sub-order (both IN_STOCK and PRE_ORDER) is inserted with
+    // fulfillmentStatus='pending' and progresses through stockOut like any
+    // other order. Reserve stock for all item types so:
+    //   - stockOut symmetrically converts reserved→out without double-counting;
+    //   - the invariant checker holds (reserved == SUM of order_items.quantity
+    //     across pending orders);
+    //   - pre-orders block stockOut until the supplier delivery raises on_hand
+    //     (stockOut checks `on_hand >= quantity` explicitly).
+    await tx
+      .update(productVariants)
+      .set({
+        reserved: sql`${productVariants.reserved} + ${item.quantity}`,
+      })
+      .where(eq(productVariants.id, variant.id));
+    variant.reserved = (variant.reserved ?? 0) + item.quantity;
 
     await tx.insert(orderItems).values({
       orderId: subOrder.id,
@@ -195,7 +200,8 @@ async function createSubOrder(
   // Create Status History
   await tx.insert(orderStatusHistory).values({
     orderId: subOrder.id,
-    status: ORDER_STATUS.PENDING,
+    paymentStatus: PAYMENT_STATUS.UNPAID,
+    fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
     note: `Sub-order created (${type})`,
     createdBy: userId,
   });

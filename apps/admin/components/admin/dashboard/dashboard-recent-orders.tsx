@@ -30,23 +30,17 @@ export function DashboardRecentOrders() {
   const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline">Đang xử lý</Badge>;
-      case "processing":
-        return (
-          <Badge variant="secondary" className="border-none bg-blue-500/10 text-blue-500">
-            Đang chuẩn bị
-          </Badge>
-        );
-      case "shipped":
+        return <Badge variant="outline">Chờ xử lý</Badge>;
+      case "stock_out":
         return (
           <Badge variant="secondary" className="border-none bg-amber-500/10 text-amber-500">
-            Đang giao
+            Đã xuất kho
           </Badge>
         );
-      case "delivered":
+      case "completed":
         return (
           <Badge variant="secondary" className="border-none bg-emerald-500/10 text-emerald-500">
-            Đã giao
+            Hoàn tất
           </Badge>
         );
       case "cancelled":

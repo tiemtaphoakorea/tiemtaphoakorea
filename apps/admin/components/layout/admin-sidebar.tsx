@@ -17,6 +17,7 @@ import {
 import {
   BarChart3,
   Building2,
+  CircleDollarSign,
   FolderOpen,
   LayoutDashboard,
   LogOut,
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { icon: Package, label: "Sản phẩm", href: ADMIN_ROUTES.PRODUCTS },
   { icon: FolderOpen, label: "Danh mục", href: ADMIN_ROUTES.CATEGORIES },
   { icon: ShoppingCart, label: "Đơn hàng", href: ADMIN_ROUTES.ORDERS },
+  { icon: CircleDollarSign, label: "Công nợ", href: ADMIN_ROUTES.DEBTS },
   { icon: Truck, label: "Nhập hàng", href: ADMIN_ROUTES.SUPPLIER_ORDERS },
   { icon: Building2, label: "Nhà cung cấp", href: ADMIN_ROUTES.SUPPLIERS },
   { icon: Users, label: "Khách hàng", href: ADMIN_ROUTES.CUSTOMERS },
@@ -125,31 +127,32 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                    className="h-11 px-4"
-                  >
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon
-                        className={`h-5 w-5 ${
-                          pathname === item.href ? "text-primary" : "text-muted-foreground"
-                        }`}
-                      />
-                      <span
-                        className={`text-sm font-bold ${
-                          pathname === item.href ? "text-primary" : "text-foreground"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {filteredNavItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.label}
+                      className="h-11 px-4"
+                    >
+                      <Link href={item.href} className="flex items-center gap-3">
+                        <item.icon
+                          className={`h-5 w-5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                        />
+                        <span
+                          className={`text-sm font-bold ${isActive ? "text-primary" : "text-foreground"}`}
+                        >
+                          {item.label}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -64,7 +64,7 @@ export async function PUT(request: Request, { params }: IdRouteParams) {
         ...v,
         price: v.price !== undefined ? Number(v.price) : undefined,
         costPrice: v.costPrice !== undefined ? Number(v.costPrice) : undefined,
-        stockQuantity: v.stockQuantity !== undefined ? Number(v.stockQuantity) : undefined,
+        onHand: v.onHand !== undefined ? Number(v.onHand) : undefined,
         lowStockThreshold:
           v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
       })),

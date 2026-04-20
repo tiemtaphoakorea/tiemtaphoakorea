@@ -2,26 +2,23 @@
   "$schema": "https://turborepo.dev/schema.json",
   "globalEnv": [
     "DATABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_SECRET_KEY",
+    "SUPABASE_PRODUCT_IMAGE_BUCKET",
     "SESSION_SECRET",
-    "STOREFRONT_BASE_URL",
-    "ADMIN_BASE_URL",
-    "AI_AGENT_ENABLED",
-    "AI_AGENT_USERNAME",
-    "AI_AGENT_DISPLAY_NAME",
-    "AI_AGENT_MODEL",
-    "AI_AGENT_MAX_CONTEXT_MESSAGES",
-    "AI_AGENT_SAFE_MODE",
-    "AI_AGENT_TEMPERATURE",
-    "AI_AGENT_MAX_TOKENS",
-    "AI_AGENT_TIMEOUT_MS",
-    "AI_AGENT_MAX_TURNS",
     "OPENAI_API_KEY"
   ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**",
+        "!.next/dev/**",
+        "!.next/static/**"
+      ]
     },
     "dev": {
       "persistent": true,

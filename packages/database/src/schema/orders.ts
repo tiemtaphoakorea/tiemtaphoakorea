@@ -10,8 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   deliveryPreferenceEnum,
-  orderStatusEnum,
+  fulfillmentStatusEnum,
   paymentMethodEnum,
+  paymentStatusEnum,
   supplierOrderStatusEnum,
 } from "./enums";
 import { productVariants } from "./products";
@@ -26,7 +27,10 @@ export const orders = pgTable(
     customerId: uuid("customer_id")
       .notNull()
       .references(() => profiles.id),
-    status: orderStatusEnum("status").default("pending"),
+    paymentStatus: paymentStatusEnum("payment_status").notNull().default("unpaid"),
+    fulfillmentStatus: fulfillmentStatusEnum("fulfillment_status").notNull().default("pending"),
+    stockOutAt: timestamp("stock_out_at"),
+    completedAt: timestamp("completed_at"),
 
     parentOrderId: uuid("parent_order_id"), // Self-reference added below in relations if needed, or just keep as UUID for now. Drizzle self-reference can be tricky in definition but easy in relations. Actually let's just make it UUID.
     splitType: varchar("split_type", { length: 20 }), // legacy: 'in_stock' | 'pre_order' for split orders; classification by quantity
@@ -59,10 +63,12 @@ export const orders = pgTable(
   (table) => {
     return [
       index("idx_orders_customer").on(table.customerId),
-      index("idx_orders_status").on(table.status),
       index("idx_orders_number").on(table.orderNumber),
       index("idx_orders_created").on(table.createdAt),
       index("idx_orders_parent").on(table.parentOrderId),
+      index("idx_orders_payment_status").on(table.paymentStatus),
+      index("idx_orders_fulfillment_status").on(table.fulfillmentStatus),
+      index("idx_orders_stock_out_at").on(table.stockOutAt),
     ];
   },
 );
@@ -109,7 +115,8 @@ export const orderStatusHistory = pgTable(
     orderId: uuid("order_id")
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
-    status: orderStatusEnum("status").notNull(),
+    paymentStatus: paymentStatusEnum("payment_status").notNull(),
+    fulfillmentStatus: fulfillmentStatusEnum("fulfillment_status").notNull(),
     note: text("note"),
     createdBy: uuid("created_by").references(() => profiles.id),
     createdAt: timestamp("created_at").defaultNow(),

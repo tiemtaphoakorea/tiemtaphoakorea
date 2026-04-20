@@ -2,10 +2,12 @@ import {
   CUSTOMER_TYPE,
   DELIVERY_PREFERENCE,
   ERROR_MESSAGE,
+  FULFILLMENT_STATUS,
+  type FulfillmentStatusValue,
   ORDER_CODE_PREFIX,
-  ORDER_STATUS,
-  ORDER_STATUS_ALL,
   type PAYMENT_METHOD,
+  PAYMENT_STATUS,
+  type PaymentStatusValue,
   ROLE,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
@@ -26,6 +28,7 @@ import type {
   VariantWithProduct,
 } from "../types/database";
 import { createCustomer } from "./customer.server";
+import { insertInventoryMovement } from "./inventory.server";
 import { createSplitOrders } from "./order-split.server";
 
 /**
@@ -145,13 +148,21 @@ export async function createOrder(data: {
   const orderNumber = await generateOrderNumberOutsideTransaction(ORDER_CODE_PREFIX);
 
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Lock Variants with SELECT FOR UPDATE to prevent race conditions
-    // This ensures exclusive access to variant rows during stock check and update
+    // 1. Lock Variants with SELECT FOR UPDATE to prevent race conditions.
     const variantIds = data.items.map((i) => i.variantId);
     const lockedVariants = await lockVariantsForUpdate(tx, variantIds);
 
+    // Build variantMap using VariantWithProduct shape for downstream compat
+    // (createSplitOrders, etc.). `onHand` here carries the *available*
+    // count (on_hand - reserved) for read-only consumers.
     const variantMap = new Map<string, VariantWithProduct>(
-      lockedVariants.map((v) => [v.id, v as VariantWithProduct]),
+      lockedVariants.map((v) => [
+        v.id,
+        {
+          ...v,
+          onHand: (v.onHand ?? 0) - (v.reserved ?? 0),
+        },
+      ]),
     );
     const missingVariantIds = variantIds.filter((variantId) => !variantMap.has(variantId));
 
@@ -170,7 +181,7 @@ export async function createOrder(data: {
     for (const item of data.items) {
       const variant = variantMap.get(item.variantId);
       if (!variant) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-      const available = variant.stockQuantity ?? 0;
+      const available = variant.onHand ?? 0;
       if (available >= item.quantity) {
         inStockItems.push(item);
       } else {
@@ -214,13 +225,14 @@ export async function createOrder(data: {
     const total = subtotal;
     const profit = total - totalCost;
 
-    // Create Order
+    // Create Order: no legacy `status`; use paymentStatus + fulfillmentStatus
     const [newOrder] = await tx
       .insert(orders)
       .values({
         orderNumber,
         customerId: resolvedCustomerId,
-        status: ORDER_STATUS.PENDING,
+        paymentStatus: PAYMENT_STATUS.UNPAID,
+        fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
         subtotal: subtotal.toString(),
         total: total.toString(),
         totalCost: totalCost.toString(),
@@ -231,7 +243,8 @@ export async function createOrder(data: {
       })
       .returning();
 
-    // Process Items: deduct stock for all items (allow negative); report shortage for supplier
+    // Process Items: reserve (do NOT deduct on_hand); report shortage for supplier
+    // Shortage is computed against available = on_hand - reserved (before increment).
     const itemsNeedingStock: Array<{
       sku: string;
       name: string;
@@ -241,18 +254,19 @@ export async function createOrder(data: {
 
     for (const item of data.items) {
       const variant = variantMap.get(item.variantId)!;
-      const availableStock = variant.stockQuantity ?? 0;
-      const deductQty = item.quantity;
+      const availableStock = variant.onHand ?? 0;
       const quantityNeedsSupplier = Math.max(0, item.quantity - availableStock);
 
       await tx
         .update(productVariants)
         .set({
-          stockQuantity: sql`${productVariants.stockQuantity} - ${deductQty}`,
+          reserved: sql`${productVariants.reserved} + ${item.quantity}`,
         })
         .where(eq(productVariants.id, variant.id));
 
-      variant.stockQuantity = availableStock - deductQty;
+      // Keep the map in sync for any later reads in this scope.
+      variant.onHand = availableStock - item.quantity;
+
       if (quantityNeedsSupplier > 0) {
         itemsNeedingStock.push({
           sku: variant.sku,
@@ -277,10 +291,11 @@ export async function createOrder(data: {
       });
     }
 
-    // Create Status History
+    // Create Status History with both payment + fulfillment status (both NOT NULL).
     await tx.insert(orderStatusHistory).values({
       orderId: newOrder.id,
-      status: ORDER_STATUS.PENDING,
+      paymentStatus: PAYMENT_STATUS.UNPAID,
+      fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
       note: "Order created by admin",
       createdBy: data.userId,
     });
@@ -300,94 +315,208 @@ export async function createOrder(data: {
   });
 }
 
-// Keep updateOrderStatus and other functions as is
-export async function updateOrderStatus(
-  orderId: string,
-  status: (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS],
-  userId: string,
-  note?: string,
-) {
+/**
+ * Transition a pending order to stock_out.
+ *
+ * Semantically: the customer arrived and we pulled their reserved units off
+ * the shelf. Deducts `on_hand -= qty` and `reserved -= qty` per order item in
+ * a single transaction. `on_hand` may go negative if stock was not available
+ * (oversell is allowed once goods physically leave). A movement record is
+ * written for each item. Requires the order to currently be
+ * `fulfillment_status = 'pending'`.
+ */
+export async function stockOut({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Lock order row first to prevent concurrent status updates
     const lockedOrder = await lockOrderForUpdate(tx, orderId);
-    if (!lockedOrder) {
-      throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(`Invalid transition: cannot stock_out from ${lockedOrder.fulfillmentStatus}`);
     }
 
-    // CANCELLED is a terminal state — no transitions allowed out of it
-    if (lockedOrder.status === ORDER_STATUS.CANCELLED) {
-      throw new Error(`Cannot update a cancelled order`);
+    const items = await tx
+      .select({ quantity: orderItems.quantity, variantId: orderItems.variantId })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    if (items.length === 0) throw new Error("Order has no items");
+
+    const variantIds = items.map((i) => i.variantId);
+    const variants = await lockVariantsForUpdate(tx, variantIds);
+    const byId = new Map(variants.map((v) => [v.id, v]));
+
+    for (const item of items) {
+      await tx
+        .update(productVariants)
+        .set({
+          onHand: sql`${productVariants.onHand} - ${item.quantity}`,
+          reserved: sql`${productVariants.reserved} - ${item.quantity}`,
+        })
+        .where(eq(productVariants.id, item.variantId));
     }
 
-    // Prevent cancelling if status is SHIPPING or DELIVERED
-    if (status === ORDER_STATUS.CANCELLED) {
-      if (
-        lockedOrder.status === ORDER_STATUS.SHIPPING ||
-        lockedOrder.status === ORDER_STATUS.DELIVERED
-      ) {
-        throw new Error(`Cannot cancel order with status "${lockedOrder.status}"`);
-      }
+    for (const item of items) {
+      const v = byId.get(item.variantId)!;
+      await insertInventoryMovement(tx, {
+        variantId: item.variantId,
+        type: "stock_out",
+        quantity: -item.quantity,
+        onHandBefore: v.onHand ?? 0,
+        referenceId: orderId,
+        createdBy: userId,
+      });
     }
 
-    // 2. Determine updates
-    const updates: {
-      status: typeof status;
-      paidAt?: Date;
-      shippedAt?: Date;
-      deliveredAt?: Date;
-      cancelledAt?: Date;
-    } = { status };
-    if (status === ORDER_STATUS.PAID) updates.paidAt = new Date();
-    if (status === ORDER_STATUS.SHIPPING) updates.shippedAt = new Date();
-    if (status === ORDER_STATUS.DELIVERED) updates.deliveredAt = new Date();
-    if (status === ORDER_STATUS.CANCELLED) updates.cancelledAt = new Date();
-
-    // 3. Update Order
-    const [updatedOrder] = await tx
+    const now = new Date();
+    const [updated] = await tx
       .update(orders)
-      .set(updates)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
+        stockOutAt: now,
+        updatedAt: now,
+      })
       .where(eq(orders.id, orderId))
       .returning();
 
-    // 4. Create History
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status,
-      note,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
+      note: note ?? "Stock out",
       createdBy: userId,
     });
 
-    // 5. Cancel: restore stock for all items (we deduct for all when creating order)
-    if (status === ORDER_STATUS.CANCELLED) {
-      const items = await tx
-        .select({
-          quantity: orderItems.quantity,
-          variantId: orderItems.variantId,
-        })
-        .from(orderItems)
-        .where(eq(orderItems.orderId, orderId));
+    return updated;
+  });
+}
 
-      const variantIds = items.map((i) => i.variantId);
-      if (variantIds.length > 0) {
-        await lockVariantsForUpdate(tx, variantIds);
-        for (const row of items) {
-          await tx
-            .update(productVariants)
-            .set({
-              stockQuantity: sql`${productVariants.stockQuantity} + ${row.quantity}`,
-            })
-            .where(eq(productVariants.id, row.variantId));
-        }
-      }
+/**
+ * Transition a stock_out order to completed.
+ *
+ * Requires payment_status='paid' (DB CHECK constraint: completed ⇒ paid) and
+ * fulfillment_status='stock_out'. Sets completed_at=now() on success.
+ */
+export async function completeOrder({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    const lockedOrder = await lockOrderForUpdate(tx, orderId);
+    if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
 
-      // 5b. Cancel supplier orders linked to this order (note contains [Order: <orderNumber>])
-      await tx
-        .update(supplierOrders)
-        .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: new Date() })
-        .where(ilike(supplierOrders.note, `%${lockedOrder.orderNumber}%`));
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.STOCK_OUT) {
+      throw new Error(`Invalid transition: cannot complete from ${lockedOrder.fulfillmentStatus}`);
+    }
+    if (lockedOrder.paymentStatus !== PAYMENT_STATUS.PAID) {
+      throw new Error("Order is not fully paid; cannot complete");
     }
 
-    return updatedOrder;
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.COMPLETED,
+        completedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.COMPLETED,
+      note: note ?? "Order completed",
+      createdBy: userId,
+    });
+
+    return updated;
+  });
+}
+
+/**
+ * Transition a pending order to cancelled.
+ *
+ * Only pending orders can be cancelled in Spec 1 — once goods have physically
+ * left stock (stock_out) the customer path is `return_order` (not yet
+ * available). Returns reserved stock (`reserved -= qty`) without touching
+ * `on_hand`, sets `cancelled_at = now()`, writes a status_history row, and
+ * cancels any supplier_orders whose note references this order's number
+ * (preserving old updateOrderStatus behavior).
+ */
+export async function cancelOrder({
+  orderId,
+  userId,
+  note,
+}: {
+  orderId: string;
+  userId: string;
+  note?: string;
+}) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    const locked = await lockOrderForUpdate(tx, orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (locked.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(
+        `Cannot cancel after stock_out. Use return_order instead (not yet available in Spec 1).`,
+      );
+    }
+
+    const items = await tx
+      .select({ quantity: orderItems.quantity, variantId: orderItems.variantId })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    const variantIds = items.map((i) => i.variantId);
+    if (variantIds.length > 0) {
+      await lockVariantsForUpdate(tx, variantIds);
+      for (const item of items) {
+        await tx
+          .update(productVariants)
+          .set({ reserved: sql`${productVariants.reserved} - ${item.quantity}` })
+          .where(eq(productVariants.id, item.variantId));
+      }
+    }
+
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+        cancelledAt: now,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+      note: note ?? "Order cancelled",
+      createdBy: userId,
+    });
+
+    await tx
+      .update(supplierOrders)
+      .set({ status: SUPPLIER_ORDER_STATUS.CANCELLED, updatedAt: now })
+      .where(ilike(supplierOrders.note, `%[Order: ${locked.orderNumber}]%`));
+
+    return updated;
   });
 }
 
@@ -395,16 +524,20 @@ import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/paginat
 
 export async function getOrders({
   search = "",
-  status = ORDER_STATUS_ALL,
+  paymentStatus,
+  fulfillmentStatus,
   customerId,
   page = PAGINATION_DEFAULT.PAGE,
   limit = PAGINATION_DEFAULT.LIMIT,
+  debtOnly,
 }: {
   search?: string;
-  status?: string;
+  paymentStatus?: PaymentStatusValue;
+  fulfillmentStatus?: FulfillmentStatusValue;
   customerId?: string;
   page?: number;
   limit?: number;
+  debtOnly?: boolean;
 } = {}) {
   const offset = (page - 1) * limit;
   const whereConditions: SQL[] = [];
@@ -419,13 +552,17 @@ export async function getOrders({
     );
   }
 
-  if (status !== ORDER_STATUS_ALL) {
-    whereConditions.push(
-      eq(
-        orders.status,
-        status as "pending" | "paid" | "preparing" | "shipping" | "delivered" | "cancelled",
-      )!,
-    );
+  if (paymentStatus) {
+    whereConditions.push(eq(orders.paymentStatus, paymentStatus)!);
+  }
+
+  if (fulfillmentStatus) {
+    whereConditions.push(eq(orders.fulfillmentStatus, fulfillmentStatus)!);
+  }
+
+  if (debtOnly) {
+    whereConditions.push(eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.STOCK_OUT)!);
+    whereConditions.push(sql`${orders.paymentStatus} != ${PAYMENT_STATUS.PAID}`);
   }
 
   if (customerId) {
@@ -448,8 +585,10 @@ export async function getOrders({
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
-      status: orders.status,
+      paymentStatus: orders.paymentStatus,
+      fulfillmentStatus: orders.fulfillmentStatus,
       total: orders.total,
+      paidAmount: orders.paidAmount,
       createdAt: orders.createdAt,
       paidAt: orders.paidAt,
       // Select flat fields to avoid Drizzle nesting issue with groupBy
@@ -470,8 +609,10 @@ export async function getOrders({
   const results = rawResults.map((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
-    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentStatus: order.fulfillmentStatus,
     total: order.total,
+    paidAmount: order.paidAmount,
     createdAt: order.createdAt,
     paidAt: order.paidAt,
     customer: {
@@ -555,12 +696,20 @@ export async function updateOrder(
   userId: string,
 ) {
   return await db.transaction(async (tx: DbTransaction) => {
-    // 1. Get current order
-    const [currentOrder] = await tx.select().from(orders).where(eq(orders.id, orderId));
-
-    if (!currentOrder) {
+    // 1. Lock order and check fulfillment status (pending-only edits).
+    const locked = await lockOrderForUpdate(tx, orderId);
+    if (!locked) {
       throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
     }
+    if (locked.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
+      throw new Error(`Cannot edit order after ${locked.fulfillmentStatus}`);
+    }
+
+    // lockOrderForUpdate doesn't surface subtotal; read it on the now-locked row.
+    const [currentOrder] = await tx
+      .select({ subtotal: orders.subtotal })
+      .from(orders)
+      .where(eq(orders.id, orderId));
 
     // 2. Prepare update data
     const updates: Record<string, unknown> = {};
@@ -577,7 +726,8 @@ export async function updateOrder(
     }
 
     if (Object.keys(updates).length === 0) {
-      return currentOrder; // Nothing to update
+      const [fullOrder] = await tx.select().from(orders).where(eq(orders.id, orderId));
+      return fullOrder; // Nothing to update
     }
 
     // 3. Update order
@@ -590,7 +740,8 @@ export async function updateOrder(
     // 4. Log to status history
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status: currentOrder.status || ORDER_STATUS.PENDING,
+      paymentStatus: locked.paymentStatus as PaymentStatusValue,
+      fulfillmentStatus: locked.fulfillmentStatus as FulfillmentStatusValue,
       note: `Cập nhật đơn hàng: ${Object.keys(updates).join(", ")}`,
       createdBy: userId,
     });
@@ -616,7 +767,8 @@ export async function updateOrderItems(
       .select({
         id: orders.id,
         orderNumber: orders.orderNumber,
-        status: orders.status,
+        paymentStatus: orders.paymentStatus,
+        fulfillmentStatus: orders.fulfillmentStatus,
         subtotal: orders.subtotal,
         discount: orders.discount,
         parentOrderId: orders.parentOrderId,
@@ -625,7 +777,7 @@ export async function updateOrderItems(
       .where(eq(orders.id, orderId))
       .for("update");
     if (!lockedOrder) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-    if (lockedOrder.status !== ORDER_STATUS.PENDING) {
+    if (lockedOrder.fulfillmentStatus !== FULFILLMENT_STATUS.PENDING) {
       throw new Error("Chỉ có thể sửa sản phẩm khi đơn hàng ở trạng thái chờ xử lý.");
     }
     if (lockedOrder.parentOrderId) {
@@ -655,7 +807,7 @@ export async function updateOrderItems(
     for (const row of existingItems) {
       await tx
         .update(productVariants)
-        .set({ stockQuantity: sql`${productVariants.stockQuantity} + ${row.quantity}` })
+        .set({ reserved: sql`${productVariants.reserved} - ${row.quantity}` })
         .where(eq(productVariants.id, row.variantId));
     }
 
@@ -693,14 +845,16 @@ export async function updateOrderItems(
       subtotal += unitPrice * item.quantity;
       totalCost += costPrice * item.quantity;
 
-      // Deduct stock (allow negative for pre-order)
+      // Re-reserve stock (order still pending, so reserve rather than deduct on_hand).
       await tx
         .update(productVariants)
-        .set({ stockQuantity: sql`${productVariants.stockQuantity} - ${item.quantity}` })
+        .set({ reserved: sql`${productVariants.reserved} + ${item.quantity}` })
         .where(eq(productVariants.id, variant.id));
 
-      const currentStock = variant.stockQuantity ?? 0;
-      const shortfall = Math.max(0, item.quantity - currentStock);
+      // Shortfall = qty - available; available = on_hand - reserved at read time
+      // (reads pre-date this loop's reserve increments, which is the correct baseline).
+      const available = (variant.onHand ?? 0) - (variant.reserved ?? 0);
+      const shortfall = Math.max(0, item.quantity - available);
       if (shortfall > 0) {
         itemsNeedingStock.push({ variantId: variant.id, quantity: shortfall, sku: variant.sku });
       }
@@ -739,7 +893,8 @@ export async function updateOrderItems(
 
     await tx.insert(orderStatusHistory).values({
       orderId,
-      status: ORDER_STATUS.PENDING,
+      paymentStatus: lockedOrder.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
       note: "Cập nhật sản phẩm đơn hàng",
       createdBy: userId,
     });
@@ -772,9 +927,9 @@ export async function deleteOrder(orderId: string, userId: string) {
     }
 
     // 2. Only allow deleting CANCELLED orders
-    if (orderToDelete.status !== ORDER_STATUS.CANCELLED) {
+    if (orderToDelete.fulfillmentStatus !== FULFILLMENT_STATUS.CANCELLED) {
       throw new Error(
-        `${ERROR_MESSAGE.ORDER.CANNOT_DELETE_WITH_STATUS} "${orderToDelete.status}". Only cancelled orders can be deleted.`,
+        `${ERROR_MESSAGE.ORDER.CANNOT_DELETE_WITH_STATUS} "${orderToDelete.fulfillmentStatus}". Only cancelled orders can be deleted.`,
       );
     }
 
@@ -798,78 +953,60 @@ export async function recordPayment(data: {
     throw new Error("INVALID_PAYMENT_AMOUNT");
   }
 
-  // 1. Check if order exists BEFORE starting transaction (avoids isolation issues)
-  const [orderCheck] = await db
-    .select({ id: orders.id })
-    .from(orders)
-    .where(eq(orders.id, data.orderId))
-    .limit(1);
+  return await db.transaction(async (tx: DbTransaction) => {
+    const locked = await lockOrderForUpdate(tx, data.orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
 
-  if (!orderCheck) {
-    throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
-  }
+    if (locked.fulfillmentStatus === FULFILLMENT_STATUS.CANCELLED) {
+      throw new Error("Cannot record payment on cancelled order");
+    }
+    if (locked.fulfillmentStatus === FULFILLMENT_STATUS.COMPLETED) {
+      throw new Error("Order already completed; no further payment");
+    }
 
-  // 2. Now do the actual payment recording in transaction
-  try {
-    return await db.transaction(async (tx: DbTransaction) => {
-      // Get current order state within transaction for accurate locking
-      const [order] = await tx
-        .select({
-          id: orders.id,
-          total: orders.total,
-          paidAmount: orders.paidAmount,
-          status: orders.status,
-        })
-        .from(orders)
-        .where(eq(orders.id, data.orderId));
+    const total = Number(locked.total ?? 0);
+    const newPaid = Number(locked.paidAmount ?? 0) + data.amount;
+    if (newPaid > total) throw new Error("OVERPAYMENT_NOT_ALLOWED");
 
-      if (!order) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    const nextPaymentStatus =
+      newPaid === 0
+        ? PAYMENT_STATUS.UNPAID
+        : newPaid < total
+          ? PAYMENT_STATUS.PARTIAL
+          : PAYMENT_STATUS.PAID;
 
-      // 3. Insert Payment
-      await tx.insert(payments).values({
-        orderId: data.orderId,
-        amount: data.amount.toString(),
-        method: data.method,
-        referenceCode: data.referenceCode,
-        note: data.note,
-        createdBy: data.userId,
-      });
-
-      // 4. Update Order Paid Amount
-      const currentPaid = Number(order.paidAmount || 0);
-      const newPaid = currentPaid + data.amount;
-      const total = Number(order.total);
-      if (newPaid > total) throw new Error("OVERPAYMENT_NOT_ALLOWED");
-
-      const updates: {
-        paidAmount: string;
-        status?: typeof ORDER_STATUS.PAID;
-        paidAt?: Date;
-      } = {
-        paidAmount: newPaid.toString(),
-      };
-
-      if (newPaid >= total && order.status === ORDER_STATUS.PENDING) {
-        updates.status = ORDER_STATUS.PAID;
-        updates.paidAt = new Date(); // Using JS Date for timestamp
-
-        // Log status change
-        await tx.insert(orderStatusHistory).values({
-          orderId: data.orderId,
-          status: ORDER_STATUS.PAID,
-          note: `Tự động cập nhật trạng thái "Đã thanh toán" (Đã trả: ${newPaid})`,
-          createdBy: data.userId,
-        });
-      }
-
-      await tx.update(orders).set(updates).where(eq(orders.id, data.orderId)).returning();
-
-      return { success: true };
+    await tx.insert(payments).values({
+      orderId: data.orderId,
+      amount: data.amount.toString(),
+      method: data.method,
+      referenceCode: data.referenceCode,
+      note: data.note,
+      createdBy: data.userId,
     });
-  } catch (error) {
-    console.error(`[recordPayment] Transaction error:`, error);
-    throw error;
-  }
+
+    const now = new Date();
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        paidAmount: newPaid.toString(),
+        paymentStatus: nextPaymentStatus,
+        paidAt: nextPaymentStatus === PAYMENT_STATUS.PAID ? now : locked.paidAt,
+        updatedAt: now,
+      })
+      .where(eq(orders.id, data.orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId: data.orderId,
+      paymentStatus: nextPaymentStatus,
+      fulfillmentStatus:
+        locked.fulfillmentStatus as (typeof FULFILLMENT_STATUS)[keyof typeof FULFILLMENT_STATUS],
+      note: data.note ?? `Payment recorded: ${data.amount} (${data.method})`,
+      createdBy: data.userId,
+    });
+
+    return updated;
+  });
 }
 
 export async function getOrderHistory(orderId: string) {
@@ -894,11 +1031,11 @@ export async function getOrderStats() {
     .select({
       total: sql<number>`count(*)`.mapWith(Number),
       pending:
-        sql<number>`count(*) filter (where ${orders.status} = ${ORDER_STATUS.PENDING})`.mapWith(
+        sql<number>`count(*) filter (where ${orders.fulfillmentStatus} = ${FULFILLMENT_STATUS.PENDING})`.mapWith(
           Number,
         ),
       completed:
-        sql<number>`count(*) filter (where ${orders.status} = ${ORDER_STATUS.DELIVERED})`.mapWith(
+        sql<number>`count(*) filter (where ${orders.fulfillmentStatus} = ${FULFILLMENT_STATUS.COMPLETED})`.mapWith(
           Number,
         ),
       totalRevenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),

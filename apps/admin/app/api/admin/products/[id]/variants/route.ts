@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: IdRouteParams) {
         name: body.name || "Variant",
         price: String(retailPrice),
         costPrice: String(costPrice),
-        stockQuantity: Number(body.stockQuantity || 0),
+        onHand: Number(body.onHand || 0),
         lowStockThreshold: body.lowStockThreshold ? Number(body.lowStockThreshold) : undefined,
         isActive: true,
       })

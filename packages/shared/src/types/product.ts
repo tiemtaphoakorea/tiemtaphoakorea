@@ -7,7 +7,7 @@ export interface ProductVariant {
   name: string;
   sku: string;
   price: string | number;
-  stockQuantity: number;
+  onHand: number;
   stockType?: string | null;
   images: VariantImage[];
 }
@@ -45,7 +45,7 @@ export type ProductFormVariant = {
   sku: string;
   price: number;
   costPrice: number;
-  stockQuantity: number;
+  onHand: number;
   /** Số tồn tối đa (kể cả) để vẫn coi là "sắp hết" — theo từng biến thể. */
   lowStockThreshold: number;
   images: string[];
@@ -66,7 +66,7 @@ export type AdminProductDetail = {
     sku: string;
     price: string;
     costPrice: string | null;
-    stockQuantity: number;
+    onHand: number;
     lowStockThreshold?: number | null;
     stockType: string | null;
     images: Array<{ imageUrl: string }>;

@@ -40,7 +40,7 @@ export function LowStockList({ items }: LowStockListProps) {
                 </p>
               </div>
               <span className="ml-4 shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-black text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                {item.stockQuantity} còn lại
+                {item.onHand} còn lại
               </span>
             </div>
           ))}

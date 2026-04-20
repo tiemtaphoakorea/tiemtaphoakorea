@@ -1,4 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
+import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { NumberInput } from "@workspace/ui/components/number-input";
@@ -26,6 +28,18 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Image as ImageIcon } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
+import { adminClient } from "@/services/admin.client";
+
+const MOVEMENT_LABELS: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
+  stock_out: { label: "Xuất kho", variant: "destructive" },
+  supplier_receipt: { label: "Nhập hàng", variant: "default" },
+  manual_adjustment: { label: "Điều chỉnh", variant: "secondary" },
+  cancellation: { label: "Hoàn hàng", variant: "outline" },
+};
 
 interface ProductEditSheetProps {
   categories: any[];
@@ -40,6 +54,17 @@ export function ProductEditSheet({
   onOpenChange,
   editingProduct,
 }: ProductEditSheetProps) {
+  const variantId: string | undefined = editingProduct?.variants[0]?.id;
+
+  const { data: movementsData, isLoading: movementsLoading } = useQuery({
+    queryKey: queryKeys.admin.inventory.movements({ variantId, limit: 10, page: 1 }),
+    queryFn: () => adminClient.getInventoryMovements({ variantId, limit: 10, page: 1 }),
+    enabled: !!variantId,
+    staleTime: 1000 * 60,
+  });
+
+  const movements = movementsData?.data ?? [];
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-xl">
@@ -137,7 +162,7 @@ export function ProductEditSheet({
                   <NumberInput
                     id="edit-product-stock"
                     name="stock"
-                    defaultValue={editingProduct.variants[0]?.stockQuantity}
+                    defaultValue={editingProduct.variants[0]?.onHand}
                     placeholder="0"
                     decimalScale={0}
                     className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
@@ -196,6 +221,47 @@ export function ProductEditSheet({
                     </div>
                   </div>
                 )}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Lịch sử kho</h3>
+                  {movementsLoading ? (
+                    <p className="text-xs text-muted-foreground">Đang tải...</p>
+                  ) : movements.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Chưa có giao dịch nào.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {movements.map((m) => {
+                        const cfg = MOVEMENT_LABELS[m.type];
+                        return (
+                          <div
+                            key={m.id}
+                            className="flex items-center justify-between text-xs py-1 border-b last:border-0"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={cfg?.variant ?? "secondary"}
+                                className="text-[10px] px-1 py-0"
+                              >
+                                {cfg?.label ?? m.type}
+                              </Badge>
+                              <span className="text-muted-foreground">
+                                {new Date(m.createdAt).toLocaleDateString("vi-VN")}
+                              </span>
+                            </div>
+                            <span
+                              className={
+                                m.quantity > 0
+                                  ? "text-green-600 font-medium"
+                                  : "text-red-600 font-medium"
+                              }
+                            >
+                              {m.quantity > 0 ? `+${m.quantity}` : m.quantity}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
                 <div className="grid gap-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800">
                   <div className="grid gap-2">
                     <label

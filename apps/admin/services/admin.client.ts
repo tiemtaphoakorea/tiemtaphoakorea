@@ -9,11 +9,13 @@ import type {
   CreateCustomerData,
   CreateProductData,
   CreateSupplierData,
+  CustomerDebtResponse,
   CustomerStatsItem,
   DashboardKPIs,
   DashboardRecentOrder,
   DashboardStats,
   DashboardTopProduct,
+  DebtListItem,
   Expense,
   FinancialStats,
   NewCategory,
@@ -32,11 +34,36 @@ import type {
 import type { Order } from "@workspace/database/types/order";
 import { axios } from "@workspace/shared/api-client";
 import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
-import { ADMIN_STATS_SECTION } from "@workspace/shared/constants";
+import {
+  ADMIN_STATS_SECTION,
+  type FulfillmentStatusValue,
+  type PaymentStatusValue,
+} from "@workspace/shared/constants";
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
 export type { StockAlertVariant };
+
+export type InventoryMovement = {
+  id: string;
+  variantId: string;
+  variantSku: string;
+  variantName: string;
+  type: "stock_out" | "supplier_receipt" | "manual_adjustment" | "cancellation";
+  quantity: number;
+  onHandBefore: number;
+  onHandAfter: number;
+  referenceId: string | null;
+  note: string | null;
+  createdAt: string;
+  createdByName: string | null;
+};
+
+export type DailySummaryRow = {
+  date: string;
+  totalIn: number;
+  totalOut: number;
+};
 
 /**
  * Service for client-side admin API calls.
@@ -214,7 +241,15 @@ export const adminClient = {
     ) as unknown as Promise<{ success: boolean; order: Order }>;
   },
 
-  async getOrders(params?: { search?: string; status?: string; page?: number; limit?: number }) {
+  async getOrders(params?: {
+    search?: string;
+    paymentStatus?: PaymentStatusValue;
+    fulfillmentStatus?: FulfillmentStatusValue;
+    customerId?: string;
+    debtOnly?: boolean;
+    page?: number;
+    limit?: number;
+  }) {
     return axios.get<PaginatedResponse<Order>>(API_ENDPOINTS.ADMIN.ORDERS, {
       params,
     }) as unknown as Promise<PaginatedResponse<Order>>;
@@ -266,11 +301,37 @@ export const adminClient = {
     ) as unknown as Promise<{ success?: boolean }>;
   },
 
-  async updateOrderStatus(id: string, data: { status: string; note?: string }) {
-    return axios.patch<{ success: boolean; order: AdminOrderDetails }>(
-      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/status`,
+  async stockOutOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/stock-out`,
       data,
     ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async completeOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/complete`,
+      data,
+    ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async cancelOrder(id: string, data: { note?: string } = {}) {
+    return axios.post<{ success: boolean; order: AdminOrderDetails }>(
+      `${API_ENDPOINTS.ADMIN.ORDERS}/${id}/cancel`,
+      data,
+    ) as unknown as Promise<{ success: boolean; order: AdminOrderDetails }>;
+  },
+
+  async getDebts(params?: { search?: string; minAgeDays?: number; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<DebtListItem>>(API_ENDPOINTS.ADMIN.DEBTS, {
+      params,
+    }) as unknown as Promise<PaginatedResponse<DebtListItem>>;
+  },
+
+  async getCustomerDebt(customerId: string) {
+    return axios.get<CustomerDebtResponse>(
+      API_ENDPOINTS.ADMIN.DEBT_DETAIL(customerId),
+    ) as unknown as Promise<CustomerDebtResponse>;
   },
 
   async recordOrderPayment(
@@ -493,5 +554,39 @@ export const adminClient = {
       API_ENDPOINTS.ADMIN.SUPPLIER_ORDER_DETAIL(id),
       data,
     ) as unknown as Promise<any>;
+  },
+
+  async getInventoryMovements(params?: {
+    variantId?: string;
+    type?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      data: InventoryMovement[];
+      metadata: { total: number; page: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.INVENTORY.MOVEMENTS, { params }) as unknown as Promise<{
+      data: InventoryMovement[];
+      metadata: { total: number; page: number; totalPages: number };
+    }>;
+  },
+
+  async getInventoryDailySummary(params?: {
+    variantId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    return axios.get<{ data: DailySummaryRow[] }>(API_ENDPOINTS.ADMIN.INVENTORY.DAILY_SUMMARY, {
+      params,
+    }) as unknown as Promise<{ data: DailySummaryRow[] }>;
+  },
+
+  async adjustInventory(body: { variantId: string; quantity: number; note?: string }) {
+    return axios.post<InventoryMovement>(
+      API_ENDPOINTS.ADMIN.INVENTORY.ADJUST,
+      body,
+    ) as unknown as Promise<InventoryMovement>;
   },
 };

@@ -5,8 +5,19 @@ import {
   storeIdempotencyKey,
 } from "@workspace/database/lib/idempotency";
 import { createOrder, getOrders } from "@workspace/database/services/order.server";
+import {
+  FULFILLMENT_STATUS,
+  type FulfillmentStatusValue,
+  PAYMENT_STATUS,
+  type PaymentStatusValue,
+} from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
+
+const PAYMENT_STATUS_VALUES = Object.values(PAYMENT_STATUS) as readonly PaymentStatusValue[];
+const FULFILLMENT_STATUS_VALUES = Object.values(
+  FULFILLMENT_STATUS,
+) as readonly FulfillmentStatusValue[];
 
 export async function GET(request: Request) {
   const user = await getInternalUser(request);
@@ -16,7 +27,18 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
-  const status = searchParams.get("status") || "All";
+  const rawPaymentStatus = searchParams.get("paymentStatus");
+  const paymentStatus =
+    rawPaymentStatus && PAYMENT_STATUS_VALUES.includes(rawPaymentStatus as PaymentStatusValue)
+      ? (rawPaymentStatus as PaymentStatusValue)
+      : undefined;
+  const rawFulfillmentStatus = searchParams.get("fulfillmentStatus");
+  const fulfillmentStatus =
+    rawFulfillmentStatus &&
+    FULFILLMENT_STATUS_VALUES.includes(rawFulfillmentStatus as FulfillmentStatusValue)
+      ? (rawFulfillmentStatus as FulfillmentStatusValue)
+      : undefined;
+  const debtOnly = searchParams.get("debtOnly") === "true";
   const customerId = searchParams.get("customerId") || undefined;
   const rawPage = parseInt(searchParams.get("page") || "1", 10);
   const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
@@ -24,7 +46,15 @@ export async function GET(request: Request) {
   const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
 
   try {
-    const result = await getOrders({ search, status, customerId, page, limit });
+    const result = await getOrders({
+      search,
+      paymentStatus,
+      fulfillmentStatus,
+      debtOnly,
+      customerId,
+      page,
+      limit,
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch orders:", error);

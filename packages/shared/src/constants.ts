@@ -55,16 +55,21 @@ export const DELIVERY_PREFERENCE = {
   SHIP_AVAILABLE_FIRST: "ship_available_first",
 } as const;
 
-export const ORDER_STATUS = {
-  PENDING: "pending",
+export const PAYMENT_STATUS = {
+  UNPAID: "unpaid",
+  PARTIAL: "partial",
   PAID: "paid",
-  PREPARING: "preparing",
-  SHIPPING: "shipping",
-  DELIVERED: "delivered",
+} as const;
+
+export const FULFILLMENT_STATUS = {
+  PENDING: "pending",
+  STOCK_OUT: "stock_out",
+  COMPLETED: "completed",
   CANCELLED: "cancelled",
 } as const;
 
-export const ORDER_STATUS_ALL = "All";
+export type PaymentStatusValue = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
+export type FulfillmentStatusValue = (typeof FULFILLMENT_STATUS)[keyof typeof FULFILLMENT_STATUS];
 
 export const SUPPLIER_ORDER_STATUS = {
   PENDING: "pending",
@@ -167,6 +172,7 @@ export const ADMIN_ROUTE_NAMES: Record<string, string> = {
   settings: "Cài đặt",
   new: "Tạo mới",
   edit: "Chỉnh sửa",
+  detail: "Chi tiết",
 };
 
 export const ADMIN_TITLE = "K-SMART Admin";

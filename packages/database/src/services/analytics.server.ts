@@ -95,22 +95,20 @@ export async function getAnalyticsData() {
     const inventoryStats = await db
       .select({
         totalCostValue:
-          sql<number>`coalesce(sum(${productVariants.stockQuantity} * ${productVariants.costPrice}), 0)`.mapWith(
+          sql<number>`coalesce(sum(${productVariants.onHand} * ${productVariants.costPrice}), 0)`.mapWith(
             Number,
           ),
         totalRetailValue:
-          sql<number>`coalesce(sum(${productVariants.stockQuantity} * ${productVariants.price}), 0)`.mapWith(
+          sql<number>`coalesce(sum(${productVariants.onHand} * ${productVariants.price}), 0)`.mapWith(
             Number,
           ),
-        totalUnits: sql<number>`coalesce(sum(${productVariants.stockQuantity}), 0)`.mapWith(Number),
+        totalUnits: sql<number>`coalesce(sum(${productVariants.onHand}), 0)`.mapWith(Number),
         lowStockCount:
-          sql<number>`count(*) filter (where ${productVariants.stockQuantity} > 0 and ${productVariants.stockQuantity} <= ${productVariants.lowStockThreshold})`.mapWith(
+          sql<number>`count(*) filter (where ${productVariants.onHand} > 0 and ${productVariants.onHand} <= ${productVariants.lowStockThreshold})`.mapWith(
             Number,
           ),
         outOfStockCount:
-          sql<number>`count(*) filter (where ${productVariants.stockQuantity} <= 0)`.mapWith(
-            Number,
-          ),
+          sql<number>`count(*) filter (where ${productVariants.onHand} <= 0)`.mapWith(Number),
       })
       .from(productVariants);
 
@@ -157,7 +155,7 @@ export type StockAlertVariant = {
   id: string;
   name: string;
   sku: string | null;
-  stockQuantity: number;
+  onHand: number;
   productName: string;
 };
 
@@ -170,18 +168,18 @@ export async function getStockAlerts(): Promise<{
       id: productVariants.id,
       name: productVariants.name,
       sku: productVariants.sku,
-      stockQuantity: sql<number>`${productVariants.stockQuantity}`.mapWith(Number),
+      onHand: sql<number>`${productVariants.onHand}`.mapWith(Number),
       productName: products.name,
     })
     .from(productVariants)
     .innerJoin(products, eq(productVariants.productId, products.id))
     .where(
       and(
-        gt(productVariants.stockQuantity, 0),
-        lte(productVariants.stockQuantity, productVariants.lowStockThreshold),
+        gt(productVariants.onHand, 0),
+        lte(productVariants.onHand, productVariants.lowStockThreshold),
       ),
     )
-    .orderBy(asc(productVariants.stockQuantity))
+    .orderBy(asc(productVariants.onHand))
     .limit(10);
 
   const outOfStock = await db
@@ -189,12 +187,12 @@ export async function getStockAlerts(): Promise<{
       id: productVariants.id,
       name: productVariants.name,
       sku: productVariants.sku,
-      stockQuantity: sql<number>`${productVariants.stockQuantity}`.mapWith(Number),
+      onHand: sql<number>`${productVariants.onHand}`.mapWith(Number),
       productName: products.name,
     })
     .from(productVariants)
     .innerJoin(products, eq(productVariants.productId, products.id))
-    .where(lte(productVariants.stockQuantity, 0))
+    .where(lte(productVariants.onHand, 0))
     .orderBy(asc(products.name))
     .limit(10);
 

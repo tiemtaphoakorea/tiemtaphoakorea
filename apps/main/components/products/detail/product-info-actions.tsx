@@ -23,7 +23,7 @@ export function ProductInfoActions({
     product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
 
   const price = Number(selectedVariant?.price || basePrice || 0);
-  const stock = Number(selectedVariant?.stockQuantity || 0);
+  const stock = Number(selectedVariant?.onHand || 0);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
