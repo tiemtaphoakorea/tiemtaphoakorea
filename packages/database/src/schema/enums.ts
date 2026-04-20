@@ -31,3 +31,10 @@ export const fulfillmentStatusEnum = pgEnum("fulfillment_status", [
   "cancelled",
 ]);
 export type FulfillmentStatus = (typeof fulfillmentStatusEnum.enumValues)[number];
+
+export const movementTypeEnum = pgEnum("movement_type", [
+  "stock_out",
+  "supplier_receipt",
+  "manual_adjustment",
+  "cancellation",
+]);
