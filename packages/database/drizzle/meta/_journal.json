@@ -22,6 +22,13 @@
       "when": 1776668471000,
       "tag": "0002_aromatic_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776800000000,
+      "tag": "0003_legacy_order_status_split",
+      "breakpoints": true
     }
   ]
 }

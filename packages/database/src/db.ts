@@ -37,10 +37,13 @@ if (isTest) {
   ]);
 
   const client = postgres(process.env.DATABASE_URL, {
-    max: 10, // Maximum number of connections in pool
-    idle_timeout: 20, // Close idle connections after 20 seconds
-    connect_timeout: 10, // Connection timeout in seconds
-    prepare: false, // Disable prepared statements to avoid caching issues
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    prepare: false, // Required for Supabase transaction pooler
+    connection: {
+      search_path: "public", // Ensure unqualified table names resolve to public schema
+    },
   });
   db = drizzle(client, { schema });
 } else {

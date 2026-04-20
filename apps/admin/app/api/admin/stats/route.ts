@@ -36,7 +36,14 @@ export async function GET(request: Request) {
     const stats = await getDashboardStats();
     return NextResponse.json({ stats });
   } catch (error) {
-    console.error("Failed to fetch admin stats:", error);
+    const cause = error instanceof Error ? error.cause : undefined;
+    console.error(
+      "[stats] section=%s error=%s cause=%s code=%s",
+      section,
+      error,
+      cause,
+      (cause as any)?.code,
+    );
     return NextResponse.json(
       {
         error: "Đã có lỗi xảy ra khi tải thống kê.",
