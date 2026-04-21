@@ -177,12 +177,27 @@ function TreeNode({
         <span className="flex-shrink-0">
           {hasChildren ? (
             effectiveOpen ? (
-              <FolderOpen className={cn("h-4 w-4", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500")} />
+              <FolderOpen
+                className={cn(
+                  "h-4 w-4",
+                  isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500",
+                )}
+              />
             ) : (
-              <Folder className={cn("h-4 w-4", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500")} />
+              <Folder
+                className={cn(
+                  "h-4 w-4",
+                  isDimmed ? "text-slate-300 dark:text-slate-600" : "text-amber-500",
+                )}
+              />
             )
           ) : (
-            <Tag className={cn("h-3.5 w-3.5", isDimmed ? "text-slate-300 dark:text-slate-600" : "text-slate-400")} />
+            <Tag
+              className={cn(
+                "h-3.5 w-3.5",
+                isDimmed ? "text-slate-300 dark:text-slate-600" : "text-slate-400",
+              )}
+            />
           )}
         </span>
 
@@ -300,7 +315,6 @@ export function CategoryTreeSelector({
         <div className="relative mb-1.5">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
-            autoFocus
             type="text"
             aria-label="Tìm danh mục"
             value={query}

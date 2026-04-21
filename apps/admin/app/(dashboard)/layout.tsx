@@ -31,11 +31,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
   // Generate breadcrumbs from pathname (router has no /admin prefix)
   const pathSegments = pathname.split("/").filter(Boolean);
 
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: user, isError } = useQuery({
     queryKey: queryKeys.admin.profile,
     queryFn: async () => {
       const data = await adminClient.getProfile();

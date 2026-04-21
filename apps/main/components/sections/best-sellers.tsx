@@ -3,7 +3,7 @@
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { ProductCard, type FeaturedProduct } from "@/components/products/product-card";
+import { type FeaturedProduct, ProductCard } from "@/components/products/product-card";
 
 type BestSellersProps = {
   products: FeaturedProduct[];

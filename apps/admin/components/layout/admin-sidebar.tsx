@@ -33,6 +33,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { adminClient } from "@/services/admin.client";
 
 const NAV_ITEMS = [
@@ -103,9 +104,9 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       setIsLoggingOut(false);
       router.push("/login");
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       setIsLoggingOut(false);
-      console.error("Logout failed:", error);
+      toast.error("Đăng xuất thất bại");
       window.location.href = "/login";
     }
   };

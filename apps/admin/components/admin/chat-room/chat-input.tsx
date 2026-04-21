@@ -3,6 +3,7 @@ import { createClient } from "@workspace/database/lib/supabase/client";
 import type { ChatTypingPayload } from "@workspace/shared/types/chat";
 import { Image as ImageIcon, Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface ChatInputProps {
   roomId: string;
@@ -95,8 +96,8 @@ export function ChatInput({
       if (input) {
         input.focus();
       }
-    } catch (err) {
-      console.error("Send error:", err);
+    } catch (_err) {
+      toast.error("Gửi tin nhắn thất bại");
     }
   };
 
@@ -135,8 +136,8 @@ export function ChatInput({
     setIsUploading(true);
     try {
       await onUploadImage(file);
-    } catch (err) {
-      console.error("Upload error:", err);
+    } catch (_err) {
+      toast.error("Tải ảnh thất bại");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

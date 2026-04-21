@@ -41,6 +41,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { CategoryTreeSelector } from "@/components/admin/products/category-tree-selector";
 import { ImageUploader } from "@/components/image-uploader";
 import { queryKeys } from "@/lib/query-keys";
@@ -524,6 +525,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     try {
       if (mode === "create") {
         res = await axios.post("/api/admin/products", createPayload);
+        toast.success("Đã tạo sản phẩm");
       } else {
         if (!productId) {
           dispatch({ type: "SET_API_ERROR", payload: "Thiếu ID sản phẩm" });
@@ -531,6 +533,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
           return;
         }
         res = await axios.put(`/api/admin/products/${productId}`, updatePayload);
+        toast.success("Đã cập nhật sản phẩm");
       }
     } catch (err: unknown) {
       const apiErr = err as ApiError;
@@ -538,6 +541,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         (apiErr?.data?.error as string | undefined) ??
         (err instanceof Error ? err.message : null) ??
         (mode === "create" ? "Không thể tạo sản phẩm" : "Không thể cập nhật sản phẩm");
+      toast.error(message || "Có lỗi xảy ra");
       dispatch({ type: "SET_API_ERROR", payload: message });
       dispatch({ type: "SET_API_PENDING", payload: false });
       return;

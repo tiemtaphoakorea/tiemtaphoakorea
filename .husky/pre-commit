@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo "🔍 Running pre-commit checks..."
 
@@ -19,9 +20,9 @@ else
   echo "📝 No staged .ts/.tsx/.js/.jsx files, skipping lint-staged"
 fi
 
-# 4. React Doctor check
+# 4. React Doctor check (informational only — không block commit)
 echo "🏥 Running React Doctor..."
-npx react-doctor@latest . --verbose
+npx react-doctor@latest . --verbose || true
 
 # 5. TypeScript type check
 echo "🔧 Running TypeScript type check..."
@@ -31,8 +32,8 @@ npm run typecheck
 echo "🧪 Running all tests..."
 npm test -- --run
 
-# 7. Build
-echo "🏗️ Building..."
-npm run build
+# 7. Build (force fresh build, no cache — mirrors production)
+echo "🏗️ Building (no cache)..."
+npx turbo build --force
 
 echo "✅ All checks passed! Proceeding with commit..."

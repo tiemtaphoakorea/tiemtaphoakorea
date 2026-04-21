@@ -219,16 +219,14 @@ export async function exportInvoiceImage(order: InvoiceOrder): Promise<void> {
 }
 
 export async function copyInvoiceImage(order: InvoiceOrder): Promise<void> {
-  const { canvas, cleanup } = await renderInvoiceCanvas(order);
-  try {
-    const blob = await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))),
-        "image/png",
+  const blobPromise = renderInvoiceCanvas(order).then(
+    ({ canvas, cleanup }) =>
+      new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob((b) => {
+          cleanup();
+          b ? resolve(b) : reject(new Error("Canvas toBlob failed"));
+        }, "image/png"),
       ),
-    );
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-  } finally {
-    cleanup();
-  }
+  );
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
 }

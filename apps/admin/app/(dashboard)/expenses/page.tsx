@@ -15,10 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { useToast } from "@workspace/ui/components/use-toast";
 import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { ExpenseAddSheet } from "@/components/admin/expense-add-sheet";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -33,7 +33,6 @@ export default function ExpensesPage() {
 
 function ExpensesPageContent() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -81,14 +80,10 @@ function ExpensesPageContent() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
       setIsAddSheetOpen(false);
-      toast({ title: "Thành công", description: "Đã thêm chi phí thành công" });
+      toast.success("Thành công", { description: "Đã thêm chi phí thành công" });
     },
     onError: () => {
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm chi phí. Vui lòng thử lại.",
-        variant: "destructive",
-      });
+      toast.error("Lỗi", { description: "Không thể thêm chi phí. Vui lòng thử lại." });
     },
   });
 
@@ -97,14 +92,10 @@ function ExpensesPageContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
-      toast({ title: "Thành công", description: "Đã xóa chi phí" });
+      toast.success("Thành công", { description: "Đã xóa chi phí" });
     },
     onError: () => {
-      toast({
-        title: "Lỗi",
-        description: "Không thể xóa chi phí.",
-        variant: "destructive",
-      });
+      toast.error("Lỗi", { description: "Không thể xóa chi phí." });
     },
   });
 

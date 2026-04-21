@@ -108,3 +108,50 @@ export const productSchema = z.object({
   isFeatured: z.boolean().optional(),
 });
 export type ProductFormValues = z.infer<typeof productSchema>;
+
+// --- Banner ---
+export const bannerSchema = z
+  .object({
+    type: z.enum(["custom", "category"]),
+    categoryId: z.string().nullable().optional(),
+    imageUrl: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    subtitle: z.string().nullable().optional(),
+    badgeText: z.string().nullable().optional(),
+    ctaLabel: z.string().nullable().optional(),
+    ctaUrl: z.string().nullable().optional(),
+    ctaSecondaryLabel: z.string().nullable().optional(),
+    discountTag: z.string().nullable().optional(),
+    discountTagSub: z.string().nullable().optional(),
+    accentColor: z.string().nullable().optional(),
+    isActive: z.boolean(),
+    sortOrder: z.number().min(0, "Thứ tự phải >= 0"),
+    startsAt: z.string().nullable().optional(),
+    endsAt: z.string().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "custom" && !data.imageUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Vui lòng upload ảnh banner.",
+        path: ["imageUrl"],
+      });
+    }
+    if (data.type === "category" && !data.categoryId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Vui lòng chọn danh mục.",
+        path: ["categoryId"],
+      });
+    }
+  });
+export type BannerFormValues = z.infer<typeof bannerSchema>;
+
+// --- Bulk Payment ---
+export const bulkPaymentSchema = z.object({
+  amount: z.number().positive("Số tiền phải lớn hơn 0"),
+  method: z.enum(["cash", "bank_transfer"]),
+  referenceCode: z.string().optional(),
+  note: z.string().optional(),
+});
+export type BulkPaymentFormValues = z.infer<typeof bulkPaymentSchema>;

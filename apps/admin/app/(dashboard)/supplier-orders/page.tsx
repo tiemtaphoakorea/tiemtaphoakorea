@@ -14,9 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { useToast } from "@workspace/ui/components/use-toast";
 import { Calendar, CalendarDays, MoreHorizontal, Truck } from "lucide-react";
 import { useMemo, useReducer } from "react";
+import { toast } from "sonner";
 // Components
 import { SupplierOrderAddSheet } from "@/components/admin/supplier-order-add-sheet";
 import { SupplierOrderHeader } from "@/components/admin/supplier-orders/supplier-order-header";
@@ -110,7 +110,6 @@ export default function SupplierOrdersPage() {
   // Destructure for convenience
   const { search, status, isAddSheetOpen, isUpdateDialogOpen, selectedOrder, pagination } = ui;
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
@@ -156,16 +155,13 @@ export default function SupplierOrdersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
       dispatch({ type: "CLOSE_ADD" });
-      toast({
-        title: "Thành công",
+      toast.success("Thành công", {
         description: "Đã tạo đơn nhập hàng mới",
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
@@ -177,16 +173,13 @@ export default function SupplierOrdersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
       dispatch({ type: "CLOSE_UPDATE" });
-      toast({
-        title: "Thành công",
+      toast.success("Thành công", {
         description: "Đã cập nhật trạng thái đơn hàng",
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });

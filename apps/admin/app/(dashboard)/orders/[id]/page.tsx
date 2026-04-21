@@ -37,7 +37,6 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { useToast } from "@workspace/ui/components/use-toast";
 import {
   AlertCircle,
   Banknote,
@@ -62,6 +61,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
+import { toast } from "sonner";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { ProductSelector } from "@/components/admin/orders/create/product-selector";
 import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
@@ -268,7 +268,6 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   "use no memo";
   const { id } = use(params);
   const router = useRouter();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Data Fetching
@@ -311,15 +310,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     };
     try {
       await adminClient.updateCustomer(customerId, payload);
-      toast({ title: "Thành công", description: "Đã cập nhật thông tin khách hàng" });
+      toast.success("Đã cập nhật thông tin khách hàng");
       setIsCustomerEditOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
     } finally {
       setIsCustomerEditSubmitting(false);
     }
@@ -376,40 +371,36 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         referenceCode: referenceCode,
         note: noteValue,
       });
-      toast({ title: "Thành công", description: "Đã ghi nhận thanh toán." });
+      toast.success("Đã ghi nhận thanh toán.");
       paymentDispatch({ type: "CLOSE" });
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 
   const handleStockOut = async () => {
     try {
       await adminClient.stockOutOrder(order.id, { note: note || undefined });
-      toast({ title: "Thành công", description: "Đã xuất kho đơn hàng." });
+      toast.success("Đã xuất kho đơn hàng.");
       setNote("");
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
+      toast.error(errorMessage);
     }
   };
 
   const handleComplete = async () => {
     try {
       await adminClient.completeOrder(order.id, { note: note || undefined });
-      toast({ title: "Thành công", description: "Đã hoàn tất đơn hàng." });
+      toast.success("Đã hoàn tất đơn hàng.");
       setNote("");
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
+      toast.error(errorMessage);
     }
   };
 
@@ -417,12 +408,12 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
     try {
       await adminClient.cancelOrder(order.id, { note: note || undefined });
-      toast({ title: "Thành công", description: "Đã hủy đơn hàng." });
+      toast.success("Đã hủy đơn hàng.");
       setNote("");
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({ title: "Lỗi", description: errorMessage, variant: "destructive" });
+      toast.error(errorMessage);
     }
   };
 
@@ -432,19 +423,12 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         adminNote: editState.editAdminNote,
         discount: editState.editDiscount,
       });
-      toast({
-        title: "Thành công",
-        description: "Cập nhật đơn hàng thành công",
-      });
+      toast.success("Cập nhật đơn hàng thành công");
       editDispatch({ type: "CANCEL_EDIT" });
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 
@@ -498,15 +482,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           customPrice: i.customPrice,
         })),
       });
-      toast({ title: "Thành công", description: "Đã cập nhật sản phẩm đơn hàng." });
+      toast.success("Đã cập nhật sản phẩm đơn hàng.");
       setIsItemEditing(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra");
     } finally {
       setIsSavingItems(false);
     }
@@ -517,13 +497,10 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     try {
       await adminClient.deleteOrder(order.id);
       router.push("/orders?deleted=true");
+      toast.success("Đã xóa đơn hàng");
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     }
   };
 

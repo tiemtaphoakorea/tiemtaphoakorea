@@ -38,7 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { useToast } from "@workspace/ui/components/use-toast";
 import {
   CheckSquare,
   Edit2,
@@ -53,6 +52,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -219,7 +219,6 @@ function AdminProductsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const [deleteState, dispatch] = useReducer(deleteReducer, initialDeleteState);
   const { deleteTarget, selectMode, selectedIds, bulkDeleteConfirm, isDeleting, bulkError } =
@@ -306,10 +305,11 @@ function AdminProductsContent() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.products.all, exact: false });
       router.refresh(); // safe no-op for server parts; invalidate handles client data
       dispatch({ type: "SET_DELETE_TARGET", payload: null });
+      toast.success("Đã xóa sản phẩm");
     } catch (error: any) {
       console.error(error);
       const message = error?.response?.data?.error ?? "Đã có lỗi xảy ra khi xóa sản phẩm.";
-      toast({ title: "Không thể xóa", description: message, variant: "destructive" });
+      toast.error(message);
       dispatch({ type: "SET_DELETE_TARGET", payload: null });
     }
   };
@@ -319,9 +319,11 @@ function AdminProductsContent() {
     dispatch({ type: "SET_DELETING", payload: true });
     try {
       const result = await adminClient.bulkDeleteProducts(selectedIds);
+      const count = result.deleted;
       await queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       router.refresh();
       exitSelectMode();
+      toast.success(`Đã xóa ${count} sản phẩm`);
       if (result.failed.length > 0) {
         dispatch({
           type: "SET_BULK_ERROR",
@@ -334,6 +336,7 @@ function AdminProductsContent() {
       dispatch({ type: "SET_BULK_CONFIRM", payload: false });
       dispatch({ type: "SET_BULK_ERROR", payload: "Đã có lỗi xảy ra khi xóa sản phẩm." });
       dispatch({ type: "SET_DELETING", payload: false });
+      toast.error("Xóa thất bại");
     }
   };
 
@@ -476,7 +479,7 @@ function AdminProductsContent() {
               </div>
             ) : (
               <>
-                <Table className="table-fixed">
+                <Table>
                   <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
                     <TableRow>
                       {selectMode && (
@@ -504,8 +507,8 @@ function AdminProductsContent() {
                         </TableHead>
                       )}
                       <TableHead className="w-14">Ảnh</TableHead>
-                      <TableHead className="min-w-0 w-[40%]">Tên sản phẩm</TableHead>
-                      <TableHead className="min-w-0">Danh mục</TableHead>
+                      <TableHead>Tên sản phẩm</TableHead>
+                      <TableHead>Danh mục</TableHead>
                       <TableHead>Giá bán</TableHead>
                       <TableHead>Tồn kho</TableHead>
                       <TableHead>Trạng thái</TableHead>
@@ -553,34 +556,29 @@ function AdminProductsContent() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="min-w-0 whitespace-normal">
-                            <span className="flex min-w-0 flex-col gap-0.5">
-                              <span
-                                className="truncate font-bold text-slate-700 dark:text-slate-200"
-                                title={product.name}
-                              >
+                          <TableCell>
+                            <span className="flex flex-col">
+                              <span className="font-bold text-slate-700 dark:text-slate-200">
                                 {product.name}
                               </span>
-                              <code className="block truncate font-mono text-xs text-slate-400">
+                              <code className="font-mono text-xs text-slate-400">
                                 /{product.slug}
                               </code>
                               {product.skus && (
-                                <span className="block truncate font-mono text-xs text-slate-500">
+                                <span className="font-mono text-xs text-slate-500">
                                   SKU: {product.skus}
                                 </span>
                               )}
                             </span>
                           </TableCell>
-                          <TableCell className="min-w-0 whitespace-normal">
+                          <TableCell>
                             {product.categoryName ? (
-                              <div className="min-w-0 max-w-[12rem] lg:max-w-[16rem]">
-                                <Badge
-                                  variant="secondary"
-                                  className="max-w-full bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
-                                >
-                                  <span className="block truncate">{product.categoryName}</span>
-                                </Badge>
-                              </div>
+                              <Badge
+                                variant="secondary"
+                                className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-200"
+                              >
+                                {product.categoryName}
+                              </Badge>
                             ) : (
                               <span className="text-xs italic text-slate-400">-</span>
                             )}

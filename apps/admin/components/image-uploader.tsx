@@ -6,6 +6,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 const EMPTY_URLS: string[] = [];
 
@@ -25,7 +26,7 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
     if (!files || files.length === 0) return;
 
     if (value.length + files.length > maxFiles) {
-      alert(`Bạn chỉ được phép tải lên tối đa ${maxFiles} ảnh.`);
+      toast.error(`Chỉ được tải lên tối đa ${maxFiles} ảnh`);
       return;
     }
 
@@ -51,23 +52,20 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
         if (result.value.response.url) {
           newUrls.push(result.value.response.url);
         } else {
-          console.error(
-            "Upload failed for file:",
-            result.value.fileName,
-            result.value.response.error,
-          );
+          toast.error("Tải ảnh thất bại");
         }
       } else {
-        console.error("Upload error:", result.reason);
+        toast.error("Tải ảnh thất bại");
       }
     }
 
     if (newUrls.length > 0) {
       onChange([...value, ...newUrls]);
+      toast.success("Đã tải ảnh lên");
     }
 
     if (newUrls.length !== files.length) {
-      alert("Một số ảnh tải lên thất bại. Vui lòng kiểm tra lại.");
+      toast.error("Tải ảnh thất bại");
     }
 
     setIsUploading(false);

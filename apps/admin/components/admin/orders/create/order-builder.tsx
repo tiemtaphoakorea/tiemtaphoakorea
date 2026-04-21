@@ -34,7 +34,7 @@ export function OrderBuilder() {
   const createOrderMutation = useMutation({
     mutationFn: async () => {
       // Validate inputs
-      if (!selectedCustomer && (!newCustomer?.name || !newCustomer?.phone)) {
+      if (!selectedCustomer && !newCustomer?.name) {
         throw new Error("Vui lòng chọn khách hàng hoặc nhập thông tin khách hàng mới.");
       }
       if (items.length === 0) {
@@ -192,7 +192,7 @@ export function OrderBuilder() {
               onClick={() => createOrderMutation.mutate()}
               disabled={
                 createOrderMutation.isPending ||
-                (!selectedCustomer && (!newCustomer?.name || !newCustomer?.phone)) ||
+                (!selectedCustomer && !newCustomer?.name) ||
                 items.length === 0
               }
             >

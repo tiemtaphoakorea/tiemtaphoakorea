@@ -16,7 +16,8 @@ export async function PATCH(request: NextRequest, { params }: IdRouteParams) {
     const banner = await updateBanner(id, {
       ...data,
       sortOrder: data.sortOrder !== undefined ? Number(data.sortOrder) : undefined,
-      startsAt: data.startsAt !== undefined ? (data.startsAt ? new Date(data.startsAt) : null) : undefined,
+      startsAt:
+        data.startsAt !== undefined ? (data.startsAt ? new Date(data.startsAt) : null) : undefined,
       endsAt: data.endsAt !== undefined ? (data.endsAt ? new Date(data.endsAt) : null) : undefined,
     });
     return NextResponse.json({ success: true, banner });

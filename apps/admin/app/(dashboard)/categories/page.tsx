@@ -54,6 +54,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useReducer } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -507,8 +508,9 @@ function AdminCategoriesContent() {
       try {
         await adminClient.deleteCategory(cat.id);
         await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all, exact: false });
+        toast.success("Đã xóa danh mục");
       } catch (error: any) {
-        alert(error.message || "Failed to delete");
+        toast.error(error.message || "Failed to delete");
       }
     }
   };
@@ -532,9 +534,10 @@ function AdminCategoriesContent() {
       }
       dispatch({ type: "CLOSE_SHEET" });
       await queryClient.invalidateQueries({ queryKey: queryKeys.categories.all, exact: false });
+      toast.success("Đã lưu danh mục");
       dispatch({ type: "SET_SUBMITTING", value: false });
     } catch (error: any) {
-      alert(error.message || "Action failed");
+      toast.error(error.message || "Action failed");
       dispatch({ type: "SET_SUBMITTING", value: false });
     }
   };

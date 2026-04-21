@@ -1,8 +1,5 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
-import {
-  createBanner,
-  getAllBannersForAdmin,
-} from "@workspace/database/services/banner.server";
+import { createBanner, getAllBannersForAdmin } from "@workspace/database/services/banner.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 

@@ -36,7 +36,6 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import { useToast } from "@workspace/ui/components/use-toast";
 import {
   Ban,
   CheckCircle2,
@@ -58,6 +57,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useReducer } from "react";
+import { toast } from "sonner";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { queryKeys } from "@/lib/query-keys";
@@ -309,7 +309,6 @@ function AdminCustomersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const searchTerm = searchParams.get("search") || "";
@@ -377,17 +376,13 @@ function AdminCustomersPageContent() {
 
     try {
       const res = await adminClient.createCustomer(payload);
-      toast({ title: "Thành công", description: "Đã tạo khách hàng mới" });
+      toast.success("Đã tạo khách hàng mới");
       dispatch({ type: "CLOSE_ADD" });
       dispatch({ type: "SHOW_CREDENTIALS", payload: { customerCode: res.profile.customerCode } });
       await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
       dispatch({ type: "SET_LOADING", payload: false });
     }
   };
@@ -405,16 +400,12 @@ function AdminCustomersPageContent() {
 
     try {
       await adminClient.updateCustomer(id, payload);
-      toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
+      toast.success("Đã cập nhật thông tin");
       dispatch({ type: "CLOSE_EDIT" });
       await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
       dispatch({ type: "SET_LOADING", payload: false });
     }
   };
@@ -424,17 +415,10 @@ function AdminCustomersPageContent() {
 
     try {
       await adminClient.toggleCustomerStatus(id, !currentStatus);
-      toast({
-        title: "Thành công",
-        description: successDescription,
-      });
+      toast.success(successDescription);
       await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
     }
   };
 
@@ -444,16 +428,12 @@ function AdminCustomersPageContent() {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       await adminClient.deleteCustomer(id);
-      toast({ title: "Thành công", description: "Đã xóa khách hàng" });
+      toast.success("Đã xóa khách hàng");
       dispatch({ type: "SET_DELETING", payload: null });
       await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra");
       dispatch({ type: "SET_LOADING", payload: false });
     }
   };
@@ -676,7 +656,7 @@ function AdminCustomersPageContent() {
                   size="sm"
                   onClick={() => {
                     navigator.clipboard.writeText(ui.showCredentials?.customerCode);
-                    toast({ title: "Copied!", duration: 1000 });
+                    toast.success("Đã sao chép mã đăng nhập");
                   }}
                 >
                   <Copy className="h-4 w-4" />
