@@ -35,6 +35,7 @@ import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -110,8 +111,9 @@ function AdminSuppliersContent() {
       try {
         await adminClient.deleteSupplier(supplier.id);
         await queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+        toast.success("Đã xóa nhà cung cấp");
       } catch (error: any) {
-        alert(error.message || "Failed to delete");
+        toast.error(error.message || "Failed to delete");
       }
     }
   };
@@ -136,9 +138,10 @@ function AdminSuppliersContent() {
       }
       setIsSheetOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
+      toast.success("Đã lưu nhà cung cấp");
       setIsSubmitting(false);
     } catch (error: any) {
-      alert(error.message || "Action failed");
+      toast.error(error.message || "Action failed");
       setIsSubmitting(false);
     }
   };

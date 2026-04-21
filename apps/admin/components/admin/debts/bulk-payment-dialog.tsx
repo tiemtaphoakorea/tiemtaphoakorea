@@ -2,7 +2,10 @@
 
 import type { CustomerDebtResponse } from "@workspace/database/types/admin";
 import { PAYMENT_METHOD } from "@workspace/shared/constants";
+import { bulkPaymentSchema, type BulkPaymentFormValues } from "@workspace/shared/schemas";
 import { formatCurrency } from "@workspace/shared/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -23,11 +26,9 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { useState } from "react";
 import { adminClient } from "@/services/admin.client";
 
 type UnpaidOrder = CustomerDebtResponse["unpaidOrders"][number];
-type PaymentMethodValue = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD];
 
 interface BulkPaymentDialogProps {
   open: boolean;
@@ -79,33 +80,33 @@ export function BulkPaymentDialog({
   onSuccess,
   onError,
 }: BulkPaymentDialogProps) {
-  const [amount, setAmount] = useState<number>(0);
-  const [method, setMethod] = useState<PaymentMethodValue>(PAYMENT_METHOD.CASH);
-  const [referenceCode, setReferenceCode] = useState("");
-  const [note, setNote] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<BulkPaymentFormValues>({
+    resolver: zodResolver(bulkPaymentSchema),
+    defaultValues: {
+      amount: 0,
+      method: "cash",
+      referenceCode: "",
+      note: "",
+    },
+  });
 
-  const resetForm = () => {
-    setAmount(0);
-    setMethod(PAYMENT_METHOD.CASH);
-    setReferenceCode("");
-    setNote("");
-  };
+  const amount = watch("amount");
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (isSubmitting) return;
-    if (!nextOpen) resetForm();
+    if (!nextOpen) reset();
     onOpenChange(nextOpen);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async ({ amount, method, referenceCode, note }: BulkPaymentFormValues) => {
     if (isSubmitting) return;
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      await onError({ message: "Số tiền phải lớn hơn 0." });
-      return;
-    }
 
     if (amount > totalDebt) {
       const excess = amount - totalDebt;
@@ -121,7 +122,6 @@ export function BulkPaymentDialog({
       return;
     }
 
-    setIsSubmitting(true);
     let paidAmount = 0;
     let affectedOrders = 0;
     try {
@@ -145,16 +145,14 @@ export function BulkPaymentDialog({
         }
       }
       await onSuccess({ paidAmount, affectedOrders });
-      resetForm();
-    } finally {
-      setIsSubmitting(false);
+      reset();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>Thu tiền công nợ</DialogTitle>
             <DialogDescription>
@@ -165,49 +163,68 @@ export function BulkPaymentDialog({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="bulk-payment-amount">Số tiền (VND)</Label>
-              <NumberInput
-                id="bulk-payment-amount"
-                value={amount}
-                onValueChange={(values) => setAmount(values.floatValue ?? 0)}
-                placeholder="Nhập số tiền"
-                max={totalDebt}
+              <Controller
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <NumberInput
+                    id="bulk-payment-amount"
+                    value={field.value}
+                    onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                    placeholder="Nhập số tiền"
+                    max={totalDebt}
+                  />
+                )}
               />
+              {errors.amount?.message ? (
+                <p className="text-sm text-destructive">{errors.amount.message}</p>
+              ) : null}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="bulk-payment-method">Phương thức</Label>
-              <Select
-                value={method}
-                onValueChange={(value) => setMethod(value as PaymentMethodValue)}
-              >
-                <SelectTrigger id="bulk-payment-method">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectItem>
-                  <SelectItem value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="method"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="bulk-payment-method">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectItem>
+                      <SelectItem value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.method?.message ? (
+                <p className="text-sm text-destructive">{errors.method.message}</p>
+              ) : null}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="bulk-payment-ref">Mã tham chiếu (tuỳ chọn)</Label>
               <Input
                 id="bulk-payment-ref"
-                value={referenceCode}
-                onChange={(e) => setReferenceCode(e.target.value)}
+                {...register("referenceCode")}
                 placeholder="Mã giao dịch nếu có"
               />
+              {errors.referenceCode?.message ? (
+                <p className="text-sm text-destructive">{errors.referenceCode.message}</p>
+              ) : null}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="bulk-payment-note">Ghi chú (tuỳ chọn)</Label>
               <Textarea
                 id="bulk-payment-note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                {...register("note")}
                 placeholder="Ghi chú thêm..."
               />
+              {errors.note?.message ? (
+                <p className="text-sm text-destructive">{errors.note.message}</p>
+              ) : null}
             </div>
           </div>
           <DialogFooter>

@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BannerForm } from "@/components/admin/banners/banner-form";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -132,8 +133,12 @@ function NavCategoriesSection() {
       );
       return { previous };
     },
+    onSuccess: () => {
+      toast.success("Đã cập nhật danh mục");
+    },
     onError: (_err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(queryKeys.categories.all, context.previous);
+      toast.error("Cập nhật thất bại");
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.categories.all }),
   });
@@ -226,12 +231,21 @@ function BannersSection({ categories }: { categories: CategoryOption[] }) {
   const toggleActive = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       axios.patch(API_ENDPOINTS.ADMIN.BANNER_DETAIL(id), { isActive }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.banners.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.banners.all });
+      toast.success("Đã cập nhật banner");
+    },
   });
 
   const deleteBanner = useMutation({
     mutationFn: (id: string) => axios.delete(API_ENDPOINTS.ADMIN.BANNER_DETAIL(id)),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.banners.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.banners.all });
+      toast.success("Đã xóa banner");
+    },
+    onError: () => {
+      toast.error("Xóa thất bại");
+    },
   });
 
   if (isLoading) {

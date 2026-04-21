@@ -17,11 +17,11 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-import { useToast } from "@workspace/ui/components/use-toast";
 import { ChevronLeft, CircleDollarSign, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BulkPaymentDialog } from "@/components/admin/debts/bulk-payment-dialog";
 import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
 import { queryKeys } from "@/lib/query-keys";
@@ -44,7 +44,6 @@ function paymentMethodLabel(method: string): string {
 export default function DebtDetailPage() {
   const params = useParams();
   const customerId = params.customerId as string;
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -315,15 +314,14 @@ export default function DebtDetailPage() {
         unpaidOrders={unpaidOrders}
         totalDebt={totalDebt}
         onSuccess={async ({ paidAmount, affectedOrders }) => {
-          toast({
-            title: "Thu tiền thành công",
+          toast.success("Thu tiền thành công", {
             description: `Đã thanh toán ${formatCurrency(paidAmount)} vào ${affectedOrders} đơn.`,
           });
           setDialogOpen(false);
           await invalidateAll();
         }}
         onError={async ({ message }) => {
-          toast({ title: "Lỗi", description: message, variant: "destructive" });
+          toast.error("Lỗi", { description: message });
           // A mid-loop failure may have posted some payments already — refresh either way.
           await invalidateAll();
         }}

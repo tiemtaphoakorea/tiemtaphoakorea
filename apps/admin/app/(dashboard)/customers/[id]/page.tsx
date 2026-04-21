@@ -4,11 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CustomerDetail } from "@workspace/database/types/admin";
 import { formatDate } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
-import { useToast } from "@workspace/ui/components/use-toast";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { CustomerFinancialStats } from "@/components/admin/customer-detail/customer-financial-stats";
 import { CustomerLocationCard } from "@/components/admin/customer-detail/customer-location-card";
 import { CustomerOrderHistoryTable } from "@/components/admin/customer-detail/customer-order-history-table";
@@ -23,7 +23,6 @@ export default function CustomerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,15 +46,11 @@ export default function CustomerDetailPage() {
     };
     try {
       await adminClient.updateCustomer(customerId, payload);
-      toast({ title: "Thành công", description: "Đã cập nhật thông tin khách hàng" });
+      toast.success("Đã cập nhật thông tin khách hàng");
       setIsEditOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.customer(id) });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
-        description: err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
-      });
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
     } finally {
       setIsSubmitting(false);
     }

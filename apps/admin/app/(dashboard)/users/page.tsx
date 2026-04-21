@@ -58,7 +58,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@workspace/ui/components/sheet";
-import { useToast } from "@workspace/ui/components/use-toast";
 import {
   Ban,
   CheckCircle2,
@@ -75,6 +74,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useReducer } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -601,7 +601,7 @@ function CredentialsDialog({
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(credentials?.username);
-                  toast({ title: "Copied!", duration: 1000 });
+                  toast.success("Copied!");
                 }}
               >
                 <Copy className="h-4 w-4" />
@@ -621,7 +621,7 @@ function CredentialsDialog({
                 size="sm"
                 onClick={() => {
                   navigator.clipboard.writeText(credentials?.password);
-                  toast({ title: "Copied!", duration: 1000 });
+                  toast.success("Copied!");
                 }}
               >
                 <Copy className="h-4 w-4" />
@@ -651,7 +651,6 @@ function AdminUsersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const searchTerm = searchParams.get("search") || "";
@@ -708,16 +707,14 @@ function AdminUsersPageContent() {
     try {
       res = await adminClient.createUser(payload);
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
       });
       dispatch({ type: "SET_LOADING", payload: false });
       return;
     }
 
-    toast({ title: "Thành công", description: "Đã tạo nhân viên mới" });
+    toast.success("Thành công", { description: "Đã tạo nhân viên mới" });
     dispatch({ type: "CLOSE_ADD" });
     dispatch({
       type: "SHOW_CREDENTIALS",
@@ -743,15 +740,13 @@ function AdminUsersPageContent() {
 
     try {
       await adminClient.updateUser(id, payload);
-      toast({ title: "Thành công", description: "Đã cập nhật thông tin" });
+      toast.success("Thành công", { description: "Đã cập nhật thông tin" });
       dispatch({ type: "CLOSE_EDIT" });
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
       });
       dispatch({ type: "SET_LOADING", payload: false });
     }
@@ -762,16 +757,13 @@ function AdminUsersPageContent() {
 
     try {
       await adminClient.toggleUserStatus(id, !currentStatus);
-      toast({
-        title: "Thành công",
+      toast.success("Thành công", {
         description: successDescription,
       });
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
       });
     }
   };
@@ -782,15 +774,13 @@ function AdminUsersPageContent() {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       await adminClient.deleteUser(id);
-      toast({ title: "Thành công", description: "Đã xóa nhân viên" });
+      toast.success("Thành công", { description: "Đã xóa nhân viên" });
       dispatch({ type: "SET_DELETING", payload: null });
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       dispatch({ type: "SET_LOADING", payload: false });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
       });
       dispatch({ type: "SET_LOADING", payload: false });
     }
@@ -810,10 +800,8 @@ function AdminUsersPageContent() {
         },
       });
     } catch (err: any) {
-      toast({
-        title: "Lỗi",
+      toast.error("Lỗi", {
         description: err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra",
-        variant: "destructive",
       });
     }
   };
