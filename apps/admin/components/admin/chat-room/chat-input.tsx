@@ -96,7 +96,7 @@ export function ChatInput({
       if (input) {
         input.focus();
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("Gửi tin nhắn thất bại");
     }
   };
@@ -136,7 +136,7 @@ export function ChatInput({
     setIsUploading(true);
     try {
       await onUploadImage(file);
-    } catch (err) {
+    } catch (_err) {
       toast.error("Tải ảnh thất bại");
     } finally {
       setIsUploading(false);
