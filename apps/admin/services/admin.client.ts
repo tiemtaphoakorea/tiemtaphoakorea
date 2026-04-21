@@ -249,9 +249,12 @@ export const adminClient = {
     customerId?: string;
     customerPhone?: string;
     customerName?: string;
-    items: { variantId: string; quantity: number }[];
+    items: Array<{ variantId: string; quantity: number; customPrice?: number }>;
     note?: string;
     deliveryPreference?: string;
+    shippingName?: string;
+    shippingPhone?: string;
+    shippingAddress?: string;
   }) {
     return axios.post<{ success: boolean; order: Order }>(
       API_ENDPOINTS.ADMIN.ORDERS,

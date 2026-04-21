@@ -10,6 +10,8 @@ import type {
 import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Loader2, Save, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -30,6 +32,9 @@ export function OrderBuilder() {
   } | null>(null);
   const [items, setItems] = React.useState<OrderBuilderItem[]>([]);
   const [note, setNote] = React.useState("");
+  const [shippingName, setShippingName] = React.useState("");
+  const [shippingPhone, setShippingPhone] = React.useState("");
+  const [shippingAddress, setShippingAddress] = React.useState("");
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
@@ -53,9 +58,12 @@ export function OrderBuilder() {
         })),
         note,
         deliveryPreference: "ship_together", // Default for now
+        shippingName: shippingName.trim() || undefined,
+        shippingPhone: shippingPhone.trim() || undefined,
+        shippingAddress: shippingAddress.trim() || undefined,
       };
 
-      return adminClient.createOrder(payload as any);
+      return adminClient.createOrder(payload);
     },
     onSuccess: (data: any) => {
       if (data.success && data.order) {
@@ -167,6 +175,42 @@ export function OrderBuilder() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Địa chỉ giao hàng</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ship-name">Người nhận</Label>
+              <Input
+                id="ship-name"
+                value={shippingName}
+                onChange={(e) => setShippingName(e.target.value)}
+                placeholder="Họ tên người nhận (tuỳ chọn)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ship-phone">SĐT nhận hàng</Label>
+              <Input
+                id="ship-phone"
+                value={shippingPhone}
+                onChange={(e) => setShippingPhone(e.target.value)}
+                placeholder="Số liên hệ khi giao (tuỳ chọn)"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ship-address">Địa chỉ giao hàng</Label>
+              <Textarea
+                id="ship-address"
+                className="min-h-[80px]"
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
+              />
+            </div>
           </CardContent>
         </Card>
 

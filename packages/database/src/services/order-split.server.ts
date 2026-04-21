@@ -25,6 +25,9 @@ export async function createSplitOrders(
     userId: string;
     deliveryPreference: (typeof DELIVERY_PREFERENCE)[keyof typeof DELIVERY_PREFERENCE];
     orderNumber?: string; // Pre-generated order number
+    shippingName?: string;
+    shippingPhone?: string;
+    shippingAddress?: string;
   },
   inStockItems: Array<{ variantId: string; quantity: number }>,
   preOrderItems: Array<{ variantId: string; quantity: number }>,
@@ -62,6 +65,15 @@ export async function createSplitOrders(
       adminNote: data.note,
       createdBy: data.userId,
       deliveryPreference: data.deliveryPreference,
+      ...(data.shippingName != null && data.shippingName !== ""
+        ? { shippingName: data.shippingName }
+        : {}),
+      ...(data.shippingPhone != null && data.shippingPhone !== ""
+        ? { shippingPhone: data.shippingPhone }
+        : {}),
+      ...(data.shippingAddress != null && data.shippingAddress !== ""
+        ? { shippingAddress: data.shippingAddress }
+        : {}),
     })
     .returning();
 
@@ -155,6 +167,15 @@ async function createSubOrder(
       adminNote: `Sub-order for ${type} items`,
       createdBy: userId,
       deliveryPreference: parentOrder.deliveryPreference,
+      ...(parentOrder.shippingName != null && parentOrder.shippingName !== ""
+        ? { shippingName: parentOrder.shippingName }
+        : {}),
+      ...(parentOrder.shippingPhone != null && parentOrder.shippingPhone !== ""
+        ? { shippingPhone: parentOrder.shippingPhone }
+        : {}),
+      ...(parentOrder.shippingAddress != null && parentOrder.shippingAddress !== ""
+        ? { shippingAddress: parentOrder.shippingAddress }
+        : {}),
     })
     .returning();
 
