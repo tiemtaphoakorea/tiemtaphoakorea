@@ -33,8 +33,8 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminClient } from "@/services/admin.client";
 import { toast } from "sonner";
+import { adminClient } from "@/services/admin.client";
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: ADMIN_ROUTES.DASHBOARD },
@@ -104,7 +104,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       setIsLoggingOut(false);
       router.push("/login");
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       setIsLoggingOut(false);
       toast.error("Đăng xuất thất bại");
       window.location.href = "/login";

@@ -1,9 +1,9 @@
 "use server";
 
+import type { BannerSlide } from "@workspace/database/services/banner.server";
 import { getBanners } from "@workspace/database/services/banner.server";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { HeroBannerCarousel } from "./hero-banner-carousel";
-import type { BannerSlide } from "@workspace/database/services/banner.server";
 
 const DEFAULT_SLIDES: BannerSlide[] = [
   {

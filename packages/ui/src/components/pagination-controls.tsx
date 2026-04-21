@@ -1,38 +1,43 @@
-"use client";
+"use client"
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@workspace/ui/components/button"
 
-import { cn } from "@workspace/ui/lib/utils";
+import { cn } from "@workspace/ui/lib/utils"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-} from "lucide-react";
+} from "lucide-react"
 
-function buildPageList(current: number, total: number): (number | "ellipsis")[] {
+function buildPageList(
+  current: number,
+  total: number
+): (number | "ellipsis")[] {
   if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
+    return Array.from({ length: total }, (_, i) => i + 1)
   }
-  const pages = new Set<number>([1, total, current, current - 1, current + 1]);
-  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
-  const out: (number | "ellipsis")[] = [];
+  const pages = new Set<number>([1, total, current, current - 1, current + 1])
+  const sorted = [...pages]
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b)
+  const out: (number | "ellipsis")[] = []
   for (let i = 0; i < sorted.length; i++) {
-    const p = sorted[i]!;
+    const p = sorted[i]!
     if (i > 0 && p - sorted[i - 1]! > 1) {
-      out.push("ellipsis");
+      out.push("ellipsis")
     }
-    out.push(p);
+    out.push(p)
   }
-  return out;
+  return out
 }
 
 export type PaginationControlsProps = {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  className?: string;
-};
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  className?: string
+}
 
 function PaginationControls({
   currentPage,
@@ -40,13 +45,16 @@ function PaginationControls({
   onPageChange,
   className,
 }: PaginationControlsProps) {
-  const safeTotal = Math.max(1, totalPages);
-  const page = Math.min(Math.max(1, currentPage), safeTotal);
-  const items = buildPageList(page, safeTotal);
+  const safeTotal = Math.max(1, totalPages)
+  const page = Math.min(Math.max(1, currentPage), safeTotal)
+  const items = buildPageList(page, safeTotal)
 
   return (
     <nav
-      className={cn("flex flex-wrap items-center justify-center gap-2", className)}
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-2",
+        className
+      )}
       aria-label="Pagination"
     >
       <Button
@@ -92,7 +100,7 @@ function PaginationControls({
           >
             {item}
           </Button>
-        ),
+        )
       )}
       <Button
         type="button"
@@ -115,7 +123,7 @@ function PaginationControls({
         <ChevronsRightIcon className="size-4" />
       </Button>
     </nav>
-  );
+  )
 }
 
-export { PaginationControls };
+export { PaginationControls }

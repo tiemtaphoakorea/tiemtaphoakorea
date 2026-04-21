@@ -150,9 +150,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                 <button
                   key={t}
                   type="button"
-                  onClick={() =>
-                    setValue("type", t, { shouldDirty: true, shouldValidate: true })
-                  }
+                  onClick={() => setValue("type", t, { shouldDirty: true, shouldValidate: true })}
                   className={`flex-1 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
                     bannerType === t
                       ? "border-primary bg-primary/10 text-primary"
@@ -237,12 +235,16 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                 <Input
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value || null)}
-                  placeholder={bannerType === "category" ? "Tự động từ tên danh mục" : "Nhập tiêu đề..."}
+                  placeholder={
+                    bannerType === "category" ? "Tự động từ tên danh mục" : "Nhập tiêu đề..."
+                  }
                   className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                 />
               )}
             />
-            {errors.title?.message && <p className="text-destructive text-sm">{errors.title.message}</p>}
+            {errors.title?.message && (
+              <p className="text-destructive text-sm">{errors.title.message}</p>
+            )}
           </div>
 
           <div className="grid gap-2">
