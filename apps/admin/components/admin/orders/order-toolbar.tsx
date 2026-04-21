@@ -45,6 +45,7 @@ export function OrderToolbar({
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9"
+          autoComplete="off"
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">

@@ -14,7 +14,8 @@ import { DataTable } from "@workspace/ui/components/data-table";
 import { Eye, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useDebounce } from "use-debounce";
 // Components
 import { OrderHeader } from "@/components/admin/orders/order-header";
 import { OrderStats } from "@/components/admin/orders/order-stats";
@@ -36,7 +37,7 @@ function AdminOrdersContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const searchTerm = searchParams.get("search") || "";
+  const urlSearchTerm = searchParams.get("search") || "";
   const paymentStatusFilter = searchParams.get("paymentStatus") || "All";
   const fulfillmentStatusFilter = searchParams.get("fulfillmentStatus") || "All";
   const debtOnly = searchParams.get("debtOnly") === "true";
@@ -46,9 +47,25 @@ function AdminOrdersContent() {
     parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
   );
 
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearchTerm);
+  }, [urlSearchTerm]);
+
+  // Push debounced search to URL.
+  useEffect(() => {
+    if (debouncedSearch === urlSearchTerm) return;
+    updateParams({ search: debouncedSearch || null, page: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, urlSearchTerm]);
+
   const { data, isLoading, isFetching } = useQuery({
     queryKey: queryKeys.orders.list(
-      searchTerm,
+      debouncedSearch,
       paymentStatusFilter,
       fulfillmentStatusFilter,
       debtOnly,
@@ -57,7 +74,7 @@ function AdminOrdersContent() {
     ),
     queryFn: () =>
       adminClient.getOrders({
-        search: searchTerm,
+        search: debouncedSearch,
         paymentStatus:
           paymentStatusFilter !== "All" ? (paymentStatusFilter as PaymentStatusValue) : undefined,
         fulfillmentStatus:
@@ -100,7 +117,7 @@ function AdminOrdersContent() {
   };
 
   const handleSearch = (val: string) => {
-    updateParams({ search: val });
+    setSearchInput(val);
   };
 
   const handlePaymentStatusChange = (val: string) => {
@@ -225,7 +242,7 @@ function AdminOrdersContent() {
       <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
         <CardHeader className="border-b border-slate-100 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
           <OrderToolbar
-            searchTerm={searchTerm}
+            searchTerm={searchInput}
             onSearchChange={handleSearch}
             paymentStatus={paymentStatusFilter}
             onPaymentStatusChange={handlePaymentStatusChange}

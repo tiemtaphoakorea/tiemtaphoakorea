@@ -828,26 +828,26 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 <TableBody>
                   {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
                     <TableRow key={isItemEditing ? item.variantId : item.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
+                      <TableCell className="overflow-hidden !whitespace-normal">
+                        <div className="flex min-w-0 items-center gap-3">
                           {!isItemEditing && item.variant?.images?.[0] ? (
                             <Image
                               src={item.variant.images[0].imageUrl}
                               alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
                               width={48}
                               height={48}
-                              className="h-12 w-12 rounded-lg bg-slate-100 object-cover"
+                              className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 object-cover"
                             />
                           ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
                               <ShoppingBag className="h-5 w-5 text-slate-300" />
                             </div>
                           )}
-                          <div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-white">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-bold text-slate-900 dark:text-white" title={formatVariantDisplayName(item.productName)}>
                               {formatVariantDisplayName(item.productName)}
                             </div>
-                            <div className="font-mono text-xs text-slate-500">
+                            <div className="truncate font-mono text-xs text-slate-500" title={formatVariantDisplayName(item.variantName)}>
                               {formatVariantDisplayName(item.variantName)}
                             </div>
                           </div>
@@ -1133,6 +1133,39 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
               <Separator />
               <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Giao hàng theo đơn
+                </div>
+                {order.shippingName?.trim() ||
+                order.shippingPhone?.trim() ||
+                order.shippingAddress?.trim() ? (
+                  <>
+                    <div className="flex items-start gap-2">
+                      <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                      <span>{order.shippingName?.trim() || "—"}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                      <span>{order.shippingPhone?.trim() || "—"}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                      <span className="whitespace-pre-wrap">
+                        {order.shippingAddress?.trim() || "—"}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs font-medium text-slate-500">
+                    Chưa nhập địa chỉ giao trên đơn.
+                  </p>
+                )}
+              </div>
+              <Separator />
+              <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Hồ sơ khách
+                </div>
                 <div className="flex items-start gap-2">
                   <Phone className="mt-0.5 h-4 w-4 text-slate-400" />
                   <span>{order.customer.phone || "Không có SĐT"}</span>

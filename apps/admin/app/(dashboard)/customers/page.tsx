@@ -56,8 +56,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useReducer } from "react";
+import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { queryKeys } from "@/lib/query-keys";
@@ -311,7 +312,7 @@ function AdminCustomersPageContent() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
-  const searchTerm = searchParams.get("search") || "";
+  const urlSearchTerm = searchParams.get("search") || "";
   const statusFilter = searchParams.get("status") || "All";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.max(
@@ -319,13 +320,29 @@ function AdminCustomersPageContent() {
     parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
   );
 
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearchTerm);
+  }, [urlSearchTerm]);
+
+  // Push debounced search to URL.
+  useEffect(() => {
+    if (debouncedSearch === urlSearchTerm) return;
+    updateParams({ search: debouncedSearch || null, page: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, urlSearchTerm]);
+
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.customers.list(searchTerm, statusFilter, page, limit),
+    queryKey: queryKeys.customers.list(debouncedSearch, statusFilter, page, limit),
     queryFn: () =>
       adminClient.getCustomers({
-        search: searchTerm,
+        search: debouncedSearch,
         status: statusFilter !== "All" ? statusFilter : undefined,
         page,
         limit,
@@ -358,7 +375,7 @@ function AdminCustomersPageContent() {
   };
 
   const handleSearch = (val: string) => {
-    updateParams({ search: val });
+    setSearchInput(val);
   };
 
   const handleStatusFilterChange = (val: string) => {
@@ -549,7 +566,7 @@ function AdminCustomersPageContent() {
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Tìm kiếm theo tên, mã khách hàng..."
-                defaultValue={searchTerm}
+                value={searchInput}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
               />

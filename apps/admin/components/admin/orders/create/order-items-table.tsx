@@ -58,9 +58,9 @@ export function OrderItemsTable({
           {items.map((item) => (
             <TableRow key={item.variantId}>
               <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium">{item.productName}</span>
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex w-48 flex-col">
+                  <span className="truncate font-medium" title={item.productName}>{item.productName}</span>
+                  <span className="truncate text-xs text-muted-foreground" title={`${item.variantName} - ${item.sku}`}>
                     {item.variantName} - {item.sku}
                   </span>
                 </div>

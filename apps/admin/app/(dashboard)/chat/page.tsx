@@ -12,6 +12,7 @@ import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { cn } from "@workspace/ui/lib/utils";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { ChatHeader } from "@/components/admin/chat-room/chat-header";
 import { ChatInput } from "@/components/admin/chat-room/chat-input";
 import { CustomerInfoSheet } from "@/components/admin/chat-room/customer-info-sheet";
@@ -22,7 +23,8 @@ import { adminClient } from "@/services/admin.client";
 export default function ChatPage() {
   const queryClient = useQueryClient();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch] = useDebounce(searchInput, 300);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const selectedRoomRef = useRef<string | null>(null);
@@ -38,10 +40,10 @@ export default function ChatPage() {
     staleTime: Infinity, // Profile doesn't change often
   });
 
-  // Fetch rooms (filter on backend via search param)
+  // Fetch rooms (filter on backend via debounced search param)
   const { data: rooms = [] } = useQuery({
-    queryKey: queryKeys.admin.chat.rooms.list(searchTerm),
-    queryFn: () => adminClient.getChatRooms({ search: searchTerm || undefined }),
+    queryKey: queryKeys.admin.chat.rooms.list(debouncedSearch),
+    queryFn: () => adminClient.getChatRooms({ search: debouncedSearch || undefined }),
   });
 
   // Fetch messages for selected room
@@ -252,8 +254,8 @@ export default function ChatPage() {
         <ChatSidebar
           rooms={rooms}
           selectedRoomId={selectedRoomId}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          searchTerm={searchInput}
+          onSearchChange={setSearchInput}
           onSelectRoom={handleSelectRoom}
         />
 
