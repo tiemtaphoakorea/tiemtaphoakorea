@@ -565,11 +565,9 @@ function DeleteUserDialog({
 function CredentialsDialog({
   credentials,
   onClose,
-  toast,
 }: {
   credentials: any | null;
   onClose: () => void;
-  toast: (opts: any) => void;
 }) {
   return (
     <Dialog open={!!credentials} onOpenChange={() => onClose()}>
@@ -890,7 +888,6 @@ function AdminUsersPageContent() {
       <CredentialsDialog
         credentials={ui.showCredentials}
         onClose={() => dispatch({ type: "HIDE_CREDENTIALS" })}
-        toast={toast}
       />
     </div>
   );

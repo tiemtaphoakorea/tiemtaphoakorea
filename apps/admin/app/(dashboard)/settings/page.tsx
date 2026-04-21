@@ -56,7 +56,7 @@ type CategoryOption = { id: string; name: string; slug: string };
 
 type BannerRow = {
   id: string;
-  type: string;
+  type: "custom" | "category";
   categoryId: string | null;
   categoryName: string | null;
   imageUrl: string | null;

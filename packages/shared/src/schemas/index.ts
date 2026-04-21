@@ -123,7 +123,7 @@ export const bannerSchema = z
     ctaSecondaryLabel: z.string().nullable().optional(),
     discountTag: z.string().nullable().optional(),
     discountTagSub: z.string().nullable().optional(),
-    accentColor: z.string().optional(),
+    accentColor: z.string().nullable().optional(),
     isActive: z.boolean(),
     sortOrder: z.number().min(0, "Thứ tự phải >= 0"),
     startsAt: z.string().nullable().optional(),
