@@ -1,11 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import type { CustomerDebtResponse } from "@workspace/database/types/admin";
 import { PAYMENT_METHOD } from "@workspace/shared/constants";
-import { bulkPaymentSchema, type BulkPaymentFormValues } from "@workspace/shared/schemas";
+import { type BulkPaymentFormValues, bulkPaymentSchema } from "@workspace/shared/schemas";
 import { formatCurrency } from "@workspace/shared/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -26,6 +25,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { Controller, useForm } from "react-hook-form";
 import { adminClient } from "@/services/admin.client";
 
 type UnpaidOrder = CustomerDebtResponse["unpaidOrders"][number];
@@ -124,29 +124,27 @@ export function BulkPaymentDialog({
 
     let paidAmount = 0;
     let affectedOrders = 0;
-    try {
-      for (const step of plan) {
-        try {
-          await adminClient.recordOrderPayment(step.orderId, {
-            amount: step.allocate,
-            method,
-            referenceCode: referenceCode || undefined,
-            note: note || undefined,
-          });
-          paidAmount += step.allocate;
-          affectedOrders += 1;
-        } catch (err: any) {
-          const errorMessage = err?.message ?? "Có lỗi xảy ra khi ghi nhận thanh toán.";
-          await onError({
-            message: `Lỗi ở đơn ${step.orderNumber}: ${errorMessage}`,
-            orderNumber: step.orderNumber,
-          });
-          return;
-        }
+    for (const step of plan) {
+      try {
+        await adminClient.recordOrderPayment(step.orderId, {
+          amount: step.allocate,
+          method,
+          referenceCode: referenceCode || undefined,
+          note: note || undefined,
+        });
+        paidAmount += step.allocate;
+        affectedOrders += 1;
+      } catch (err: any) {
+        const errorMessage = err?.message ?? "Có lỗi xảy ra khi ghi nhận thanh toán.";
+        await onError({
+          message: `Lỗi ở đơn ${step.orderNumber}: ${errorMessage}`,
+          orderNumber: step.orderNumber,
+        });
+        return;
       }
-      await onSuccess({ paidAmount, affectedOrders });
-      reset();
     }
+    await onSuccess({ paidAmount, affectedOrders });
+    reset();
   };
 
   return (
