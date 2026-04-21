@@ -38,8 +38,8 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
           <TableBody>
             {items.map((item: any) => (
               <TableRow key={item.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
+                <TableCell className="overflow-hidden">
+                  <div className="flex min-w-0 items-center gap-3">
                     {item.variant.images[0] ? (
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                         <Image
@@ -55,11 +55,11 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
                         <ShoppingBag className="h-5 w-5 text-slate-300" />
                       </div>
                     )}
-                    <div>
-                      <div className="text-sm font-bold text-slate-900 dark:text-white">
+                    <div className="min-w-0 max-w-[180px]">
+                      <div className="truncate text-sm font-bold text-slate-900 dark:text-white" title={formatVariantDisplayName(item.productName)}>
                         {formatVariantDisplayName(item.productName)}
                       </div>
-                      <div className="font-mono text-xs text-slate-500">
+                      <div className="truncate font-mono text-xs text-slate-500" title={formatVariantDisplayName(item.variantName)}>
                         {formatVariantDisplayName(item.variantName)}
                       </div>
                     </div>

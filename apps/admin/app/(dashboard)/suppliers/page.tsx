@@ -33,9 +33,10 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Edit2, Mail, MoreHorizontal, Phone, Plus, Search, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -53,7 +54,16 @@ function AdminSuppliersContent() {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const searchTerm = searchParams.get("search") || "";
+  const urlSearchTerm = searchParams.get("search") || "";
+
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearchTerm);
+  }, [urlSearchTerm]);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any | null>(null);
@@ -73,12 +83,13 @@ function AdminSuppliersContent() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.suppliers.list(searchTerm),
-    queryFn: () => adminClient.getSuppliers({ search: searchTerm }),
+    queryKey: queryKeys.suppliers.list(debouncedSearch),
+    queryFn: () => adminClient.getSuppliers({ search: debouncedSearch }),
   });
   const suppliers = data?.suppliers || [];
 
   const handleSearch = (val: string) => {
+    setSearchInput(val);
     const params = new URLSearchParams(searchParams.toString());
     if (val) params.set("search", val);
     else params.delete("search");
@@ -173,7 +184,7 @@ function AdminSuppliersContent() {
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Tìm kiếm nhà cung cấp..."
-              value={searchTerm}
+              value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
               className="h-10 border-none bg-slate-50/50 pl-10 ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800"
             />

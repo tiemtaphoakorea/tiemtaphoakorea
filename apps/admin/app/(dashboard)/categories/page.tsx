@@ -52,9 +52,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useReducer } from "react";
+import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -428,7 +429,16 @@ function AdminCategoriesContent() {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const searchTerm = searchParams.get("search") || "";
+  const urlSearchTerm = searchParams.get("search") || "";
+
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearchTerm);
+  }, [urlSearchTerm]);
 
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
@@ -444,8 +454,8 @@ function AdminCategoriesContent() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.categories.list(searchTerm),
-    queryFn: () => adminClient.getCategories({ search: searchTerm }),
+    queryKey: queryKeys.categories.list(debouncedSearch),
+    queryFn: () => adminClient.getCategories({ search: debouncedSearch }),
   });
   const categories = data?.categories || [];
   const flatCategories = data?.flatCategories || [];
@@ -475,6 +485,7 @@ function AdminCategoriesContent() {
   };
 
   const handleSearch = (val: string) => {
+    setSearchInput(val);
     const params = new URLSearchParams(searchParams.toString());
     if (val) params.set("search", val);
     else params.delete("search");
@@ -569,7 +580,7 @@ function AdminCategoriesContent() {
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Tìm kiếm danh mục..."
-              value={searchTerm}
+              value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
               className="h-10 border-none bg-slate-50/50 pl-10 ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800"
             />

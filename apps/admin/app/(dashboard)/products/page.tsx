@@ -51,7 +51,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -238,17 +239,33 @@ function AdminProductsContent() {
     // eslint_disable-next-line react-hooks/exhaustive-deps
   }, [selectMode, isDeleting, exitSelectMode]);
 
-  const search = searchParams.get("search") || "";
+  const urlSearch = searchParams.get("search") || "";
   const stockStatus = searchParams.get("stockStatus") || "all";
   const updated = searchParams.get("updated") === "1";
+
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
+
+  // Push debounced search to URL.
+  useEffect(() => {
+    if (debouncedSearch === urlSearch) return;
+    updateParams({ search: debouncedSearch || null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, urlSearch]);
 
   const PAGE_SIZE = 20;
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    queryKey: [...queryKeys.products.all, "infinite", search, stockStatus],
+    queryKey: [...queryKeys.products.all, "infinite", debouncedSearch, stockStatus],
     queryFn: ({ pageParam }) =>
       adminClient.getProducts({
-        search,
+        search: debouncedSearch,
         page: pageParam,
         limit: PAGE_SIZE,
         stockStatus: stockStatus === "all" ? undefined : stockStatus,
@@ -292,7 +309,7 @@ function AdminProductsContent() {
   };
 
   const handleSearch = (val: string) => {
-    updateParams({ search: val || null });
+    setSearchInput(val);
   };
 
   const handleEdit = useCallback((id: string) => router.push(`/products/${id}/edit`), [router]);
@@ -401,14 +418,14 @@ function AdminProductsContent() {
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Tìm kiếm sản phẩm theo tên, mã SKU..."
-                  defaultValue={search}
+                  value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="h-10 border-none bg-slate-50/50 pl-10 ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800"
                 />
               </div>
-              {search && (
+              {debouncedSearch && (
                 <div className="text-xs font-medium text-slate-500">
-                  Từ khóa: <span className="font-bold">{search}</span>
+                  Từ khóa: <span className="font-bold">{debouncedSearch}</span>
                 </div>
               )}
             </div>

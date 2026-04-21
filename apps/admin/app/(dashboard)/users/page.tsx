@@ -72,9 +72,10 @@ import {
   UserPlus,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useReducer } from "react";
+import { Suspense, useEffect, useReducer, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -651,18 +652,34 @@ function AdminUsersPageContent() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
-  const searchTerm = searchParams.get("search") || "";
+  const urlSearchTerm = searchParams.get("search") || "";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.max(
     1,
     parseInt(searchParams.get("limit") || String(PAGINATION_DEFAULT.LIMIT), 10),
   );
 
+  // Local search state with debounce so URL updates after user pauses typing.
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [debouncedSearch] = useDebounce(searchInput, 300);
+
+  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
+  useEffect(() => {
+    setSearchInput(urlSearchTerm);
+  }, [urlSearchTerm]);
+
+  // Push debounced search to URL.
+  useEffect(() => {
+    if (debouncedSearch === urlSearchTerm) return;
+    updateParams({ search: debouncedSearch || null, page: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, urlSearchTerm]);
+
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.users.list(searchTerm, page, limit),
-    queryFn: () => adminClient.getUsers({ search: searchTerm || undefined, page, limit }),
+    queryKey: queryKeys.users.list(debouncedSearch, page, limit),
+    queryFn: () => adminClient.getUsers({ search: debouncedSearch || undefined, page, limit }),
     placeholderData: keepPreviousData,
   });
 
@@ -689,7 +706,7 @@ function AdminUsersPageContent() {
   };
 
   const handleSearch = (val: string) => {
-    updateParams({ search: val });
+    setSearchInput(val);
   };
 
   const handleAddUser = async (data: UserFormValues) => {
@@ -840,7 +857,7 @@ function AdminUsersPageContent() {
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Tìm kiếm nhân viên (tên, tài khoản)..."
-                defaultValue={searchTerm}
+                value={searchInput}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
               />
