@@ -8,10 +8,10 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/db.server";
 import { categories } from "@/db/schema/categories";
-import { orders, supplierOrders } from "@/db/schema/orders";
+import { orderItems, orders, supplierOrders } from "@/db/schema/orders";
 import { products, productVariants } from "@/db/schema/products";
 import { profiles } from "@/db/schema/profiles";
 import { ROLE } from "@/lib/constants";
@@ -97,7 +97,16 @@ export async function seedOrderTest(): Promise<OrderTestFixture> {
  * cascade-delete their items and status history via FKs on the schema.
  */
 export async function cleanOrderTest(fx: OrderTestFixture): Promise<void> {
-  // Orders → cascade-delete their items and status history via FKs.
+  // Orders that reference this variant (including auto-created customers not in fx.customerId)
+  const variantOrderRows = await db
+    .selectDistinct({ orderId: orderItems.orderId })
+    .from(orderItems)
+    .where(eq(orderItems.variantId, fx.variantId));
+  const variantOrderIds = variantOrderRows.map((r) => r.orderId);
+  if (variantOrderIds.length > 0) {
+    await db.delete(orders).where(inArray(orders.id, variantOrderIds));
+  }
+  // Orders for the seeded fixture customer
   await db.delete(orders).where(eq(orders.customerId, fx.customerId));
   // supplier_orders.variant_id has no cascade from product_variants.
   await db.delete(supplierOrders).where(eq(supplierOrders.variantId, fx.variantId));

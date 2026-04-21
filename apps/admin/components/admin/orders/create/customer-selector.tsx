@@ -102,12 +102,12 @@ export function CustomerSelector({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-phone">Số điện thoại</Label>
+            <Label htmlFor="new-phone">Số điện thoại (tuỳ chọn)</Label>
             <Input
               id="new-phone"
               value={newCustomer.phone}
               onChange={(e) => onNewCustomerChange({ ...newCustomer, phone: e.target.value })}
-              placeholder="Nhập số điện thoại"
+              placeholder="Để trống nếu không có"
             />
           </div>
         </div>

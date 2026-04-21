@@ -217,7 +217,7 @@ function getColumns({
     {
       id: "actions",
       cell: ({ row }) => (
-        <div className="text-right">
+        <div className="text-right" onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -83,6 +83,9 @@ export async function POST(request: Request) {
       note,
       deliveryPreference,
       clientToken,
+      shippingName,
+      shippingPhone,
+      shippingAddress,
     } = body;
 
     // Check for idempotency key if provided
@@ -97,6 +100,9 @@ export async function POST(request: Request) {
           items,
           note,
           deliveryPreference,
+          shippingName,
+          shippingPhone,
+          shippingAddress,
         };
 
         if (!comparePayloads(existing.requestPayload, currentPayload)) {
@@ -130,6 +136,9 @@ export async function POST(request: Request) {
             items,
             note,
             deliveryPreference,
+            shippingName,
+            shippingPhone,
+            shippingAddress,
           },
         });
       } catch (error: any) {
@@ -160,27 +169,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // If customerId not provided, check if we have phone/name to auto-create customer
     let resolvedCustomerId = customerId;
-    if (!resolvedCustomerId && (customerPhone || customerName)) {
-      if (!customerPhone || !customerName) {
+    if (!resolvedCustomerId) {
+      const name = typeof customerName === "string" ? customerName.trim() : "";
+      if (!name) {
         return NextResponse.json(
           {
-            error: "Both customerPhone and customerName are required for auto-creating customer",
+            error: "customerName is required when customerId is not provided",
           },
           { status: HTTP_STATUS.BAD_REQUEST },
         );
       }
-
-      // Auto-create customer functionality will be delegated to the service layer
-      resolvedCustomerId = { phone: customerPhone, name: customerName };
-    } else if (!resolvedCustomerId) {
-      return NextResponse.json(
-        {
-          error: "Missing customerId or customer information (phone and name)",
-        },
-        { status: HTTP_STATUS.BAD_REQUEST },
-      );
+      const phone =
+        typeof customerPhone === "string" && customerPhone.trim() !== ""
+          ? customerPhone.trim()
+          : undefined;
+      resolvedCustomerId = { name, phone };
     }
 
     const payload = {
@@ -193,6 +197,9 @@ export async function POST(request: Request) {
       note,
       userId: user.profile.id,
       deliveryPreference,
+      shippingName,
+      shippingPhone,
+      shippingAddress,
     };
 
     let result:

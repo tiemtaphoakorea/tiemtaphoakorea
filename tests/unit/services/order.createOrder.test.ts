@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { orders } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
+import { profiles } from "@/db/schema/profiles";
 import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { createOrder } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
@@ -66,6 +67,47 @@ describe("createOrder (reserve-stock model)", () => {
     expect(row.fulfillmentStatus).toBe(FULFILLMENT_STATUS.PENDING);
     expect(row.stockOutAt).toBeNull();
     expect(row.completedAt).toBeNull();
+  });
+
+  it("creates a new customer without phone from customer info object", async () => {
+    const guestName = `Guest ${fx.testId}`;
+    const { order } = await createOrder({
+      customerId: { name: guestName, phone: undefined },
+      items: [{ variantId: fx.variantId, quantity: 1 }],
+      userId: fx.userId,
+    });
+
+    const [profile] = await db
+      .select({ phone: profiles.phone, fullName: profiles.fullName })
+      .from(profiles)
+      .where(eq(profiles.id, order.customerId));
+
+    expect(profile.fullName).toBe(guestName);
+    expect(profile.phone).toBeNull();
+  });
+
+  it("persists shipping fields when provided", async () => {
+    const { order } = await createOrder({
+      customerId: fx.customerId,
+      items: [{ variantId: fx.variantId, quantity: 1 }],
+      userId: fx.userId,
+      shippingName: "Người nhận",
+      shippingPhone: "0900000001",
+      shippingAddress: "123 Đường ABC",
+    });
+
+    const [row] = await db
+      .select({
+        shippingName: orders.shippingName,
+        shippingPhone: orders.shippingPhone,
+        shippingAddress: orders.shippingAddress,
+      })
+      .from(orders)
+      .where(eq(orders.id, order.id));
+
+    expect(row.shippingName).toBe("Người nhận");
+    expect(row.shippingPhone).toBe("0900000001");
+    expect(row.shippingAddress).toBe("123 Đường ABC");
   });
 
   it("allows oversell — reserved may exceed on_hand", async () => {

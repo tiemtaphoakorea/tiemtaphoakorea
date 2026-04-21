@@ -31,21 +31,39 @@ import { createCustomer } from "./customer.server";
 import { insertInventoryMovement } from "./inventory.server";
 import { createSplitOrders } from "./order-split.server";
 
+function normalizeOptionalString(value: string | null | undefined): string | undefined {
+  if (value == null) return undefined;
+  const t = value.trim();
+  return t === "" ? undefined : t;
+}
+
 /**
  * Helper function to find or create a customer
  * Handles race conditions when multiple concurrent requests try to create the same customer
+ * When phone is omitted, creates a new profile (no dedupe — multiple NULL phones are allowed).
  */
 async function findOrCreateCustomer(customerInfo: {
-  phone: string;
+  phone?: string;
   name: string;
 }): Promise<string> {
+  const phone = normalizeOptionalString(customerInfo.phone);
+
+  if (!phone) {
+    const newCustomer = await createCustomer({
+      fullName: customerInfo.name,
+      phone: undefined,
+      customerType: CUSTOMER_TYPE.RETAIL,
+    });
+    return newCustomer.profile.id;
+  }
+
   // Try up to 3 times to handle race conditions
   for (let attempt = 1; attempt <= 3; attempt++) {
     // First, try to find existing customer by phone
     const existingCustomers = await db
       .select()
       .from(profiles)
-      .where(and(eq(profiles.role, ROLE.CUSTOMER), eq(profiles.phone, customerInfo.phone)))
+      .where(and(eq(profiles.role, ROLE.CUSTOMER), eq(profiles.phone, phone)))
       .limit(1);
 
     if (existingCustomers.length > 0) {
@@ -56,7 +74,7 @@ async function findOrCreateCustomer(customerInfo: {
     try {
       const newCustomer = await createCustomer({
         fullName: customerInfo.name,
-        phone: customerInfo.phone,
+        phone,
         customerType: CUSTOMER_TYPE.RETAIL,
       });
       return newCustomer.profile.id;
@@ -122,7 +140,7 @@ async function createSupplierOrdersForItems(
 }
 
 export async function createOrder(data: {
-  customerId: string | { phone: string; name: string };
+  customerId: string | { phone?: string; name: string };
   items: Array<{
     variantId: string;
     quantity: number;
@@ -131,6 +149,9 @@ export async function createOrder(data: {
   note?: string;
   userId: string; // Admin creating the order
   deliveryPreference?: (typeof DELIVERY_PREFERENCE)[keyof typeof DELIVERY_PREFERENCE];
+  shippingName?: string | null;
+  shippingPhone?: string | null;
+  shippingAddress?: string | null;
 }) {
   // Resolve customerId - handle both string ID and customer info object
   let resolvedCustomerId: string;
@@ -142,6 +163,9 @@ export async function createOrder(data: {
   }
 
   const deliveryPreference = data.deliveryPreference || DELIVERY_PREFERENCE.SHIP_TOGETHER;
+  const shippingName = normalizeOptionalString(data.shippingName ?? undefined);
+  const shippingPhone = normalizeOptionalString(data.shippingPhone ?? undefined);
+  const shippingAddress = normalizeOptionalString(data.shippingAddress ?? undefined);
 
   // Generate Order Number OUTSIDE transaction to avoid transaction abort issues
   // when database function doesn't exist
@@ -202,6 +226,9 @@ export async function createOrder(data: {
           customerId: resolvedCustomerId,
           deliveryPreference,
           orderNumber,
+          shippingName,
+          shippingPhone,
+          shippingAddress,
         },
         inStockItems,
         preOrderItems,
@@ -240,6 +267,9 @@ export async function createOrder(data: {
         adminNote: data.note,
         createdBy: data.userId,
         deliveryPreference,
+        ...(shippingName != null && { shippingName }),
+        ...(shippingPhone != null && { shippingPhone }),
+        ...(shippingAddress != null && { shippingAddress }),
       })
       .returning();
 
