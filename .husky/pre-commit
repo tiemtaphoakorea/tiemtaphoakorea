@@ -31,8 +31,8 @@ npm run typecheck
 echo "🧪 Running all tests..."
 npm test -- --run
 
-# 7. Build
-echo "🏗️ Building..."
-npm run build
+# 7. Build (force fresh build, no cache — mirrors production)
+echo "🏗️ Building (no cache)..."
+npx turbo build --force
 
 echo "✅ All checks passed! Proceeding with commit..."
