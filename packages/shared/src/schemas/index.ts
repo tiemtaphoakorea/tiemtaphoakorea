@@ -146,3 +146,12 @@ export const bannerSchema = z
     }
   });
 export type BannerFormValues = z.infer<typeof bannerSchema>;
+
+// --- Bulk Payment ---
+export const bulkPaymentSchema = z.object({
+  amount: z.number().positive("Số tiền phải lớn hơn 0"),
+  method: z.enum(["cash", "bank_transfer"]),
+  referenceCode: z.string().optional(),
+  note: z.string().optional(),
+});
+export type BulkPaymentFormValues = z.infer<typeof bulkPaymentSchema>;
