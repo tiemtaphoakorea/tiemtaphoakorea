@@ -52,6 +52,7 @@ export function QuickPaymentDialog({
 
   const handleOpenChange = (next: boolean) => {
     if (isSubmitting) return;
+    if (!next) setMethod(PAYMENT_METHOD.BANK_TRANSFER);
     onOpenChange(next);
   };
 
@@ -62,17 +63,24 @@ export function QuickPaymentDialog({
     try {
       for (const order of eligibleOrders) {
         const amount = Number(order.total) - Number(order.paidAmount);
-        await adminClient.recordOrderPayment(order.id, { amount, method });
-        successCount += 1;
+        try {
+          await adminClient.recordOrderPayment(order.id, { amount, method });
+          successCount += 1;
+        } catch (err: unknown) {
+          await queryClient.invalidateQueries({ queryKey: ["orders"] });
+          const message =
+            err instanceof Error ? err.message : "Có lỗi xảy ra khi ghi nhận thanh toán.";
+          toast.error("Lỗi thanh toán", {
+            description: `Lỗi ở đơn ${order.orderNumber}: ${message}. Đã ghi nhận ${successCount}/${eligibleOrders.length} đơn.`,
+          });
+          return;
+        }
       }
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast.success("Thanh toán thành công", {
         description: `Đã ghi nhận thanh toán cho ${successCount} đơn hàng.`,
       });
       onSuccess();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Có lỗi xảy ra khi ghi nhận thanh toán.";
-      toast.error("Lỗi thanh toán", { description: message });
     } finally {
       setIsSubmitting(false);
     }
