@@ -73,10 +73,10 @@ function AdminOrdersContent() {
     updateParams({ search: debouncedSearch || null, page: 1 });
   }, [debouncedSearch, urlSearchTerm]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: page is used as a reactive trigger to clear selection on navigation
+  // biome-ignore lint/correctness/useExhaustiveDependencies: these are reactive triggers to clear selection when the result set changes
   useEffect(() => {
     setSelectedIds([]);
-  }, [page]);
+  }, [page, paymentStatusFilter, fulfillmentStatusFilter, debtOnly, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: queryKeys.orders.list(
