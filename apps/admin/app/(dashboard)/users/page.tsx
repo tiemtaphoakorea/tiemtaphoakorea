@@ -669,10 +669,10 @@ function AdminUsersPageContent() {
   }, [urlSearchTerm]);
 
   // Push debounced search to URL.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: updateParams is recreated each render
   useEffect(() => {
     if (debouncedSearch === urlSearchTerm) return;
     updateParams({ search: debouncedSearch || null, page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, urlSearchTerm]);
 
   const [ui, dispatch] = useReducer(uiReducer, initialUIState);
