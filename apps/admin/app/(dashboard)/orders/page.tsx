@@ -51,17 +51,32 @@ function AdminOrdersContent() {
   const [searchInput, setSearchInput] = useState(urlSearchTerm);
   const [debouncedSearch] = useDebounce(searchInput, 300);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? orders.map((o) => o.id) : []);
+  };
+
   // Keep local input in sync if URL changes from elsewhere (e.g. back button).
   useEffect(() => {
     setSearchInput(urlSearchTerm);
   }, [urlSearchTerm]);
 
   // Push debounced search to URL.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: updateParams is recreated each render
   useEffect(() => {
     if (debouncedSearch === urlSearchTerm) return;
     updateParams({ search: debouncedSearch || null, page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, urlSearchTerm]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: page is used as a reactive trigger to clear selection on navigation
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [page]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: queryKeys.orders.list(
@@ -151,6 +166,35 @@ function AdminOrdersContent() {
 
   const columns: ColumnDef<AdminOrderListItem>[] = [
     {
+      id: "select",
+      header: () => (
+        <input
+          type="checkbox"
+          checked={orders.length > 0 && orders.every((o) => selectedIds.includes(o.id))}
+          ref={(el) => {
+            if (el) {
+              const some = orders.some((o) => selectedIds.includes(o.id));
+              const all = orders.length > 0 && orders.every((o) => selectedIds.includes(o.id));
+              el.indeterminate = some && !all;
+            }
+          }}
+          onChange={(e) => toggleSelectAll(e.target.checked)}
+          aria-label="Chọn tất cả"
+          className="h-4 w-4 cursor-pointer accent-primary"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.original.id)}
+          onChange={() => toggleSelect(row.original.id)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Chọn đơn ${row.original.orderNumber}`}
+          className="h-4 w-4 cursor-pointer accent-primary"
+        />
+      ),
+    },
+    {
       accessorKey: "orderNumber",
       header: "Mã đơn",
       cell: ({ row }) => (
@@ -233,6 +277,8 @@ function AdminOrdersContent() {
     },
   ];
 
+  const selectedOrders = orders.filter((o) => selectedIds.includes(o.id));
+
   return (
     <div className="flex flex-col gap-8">
       <OrderHeader />
@@ -252,6 +298,8 @@ function AdminOrdersContent() {
             onDebtOnlyToggle={handleDebtOnlyToggle}
             paymentBadge={PAYMENT_BADGE}
             fulfillmentBadge={FULFILLMENT_BADGE}
+            selectedOrders={selectedOrders}
+            onQuickPaymentSuccess={() => setSelectedIds([])}
           />
         </CardHeader>
         <CardContent className="p-0">

@@ -52,8 +52,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { useDebounce } from "use-debounce";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -253,10 +253,10 @@ function AdminProductsContent() {
   }, [urlSearch]);
 
   // Push debounced search to URL.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: updateParams is recreated each render
   useEffect(() => {
     if (debouncedSearch === urlSearch) return;
     updateParams({ search: debouncedSearch || null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, urlSearch]);
 
   const PAGE_SIZE = 20;

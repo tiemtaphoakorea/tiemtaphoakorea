@@ -56,10 +56,16 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
                       </div>
                     )}
                     <div className="min-w-0 max-w-[180px]">
-                      <div className="truncate text-sm font-bold text-slate-900 dark:text-white" title={formatVariantDisplayName(item.productName)}>
+                      <div
+                        className="truncate text-sm font-bold text-slate-900 dark:text-white"
+                        title={formatVariantDisplayName(item.productName)}
+                      >
                         {formatVariantDisplayName(item.productName)}
                       </div>
-                      <div className="truncate font-mono text-xs text-slate-500" title={formatVariantDisplayName(item.variantName)}>
+                      <div
+                        className="truncate font-mono text-xs text-slate-500"
+                        title={formatVariantDisplayName(item.variantName)}
+                      >
                         {formatVariantDisplayName(item.variantName)}
                       </div>
                     </div>
