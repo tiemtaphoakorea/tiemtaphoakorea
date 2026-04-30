@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
     SUPPLIERS: "/api/admin/suppliers",
     EXPENSES: "/api/admin/expenses",
     FINANCE: "/api/admin/finance",
+    FINANCE_DAILY: "/api/admin/finance/daily",
     ANALYTICS: "/api/admin/analytics",
     STOCK_ALERTS: "/api/admin/analytics/stock-alerts",
     LOGIN: "/api/admin/login",

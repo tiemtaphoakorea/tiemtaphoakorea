@@ -3,6 +3,7 @@ import { and, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { expenses } from "../schema/expenses";
 import { orders } from "../schema/orders";
+import { profiles } from "../schema/profiles";
 
 export type CreateExpenseData = {
   description: string;
@@ -10,6 +11,13 @@ export type CreateExpenseData = {
   type: "fixed" | "variable";
   date: Date;
   createdBy: string;
+};
+
+export type DayOrderRow = {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  total: string | null;
 };
 
 // --- Expense Management ---
@@ -154,4 +162,31 @@ export async function getFinancialStats(params: {
     netProfit,
     orderCount: orderStats[0]?.count ?? 0,
   };
+}
+
+export async function getDayOrders(date: string): Promise<DayOrderRow[]> {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+
+  const rows = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      customerName: profiles.fullName,
+      total: orders.total,
+    })
+    .from(orders)
+    .innerJoin(profiles, eq(orders.customerId, profiles.id))
+    .where(
+      and(
+        gte(orders.createdAt, start),
+        lte(orders.createdAt, end),
+        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
+      ),
+    )
+    .orderBy(desc(orders.createdAt));
+
+  return rows;
 }

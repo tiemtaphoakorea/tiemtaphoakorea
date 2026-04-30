@@ -1,4 +1,5 @@
 import type { StockAlertVariant } from "@workspace/database/services/analytics.server";
+import type { DayOrderRow } from "@workspace/database/services/finance.server";
 import type {
   AdminOrderDetails,
   AdminProfile,
@@ -42,7 +43,7 @@ import {
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
-export type { StockAlertVariant };
+export type { DayOrderRow, StockAlertVariant };
 
 export type InventoryMovement = {
   id: string;
@@ -489,6 +490,12 @@ export const adminClient = {
     return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
       params,
     }) as unknown as Promise<{ stats: FinancialStats }>;
+  },
+
+  async getDayOrders(date: string) {
+    return axios.get<{ orders: DayOrderRow[] }>(API_ENDPOINTS.ADMIN.FINANCE_DAILY, {
+      params: { date },
+    }) as unknown as Promise<{ orders: DayOrderRow[] }>;
   },
 
   async getExpenses(params: {
