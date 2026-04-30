@@ -78,7 +78,7 @@ export function AnalyticsHubCards() {
       {cards.map(({ href, icon: Icon, label, headline, sub, color }) => (
         <Link key={href} href={href} className="group block">
           <Card className="h-full border-none shadow-sm ring-1 ring-slate-200 transition-shadow group-hover:shadow-md dark:ring-slate-800">
-            <CardContent className="flex flex-col gap-3 p-5">
+            <CardContent className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black tracking-widest text-slate-500 uppercase">
                   {label}

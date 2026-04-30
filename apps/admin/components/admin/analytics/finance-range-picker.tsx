@@ -2,6 +2,7 @@
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -9,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { cn } from "@workspace/ui/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type DateRange = { startDate: string; endDate: string };
 
@@ -65,11 +65,9 @@ const PRESETS: { key: Preset; label: string }[] = [
   { key: "lastMonth", label: "Tháng trước" },
 ];
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => ({
-  value: i + 1,
-  label: `Tháng ${i + 1}`,
-}));
-const YEARS = [2024, 2025, 2026];
+const MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }));
+const currentYear = new Date().getFullYear();
+const YEARS = [currentYear - 1, currentYear, currentYear + 1];
 
 interface FinanceRangePickerProps {
   value: DateRange;
@@ -83,94 +81,125 @@ export function FinanceRangePicker({ value, onChange }: FinanceRangePickerProps)
   const [year, setYear] = useState(now.getFullYear());
   const [customFrom, setCustomFrom] = useState(value.startDate);
   const [customTo, setCustomTo] = useState(value.endDate);
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+
+  useEffect(() => {
+    setCustomFrom(value.startDate);
+    setCustomTo(value.endDate);
+  }, [value.startDate, value.endDate]);
 
   function selectPreset(preset: Preset) {
     setActivePreset(preset);
-    if (preset !== "month" && preset !== "custom") {
-      onChange(presetToRange(preset));
-    }
+    onChange(presetToRange(preset));
   }
 
   function applyMonth() {
     setActivePreset("month");
     onChange(presetToRange("month", { month, year }));
+    setMonthOpen(false);
   }
 
   function applyCustom() {
     if (customFrom && customTo && customFrom <= customTo) {
       setActivePreset("custom");
       onChange({ startDate: customFrom, endDate: customTo });
+      setCustomOpen(false);
     }
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map(({ key, label }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => selectPreset(key)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-bold transition-colors",
-              activePreset === key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400",
-            )}
+    <div className="flex flex-wrap gap-2">
+      {PRESETS.map(({ key, label }) => (
+        <Button
+          key={key}
+          size="sm"
+          variant={activePreset === key ? "default" : "outline"}
+          className="h-7 rounded-full px-3 text-xs font-bold"
+          onClick={() => selectPreset(key)}
+        >
+          {label}
+        </Button>
+      ))}
+
+      <Popover open={monthOpen} onOpenChange={setMonthOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="sm"
+            variant={activePreset === "month" ? "default" : "outline"}
+            className="h-7 rounded-full px-3 text-xs font-bold"
           >
-            {label}
-          </button>
-        ))}
-      </div>
+            Tháng cụ thể
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-3" align="start">
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+                <SelectTrigger className="h-8 flex-1 text-xs font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m) => (
+                    <SelectItem key={m.value} value={String(m.value)} className="text-xs">
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                <SelectTrigger className="h-8 w-20 text-xs font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button size="sm" className="h-8 w-full text-xs font-bold" onClick={applyMonth}>
+              Áp dụng
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
-          <SelectTrigger className="h-8 w-32 text-xs font-bold">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTHS.map((m) => (
-              <SelectItem key={m.value} value={String(m.value)} className="text-xs">
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-          <SelectTrigger className="h-8 w-24 text-xs font-bold">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)} className="text-xs">
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button size="sm" variant="outline" className="h-8 text-xs font-bold" onClick={applyMonth}>
-          Xem tháng
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Input
-          type="date"
-          value={customFrom}
-          onChange={(e) => setCustomFrom(e.target.value)}
-          className="h-8 w-36 text-xs"
-        />
-        <span className="text-xs text-slate-500">→</span>
-        <Input
-          type="date"
-          value={customTo}
-          onChange={(e) => setCustomTo(e.target.value)}
-          className="h-8 w-36 text-xs"
-        />
-        <Button size="sm" variant="outline" className="h-8 text-xs font-bold" onClick={applyCustom}>
-          Áp dụng
-        </Button>
-      </div>
+      <Popover open={customOpen} onOpenChange={setCustomOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="sm"
+            variant={activePreset === "custom" ? "default" : "outline"}
+            className="h-7 rounded-full px-3 text-xs font-bold"
+          >
+            Tùy chỉnh
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" align="start">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                className="h-8 text-xs"
+              />
+              <span className="text-xs text-muted-foreground">→</span>
+              <Input
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+            <Button size="sm" className="h-8 w-full text-xs font-bold" onClick={applyCustom}>
+              Áp dụng
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

@@ -13,21 +13,6 @@ export type CreateExpenseData = {
   createdBy: string;
 };
 
-export type DayOrderRow = {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  total: string | null;
-};
-
-export type DailyStatRow = {
-  date: string;
-  revenue: number;
-  cogs: number;
-  grossProfit: number;
-  orderCount: number;
-};
-
 // --- Expense Management ---
 
 export async function createExpense(data: CreateExpenseData) {
@@ -95,6 +80,63 @@ export async function deleteExpense(id: string) {
   return { success: true };
 }
 
+export type DailyStatRow = {
+  date: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  orderCount: number;
+};
+
+export type DayOrderRow = {
+  id: string;
+  orderNumber: string;
+  customerName: string | null;
+  total: string | null;
+};
+
+export async function getDailyStats(startDate: Date, endDate: Date) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
+  const rows = await db
+    .select({
+      date: sql<string>`DATE(${orders.createdAt})`,
+      revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
+      cogs: sql<number>`coalesce(sum(${orders.totalCost}), 0)`.mapWith(Number),
+      orderCount: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(orders)
+    .where(
+      and(
+        gte(orders.createdAt, start),
+        lte(orders.createdAt, end),
+        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
+      ),
+    )
+    .groupBy(sql`DATE(${orders.createdAt})`)
+    .orderBy(sql`DATE(${orders.createdAt})`);
+
+  const dailyData: DailyStatRow[] = rows.map((r) => ({
+    date: r.date,
+    revenue: r.revenue,
+    cogs: r.cogs,
+    grossProfit: r.revenue - r.cogs,
+    orderCount: r.orderCount,
+  }));
+
+  const summary = {
+    revenue: dailyData.reduce((s, r) => s + r.revenue, 0),
+    cogs: dailyData.reduce((s, r) => s + r.cogs, 0),
+    grossProfit: dailyData.reduce((s, r) => s + r.grossProfit, 0),
+    orderCount: dailyData.reduce((s, r) => s + r.orderCount, 0),
+  };
+
+  return { dailyData, summary };
+}
+
 // --- Financial Reporting (P&L) ---
 
 export async function getFinancialStats(params: {
@@ -119,17 +161,7 @@ export async function getFinancialStats(params: {
     throw new Error("Invalid date parameters: provide either month/year or startDate/endDate");
   }
 
-  // 1. Revenue & COGS (From Paid/Delivered Orders)
-  // Logic: Revenue is recognized when order is 'paid' or 'delivered' or just use all orders?
-  // Conservative approach: 'paid' or 'delivered' to avoid counting cancelled or pending-unpaid.
-  // Actually, standard retail usually counts 'paid' orders.
-  // Let's filter by status: paid, delivered, shipping.
-
-  // Note: We should filter by order `createdAt` or `paidAt`?
-  // P&L usually follows accrual basis (when order created) or cash basis (when paid).
-  // Given retail, let's use `createdAt` for simplicity of matching Expenses in that month,
-  // but only count valid orders (not cancelled).
-
+  // Cash basis: count by createdAt where paymentStatus = PAID
   const orderStats = await db
     .select({
       revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
@@ -172,62 +204,9 @@ export async function getFinancialStats(params: {
   };
 }
 
-export async function getDailyStats(
-  startDate: Date,
-  endDate: Date,
-): Promise<{
-  dailyData: DailyStatRow[];
-  summary: { revenue: number; cogs: number; grossProfit: number; orderCount: number };
-}> {
-  const start = new Date(startDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setHours(23, 59, 59, 999);
-
-  const rows = await db
-    .select({
-      date: sql<string>`date(${orders.createdAt})`,
-      revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
-      cogs: sql<number>`coalesce(sum(${orders.totalCost}), 0)`.mapWith(Number),
-      orderCount: sql<number>`count(*)`.mapWith(Number),
-    })
-    .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, start),
-        lte(orders.createdAt, end),
-        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
-      ),
-    )
-    .groupBy(sql`date(${orders.createdAt})`)
-    .orderBy(sql`date(${orders.createdAt})`);
-
-  const dailyData: DailyStatRow[] = rows.map((row) => ({
-    date: row.date,
-    revenue: row.revenue,
-    cogs: row.cogs,
-    grossProfit: row.revenue - row.cogs,
-    orderCount: row.orderCount,
-  }));
-
-  const summary = dailyData.reduce(
-    (acc, row) => ({
-      revenue: acc.revenue + row.revenue,
-      cogs: acc.cogs + row.cogs,
-      grossProfit: acc.grossProfit + row.grossProfit,
-      orderCount: acc.orderCount + row.orderCount,
-    }),
-    { revenue: 0, cogs: 0, grossProfit: 0, orderCount: 0 },
-  );
-
-  return { dailyData, summary };
-}
-
 export async function getDayOrders(date: string): Promise<DayOrderRow[]> {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
+  const start = new Date(`${date}T00:00:00.000Z`);
+  const end = new Date(`${date}T23:59:59.999Z`);
 
   const rows = await db
     .select({

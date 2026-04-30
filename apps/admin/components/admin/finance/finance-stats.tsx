@@ -212,8 +212,10 @@ export function FinanceStats({ date }: FinanceStatsProps) {
               <div className="text-primary flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl ring-4 shadow-slate-200/50 ring-slate-50 dark:bg-slate-800 dark:shadow-black/20 dark:ring-slate-900">
                 <TrendingUp className="h-10 w-10" />
               </div>
-              <div className="absolute -right-2 -bottom-2 rounded-full border-2 border-white bg-green-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg dark:border-slate-800">
-                GOOD
+              <div
+                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-[10px] font-bold text-white shadow-lg dark:border-slate-800 ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
+              >
+                {(stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
             </div>
 

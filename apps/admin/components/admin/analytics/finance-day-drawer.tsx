@@ -1,9 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import Link from "next/link";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -33,8 +35,8 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
 
   return (
     <Sheet open={!!date} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-[640px]">
-        <SheetHeader className="mb-6">
+      <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl">
+        <SheetHeader>
           <SheetTitle className="text-lg font-black capitalize">{formattedDate}</SheetTitle>
         </SheetHeader>
 
@@ -57,9 +59,10 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
               </span>
             </div>
             {orders.map((order) => (
-              <div
+              <Link
                 key={order.id}
-                className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800"
+                href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}
+                className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-muted dark:border-slate-800"
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-bold text-slate-900 dark:text-white">
@@ -70,7 +73,7 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
                 <span className="text-sm font-black">
                   {formatCurrency(Number(order.total ?? 0))}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         )}

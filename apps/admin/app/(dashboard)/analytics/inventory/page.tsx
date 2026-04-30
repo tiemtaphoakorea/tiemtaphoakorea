@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "@workspace/database/types/admin";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
-import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import Link from "next/link";
 import { InventoryStats } from "@/components/admin/analytics/inventory-stats";
@@ -32,14 +31,25 @@ export default function AnalyticsInventoryPage() {
   return (
     <div className="flex flex-col gap-8 pb-10">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={ADMIN_ROUTES.ANALYTICS}>← Báo cáo</Link>
-        </Button>
+        <Link
+          href={ADMIN_ROUTES.ANALYTICS}
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Báo cáo
+        </Link>
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
           Tồn kho
         </h1>
       </div>
-      {data?.inventory && <InventoryStats data={data.inventory} />}
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-200 dark:bg-slate-700" />
+          ))}
+        </div>
+      ) : (
+        data?.inventory && <InventoryStats data={data.inventory} />
+      )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardContent className="pt-6">

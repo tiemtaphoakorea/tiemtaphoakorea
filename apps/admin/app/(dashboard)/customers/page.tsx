@@ -50,13 +50,12 @@ import {
   Search,
   ShoppingBag,
   Trash2,
-  TrendingUp,
   UserCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
+import { Suspense, useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
@@ -457,14 +456,13 @@ function AdminCustomersPageContent() {
 
   // NOTE: handleResetPassword removed - customers don't have auth accounts
 
-  const stats = useMemo(() => {
-    return {
-      total: metadata?.total || 0,
-      active: 0, // Simplified
-      inactive: 0, // Simplified
-      totalSpent: customers.reduce((acc, curr) => acc + Number(curr.totalSpent || 0), 0),
-    };
-  }, [customers, metadata]);
+  const { data: statsData } = useQuery({
+    queryKey: queryKeys.customers.stats,
+    queryFn: () => adminClient.getCustomerStats(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const stats = statsData ?? { total: 0, withOrders: 0, withoutOrders: 0, totalSpent: 0 };
 
   const columns = getColumns({
     onOpenEdit: (customer) => dispatch({ type: "OPEN_EDIT", payload: customer }),
@@ -481,7 +479,7 @@ function AdminCustomersPageContent() {
             Quản lý khách hàng
           </h1>
           <p className="mt-1 font-medium text-slate-500 dark:text-slate-400">
-            Theo dõi thông tin, lịch sử mua hàng và quản lý tài khoản khách hàng.
+            Theo dõi thông tin và lịch sử mua hàng của khách hàng.
           </p>
         </div>
 
@@ -495,7 +493,7 @@ function AdminCustomersPageContent() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
               Tổng khách hàng
@@ -504,55 +502,53 @@ function AdminCustomersPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black">{stats.total}</div>
-            <p className="text-primary mt-1 text-[10px] font-bold tracking-tight uppercase">
-              Tất cả tài khoản
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase">
+              Tổng cộng
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-              Đang hoạt động
+              Đã mua hàng
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <ShoppingBag className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black">{stats.active}</div>
-            <p className="mt-1 text-xs font-bold tracking-tight text-emerald-500/80 uppercase">
-              Tài khoản khả dụng
+            <div className="text-2xl font-black">{stats.withOrders}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-emerald-500/80 uppercase">
+              Có ít nhất 1 đơn
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-              Ngừng hoạt động
+              Chưa đặt hàng
             </CardTitle>
-            <Ban className="h-4 w-4 text-slate-400" />
+            <UserCheck className="h-4 w-4 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black">{stats.inactive}</div>
-            <p className="mt-1 text-xs font-bold tracking-tight text-slate-400 uppercase">
-              Đã bị chặn/khóa
+            <div className="text-2xl font-black">{stats.withoutOrders}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
+              Toàn bộ khách hàng
             </p>
           </CardContent>
         </Card>
 
-        <Card className="ring-primary/10 bg-primary/5 dark:bg-primary/10 border-none shadow-sm ring-1 backdrop-blur-sm">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-primary/70 text-sm font-black tracking-wider uppercase">
-              Tổng doanh thu
+            <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
+              Tổng chi tiêu
             </CardTitle>
             <CreditCard className="text-primary h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-primary text-2xl font-black">
-              {formatCurrency(stats.totalSpent)}
-            </div>
-            <p className="text-primary/60 mt-1 text-xs font-bold tracking-tight uppercase">
-              Doanh thu lũy kế
+            <div className="text-2xl font-black">{formatCurrency(stats.totalSpent)}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase">
+              Toàn bộ khách hàng
             </p>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
 import {
   AlertDialog,
@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
+import { PaginationControls } from "@workspace/ui/components/pagination-controls";
 import {
   Select,
   SelectContent,
@@ -51,7 +52,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
@@ -242,6 +243,11 @@ function AdminProductsContent() {
   const urlSearch = searchParams.get("search") || "";
   const stockStatus = searchParams.get("stockStatus") || "all";
   const updated = searchParams.get("updated") === "1";
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const VALID_LIMITS = [10, 20, 50];
+  const limit = VALID_LIMITS.includes(parseInt(searchParams.get("limit") || "", 10))
+    ? parseInt(searchParams.get("limit") || "", 10)
+    : 20;
 
   // Local search state with debounce so URL updates after user pauses typing.
   const [searchInput, setSearchInput] = useState(urlSearch);
@@ -252,58 +258,45 @@ function AdminProductsContent() {
     setSearchInput(urlSearch);
   }, [urlSearch]);
 
-  // Push debounced search to URL.
+  // Sync default limit into URL on mount so it's always visible in the query string.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional mount-only effect
+  useEffect(() => {
+    if (!searchParams.get("limit")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("limit", limit.toString());
+      router.replace(`${pathname}?${params.toString()}`);
+    }
+  }, []);
+
+  // Push debounced search to URL, reset to page 1.
   // biome-ignore lint/correctness/useExhaustiveDependencies: updateParams is recreated each render
   useEffect(() => {
     if (debouncedSearch === urlSearch) return;
-    updateParams({ search: debouncedSearch || null });
+    updateParams({ search: debouncedSearch || null, page: 1 });
   }, [debouncedSearch, urlSearch]);
 
-  const PAGE_SIZE = 20;
-
-  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    queryKey: [...queryKeys.products.all, "infinite", debouncedSearch, stockStatus],
-    queryFn: ({ pageParam }) =>
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: [...queryKeys.products.all, debouncedSearch, stockStatus, page, limit],
+    queryFn: () =>
       adminClient.getProducts({
         search: debouncedSearch,
-        page: pageParam,
-        limit: PAGE_SIZE,
+        page,
+        limit,
         stockStatus: stockStatus === "all" ? undefined : stockStatus,
       }),
-    getNextPageParam: (lastPage) => {
-      const { page, totalPages } = lastPage.metadata;
-      return page < totalPages ? page + 1 : undefined;
-    },
-    initialPageParam: 1,
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 5,
   });
 
-  const products = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
-  const totalCount = data?.pages[0]?.metadata.total ?? 0;
+  const products = useMemo(() => data?.data ?? [], [data]);
+  const totalCount = data?.metadata.total ?? 0;
+  const totalPages = data?.metadata.totalPages ?? 1;
 
-  // Sentinel for infinite scroll
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const updateParams = (newParams: Record<string, string | null>) => {
+  const updateParams = (newParams: Record<string, string | number | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(newParams).forEach(([key, value]) => {
       if (value === null || value === "") params.delete(key);
-      else params.set(key, value);
+      else params.set(key, value.toString());
     });
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -457,7 +450,7 @@ function AdminProductsContent() {
                 <>
                   <Select
                     value={stockStatus}
-                    onValueChange={(val) => updateParams({ stockStatus: val })}
+                    onValueChange={(val) => updateParams({ stockStatus: val, page: 1 })}
                   >
                     <SelectTrigger
                       className="h-10 w-full border-none bg-slate-50/50 ring-1 ring-slate-200 md:w-[180px] dark:bg-slate-900/50 dark:ring-slate-800"
@@ -496,7 +489,7 @@ function AdminProductsContent() {
               </div>
             ) : (
               <>
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
                     <TableRow>
                       {selectMode && (
@@ -524,11 +517,11 @@ function AdminProductsContent() {
                         </TableHead>
                       )}
                       <TableHead className="w-14">Ảnh</TableHead>
-                      <TableHead>Tên sản phẩm</TableHead>
-                      <TableHead>Danh mục</TableHead>
-                      <TableHead>Giá bán</TableHead>
-                      <TableHead>Tồn kho</TableHead>
-                      <TableHead>Trạng thái</TableHead>
+                      <TableHead className="w-52">Tên sản phẩm</TableHead>
+                      <TableHead className="w-32">Danh mục</TableHead>
+                      <TableHead className="w-36">Giá bán</TableHead>
+                      <TableHead className="w-52">Tồn kho</TableHead>
+                      <TableHead className="w-28">Trạng thái</TableHead>
                       <TableHead className="w-20" />
                     </TableRow>
                   </TableHeader>
@@ -573,16 +566,16 @@ function AdminProductsContent() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <span className="flex flex-col">
-                              <span className="font-bold text-slate-700 dark:text-slate-200">
+                          <TableCell className="min-w-0">
+                            <span className="flex min-w-0 flex-col">
+                              <span className="truncate font-bold text-slate-700 dark:text-slate-200">
                                 {product.name}
                               </span>
-                              <code className="font-mono text-xs text-slate-400">
+                              <code className="truncate font-mono text-xs text-slate-400">
                                 /{product.slug}
                               </code>
                               {product.skus && (
-                                <span className="font-mono text-xs text-slate-500">
+                                <span className="truncate font-mono text-xs text-slate-500">
                                   SKU: {product.skus}
                                 </span>
                               )}
@@ -617,7 +610,9 @@ function AdminProductsContent() {
                                     : "text-xs font-medium text-slate-500"
                                 }
                               >
-                                (còn bán được: {available})
+                                {available < 0
+                                  ? `oversold ${Math.abs(available)}`
+                                  : `khả dụng: ${available}`}
                               </span>
                               {isOutOfStock ? (
                                 <Badge variant="destructive" className="text-[10px] font-bold">
@@ -689,16 +684,37 @@ function AdminProductsContent() {
                   </TableBody>
                 </Table>
 
-                {/* Infinite scroll sentinel */}
-                <div ref={sentinelRef} className="flex items-center justify-center py-6">
-                  {isFetchingNextPage && (
-                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                  )}
-                  {!hasNextPage && (
-                    <p className="text-xs text-slate-400">
-                      Đã hiển thị tất cả {totalCount} sản phẩm
-                    </p>
-                  )}
+                <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 dark:border-slate-800">
+                  <p className="text-xs font-medium text-slate-500">
+                    {isFetching ? (
+                      <Loader2 className="inline h-3 w-3 animate-spin" />
+                    ) : (
+                      `Tổng ${totalCount} sản phẩm`
+                    )}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-slate-500">Hiển thị</span>
+                      <Select
+                        value={limit.toString()}
+                        onValueChange={(val) => updateParams({ limit: Number(val), page: 1 })}
+                      >
+                        <SelectTrigger className="h-8 w-[70px] border-none bg-slate-50/50 text-xs ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <PaginationControls
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={(p) => updateParams({ page: p })}
+                    />
+                  </div>
                 </div>
               </>
             )}

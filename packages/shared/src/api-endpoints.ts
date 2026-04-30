@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     DEBT_SUMMARY: "/api/admin/debts/summary",
     USERS: "/api/admin/users",
     CUSTOMERS: "/api/admin/customers",
+    CUSTOMER_STATS: "/api/admin/customers/stats",
     SUPPLIERS: "/api/admin/suppliers",
     EXPENSES: "/api/admin/expenses",
     FINANCE: "/api/admin/finance",

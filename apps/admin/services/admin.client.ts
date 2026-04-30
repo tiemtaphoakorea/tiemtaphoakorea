@@ -396,6 +396,20 @@ export const adminClient = {
   },
 
   // Customer Management
+  async getCustomerStats() {
+    return axios.get<{
+      total: number;
+      withOrders: number;
+      withoutOrders: number;
+      totalSpent: number;
+    }>(API_ENDPOINTS.ADMIN.CUSTOMER_STATS) as unknown as Promise<{
+      total: number;
+      withOrders: number;
+      withoutOrders: number;
+      totalSpent: number;
+    }>;
+  },
+
   async getCustomers(params?: { search?: string; status?: string; page?: number; limit?: number }) {
     return axios.get<PaginatedResponse<CustomerStatsItem>>(API_ENDPOINTS.ADMIN.CUSTOMERS, {
       params,

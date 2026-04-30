@@ -601,17 +601,13 @@ export async function getOrders({
 
   const whereClause = and(...whereConditions);
 
-  // Total count query
-  const totalQuery = db
-    .select({ count: sql<number>`count(distinct ${orders.id})` })
+  const countQuery = db
+    .select({ count: sql<number>`count(*)` })
     .from(orders)
     .innerJoin(profiles, eq(orders.customerId, profiles.id))
     .where(whereClause);
 
-  const [totalResult] = await totalQuery;
-  const total = Number(totalResult?.count || 0);
-
-  const rawResults = await db
+  const dataQuery = db
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
@@ -625,6 +621,7 @@ export async function getOrders({
       customerId: profiles.id,
       customerFullName: profiles.fullName,
       customerCode: profiles.customerCode,
+      customerPhone: profiles.phone,
       itemCount: sql<number>`count(${orderItems.id})`.mapWith(Number),
     })
     .from(orders)
@@ -635,6 +632,9 @@ export async function getOrders({
     .orderBy(desc(orders.createdAt))
     .limit(limit)
     .offset(offset);
+
+  const [[totalResult], rawResults] = await Promise.all([countQuery, dataQuery]);
+  const total = Number(totalResult?.count || 0);
 
   const results = rawResults.map((order) => ({
     id: order.id,
@@ -649,6 +649,7 @@ export async function getOrders({
       id: order.customerId,
       fullName: order.customerFullName,
       customerCode: order.customerCode,
+      phone: order.customerPhone,
     },
     itemCount: order.itemCount,
   }));
@@ -701,15 +702,48 @@ export async function getOrderDetails(id: string) {
     },
   });
 
-  // 6. Return assembled object
+  // 6. Fetch sub-orders (orders whose parentOrderId points to this order)
+  const subOrders = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      paymentStatus: orders.paymentStatus,
+      fulfillmentStatus: orders.fulfillmentStatus,
+      total: orders.total,
+      paidAmount: orders.paidAmount,
+      splitType: orders.splitType,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .where(eq(orders.parentOrderId, order.id));
+
+  // 7. Fetch parent order if this order is a sub-order
+  const parentOrder = order.parentOrderId
+    ? await db
+        .select({
+          id: orders.id,
+          orderNumber: orders.orderNumber,
+          paymentStatus: orders.paymentStatus,
+          fulfillmentStatus: orders.fulfillmentStatus,
+          total: orders.total,
+          paidAmount: orders.paidAmount,
+          createdAt: orders.createdAt,
+        })
+        .from(orders)
+        .where(eq(orders.id, order.parentOrderId))
+        .limit(1)
+        .then((rows) => rows[0] ?? null)
+    : null;
+
+  // 8. Return assembled object
   return {
     ...order,
     customer,
     payments: paymentsData,
     items,
     statusHistory,
-    subOrders: [],
-    parentOrder: null,
+    subOrders,
+    parentOrder,
   };
 }
 

@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "@workspace/database/types/admin";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
-import { Button } from "@workspace/ui/components/button";
 import Link from "next/link";
 import { TopProducts } from "@/components/admin/analytics/top-products";
 import { queryKeys } from "@/lib/query-keys";
@@ -22,9 +21,12 @@ export default function AnalyticsProductsPage() {
   return (
     <div className="flex flex-col gap-8 pb-10">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={ADMIN_ROUTES.ANALYTICS}>← Báo cáo</Link>
-        </Button>
+        <Link
+          href={ADMIN_ROUTES.ANALYTICS}
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Báo cáo
+        </Link>
         <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
           Sản phẩm bán chạy
         </h1>

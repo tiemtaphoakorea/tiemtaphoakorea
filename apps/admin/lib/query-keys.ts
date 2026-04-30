@@ -101,6 +101,7 @@ export const queryKeys = {
   productCategories: [QK.categoriesRoot, "for-products"] as const,
   customers: {
     all: [QK.customersRoot] as const,
+    stats: [QK.customersRoot, "stats"] as const,
     list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
       [QK.customersRoot, searchTerm, statusFilter, page, limit] as const,
     search: (debouncedSearch: string) =>

@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "@workspace/database/types/admin";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
-import { Button } from "@workspace/ui/components/button";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AnalyticsHeader } from "@/components/admin/analytics/analytics-header";
@@ -66,9 +65,12 @@ export default function AnalyticsOverviewPage() {
   return (
     <div className="flex flex-col gap-8 pb-10">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={ADMIN_ROUTES.ANALYTICS}>← Báo cáo</Link>
-        </Button>
+        <Link
+          href={ADMIN_ROUTES.ANALYTICS}
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Báo cáo
+        </Link>
       </div>
       <AnalyticsHeader data={data} />
       <AnalyticsStats data={data} />

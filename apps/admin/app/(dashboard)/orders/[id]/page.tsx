@@ -2,7 +2,12 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ProductWithVariants } from "@workspace/database/types/api";
-import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
+import type {
+  FulfillmentStatusValue,
+  PaymentMethodValue,
+  PaymentStatusValue,
+} from "@workspace/shared/constants";
+import { PAYMENT_METHOD, PAYMENT_METHOD_LABEL } from "@workspace/shared/constants";
 import { formatCurrency, formatDate, formatVariantDisplayName } from "@workspace/shared/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
@@ -108,7 +113,7 @@ type PaymentState = { isOpen: boolean; amount: number; method: string; ref: stri
 const initialPaymentState: PaymentState = {
   isOpen: false,
   amount: 0,
-  method: "cash",
+  method: PAYMENT_METHOD.CASH,
   ref: "",
   note: "",
 };
@@ -201,20 +206,20 @@ function PaymentDialog({
               className="flex gap-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="cash" id="cash" />
-                <Label htmlFor="cash">Tiền mặt</Label>
+                <RadioGroupItem value={PAYMENT_METHOD.CASH} id="cash" />
+                <Label htmlFor="cash">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CASH]}</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="bank_transfer" id="bank" />
-                <Label htmlFor="bank">Chuyển khoản</Label>
+                <RadioGroupItem value={PAYMENT_METHOD.BANK_TRANSFER} id="bank" />
+                <Label htmlFor="bank">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.BANK_TRANSFER]}</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="card" id="card" />
-                <Label htmlFor="card">Thẻ</Label>
+                <RadioGroupItem value={PAYMENT_METHOD.CARD} id="card" />
+                <Label htmlFor="card">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CARD]}</Label>
               </div>
             </RadioGroup>
           </div>
-          {paymentState.method === "bank_transfer" && (
+          {paymentState.method === PAYMENT_METHOD.BANK_TRANSFER && (
             <div className="space-y-2">
               <Label>Mã tham chiếu (Mã GD)</Label>
               <Input
@@ -555,7 +560,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     customer: {
                       fullName: order.customer?.fullName ?? "Khách lẻ",
                       phone: order.customer?.phone,
-                      address: order.customer?.address,
+                      address: order.shippingAddress || order.customer?.address,
                     },
                     items: order.items.map((item: any) => ({
                       productName: item.productName,
@@ -583,7 +588,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     customer: {
                       fullName: order.customer?.fullName ?? "Khách lẻ",
                       phone: order.customer?.phone,
-                      address: order.customer?.address,
+                      address: order.shippingAddress || order.customer?.address,
                     },
                     items: order.items.map((item: any) => ({
                       productName: item.productName,
@@ -611,7 +616,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     customer: {
                       fullName: order.customer?.fullName ?? "Khách lẻ",
                       phone: order.customer?.phone,
-                      address: order.customer?.address,
+                      address: order.shippingAddress || order.customer?.address,
                     },
                     items: order.items.map((item: any) => ({
                       productName: item.productName,
@@ -990,11 +995,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] uppercase">
-                            {p.method === "bank_transfer"
-                              ? "Chuyển khoản"
-                              : p.method === "card"
-                                ? "Thẻ"
-                                : "Tiền mặt"}
+                            {PAYMENT_METHOD_LABEL[p.method as PaymentMethodValue] ?? p.method}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs">

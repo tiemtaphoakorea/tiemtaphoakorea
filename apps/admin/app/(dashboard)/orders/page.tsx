@@ -14,7 +14,7 @@ import { DataTable } from "@workspace/ui/components/data-table";
 import { Eye, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 // Components
 import { OrderHeader } from "@/components/admin/orders/order-header";
@@ -53,13 +53,9 @@ function AdminOrdersContent() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
-  const toggleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? orders.map((o) => o.id) : []);
-  };
+  }, []);
 
   // Keep local input in sync if URL changes from elsewhere (e.g. back button).
   useEffect(() => {
@@ -106,6 +102,13 @@ function AdminOrdersContent() {
 
   const orders = (data?.data as AdminOrderListItem[]) || [];
   const metadata = data?.metadata;
+
+  const toggleSelectAll = useCallback(
+    (checked: boolean) => {
+      setSelectedIds(checked ? orders.map((o) => o.id) : []);
+    },
+    [orders],
+  );
 
   const updateParams = (newParams: Record<string, string | number | boolean | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -157,125 +160,128 @@ function AdminOrdersContent() {
     return (
       statsContent || {
         total: metadata?.total || 0,
-        pending: 0,
-        completed: 0,
+        pending: undefined,
+        completed: undefined,
         totalRevenue: orders.reduce((acc, curr) => acc + Number(curr.total || 0), 0),
       }
     );
   }, [statsContent, orders, metadata]);
 
-  const columns: ColumnDef<AdminOrderListItem>[] = [
-    {
-      id: "select",
-      header: () => (
-        <input
-          type="checkbox"
-          checked={orders.length > 0 && orders.every((o) => selectedIds.includes(o.id))}
-          ref={(el) => {
-            if (el) {
-              const some = orders.some((o) => selectedIds.includes(o.id));
-              const all = orders.length > 0 && orders.every((o) => selectedIds.includes(o.id));
-              el.indeterminate = some && !all;
-            }
-          }}
-          onChange={(e) => toggleSelectAll(e.target.checked)}
-          aria-label="Chọn tất cả"
-          className="h-4 w-4 cursor-pointer accent-primary"
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={selectedIds.includes(row.original.id)}
-          onChange={() => toggleSelect(row.original.id)}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`Chọn đơn ${row.original.orderNumber}`}
-          className="h-4 w-4 cursor-pointer accent-primary"
-        />
-      ),
-    },
-    {
-      accessorKey: "orderNumber",
-      header: "Mã đơn",
-      cell: ({ row }) => (
-        <span className="font-black text-slate-900 dark:text-white">
-          #{row.original.orderNumber}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "customer",
-      header: "Khách hàng",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-bold text-slate-900 dark:text-white">
-            {row.original.customer?.fullName || "---"}
-          </span>
-          <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
-            <Smartphone className="h-3 w-3" /> {row.original.customer?.phone || "---"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      id: "status",
-      header: "Trạng thái",
-      cell: ({ row }) => {
-        const payment = row.original.paymentStatus as PaymentStatusValue;
-        const fulfillment = row.original.fulfillmentStatus as FulfillmentStatusValue;
-        const paymentCfg = PAYMENT_BADGE[payment];
-        const fulfillmentCfg = FULFILLMENT_BADGE[fulfillment];
-        return (
-          <div className="flex flex-col gap-1">
-            <Badge
-              className={`${paymentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-            >
-              {paymentCfg?.label || payment}
-            </Badge>
-            <Badge
-              className={`${fulfillmentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-            >
-              {fulfillmentCfg?.label || fulfillment}
-            </Badge>
-          </div>
-        );
+  const columns = useMemo<ColumnDef<AdminOrderListItem>[]>(
+    () => [
+      {
+        id: "select",
+        header: () => (
+          <input
+            type="checkbox"
+            checked={orders.length > 0 && orders.every((o) => selectedIds.includes(o.id))}
+            ref={(el) => {
+              if (el) {
+                const some = orders.some((o) => selectedIds.includes(o.id));
+                const all = orders.length > 0 && orders.every((o) => selectedIds.includes(o.id));
+                el.indeterminate = some && !all;
+              }
+            }}
+            onChange={(e) => toggleSelectAll(e.target.checked)}
+            aria-label="Chọn tất cả"
+            className="h-4 w-4 cursor-pointer accent-primary"
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(row.original.id)}
+            onChange={() => toggleSelect(row.original.id)}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Chọn đơn ${row.original.orderNumber}`}
+            className="h-4 w-4 cursor-pointer accent-primary"
+          />
+        ),
       },
-    },
-    {
-      accessorKey: "total",
-      header: () => <div className="text-right">Tổng tiền</div>,
-      cell: ({ row }) => (
-        <div className="text-right font-black text-slate-900 dark:text-white">
-          {formatCurrency(row.original.total)}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "createdAt",
-      header: () => <div className="text-center">Ngày tạo</div>,
-      cell: ({ row }) => (
-        <div className="text-center font-mono text-sm font-medium text-slate-500">
-          {formatDate(row.original.createdAt)}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
-          asChild
-        >
-          <Link href={ADMIN_ROUTES.ORDER_DETAIL(row.original.id)}>
-            <Eye className="h-4 w-4" />
-            <span>Xem chi tiết</span>
-          </Link>
-        </Button>
-      ),
-    },
-  ];
+      {
+        accessorKey: "orderNumber",
+        header: "Mã đơn",
+        cell: ({ row }) => (
+          <span className="font-black text-slate-900 dark:text-white">
+            #{row.original.orderNumber}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "customer",
+        header: "Khách hàng",
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-900 dark:text-white">
+              {row.original.customer?.fullName || "---"}
+            </span>
+            <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
+              <Smartphone className="h-3 w-3" /> {row.original.customer?.phone || "---"}
+            </span>
+          </div>
+        ),
+      },
+      {
+        id: "status",
+        header: "Trạng thái",
+        cell: ({ row }) => {
+          const payment = row.original.paymentStatus as PaymentStatusValue;
+          const fulfillment = row.original.fulfillmentStatus as FulfillmentStatusValue;
+          const paymentCfg = PAYMENT_BADGE[payment];
+          const fulfillmentCfg = FULFILLMENT_BADGE[fulfillment];
+          return (
+            <div className="flex flex-col gap-1">
+              <Badge
+                className={`${paymentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
+              >
+                {paymentCfg?.label || payment}
+              </Badge>
+              <Badge
+                className={`${fulfillmentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
+              >
+                {fulfillmentCfg?.label || fulfillment}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "total",
+        header: () => <div className="text-right">Tổng tiền</div>,
+        cell: ({ row }) => (
+          <div className="text-right font-black text-slate-900 dark:text-white">
+            {formatCurrency(row.original.total)}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: () => <div className="text-center">Ngày tạo</div>,
+        cell: ({ row }) => (
+          <div className="text-center font-mono text-sm font-medium text-slate-500">
+            {formatDate(row.original.createdAt)}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        cell: ({ row }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
+            asChild
+          >
+            <Link href={ADMIN_ROUTES.ORDER_DETAIL(row.original.id)}>
+              <Eye className="h-4 w-4" />
+              <span>Xem chi tiết</span>
+            </Link>
+          </Button>
+        ),
+      },
+    ],
+    [orders, selectedIds, toggleSelect, toggleSelectAll],
+  );
 
   const selectedOrders = orders.filter((o) => selectedIds.includes(o.id));
 

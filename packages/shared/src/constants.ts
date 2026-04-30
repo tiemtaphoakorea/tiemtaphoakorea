@@ -86,6 +86,14 @@ export const PAYMENT_METHOD = {
   CARD: "card",
 } as const;
 
+export type PaymentMethodValue = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD];
+
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethodValue, string> = {
+  cash: "Tiền mặt",
+  bank_transfer: "Chuyển khoản",
+  card: "Thẻ",
+};
+
 export const PRODUCT_SORT = {
   LATEST: "latest",
   PRICE_ASC: "price-asc",
