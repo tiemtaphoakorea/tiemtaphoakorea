@@ -43,6 +43,7 @@ export const queryKeys = {
     profile: [QK.adminRoot, QK.profile] as const,
     analytics: [QK.adminRoot, QK.analytics] as const,
     stockAlerts: [QK.adminRoot, "stock-alerts"] as const,
+    debtSummary: [QK.adminRoot, "debt-summary"] as const,
     products: {
       all: [QK.adminRoot, QK.adminProducts] as const,
       withVariants: [QK.adminRoot, QK.adminProducts, INCLUDE_VARIANTS] as const,
@@ -84,7 +85,6 @@ export const queryKeys = {
     topProducts: [QK.dashboardRoot, QK.topProducts] as const,
     recentOrders: [QK.dashboardRoot, QK.recentOrders] as const,
     kpi: [QK.dashboardRoot, QK.kpi] as const,
-    debtSummary: [QK.adminRoot, "debt-summary"] as const,
   },
   products: {
     all: [QK.productsRoot] as const,

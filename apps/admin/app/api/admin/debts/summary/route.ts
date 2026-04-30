@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Failed to fetch debt aggregate:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error instanceof Error ? error.message : "Internal Server Error" },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
