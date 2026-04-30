@@ -123,3 +123,19 @@ export async function getCustomerDebt(customerId: string) {
     allOrders,
   };
 }
+
+export async function getDebtAggregate(): Promise<{ totalDebt: number; customerCount: number }> {
+  const [row] = await db
+    .select({
+      totalDebt: sql<string>`coalesce(sum(${orders.total}::numeric - coalesce(${orders.paidAmount}, '0')::numeric), 0)`,
+      customerCount: sql<number>`count(distinct ${orders.customerId})`.mapWith(Number),
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.fulfillmentStatus, FULFILLMENT_STATUS.STOCK_OUT),
+        sql`${orders.paymentStatus} != ${PAYMENT_STATUS.PAID}`,
+      ),
+    );
+  return { totalDebt: Number(row?.totalDebt ?? 0), customerCount: row?.customerCount ?? 0 };
+}

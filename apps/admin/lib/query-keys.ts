@@ -62,6 +62,8 @@ export const queryKeys = {
       all: [QK.adminRoot, QK.finance] as const,
       stats: (date: { month: number; year: number }) =>
         [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date] as const,
+      statsByRange: (params: { startDate: string; endDate: string }) =>
+        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, params] as const,
     },
     chat: {
       rooms: {
@@ -82,6 +84,7 @@ export const queryKeys = {
     topProducts: [QK.dashboardRoot, QK.topProducts] as const,
     recentOrders: [QK.dashboardRoot, QK.recentOrders] as const,
     kpi: [QK.dashboardRoot, QK.kpi] as const,
+    debtSummary: [QK.adminRoot, "debt-summary"] as const,
   },
   products: {
     all: [QK.productsRoot] as const,

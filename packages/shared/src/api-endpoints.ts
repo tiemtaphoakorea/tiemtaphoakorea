@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     ORDER_STATS: "/api/admin/orders/stats",
     DEBTS: "/api/admin/debts",
     DEBT_DETAIL: (customerId: string) => `/api/admin/debts/${customerId}`,
+    DEBT_SUMMARY: "/api/admin/debts/summary",
     USERS: "/api/admin/users",
     CUSTOMERS: "/api/admin/customers",
     SUPPLIERS: "/api/admin/suppliers",

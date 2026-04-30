@@ -349,6 +349,12 @@ export const adminClient = {
     }) as unknown as Promise<PaginatedResponse<DebtListItem>>;
   },
 
+  async getDebtSummary() {
+    return axios.get<{ totalDebt: number; customerCount: number }>(
+      API_ENDPOINTS.ADMIN.DEBT_SUMMARY,
+    ) as unknown as Promise<{ totalDebt: number; customerCount: number }>;
+  },
+
   async getCustomerDebt(customerId: string) {
     return axios.get<CustomerDebtResponse>(
       API_ENDPOINTS.ADMIN.DEBT_DETAIL(customerId),
@@ -474,6 +480,12 @@ export const adminClient = {
 
   // Finance & Expenses
   async getFinancialStats(params: { month: number; year: number }) {
+    return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
+      params,
+    }) as unknown as Promise<{ stats: FinancialStats }>;
+  },
+
+  async getFinancialStatsByRange(params: { startDate: string; endDate: string }) {
     return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
       params,
     }) as unknown as Promise<{ stats: FinancialStats }>;
