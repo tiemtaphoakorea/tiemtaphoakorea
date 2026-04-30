@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
 import "@workspace/ui/styles/globals.css";
 import { Toaster } from "@workspace/ui/components/sonner";
@@ -17,6 +17,13 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "K-SMART",
   description: "K-SMART Pure Beauty",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

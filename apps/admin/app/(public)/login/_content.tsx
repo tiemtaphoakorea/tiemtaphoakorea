@@ -100,7 +100,7 @@ export default function AdminLoginPage() {
                     {...register("username")}
                     type="text"
                     placeholder="admin"
-                    className="h-12 rounded-lg border-border bg-background pl-12 text-sm transition-all focus:ring-1 focus:ring-ring"
+                    className="h-12 rounded-lg border-border bg-background pl-12 transition-all focus:ring-1 focus:ring-ring"
                     aria-invalid={!!errors.username}
                   />
                 </div>
@@ -125,7 +125,7 @@ export default function AdminLoginPage() {
                     {...register("password")}
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="h-12 rounded-lg border-border bg-background pl-12 pr-12 text-sm transition-all focus:ring-1 focus:ring-ring"
+                    className="h-12 rounded-lg border-border bg-background pl-12 pr-12 transition-all focus:ring-1 focus:ring-ring"
                     aria-invalid={!!errors.password}
                   />
                   <button
