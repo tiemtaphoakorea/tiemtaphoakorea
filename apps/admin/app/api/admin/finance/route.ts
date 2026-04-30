@@ -1,48 +1,26 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
 import { getFinancialStats } from "@workspace/database/services/finance.server";
-import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
+import { parseDateRange } from "@/lib/date-range";
 
 export async function GET(request: NextRequest) {
-  const user = await getInternalUser(request);
-
   // Finance module is Owner-only
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const monthParam = searchParams.get("month");
   const yearParam = searchParams.get("year");
-  const startDateParam = searchParams.get("startDate");
-  const endDateParam = searchParams.get("endDate");
+  const hasDateRange = searchParams.has("startDate") || searchParams.has("endDate");
 
   let stats;
 
   try {
-    if (startDateParam && endDateParam) {
-      const startDate = new Date(startDateParam);
-      const endDate = new Date(endDateParam);
-
-      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-        return NextResponse.json(
-          { error: "Invalid date format" },
-          { status: HTTP_STATUS.BAD_REQUEST },
-        );
-      }
-
-      if (startDate > endDate) {
-        return NextResponse.json(
-          { error: "Start date must be before end date" },
-          { status: HTTP_STATUS.BAD_REQUEST },
-        );
-      }
-
-      stats = await getFinancialStats({ startDate, endDate });
+    if (hasDateRange) {
+      const range = parseDateRange(searchParams);
+      if (!range.ok) return range.response;
+      stats = await getFinancialStats({ startDate: range.startDate, endDate: range.endDate });
     } else if (monthParam && yearParam) {
       const month = Number.parseInt(monthParam, 10);
       const year = Number.parseInt(yearParam, 10);

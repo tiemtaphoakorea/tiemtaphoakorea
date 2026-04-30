@@ -1,29 +1,18 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
 import { createUser, getUsersPaginated } from "@workspace/database/services/user.server";
 import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
-import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { getPaginationParams } from "@workspace/shared/pagination";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || undefined;
-    const rawPage = parseInt(searchParams.get("page") || "1", 10);
-    const page = Math.max(1, Number.isNaN(rawPage) ? PAGINATION_DEFAULT.PAGE : rawPage);
-    const rawLimit = parseInt(searchParams.get("limit") || String(PAGINATION_DEFAULT.LIMIT), 10);
-    const limit = Math.min(
-      100,
-      Math.max(1, Number.isNaN(rawLimit) ? PAGINATION_DEFAULT.LIMIT : rawLimit),
-    );
+    const { page, limit } = getPaginationParams(request);
     const result = await getUsersPaginated({ search, page, limit });
     return NextResponse.json(result);
   } catch (error: any) {
@@ -36,13 +25,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const body = await request.json();

@@ -1,6 +1,7 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
 import { createCustomer, getCustomers } from "@workspace/database/services/customer.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { getPaginationParams } from "@workspace/shared/pagination";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -11,10 +12,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
-  const rawPage = parseInt(searchParams.get("page") || "1", 10);
-  const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
-  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
-  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
+  const { page, limit } = getPaginationParams(request);
 
   try {
     const result = await getCustomers({ search, page, limit });

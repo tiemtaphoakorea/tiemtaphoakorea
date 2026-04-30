@@ -444,6 +444,32 @@ export const adminClient = {
     ) as unknown as Promise<{ success: boolean; profile: CustomerStatsItem }>;
   },
 
+  async getCustomerTierConfig() {
+    return axios.get<{
+      loyalMinOrders: number;
+      loyalMinSpent: number;
+      frequentMinOrders: number;
+      frequentMinSpent: number;
+    }>(API_ENDPOINTS.ADMIN.SETTINGS_CUSTOMER_TIER) as unknown as Promise<{
+      loyalMinOrders: number;
+      loyalMinSpent: number;
+      frequentMinOrders: number;
+      frequentMinSpent: number;
+    }>;
+  },
+
+  async updateCustomerTierConfig(data: {
+    loyalMinOrders: number;
+    loyalMinSpent: number;
+    frequentMinOrders: number;
+    frequentMinSpent: number;
+  }) {
+    return axios.put<typeof data>(
+      API_ENDPOINTS.ADMIN.SETTINGS_CUSTOMER_TIER,
+      data,
+    ) as unknown as Promise<typeof data>;
+  },
+
   async resetCustomerPassword(id: string) {
     return axios.post<{ newPassword: string }>(
       `${API_ENDPOINTS.ADMIN.CUSTOMERS}/${id}/reset-password`,

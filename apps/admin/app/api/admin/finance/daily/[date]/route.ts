@@ -1,18 +1,11 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
 import { getDayOrders } from "@workspace/database/services/finance.server";
-import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ date: string }> }) {
-  const user = await getInternalUser(request);
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   const { date } = await params;
 

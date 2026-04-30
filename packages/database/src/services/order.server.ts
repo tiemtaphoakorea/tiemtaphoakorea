@@ -1073,23 +1073,6 @@ export async function recordPayment(data: {
   });
 }
 
-export async function getOrderHistory(orderId: string) {
-  const history = await db.query.orderStatusHistory.findMany({
-    where: eq(orderStatusHistory.orderId, orderId),
-    orderBy: [desc(orderStatusHistory.createdAt)],
-    with: {
-      creator: {
-        columns: {
-          id: true,
-          fullName: true,
-        },
-      },
-    },
-  });
-
-  return history;
-}
-
 export async function getOrderStats() {
   const [stats] = await db
     .select({

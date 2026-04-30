@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
     USERS: "/api/admin/users",
     CUSTOMERS: "/api/admin/customers",
     CUSTOMER_STATS: "/api/admin/customers/stats",
+    SETTINGS_CUSTOMER_TIER: "/api/admin/settings/customer-tier",
     SUPPLIERS: "/api/admin/suppliers",
     EXPENSES: "/api/admin/expenses",
     FINANCE: "/api/admin/finance",

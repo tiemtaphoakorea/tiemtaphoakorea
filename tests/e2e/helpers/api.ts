@@ -584,24 +584,11 @@ export async function getAdminFinance(page: Page) {
   return data;
 }
 
-export async function getProfitReport(page: Page, params: { month: number; year: number }) {
-  const { data } = await apiGet<{ stats: any }>(
-    page,
-    `/api/admin/stats/profit?month=${params.month}&year=${params.year}`,
-  );
-  return data.stats;
-}
-
 export async function recordExpense(
   page: Page,
   params: { description: string; amount: number; type: string; date: string },
 ) {
   return createExpense(page, params);
-}
-
-export async function getOrderHistory(page: Page, orderId: string) {
-  const { data } = await apiGet<{ history: any[] }>(page, `/api/admin/orders/${orderId}/history`);
-  return data.history || [];
 }
 
 export async function getSupplierStats(page: Page, supplierId: string) {

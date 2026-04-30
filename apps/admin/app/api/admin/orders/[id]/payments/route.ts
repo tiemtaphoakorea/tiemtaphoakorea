@@ -1,14 +1,10 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
-import {
-  checkIdempotencyKey,
-  comparePayloads,
-  storeIdempotencyKey,
-} from "@workspace/database/lib/idempotency";
 import { recordPayment } from "@workspace/database/services/order.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
 import { PAYMENT_METHOD } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { beginIdempotency } from "@/lib/idempotency";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {
   const user = await getInternalUser(request);
@@ -22,66 +18,13 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
 
     const { id: orderId } = await params;
 
-    // Check for idempotency key if provided
-    if (clientToken) {
-      const existing = await checkIdempotencyKey(clientToken, "payment");
-      if (existing?.exists) {
-        // Compare request payloads
-        const currentPayload = {
-          orderId,
-          amount,
-          method,
-          referenceCode,
-          note,
-        };
-
-        if (!comparePayloads(existing.requestPayload, currentPayload)) {
-          // Same key, different payload - return conflict
-          return NextResponse.json(
-            { error: "Idempotency key conflict: different payload" },
-            { status: HTTP_STATUS.CONFLICT },
-          );
-        }
-
-        // Same key, same payload - return cached response if available
-        if (existing.response) {
-          return NextResponse.json(existing.response);
-        }
-        // If no response yet, it means another request is processing - return conflict
-        return NextResponse.json(
-          { error: "Request already in progress" },
-          { status: HTTP_STATUS.CONFLICT },
-        );
-      }
-
-      // Store the idempotency key immediately to prevent race conditions
-      try {
-        await storeIdempotencyKey({
-          key: clientToken,
-          resourceType: "payment",
-          requestPayload: {
-            orderId,
-            amount,
-            method,
-            referenceCode,
-            note,
-          },
-        });
-      } catch (error: any) {
-        // If key already exists (race condition), check and return
-        if (error?.code === "23505" || error?.constraint === "idempotency_keys_key_unique") {
-          const existing = await checkIdempotencyKey(clientToken, "payment");
-          if (existing?.response) {
-            return NextResponse.json(existing.response);
-          }
-          return NextResponse.json(
-            { error: "Request already in progress" },
-            { status: HTTP_STATUS.CONFLICT },
-          );
-        }
-        throw error;
-      }
-    }
+    const idem = await beginIdempotency({
+      clientToken,
+      resourceType: "payment",
+      resourceId: orderId,
+      payload: { orderId, amount, method, referenceCode, note },
+    });
+    if ("replay" in idem) return idem.replay;
 
     const parsedAmount = Number(amount);
     if (!method || Number.isNaN(parsedAmount)) {
@@ -115,11 +58,7 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
       userId: user.profile.id,
     });
 
-    // Update idempotency key with response if clientToken was provided
-    if (clientToken) {
-      const { updateIdempotencyKey } = await import("@workspace/database/lib/idempotency");
-      await updateIdempotencyKey(clientToken, orderId, result);
-    }
+    await idem.finalize(result);
 
     return NextResponse.json(result);
   } catch (error: any) {
