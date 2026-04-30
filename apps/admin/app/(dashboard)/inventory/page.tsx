@@ -7,6 +7,6 @@ const Content = dynamic(() => import("./_content"), {
   loading: () => null,
 });
 
-export default function AnalyticsOverviewPage() {
+export default function SupplierOrdersPage() {
   return <Content />;
 }

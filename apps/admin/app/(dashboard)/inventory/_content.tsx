@@ -14,14 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Calendar, CalendarDays, MoreHorizontal, Truck } from "lucide-react";
-import { useMemo, useReducer } from "react";
+import { Suspense, useMemo, useReducer } from "react";
 import { toast } from "sonner";
 // Components
-import { SupplierOrderAddSheet } from "@/components/admin/supplier-order-add-sheet";
-import { SupplierOrderHeader } from "@/components/admin/supplier-orders/supplier-order-header";
-import { SupplierOrderStatusDialog } from "@/components/admin/supplier-orders/supplier-order-status-dialog";
-import { SupplierOrderToolbar } from "@/components/admin/supplier-orders/supplier-order-toolbar";
+import { InventoryAddSheet } from "@/components/admin/inventory/add-sheet";
+import { InventoryDailySummaryTab } from "@/components/admin/inventory/daily-summary-tab";
+import { InventoryHeader } from "@/components/admin/inventory/header";
+import { InventoryMovementsTab } from "@/components/admin/inventory/movements-tab";
+import { InventoryStatusDialog } from "@/components/admin/inventory/status-dialog";
+import { InventoryToolbar } from "@/components/admin/inventory/toolbar";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -303,44 +306,74 @@ export default function SupplierOrdersPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SupplierOrderHeader onAddClick={() => dispatch({ type: "OPEN_ADD" })} />
+      <InventoryHeader onAddClick={() => dispatch({ type: "OPEN_ADD" })} />
 
-      <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-        <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
-          <SupplierOrderToolbar
-            searchTerm={search}
-            onSearchChange={(v) => dispatch({ type: "SET_SEARCH", payload: v })}
-            statusFilter={status}
-            onStatusChange={(v) => dispatch({ type: "SET_STATUS", payload: v })}
-            statusConfig={STATUS_CONFIG}
-          />
-        </CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={paginatedData}
-            isLoading={isLoading}
-            emptyState={
-              <div className="flex flex-col items-center justify-center gap-3 py-12">
-                <Truck className="h-12 w-12 text-slate-300" data-icon="truck" />
-                <div className="flex flex-col gap-1 text-center">
-                  <p className="text-sm font-semibold text-slate-700">Không có đơn đặt hàng nào</p>
-                  <p className="text-xs text-slate-500">
-                    Các đơn hàng Pre-order sẽ xuất hiện tại đây
-                  </p>
-                </div>
-              </div>
-            }
-            pageCount={pageCount}
-            pagination={pagination}
-            onPaginationChange={(updater) => {
-              dispatch({ type: "SET_PAGINATION", payload: updater });
-            }}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="orders" className="flex flex-col gap-4">
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
+          <TabsTrigger value="orders">Đơn nhập hàng</TabsTrigger>
+          <TabsTrigger value="movements">Giao dịch kho</TabsTrigger>
+          <TabsTrigger value="daily">Tổng hợp theo ngày</TabsTrigger>
+        </TabsList>
 
-      <SupplierOrderAddSheet
+        <TabsContent value="orders" className="m-0">
+          <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+            <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+              <InventoryToolbar
+                searchTerm={search}
+                onSearchChange={(v) => dispatch({ type: "SET_SEARCH", payload: v })}
+                statusFilter={status}
+                onStatusChange={(v) => dispatch({ type: "SET_STATUS", payload: v })}
+                statusConfig={STATUS_CONFIG}
+              />
+            </CardHeader>
+            <CardContent className="p-0">
+              <DataTable
+                columns={columns}
+                data={paginatedData}
+                isLoading={isLoading}
+                emptyState={
+                  <div className="flex flex-col items-center justify-center gap-3 py-12">
+                    <Truck className="h-12 w-12 text-slate-300" data-icon="truck" />
+                    <div className="flex flex-col gap-1 text-center">
+                      <p className="text-sm font-semibold text-slate-700">
+                        Không có đơn đặt hàng nào
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Các đơn hàng Pre-order sẽ xuất hiện tại đây
+                      </p>
+                    </div>
+                  </div>
+                }
+                pageCount={pageCount}
+                pagination={pagination}
+                onPaginationChange={(updater) => {
+                  dispatch({ type: "SET_PAGINATION", payload: updater });
+                }}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="movements" className="m-0">
+          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+            <CardContent className="p-4 sm:p-6">
+              <Suspense fallback={<div className="text-sm text-slate-500">Đang tải...</div>}>
+                <InventoryMovementsTab />
+              </Suspense>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="daily" className="m-0">
+          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+            <CardContent className="p-4 sm:p-6">
+              <InventoryDailySummaryTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <InventoryAddSheet
         isOpen={isAddSheetOpen}
         onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
         products={productsData.products}
@@ -350,7 +383,7 @@ export default function SupplierOrdersPage() {
       />
 
       {selectedOrder && (
-        <SupplierOrderStatusDialog
+        <InventoryStatusDialog
           open={isUpdateDialogOpen}
           onOpenChange={(open) =>
             open
