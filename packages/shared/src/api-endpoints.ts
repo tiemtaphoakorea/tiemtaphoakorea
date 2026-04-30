@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
     EXPENSES: "/api/admin/expenses",
     FINANCE: "/api/admin/finance",
     FINANCE_DAILY: "/api/admin/finance/daily",
+    FINANCE_DAY_ORDERS: (date: string) => `/api/admin/finance/daily/${date}`,
     ANALYTICS: "/api/admin/analytics",
     STOCK_ALERTS: "/api/admin/analytics/stock-alerts",
     LOGIN: "/api/admin/login",

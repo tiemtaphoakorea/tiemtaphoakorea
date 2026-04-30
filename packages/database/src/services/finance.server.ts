@@ -20,6 +20,14 @@ export type DayOrderRow = {
   total: string | null;
 };
 
+export type DailyStatRow = {
+  date: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  orderCount: number;
+};
+
 // --- Expense Management ---
 
 export async function createExpense(data: CreateExpenseData) {
@@ -162,6 +170,57 @@ export async function getFinancialStats(params: {
     netProfit,
     orderCount: orderStats[0]?.count ?? 0,
   };
+}
+
+export async function getDailyStats(
+  startDate: Date,
+  endDate: Date,
+): Promise<{
+  dailyData: DailyStatRow[];
+  summary: { revenue: number; cogs: number; grossProfit: number; orderCount: number };
+}> {
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  const rows = await db
+    .select({
+      date: sql<string>`date(${orders.createdAt})`,
+      revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
+      cogs: sql<number>`coalesce(sum(${orders.totalCost}), 0)`.mapWith(Number),
+      orderCount: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(orders)
+    .where(
+      and(
+        gte(orders.createdAt, start),
+        lte(orders.createdAt, end),
+        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
+      ),
+    )
+    .groupBy(sql`date(${orders.createdAt})`)
+    .orderBy(sql`date(${orders.createdAt})`);
+
+  const dailyData: DailyStatRow[] = rows.map((row) => ({
+    date: row.date,
+    revenue: row.revenue,
+    cogs: row.cogs,
+    grossProfit: row.revenue - row.cogs,
+    orderCount: row.orderCount,
+  }));
+
+  const summary = dailyData.reduce(
+    (acc, row) => ({
+      revenue: acc.revenue + row.revenue,
+      cogs: acc.cogs + row.cogs,
+      grossProfit: acc.grossProfit + row.grossProfit,
+      orderCount: acc.orderCount + row.orderCount,
+    }),
+    { revenue: 0, cogs: 0, grossProfit: 0, orderCount: 0 },
+  );
+
+  return { dailyData, summary };
 }
 
 export async function getDayOrders(date: string): Promise<DayOrderRow[]> {

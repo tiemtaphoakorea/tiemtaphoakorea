@@ -66,6 +66,8 @@ export const queryKeys = {
       statsByRange: (params: { startDate: string; endDate: string }) =>
         [QK.adminRoot, QK.finance, QK.financeStatsLeaf, params] as const,
       dayOrders: (date: string) => [QK.adminRoot, QK.finance, "day-orders", date] as const,
+      daily: (params: { startDate: string; endDate: string }) =>
+        [QK.adminRoot, QK.finance, "daily", params] as const,
     },
     chat: {
       rooms: {
