@@ -23,7 +23,6 @@ import {
   LogOut,
   MessageCircle,
   Package,
-  PieChart,
   Settings2,
   ShoppingCart,
   Truck,
@@ -48,7 +47,6 @@ const NAV_ITEMS = [
   { icon: Users, label: "Nhân sự", href: ADMIN_ROUTES.USERS },
   { icon: MessageCircle, label: "Tin nhắn", href: ADMIN_ROUTES.CHAT },
   { icon: Wallet, label: "Chi phí", href: ADMIN_ROUTES.EXPENSES },
-  { icon: PieChart, label: "Tài chính", href: ADMIN_ROUTES.FINANCE },
   { icon: BarChart3, label: "Báo cáo", href: ADMIN_ROUTES.ANALYTICS },
   { icon: Settings2, label: "Cài đặt", href: ADMIN_ROUTES.SETTINGS },
 ];
@@ -77,8 +75,8 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       return user.role === ROLE.OWNER;
     }
 
-    // Finance & Expenses are Owner-only
-    if (item.href === ADMIN_ROUTES.FINANCE || item.href === ADMIN_ROUTES.EXPENSES) {
+    // Expenses are Owner-only
+    if (item.href === ADMIN_ROUTES.EXPENSES) {
       return user.role === ROLE.OWNER;
     }
 

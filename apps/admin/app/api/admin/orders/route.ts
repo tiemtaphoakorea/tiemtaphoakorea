@@ -1,9 +1,4 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
-import {
-  checkIdempotencyKey,
-  comparePayloads,
-  storeIdempotencyKey,
-} from "@workspace/database/lib/idempotency";
 import { createOrder, getOrders } from "@workspace/database/services/order.server";
 import {
   FULFILLMENT_STATUS,
@@ -12,7 +7,9 @@ import {
   type PaymentStatusValue,
 } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { getPaginationParams } from "@workspace/shared/pagination";
 import { NextResponse } from "next/server";
+import { beginIdempotency } from "@/lib/idempotency";
 
 const PAYMENT_STATUS_VALUES = Object.values(PAYMENT_STATUS) as readonly PaymentStatusValue[];
 const FULFILLMENT_STATUS_VALUES = Object.values(
@@ -40,10 +37,7 @@ export async function GET(request: Request) {
       : undefined;
   const debtOnly = searchParams.get("debtOnly") === "true";
   const customerId = searchParams.get("customerId") || undefined;
-  const rawPage = parseInt(searchParams.get("page") || "1", 10);
-  const page = Math.max(1, Number.isNaN(rawPage) ? 1 : rawPage);
-  const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
-  const limit = Math.min(100, Math.max(1, Number.isNaN(rawLimit) ? 10 : rawLimit));
+  const { page, limit } = getPaginationParams(request);
 
   try {
     const result = await getOrders({
@@ -88,74 +82,22 @@ export async function POST(request: Request) {
       shippingAddress,
     } = body;
 
-    // Check for idempotency key if provided
-    if (clientToken) {
-      const existing = await checkIdempotencyKey(clientToken, "order");
-      if (existing?.exists) {
-        // Compare request payloads
-        const currentPayload = {
-          customerId,
-          customerPhone,
-          customerName,
-          items,
-          note,
-          deliveryPreference,
-          shippingName,
-          shippingPhone,
-          shippingAddress,
-        };
-
-        if (!comparePayloads(existing.requestPayload, currentPayload)) {
-          // Same key, different payload - return conflict
-          return NextResponse.json(
-            { error: "Idempotency key conflict: different payload" },
-            { status: HTTP_STATUS.CONFLICT },
-          );
-        }
-
-        // Same key, same payload - return cached response if available
-        if (existing.response) {
-          return NextResponse.json(existing.response);
-        }
-        // If no response yet, it means another request is processing - return conflict
-        return NextResponse.json(
-          { error: "Request already in progress" },
-          { status: HTTP_STATUS.CONFLICT },
-        );
-      }
-
-      // Store the idempotency key immediately to prevent race conditions
-      try {
-        await storeIdempotencyKey({
-          key: clientToken,
-          resourceType: "order",
-          requestPayload: {
-            customerId,
-            customerPhone,
-            customerName,
-            items,
-            note,
-            deliveryPreference,
-            shippingName,
-            shippingPhone,
-            shippingAddress,
-          },
-        });
-      } catch (error: any) {
-        // If key already exists (race condition), check and return
-        if (error?.code === "23505" || error?.constraint === "idempotency_keys_key_unique") {
-          const existing = await checkIdempotencyKey(clientToken, "order");
-          if (existing?.response) {
-            return NextResponse.json(existing.response);
-          }
-          return NextResponse.json(
-            { error: "Request already in progress" },
-            { status: HTTP_STATUS.CONFLICT },
-          );
-        }
-        throw error;
-      }
-    }
+    const idem = await beginIdempotency({
+      clientToken,
+      resourceType: "order",
+      payload: {
+        customerId,
+        customerPhone,
+        customerName,
+        items,
+        note,
+        deliveryPreference,
+        shippingName,
+        shippingPhone,
+        shippingAddress,
+      },
+    });
+    if ("replay" in idem) return idem.replay;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Missing items" }, { status: HTTP_STATUS.BAD_REQUEST });
@@ -242,10 +184,8 @@ export async function POST(request: Request) {
       itemsNeedingStock: itemsNeedingStock?.length ? itemsNeedingStock : undefined,
     };
 
-    // Update idempotency key with response if clientToken was provided
-    if (clientToken && order?.id) {
-      const { updateIdempotencyKey } = await import("@workspace/database/lib/idempotency");
-      await updateIdempotencyKey(clientToken, order.id, response);
+    if (order?.id) {
+      await idem.finalize(response, order.id);
     }
 
     return NextResponse.json(response);

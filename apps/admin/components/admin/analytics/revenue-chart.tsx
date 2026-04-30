@@ -23,17 +23,13 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
-  const currentYear = new Date().getFullYear();
-
   return (
     <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 lg:col-span-2 dark:shadow-none dark:ring-slate-800">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-black">Tổng quan doanh thu</CardTitle>
-            <CardDescription className="font-medium">
-              Xu hướng doanh thu theo tháng năm {currentYear}
-            </CardDescription>
+            <CardDescription className="font-medium">Xu hướng doanh thu theo tháng</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -64,6 +60,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
               tickLine={false}
               tick={{ fill: "hsl(var(--slate-500))", fontSize: 11, fontWeight: 700 }}
               tickFormatter={(value) => `${value / 1000000}M`}
+              width={60}
             />
             <Tooltip
               content={({ active, payload }) => {

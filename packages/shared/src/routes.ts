@@ -55,10 +55,14 @@ export const ADMIN_ROUTES = {
 
   // Analytics
   ANALYTICS: "/analytics",
+  ANALYTICS_OVERVIEW: "/analytics/overview",
+  ANALYTICS_PRODUCTS: "/analytics/products",
+  ANALYTICS_INVENTORY: "/analytics/inventory",
+  ANALYTICS_FINANCE: "/analytics/finance",
+  ANALYTICS_FINANCE_DETAIL: "/analytics/finance/detail",
 
   // Finance
   EXPENSES: "/expenses",
-  FINANCE: "/finance",
 
   // Users (Staff Management)
   USERS: "/users",

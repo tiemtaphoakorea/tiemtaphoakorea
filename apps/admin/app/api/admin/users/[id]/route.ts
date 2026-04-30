@@ -1,4 +1,3 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
 import {
   deleteUser,
   getUserById,
@@ -9,15 +8,11 @@ import type { IdRouteParams } from "@workspace/database/types/api";
 import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest, { params }: IdRouteParams) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const { id } = await params;
@@ -38,13 +33,8 @@ export async function GET(request: NextRequest, { params }: IdRouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: IdRouteParams) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const body = await request.json();
@@ -88,13 +78,8 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: IdRouteParams) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const { id } = await params;

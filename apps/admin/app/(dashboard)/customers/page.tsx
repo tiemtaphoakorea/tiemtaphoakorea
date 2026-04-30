@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import {
   Ban,
   CheckCircle2,
@@ -48,21 +49,70 @@ import {
   MoreHorizontal,
   Phone,
   Search,
+  Settings2,
   ShoppingBag,
   Trash2,
-  TrendingUp,
   UserCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
+import { Suspense, useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import { CustomerAddSheet } from "@/components/admin/customers/customer-add-sheet";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
+
+const CUSTOMER_TYPE_CONFIG = {
+  wholesale: {
+    label: "Khách sỉ",
+    className:
+      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800",
+  },
+  retail: {
+    label: "Khách lẻ",
+    className:
+      "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
+  },
+};
+
+type TierConfig = {
+  loyalMinOrders: number;
+  loyalMinSpent: number;
+  frequentMinOrders: number;
+  frequentMinSpent: number;
+};
+
+const DEFAULT_TIER_CONFIG: TierConfig = {
+  loyalMinOrders: 10,
+  loyalMinSpent: 5_000_000,
+  frequentMinOrders: 5,
+  frequentMinSpent: 2_000_000,
+};
+
+function getCustomerTier(orderCount: number, totalSpent: number, config: TierConfig) {
+  if (orderCount === 0)
+    return {
+      label: "Tiềm năng",
+      className:
+        "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
+    };
+  if (orderCount >= config.loyalMinOrders || totalSpent >= config.loyalMinSpent)
+    return {
+      label: "Thân thiết",
+      className:
+        "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
+    };
+  if (orderCount >= config.frequentMinOrders || totalSpent >= config.frequentMinSpent)
+    return {
+      label: "Mua nhiều",
+      className:
+        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+    };
+  return null;
+}
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   Active: {
@@ -127,12 +177,14 @@ type GetColumnsArgs = {
   onOpenEdit: (customer: any) => void;
   onSetDeleting: (customer: any) => void;
   onToggleStatus: (id: string, currentStatus: boolean) => void;
+  tierConfig: TierConfig;
 };
 
 function getColumns({
   onOpenEdit,
   onSetDeleting,
   onToggleStatus,
+  tierConfig,
 }: GetColumnsArgs): ColumnDef<CustomerStatsItem>[] {
   return [
     {
@@ -155,17 +207,42 @@ function getColumns({
     {
       accessorKey: "fullName",
       header: "Khách hàng",
-      cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-black text-slate-900 dark:text-white">{row.original.fullName}</span>
-          <span className="flex items-center gap-1 text-[10px] font-bold tracking-tight text-slate-500 uppercase">
-            <Badge variant="outline" className="h-4 px-1 text-[8px] font-black uppercase">
-              {row.original.customerType === "wholesale" ? "Sỉ" : "Lẻ"}
-            </Badge>
-            Mã: {row.original.customerCode}
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const typeConfig =
+          CUSTOMER_TYPE_CONFIG[row.original.customerType as keyof typeof CUSTOMER_TYPE_CONFIG] ??
+          CUSTOMER_TYPE_CONFIG.retail;
+        const tier = getCustomerTier(
+          row.original.orderCount,
+          Number(row.original.totalSpent),
+          tierConfig,
+        );
+        return (
+          <div className="flex flex-col gap-1">
+            <span className="font-black text-slate-900 dark:text-white">
+              {row.original.fullName}
+            </span>
+            <div className="flex flex-wrap items-center gap-1">
+              <Badge
+                variant="outline"
+                className={`h-4 px-1.5 text-[9px] font-black uppercase ${typeConfig.className}`}
+              >
+                {typeConfig.label}
+              </Badge>
+              {tier && (
+                <Badge
+                  variant="outline"
+                  className={`h-4 px-1.5 text-[9px] font-black uppercase ${tier.className}`}
+                >
+                  {tier.label}
+                </Badge>
+              )}
+              <span className="text-[10px] font-bold tracking-tight text-slate-400">
+                {row.original.customerCode}
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "contact",
@@ -457,19 +534,50 @@ function AdminCustomersPageContent() {
 
   // NOTE: handleResetPassword removed - customers don't have auth accounts
 
-  const stats = useMemo(() => {
-    return {
-      total: metadata?.total || 0,
-      active: 0, // Simplified
-      inactive: 0, // Simplified
-      totalSpent: customers.reduce((acc, curr) => acc + Number(curr.totalSpent || 0), 0),
-    };
-  }, [customers, metadata]);
+  const { data: statsData } = useQuery({
+    queryKey: queryKeys.customers.stats,
+    queryFn: () => adminClient.getCustomerStats(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const stats = statsData ?? { total: 0, withOrders: 0, withoutOrders: 0, totalSpent: 0 };
+
+  const { data: tierConfig } = useQuery({
+    queryKey: queryKeys.customers.tierConfig,
+    queryFn: () => adminClient.getCustomerTierConfig(),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const resolvedTierConfig = tierConfig ?? DEFAULT_TIER_CONFIG;
+
+  const [tierSettingsOpen, setTierSettingsOpen] = useState(false);
+  const [tierDraft, setTierDraft] = useState<TierConfig>(DEFAULT_TIER_CONFIG);
+  const [isSavingTier, setIsSavingTier] = useState(false);
+
+  const openTierSettings = () => {
+    setTierDraft(resolvedTierConfig);
+    setTierSettingsOpen(true);
+  };
+
+  const handleSaveTierConfig = async () => {
+    setIsSavingTier(true);
+    try {
+      await adminClient.updateCustomerTierConfig(tierDraft);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.tierConfig });
+      setTierSettingsOpen(false);
+      toast.success("Đã lưu cấu hình xếp hạng");
+    } catch {
+      toast.error("Có lỗi khi lưu cấu hình");
+    } finally {
+      setIsSavingTier(false);
+    }
+  };
 
   const columns = getColumns({
     onOpenEdit: (customer) => dispatch({ type: "OPEN_EDIT", payload: customer }),
     onSetDeleting: (customer) => dispatch({ type: "SET_DELETING", payload: customer }),
     onToggleStatus: handleToggleStatus,
+    tierConfig: resolvedTierConfig,
   });
 
   return (
@@ -481,21 +589,27 @@ function AdminCustomersPageContent() {
             Quản lý khách hàng
           </h1>
           <p className="mt-1 font-medium text-slate-500 dark:text-slate-400">
-            Theo dõi thông tin, lịch sử mua hàng và quản lý tài khoản khách hàng.
+            Theo dõi thông tin và lịch sử mua hàng của khách hàng.
           </p>
         </div>
 
-        <CustomerAddSheet
-          isOpen={ui.isAddSheetOpen}
-          onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
-          isSubmitting={ui.isLoadingAction}
-          onSubmit={handleAddCustomer}
-        />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={openTierSettings}>
+            <Settings2 className="h-4 w-4" />
+            Cấu hình xếp hạng
+          </Button>
+          <CustomerAddSheet
+            isOpen={ui.isAddSheetOpen}
+            onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
+            isSubmitting={ui.isLoadingAction}
+            onSubmit={handleAddCustomer}
+          />
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
               Tổng khách hàng
@@ -504,55 +618,53 @@ function AdminCustomersPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black">{stats.total}</div>
-            <p className="text-primary mt-1 text-[10px] font-bold tracking-tight uppercase">
-              Tất cả tài khoản
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase">
+              Tổng cộng
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-              Đang hoạt động
+              Đã mua hàng
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <ShoppingBag className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black">{stats.active}</div>
-            <p className="mt-1 text-xs font-bold tracking-tight text-emerald-500/80 uppercase">
-              Tài khoản khả dụng
+            <div className="text-2xl font-black">{stats.withOrders}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-emerald-500/80 uppercase">
+              Có ít nhất 1 đơn
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-              Ngừng hoạt động
+              Chưa đặt hàng
             </CardTitle>
-            <Ban className="h-4 w-4 text-slate-400" />
+            <UserCheck className="h-4 w-4 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black">{stats.inactive}</div>
-            <p className="mt-1 text-xs font-bold tracking-tight text-slate-400 uppercase">
-              Đã bị chặn/khóa
+            <div className="text-2xl font-black">{stats.withoutOrders}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
+              Toàn bộ khách hàng
             </p>
           </CardContent>
         </Card>
 
-        <Card className="ring-primary/10 bg-primary/5 dark:bg-primary/10 border-none shadow-sm ring-1 backdrop-blur-sm">
+        <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-primary/70 text-sm font-black tracking-wider uppercase">
-              Tổng doanh thu
+            <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
+              Tổng chi tiêu
             </CardTitle>
             <CreditCard className="text-primary h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-primary text-2xl font-black">
-              {formatCurrency(stats.totalSpent)}
-            </div>
-            <p className="text-primary/60 mt-1 text-xs font-bold tracking-tight uppercase">
-              Doanh thu lũy kế
+            <div className="text-2xl font-black">{formatCurrency(stats.totalSpent)}</div>
+            <p className="mt-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase">
+              Toàn bộ khách hàng
             </p>
           </CardContent>
         </Card>
@@ -680,6 +792,89 @@ function AdminCustomersPageContent() {
                 </Button>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tier Config Dialog */}
+      <Dialog open={tierSettingsOpen} onOpenChange={setTierSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black">Cấu hình xếp hạng khách hàng</DialogTitle>
+            <DialogDescription>
+              Điều kiện OR — đạt một trong hai tiêu chí là được xếp hạng.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-6 py-2">
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center gap-2 text-sm font-black text-emerald-700 dark:text-emerald-400">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                Thân thiết
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-bold text-slate-500">Số đơn tối thiểu</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={tierDraft.loyalMinOrders}
+                    onChange={(e) =>
+                      setTierDraft((d) => ({ ...d, loyalMinOrders: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-bold text-slate-500">Chi tiêu tối thiểu (₫)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={tierDraft.loyalMinSpent}
+                    onChange={(e) =>
+                      setTierDraft((d) => ({ ...d, loyalMinSpent: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center gap-2 text-sm font-black text-amber-700 dark:text-amber-400">
+                <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+                Mua nhiều
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-bold text-slate-500">Số đơn tối thiểu</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={tierDraft.frequentMinOrders}
+                    onChange={(e) =>
+                      setTierDraft((d) => ({ ...d, frequentMinOrders: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-bold text-slate-500">Chi tiêu tối thiểu (₫)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={tierDraft.frequentMinSpent}
+                    onChange={(e) =>
+                      setTierDraft((d) => ({ ...d, frequentMinSpent: Number(e.target.value) }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setTierSettingsOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={handleSaveTierConfig} disabled={isSavingTier}>
+              {isSavingTier ? "Đang lưu..." : "Lưu cấu hình"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,18 +1,12 @@
-import { getInternalUser } from "@workspace/database/lib/auth";
 import { resetUserPassword } from "@workspace/database/services/user.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
-import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest, { params }: IdRouteParams) {
-  const user = await getInternalUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: HTTP_STATUS.UNAUTHORIZED });
-  }
-  if (user.profile.role !== ROLE.OWNER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: HTTP_STATUS.FORBIDDEN });
-  }
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
 
   try {
     const { id } = await params;

@@ -1,4 +1,5 @@
 import type { StockAlertVariant } from "@workspace/database/services/analytics.server";
+import type { DailyStatRow, DayOrderRow } from "@workspace/database/services/finance.server";
 import type {
   AdminOrderDetails,
   AdminProfile,
@@ -42,7 +43,7 @@ import {
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
-export type { StockAlertVariant };
+export type { DailyStatRow, DayOrderRow, StockAlertVariant };
 
 export type InventoryMovement = {
   id: string;
@@ -349,6 +350,12 @@ export const adminClient = {
     }) as unknown as Promise<PaginatedResponse<DebtListItem>>;
   },
 
+  async getDebtSummary() {
+    return axios.get<{ totalDebt: number; customerCount: number }>(
+      API_ENDPOINTS.ADMIN.DEBT_SUMMARY,
+    ) as unknown as Promise<{ totalDebt: number; customerCount: number }>;
+  },
+
   async getCustomerDebt(customerId: string) {
     return axios.get<CustomerDebtResponse>(
       API_ENDPOINTS.ADMIN.DEBT_DETAIL(customerId),
@@ -389,6 +396,20 @@ export const adminClient = {
   },
 
   // Customer Management
+  async getCustomerStats() {
+    return axios.get<{
+      total: number;
+      withOrders: number;
+      withoutOrders: number;
+      totalSpent: number;
+    }>(API_ENDPOINTS.ADMIN.CUSTOMER_STATS) as unknown as Promise<{
+      total: number;
+      withOrders: number;
+      withoutOrders: number;
+      totalSpent: number;
+    }>;
+  },
+
   async getCustomers(params?: { search?: string; status?: string; page?: number; limit?: number }) {
     return axios.get<PaginatedResponse<CustomerStatsItem>>(API_ENDPOINTS.ADMIN.CUSTOMERS, {
       params,
@@ -421,6 +442,32 @@ export const adminClient = {
         isActive,
       },
     ) as unknown as Promise<{ success: boolean; profile: CustomerStatsItem }>;
+  },
+
+  async getCustomerTierConfig() {
+    return axios.get<{
+      loyalMinOrders: number;
+      loyalMinSpent: number;
+      frequentMinOrders: number;
+      frequentMinSpent: number;
+    }>(API_ENDPOINTS.ADMIN.SETTINGS_CUSTOMER_TIER) as unknown as Promise<{
+      loyalMinOrders: number;
+      loyalMinSpent: number;
+      frequentMinOrders: number;
+      frequentMinSpent: number;
+    }>;
+  },
+
+  async updateCustomerTierConfig(data: {
+    loyalMinOrders: number;
+    loyalMinSpent: number;
+    frequentMinOrders: number;
+    frequentMinSpent: number;
+  }) {
+    return axios.put<typeof data>(
+      API_ENDPOINTS.ADMIN.SETTINGS_CUSTOMER_TIER,
+      data,
+    ) as unknown as Promise<typeof data>;
   },
 
   async resetCustomerPassword(id: string) {
@@ -477,6 +524,28 @@ export const adminClient = {
     return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
       params,
     }) as unknown as Promise<{ stats: FinancialStats }>;
+  },
+
+  async getFinancialStatsByRange(params: { startDate: string; endDate: string }) {
+    return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
+      params,
+    }) as unknown as Promise<{ stats: FinancialStats }>;
+  },
+
+  async getDayOrders(date: string) {
+    return axios.get<{ orders: DayOrderRow[] }>(
+      API_ENDPOINTS.ADMIN.FINANCE_DAY_ORDERS(date),
+    ) as unknown as Promise<{ orders: DayOrderRow[] }>;
+  },
+
+  async getDailyFinancialStats(params: { startDate: string; endDate: string }) {
+    return axios.get<{
+      dailyData: DailyStatRow[];
+      summary: { revenue: number; cogs: number; grossProfit: number; orderCount: number };
+    }>(API_ENDPOINTS.ADMIN.FINANCE_DAILY, { params }) as unknown as Promise<{
+      dailyData: DailyStatRow[];
+      summary: { revenue: number; cogs: number; grossProfit: number; orderCount: number };
+    }>;
   },
 
   async getExpenses(params: {

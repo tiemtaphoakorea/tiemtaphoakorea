@@ -3,13 +3,13 @@
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Button } from "@workspace/ui/components/button";
 import { ErrorBoundary } from "@workspace/ui/components/error-boundary";
-import { Plus } from "lucide-react";
+import { BarChart3, Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Suspense } from "react";
+import { DashboardDebtSummary } from "@/components/admin/dashboard/dashboard-debt-summary";
 import { DashboardKPIsSkeleton } from "@/components/admin/dashboard/dashboard-kpis-skeleton";
 import { DashboardRecentOrdersSkeleton } from "@/components/admin/dashboard/dashboard-recent-orders-skeleton";
-import { DashboardTopProductsSkeleton } from "@/components/admin/dashboard/dashboard-top-products-skeleton";
 
 const DashboardKPIs = dynamic(
   () =>
@@ -24,13 +24,6 @@ const DashboardRecentOrders = dynamic(
       default: m.DashboardRecentOrders,
     })),
   { ssr: false, loading: () => <DashboardRecentOrdersSkeleton /> },
-);
-const DashboardTopProducts = dynamic(
-  () =>
-    import("@/components/admin/dashboard/dashboard-top-products").then((m) => ({
-      default: m.DashboardTopProducts,
-    })),
-  { ssr: false, loading: () => <DashboardTopProductsSkeleton /> },
 );
 
 export default function AdminDashboard() {
@@ -66,7 +59,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <ErrorBoundary>
         <Suspense fallback={<DashboardKPIsSkeleton />}>
           <DashboardKPIs />
@@ -81,12 +73,15 @@ export default function AdminDashboard() {
             </Suspense>
           </ErrorBoundary>
         </div>
-        <div>
-          <ErrorBoundary>
-            <Suspense fallback={<DashboardTopProductsSkeleton />}>
-              <DashboardTopProducts />
-            </Suspense>
-          </ErrorBoundary>
+        <div className="flex flex-col gap-4">
+          <DashboardDebtSummary />
+          <Link
+            href={ADMIN_ROUTES.ANALYTICS}
+            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-900"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Xem báo cáo đầy đủ
+          </Link>
         </div>
       </div>
     </div>

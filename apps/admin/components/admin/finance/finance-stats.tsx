@@ -2,10 +2,8 @@
 
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
-import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { ArrowUpRight, DollarSign, PieChart, TrendingUp, Wallet } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -17,8 +15,6 @@ interface FinanceStatsProps {
 }
 
 export function FinanceStats({ date }: FinanceStatsProps) {
-  const router = useRouter();
-
   const { data } = useSuspenseQuery({
     queryKey: queryKeys.admin.finance.stats(date),
     queryFn: () => adminClient.getFinancialStats(date),
@@ -216,8 +212,10 @@ export function FinanceStats({ date }: FinanceStatsProps) {
               <div className="text-primary flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl ring-4 shadow-slate-200/50 ring-slate-50 dark:bg-slate-800 dark:shadow-black/20 dark:ring-slate-900">
                 <TrendingUp className="h-10 w-10" />
               </div>
-              <div className="absolute -right-2 -bottom-2 rounded-full border-2 border-white bg-green-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg dark:border-slate-800">
-                GOOD
+              <div
+                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-[10px] font-bold text-white shadow-lg dark:border-slate-800 ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
+              >
+                {(stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
             </div>
 
@@ -237,15 +235,6 @@ export function FinanceStats({ date }: FinanceStatsProps) {
                   : "Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."}
               </p>
             </div>
-          </div>
-
-          <div className="z-10 p-6 pt-0">
-            <Button
-              className="shadow-primary/20 hover:shadow-primary/30 h-12 w-full rounded-xl font-bold shadow-lg transition-all"
-              onClick={() => router.push(`/finance/detail?month=${date.month}&year=${date.year}`)}
-            >
-              Xem báo cáo chi tiết
-            </Button>
           </div>
         </Card>
       </div>

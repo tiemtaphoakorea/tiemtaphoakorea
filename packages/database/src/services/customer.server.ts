@@ -67,6 +67,30 @@ export async function getCustomers({
   };
 }
 
+export async function getCustomerStats() {
+  const [result] = await db
+    .select({
+      total: sql<number>`count(distinct ${profiles.id})`.mapWith(Number),
+      withOrders:
+        sql<number>`count(distinct case when ${orders.id} is not null then ${profiles.id} end)`.mapWith(
+          Number,
+        ),
+      totalSpent: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
+    })
+    .from(profiles)
+    .leftJoin(orders, eq(profiles.id, orders.customerId))
+    .where(eq(profiles.role, ROLE.CUSTOMER));
+
+  const total = result?.total ?? 0;
+  const withOrders = result?.withOrders ?? 0;
+  return {
+    total,
+    withOrders,
+    withoutOrders: total - withOrders,
+    totalSpent: result?.totalSpent ?? 0,
+  };
+}
+
 export async function getCustomerDetails(id: string) {
   const customer = await db.query.profiles.findFirst({
     where: eq(profiles.id, id),

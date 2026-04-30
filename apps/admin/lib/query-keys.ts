@@ -43,6 +43,7 @@ export const queryKeys = {
     profile: [QK.adminRoot, QK.profile] as const,
     analytics: [QK.adminRoot, QK.analytics] as const,
     stockAlerts: [QK.adminRoot, "stock-alerts"] as const,
+    debtSummary: [QK.adminRoot, "debt-summary"] as const,
     products: {
       all: [QK.adminRoot, QK.adminProducts] as const,
       withVariants: [QK.adminRoot, QK.adminProducts, INCLUDE_VARIANTS] as const,
@@ -62,6 +63,11 @@ export const queryKeys = {
       all: [QK.adminRoot, QK.finance] as const,
       stats: (date: { month: number; year: number }) =>
         [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date] as const,
+      statsByRange: (params: { startDate: string; endDate: string }) =>
+        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, params] as const,
+      dayOrders: (date: string) => [QK.adminRoot, QK.finance, "day-orders", date] as const,
+      daily: (params: { startDate: string; endDate: string }) =>
+        [QK.adminRoot, QK.finance, "daily", params] as const,
     },
     chat: {
       rooms: {
@@ -95,6 +101,8 @@ export const queryKeys = {
   productCategories: [QK.categoriesRoot, "for-products"] as const,
   customers: {
     all: [QK.customersRoot] as const,
+    stats: [QK.customersRoot, "stats"] as const,
+    tierConfig: [QK.customersRoot, "tier-config"] as const,
     list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
       [QK.customersRoot, searchTerm, statusFilter, page, limit] as const,
     search: (debouncedSearch: string) =>
