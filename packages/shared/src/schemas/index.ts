@@ -22,7 +22,13 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 // --- Customer ---
 export const customerSchema = z.object({
   fullName: z.string().min(1, "Vui lòng nhập họ tên"),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^0\d{9}$/.test(val),
+      "Số điện thoại không hợp lệ (phải có 10 chữ số, bắt đầu bằng 0)",
+    ),
   address: z.string().optional(),
   customerType: z.enum(["retail", "wholesale"]),
 });
@@ -54,6 +60,7 @@ export const categorySchema = z.object({
   name: z.string().min(1, "Vui lòng nhập tên danh mục"),
   parentId: z.string().optional().nullable(),
   description: z.string().optional(),
+  imageUrl: z.string().optional().nullable(),
   displayOrder: z.number().min(0, "Thứ tự phải >= 0").optional(),
   isActive: z.boolean().optional(),
 });

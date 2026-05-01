@@ -80,17 +80,17 @@ export function MessageList({ roomId, messages, currentUserId }: MessageListProp
   };
 
   return (
-    <ScrollArea className="flex-1 h-0 bg-slate-50/30 dark:bg-slate-900/10">
+    <ScrollArea className="flex-1 h-0 bg-slate-50/30">
       <div className="mx-auto max-w-4xl space-y-6 px-6 py-4">
         {Object.entries(groupedMessages).map(([dateStr, msgs]) => (
           <div key={dateStr}>
             {/* Date Separator */}
             <div className="my-8 flex items-center justify-center">
-              <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-              <span className="mx-4 rounded-full bg-white px-4 py-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase shadow-sm ring-1 ring-slate-100 dark:bg-slate-950 dark:ring-slate-800">
+              <div className="h-px flex-1 bg-slate-100" />
+              <span className="mx-4 rounded-full bg-white px-4 py-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase shadow-sm ring-1 ring-slate-100">
                 {formatDateSeparator(msgs[0]?.createdAt)}
               </span>
-              <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+              <div className="h-px flex-1 bg-slate-100" />
             </div>
 
             {/* Messages */}
@@ -108,8 +108,8 @@ export function MessageList({ roomId, messages, currentUserId }: MessageListProp
                         isOwn
                           ? "bg-primary text-primary-foreground ring-primary/20"
                           : isAgentMessage
-                            ? "bg-blue-50 text-blue-900 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-100 dark:ring-blue-900/40"
-                            : "bg-white text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800"
+                            ? "bg-blue-50 text-blue-900 ring-blue-200"
+                            : "bg-white text-slate-700 ring-slate-200"
                       }`}
                     >
                       {isAgentMessage && (
@@ -119,7 +119,7 @@ export function MessageList({ roomId, messages, currentUserId }: MessageListProp
                       )}
 
                       {msg.messageType === "image" && msg.imageUrl ? (
-                        <div className="relative mb-2 aspect-video max-h-[400px] w-full overflow-hidden rounded-xl border border-white/20 dark:border-slate-800/50">
+                        <div className="relative mb-2 aspect-video max-h-[400px] w-full overflow-hidden rounded-xl border border-white/20">
                           <a
                             href={msg.imageUrl}
                             target="_blank"

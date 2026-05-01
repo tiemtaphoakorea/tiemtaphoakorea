@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/av
 import { Badge } from "@workspace/ui/components/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ export function OrderCustomerCard({
   const selectedCustomerData = customers.find((c) => c.id === selectedCustomerId);
 
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
           <User className="text-primary h-5 w-5" />
@@ -39,17 +40,9 @@ export function OrderCustomerCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <label
-            htmlFor="order-customer-select"
-            className="text-sm font-black tracking-wider text-slate-500 uppercase"
-          >
-            Chọn khách hàng
-          </label>
+          <Label htmlFor="order-customer-select">Chọn khách hàng</Label>
           <Select value={selectedCustomerId} onValueChange={onCustomerChange}>
-            <SelectTrigger
-              id="order-customer-select"
-              className="h-12 bg-slate-50 font-medium dark:bg-slate-900"
-            >
+            <SelectTrigger id="order-customer-select" className="h-12 bg-slate-50 font-medium">
               <SelectValue placeholder="Tìm khách hàng..." />
             </SelectTrigger>
             <SelectContent>
@@ -66,23 +59,21 @@ export function OrderCustomerCard({
         </div>
 
         {selectedCustomerData && (
-          <div className="animate-in fade-in slide-in-from-top-2 space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="animate-in fade-in slide-in-from-top-2 space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
             <div className="flex items-center gap-3">
               <Avatar>
                 <AvatarImage src={selectedCustomerData.avatarUrl || undefined} />
                 <AvatarFallback>{selectedCustomerData.fullName[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-black text-slate-900 dark:text-white">
-                  {selectedCustomerData.fullName}
-                </div>
+                <div className="font-black text-slate-900">{selectedCustomerData.fullName}</div>
                 <div className="text-xs font-bold text-slate-500 uppercase">
                   {selectedCustomerData.customerCode}
                 </div>
               </div>
             </div>
             <Separator />
-            <div className="space-y-1 text-sm font-medium text-slate-600 dark:text-slate-400">
+            <div className="space-y-1 text-sm font-medium text-slate-600">
               <p>SĐT: {selectedCustomerData.phone || "---"}</p>
               <p>Đ/C: {selectedCustomerData.address || "---"}</p>
               <Badge variant="secondary" className="mt-2 text-[10px] font-black uppercase">
@@ -93,18 +84,13 @@ export function OrderCustomerCard({
         )}
 
         <div className="space-y-2 pt-2">
-          <label
-            htmlFor="order-note"
-            className="text-sm font-black tracking-wider text-slate-500 uppercase"
-          >
-            Ghi chú đơn hàng
-          </label>
+          <Label htmlFor="order-note">Ghi chú đơn hàng</Label>
           <Input
             id="order-note"
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
             placeholder="Ghi chú nội bộ..."
-            className="h-12 bg-slate-50 font-medium dark:bg-slate-900"
+            className="h-12 bg-slate-50 font-medium"
           />
         </div>
       </CardContent>

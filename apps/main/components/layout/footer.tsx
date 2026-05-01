@@ -1,6 +1,7 @@
 "use client";
 
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
+import { Input } from "@workspace/ui/components/input";
 import { ArrowUp, CircleDollarSign, Facebook, Globe, Instagram, Youtube, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -20,8 +21,8 @@ export function Footer() {
 
   return (
     <footer className="bg-foreground text-background dark:bg-card dark:text-foreground">
-      {/* Newsletter Band */}
-      <div className="border-b border-white/10 dark:border-border">
+      {/* Newsletter Band — hidden on desktop where NewsletterCta runs above the footer */}
+      <div className="border-b border-white/10 md:hidden dark:border-border">
         <div className="container mx-auto px-4 py-10">
           <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
             <div className="space-y-1 text-center lg:text-left">
@@ -33,10 +34,10 @@ export function Footer() {
               </p>
             </div>
             <div className="flex w-full max-w-md overflow-hidden rounded-full border border-white/15 bg-white/8 dark:border-border dark:bg-muted">
-              <input
+              <Input
                 type="email"
                 placeholder="Email của bạn..."
-                className="min-w-0 flex-1 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/40 dark:text-foreground dark:placeholder:text-muted-foreground"
+                className="h-auto min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-sm text-white shadow-none placeholder:text-white/40 focus-visible:ring-0 dark:text-foreground dark:placeholder:text-muted-foreground"
               />
               <button
                 type="button"

@@ -60,11 +60,7 @@ export default function CustomerDetailPage() {
     return (
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            asChild
-            className="gap-2 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
+          <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
             <Link href="/admin/customers">
               <ChevronLeft className="h-4 w-4" />
               Quay lại
@@ -82,11 +78,7 @@ export default function CustomerDetailPage() {
     return (
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            asChild
-            className="gap-2 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
+          <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
             <Link href="/admin/customers">
               <ChevronLeft className="h-4 w-4" />
               Quay lại
@@ -112,11 +104,7 @@ export default function CustomerDetailPage() {
   return (
     <div className="flex flex-col gap-8 pb-20">
       <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="ghost"
-          asChild
-          className="gap-2 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
+        <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
           <Link href="/admin/customers">
             <ChevronLeft className="h-4 w-4" />
             Quay lại

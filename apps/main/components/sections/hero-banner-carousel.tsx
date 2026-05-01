@@ -8,6 +8,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const AUTOPLAY_INTERVAL = 5000;
+const HERO_FALLBACK_IMAGES = [
+  "/banners/k-smart-hero-fallback.png",
+  "/banners/k-smart-hero-skincare.png",
+  "/banners/k-smart-hero-snacks.png",
+  "/banners/k-smart-hero-homecare.png",
+  "/banners/k-smart-hero-wellness.png",
+];
 
 const ACCENT_COLOR_MAP: Record<string, string> = {
   violet: "from-violet-600/80 via-black/40 to-transparent",
@@ -32,6 +39,7 @@ type Props = {
 export function HeroBannerCarousel({ slides }: Props) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [failedImageUrls, setFailedImageUrls] = useState<Record<string, true>>({});
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const total = slides.length;
@@ -86,19 +94,23 @@ export function HeroBannerCarousel({ slides }: Props) {
             style={{ opacity: i === current ? 1 : 0, zIndex: i === current ? 1 : 0 }}
             aria-hidden={i !== current}
           >
-            {s.imageUrl ? (
-              <Image
-                src={s.imageUrl}
-                alt={s.title}
-                fill
-                className="object-cover"
-                sizes="100vw"
-                priority={i === 0}
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
-            )}
-            {/* Gradient overlays */}
+            <Image
+              src={
+                s.imageUrl && !failedImageUrls[s.imageUrl]
+                  ? s.imageUrl
+                  : HERO_FALLBACK_IMAGES[i % HERO_FALLBACK_IMAGES.length]
+              }
+              alt={s.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1536px) calc(100vw - 2rem), 1504px"
+              priority={i === 0}
+              onError={() => {
+                if (s.imageUrl) {
+                  setFailedImageUrls((currentFailed) => ({ ...currentFailed, [s.imageUrl]: true }));
+                }
+              }}
+            />
             <div
               className={`absolute inset-0 bg-gradient-to-r ${getAccentGradient(s.accentColor)}`}
             />

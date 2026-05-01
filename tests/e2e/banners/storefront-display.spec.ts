@@ -1,6 +1,6 @@
+import { STOREFRONT_BASE_URL } from "@workspace/shared/constants";
 import { expect, test } from "../fixtures/auth";
 import { apiDelete, apiPost } from "../helpers/api";
-import { STOREFRONT_BASE_URL } from "../../../lib/constants";
 
 const BANNER_1_TITLE = "E2E Banner Slide 1";
 const BANNER_2_TITLE = "E2E Banner Slide 2";

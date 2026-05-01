@@ -468,9 +468,12 @@ const ChatMessages = ({
   typingSenderName: string | null;
 }) => {
   return (
-    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+    <div
+      ref={containerRef}
+      className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
+    >
       {displayMessages.length === 0 ? (
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="absolute inset-0 flex items-center justify-center text-center text-sm text-muted-foreground">
           No messages yet. Start the conversation!
         </div>
       ) : null}

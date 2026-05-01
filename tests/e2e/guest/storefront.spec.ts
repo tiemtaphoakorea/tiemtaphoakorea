@@ -1,5 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
-import { ADMIN_BASE_URL, STOREFRONT_BASE_URL } from "../../../lib/constants";
+import { ADMIN_BASE_URL, STOREFRONT_BASE_URL } from "@workspace/shared/constants";
 import { expect, login, test } from "../fixtures/auth";
 
 /**

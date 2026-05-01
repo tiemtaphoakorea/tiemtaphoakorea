@@ -7,7 +7,7 @@ interface CustomerLocationCardProps {
 
 export function CustomerLocationCard({ address }: CustomerLocationCardProps) {
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
           <MapPin className="text-primary h-5 w-5" />
@@ -15,7 +15,7 @@ export function CustomerLocationCard({ address }: CustomerLocationCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="font-bold text-slate-600 italic dark:text-slate-400">
+        <p className="font-bold text-slate-600 italic">
           {address || "Khách hàng chưa cung cấp địa chỉ giao hàng cố định."}
         </p>
       </CardContent>

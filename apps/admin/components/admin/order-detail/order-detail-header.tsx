@@ -30,7 +30,7 @@ export function OrderDetailHeader({
         </Button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">
               #{order.orderNumber}
             </h1>
             <Badge

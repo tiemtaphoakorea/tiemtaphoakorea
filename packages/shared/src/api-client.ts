@@ -41,9 +41,15 @@ function redirectToLoginIfNeeded() {
   window.location.href = loginPath;
 }
 
-// Create Axios instance with default config
+// Create Axios instance with default config.
+// `timeout` is critical: mobile browsers (esp. iOS Safari) may freeze in-flight
+// requests when the tab goes to background. Without a timeout, the promise
+// hangs forever after the tab resumes — UI shows skeletons indefinitely.
+// 30s gives slow networks enough headroom while still forcing a retry-able
+// rejection if a request truly stalls.
 const axiosInstance: AxiosInstance = axios.create({
   withCredentials: true,
+  timeout: 30_000,
 });
 
 // Request Interceptor

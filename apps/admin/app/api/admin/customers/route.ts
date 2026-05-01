@@ -12,10 +12,12 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
+  const status = searchParams.get("status") || undefined;
+  const customerType = searchParams.get("customerType") || undefined;
   const { page, limit } = getPaginationParams(request);
 
   try {
-    const result = await getCustomers({ search, page, limit });
+    const result = await getCustomers({ search, page, limit, customerType, status });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch customers:", error);

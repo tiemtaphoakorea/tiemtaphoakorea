@@ -42,7 +42,7 @@ export function OrderItemsTable({
   }
 
   return (
-    <div className="rounded-md border overflow-hidden">
+    <div className="overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>

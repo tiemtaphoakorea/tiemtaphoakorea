@@ -69,6 +69,7 @@ import { Suspense, use, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { ProductSelector } from "@/components/admin/orders/create/product-selector";
+import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
 import { copyInvoiceImage, exportInvoiceImage, printInvoice } from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
@@ -302,6 +303,8 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [isItemEditing, setIsItemEditing] = useState(false);
   const [editableItems, setEditableItems] = useState<EditableItem[]>([]);
   const [isSavingItems, setIsSavingItems] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleEditCustomer = async (formData: FormData) => {
     const customerId = formData.get("id") as string;
@@ -410,7 +413,6 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   };
 
   const handleCancel = async () => {
-    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
     try {
       await adminClient.cancelOrder(order.id, { note: note || undefined });
       toast.success("Đã hủy đơn hàng.");
@@ -498,7 +500,6 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) return;
     try {
       await adminClient.deleteOrder(order.id);
       router.push("/orders?deleted=true");
@@ -521,7 +522,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           </Button>
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900">
                 #{order.orderNumber}
               </h1>
               {paymentBadge && (
@@ -544,7 +545,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 font-bold">
@@ -647,7 +648,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               >
                 Xuất kho
               </Button>
-              <Button variant="destructive" className="font-bold shadow-lg" onClick={handleCancel}>
+              <Button
+                variant="destructive"
+                className="font-bold shadow-lg"
+                onClick={() => setShowCancelConfirm(true)}
+              >
                 Hủy đơn
               </Button>
               {paymentStatus !== "paid" && (
@@ -696,18 +701,16 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         <div className="space-y-6 lg:col-span-2">
           {/* Parent Order Link (if child) */}
           {order.parentOrder && (
-            <Card className="border-blue-100 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
+            <Card className="border-blue-100 bg-blue-50/50">
               <CardContent className="flex items-center gap-4 p-4">
-                <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900">
-                  <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="rounded-full bg-blue-100 p-2">
+                  <Package className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-bold text-blue-900 dark:text-blue-100">
-                    Đơn hàng được tách từ đơn gốc
-                  </div>
+                  <div className="font-bold text-blue-900">Đơn hàng được tách từ đơn gốc</div>
                   <Link
                     href={`/orders/${order.parentOrder.id}`}
-                    className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
                   >
                     Xem đơn gốc #{order.parentOrder.orderNumber}
                   </Link>
@@ -718,7 +721,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
           {/* Sub-orders (if parent) */}
           {order.subOrders && order.subOrders.length > 0 && (
-            <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+            <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
                   <Package className="text-primary h-5 w-5" /> Đơn hàng con (
@@ -729,24 +732,21 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 {order.subOrders.map((sub: any) => (
                   <div
                     key={sub.id}
-                    className="hover:border-primary/50 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800 dark:bg-slate-900"
+                    className="hover:border-primary/50 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="rounded-lg border border-slate-100 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="rounded-lg border border-slate-100 bg-white p-2">
                         <Package className="h-5 w-5 text-slate-400" />
                       </div>
                       <div>
                         <Link
                           href={`/orders/${sub.id}`}
-                          className="hover:text-primary font-black text-slate-900 hover:underline dark:text-white"
+                          className="hover:text-primary font-black text-slate-900 hover:underline"
                         >
                           #{sub.orderNumber}
                         </Link>
                         <div className="mt-1 flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className="bg-white text-[10px] dark:bg-slate-950"
-                          >
+                          <Badge variant="outline" className="bg-white text-[10px]">
                             {sub.splitType === "in_stock"
                               ? "Hàng có sẵn"
                               : sub.splitType === "pre_order"
@@ -783,7 +783,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {/* Order Items */}
-          <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
                 <Package className="text-primary h-5 w-5" /> Chi tiết sản phẩm
@@ -816,118 +816,120 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </CardHeader>
             <CardContent className="p-0">
               {isItemEditing && (
-                <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-800">
+                <div className="border-b border-slate-100 px-4 py-4">
                   <ProductSelector onSelectVariant={handleAddVariantToEdit} />
                 </div>
               )}
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[45%]">Sản phẩm</TableHead>
-                    <TableHead className="text-center">SL</TableHead>
-                    <TableHead className="text-right">Đơn giá</TableHead>
-                    <TableHead className="text-right">Tổng</TableHead>
-                    {isItemEditing && <TableHead className="w-10" />}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
-                    <TableRow key={isItemEditing ? item.variantId : item.id}>
-                      <TableCell className="overflow-hidden !whitespace-normal">
-                        <div className="flex min-w-0 items-center gap-3">
-                          {!isItemEditing && item.variant?.images?.[0] ? (
-                            <Image
-                              src={item.variant.images[0].imageUrl}
-                              alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
-                              width={48}
-                              height={48}
-                              className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                              <ShoppingBag className="h-5 w-5 text-slate-300" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div
-                              className="truncate text-sm font-bold text-slate-900 dark:text-white"
-                              title={formatVariantDisplayName(item.productName)}
-                            >
-                              {formatVariantDisplayName(item.productName)}
-                            </div>
-                            <div
-                              className="truncate font-mono text-xs text-slate-500"
-                              title={formatVariantDisplayName(item.variantName)}
-                            >
-                              {formatVariantDisplayName(item.variantName)}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[45%]">Sản phẩm</TableHead>
+                      <TableHead className="text-center">SL</TableHead>
+                      <TableHead className="text-right">Đơn giá</TableHead>
+                      <TableHead className="text-right">Tổng</TableHead>
+                      {isItemEditing && <TableHead className="w-10" />}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
+                      <TableRow key={isItemEditing ? item.variantId : item.id}>
+                        <TableCell className="overflow-hidden !whitespace-normal">
+                          <div className="flex min-w-0 items-center gap-3">
+                            {!isItemEditing && item.variant?.images?.[0] ? (
+                              <Image
+                                src={item.variant.images[0].imageUrl}
+                                alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
+                                width={48}
+                                height={48}
+                                className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                                <ShoppingBag className="h-5 w-5 text-slate-300" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div
+                                className="truncate text-sm font-bold text-slate-900"
+                                title={formatVariantDisplayName(item.productName)}
+                              >
+                                {formatVariantDisplayName(item.productName)}
+                              </div>
+                              <div
+                                className="truncate font-mono text-xs text-slate-500"
+                                title={formatVariantDisplayName(item.variantName)}
+                              >
+                                {formatVariantDisplayName(item.variantName)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {isItemEditing ? (
-                          <Input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const qty = Math.max(1, Number(e.target.value));
-                              setEditableItems((prev) =>
-                                prev.map((ei, i) => (i === idx ? { ...ei, quantity: qty } : ei)),
-                              );
-                            }}
-                            className="w-16 text-center"
-                          />
-                        ) : (
-                          <span className="font-bold">{item.quantity}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isItemEditing ? (
-                          <Input
-                            type="number"
-                            min={0}
-                            value={item.customPrice}
-                            onChange={(e) => {
-                              const price = Math.max(0, Number(e.target.value));
-                              setEditableItems((prev) =>
-                                prev.map((ei, i) =>
-                                  i === idx ? { ...ei, customPrice: price } : ei,
-                                ),
-                              );
-                            }}
-                            className="w-28 text-right"
-                          />
-                        ) : (
-                          <span className="font-medium text-slate-600">
-                            {formatCurrency(Number(item.unitPrice))}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-slate-900">
-                        {isItemEditing
-                          ? formatCurrency(item.customPrice * item.quantity)
-                          : formatCurrency(Number(item.lineTotal))}
-                      </TableCell>
-                      {isItemEditing && (
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-400 hover:text-red-600"
-                            onClick={() =>
-                              setEditableItems((prev) => prev.filter((_, i) => i !== idx))
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex flex-col items-end gap-2 border-t border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
+                        <TableCell className="text-center">
+                          {isItemEditing ? (
+                            <Input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const qty = Math.max(1, Number(e.target.value));
+                                setEditableItems((prev) =>
+                                  prev.map((ei, i) => (i === idx ? { ...ei, quantity: qty } : ei)),
+                                );
+                              }}
+                              className="w-16 text-center"
+                            />
+                          ) : (
+                            <span className="font-bold">{item.quantity}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isItemEditing ? (
+                            <Input
+                              type="number"
+                              min={0}
+                              value={item.customPrice}
+                              onChange={(e) => {
+                                const price = Math.max(0, Number(e.target.value));
+                                setEditableItems((prev) =>
+                                  prev.map((ei, i) =>
+                                    i === idx ? { ...ei, customPrice: price } : ei,
+                                  ),
+                                );
+                              }}
+                              className="w-28 text-right"
+                            />
+                          ) : (
+                            <span className="font-medium text-slate-600">
+                              {formatCurrency(Number(item.unitPrice))}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-slate-900">
+                          {isItemEditing
+                            ? formatCurrency(item.customPrice * item.quantity)
+                            : formatCurrency(Number(item.lineTotal))}
+                        </TableCell>
+                        {isItemEditing && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-400 hover:text-red-600"
+                              onClick={() =>
+                                setEditableItems((prev) => prev.filter((_, i) => i !== idx))
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex flex-col items-end gap-2 border-t border-slate-100 bg-slate-50/50 p-6">
                 <div className="flex w-full max-w-xs justify-between text-sm font-medium text-slate-500">
                   <span>Tạm tính</span>
                   <span>
@@ -938,7 +940,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       : formatCurrency(Number(order.subtotal))}
                   </span>
                 </div>
-                <div className="flex w-full max-w-xs justify-between text-xl font-black text-slate-900 dark:text-white">
+                <div className="flex w-full max-w-xs justify-between text-xl font-black text-slate-900">
                   <span>Tổng cộng</span>
                   <span className="text-primary">
                     {isItemEditing
@@ -951,7 +953,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {/* Payment Summary */}
-              <div className="mt-4 flex w-full flex-col items-end gap-2 border-t border-slate-100 px-6 pt-4 pb-6 dark:border-slate-800">
+              <div className="mt-4 flex w-full flex-col items-end gap-2 border-t border-slate-100 px-6 pt-4 pb-6">
                 <div className="flex w-full max-w-xs justify-between text-sm font-medium text-emerald-600">
                   <span>Đã thanh toán</span>
                   <span>{formatCurrency(Number(order.paidAmount || 0))}</span>
@@ -970,74 +972,73 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
           {/* Payment History */}
           {order.payments && order.payments.length > 0 && (
-            <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+            <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
                   <Wallet className="h-5 w-5 text-emerald-600" /> Lịch sử thanh toán
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Thời gian</TableHead>
-                      <TableHead>Phương thức</TableHead>
-                      <TableHead>Ghi chú/Mã</TableHead>
-                      <TableHead className="text-right">Số tiền</TableHead>
-                      <TableHead className="text-right">Người thu</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {order.payments.map((p: any) => (
-                      <TableRow key={p.id}>
-                        <TableCell className="text-xs font-medium text-slate-500">
-                          {formatDate(p.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[10px] uppercase">
-                            {PAYMENT_METHOD_LABEL[p.method as PaymentMethodValue] ?? p.method}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {p.referenceCode && (
-                            <span className="mr-2 font-mono text-slate-500">
-                              #{p.referenceCode}
-                            </span>
-                          )}
-                          {p.note}
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-emerald-600">
-                          {formatCurrency(Number(p.amount))}
-                        </TableCell>
-                        <TableCell className="text-right text-xs">
-                          {p.creator?.fullName || "System"}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Thời gian</TableHead>
+                        <TableHead>Phương thức</TableHead>
+                        <TableHead>Ghi chú/Mã</TableHead>
+                        <TableHead className="text-right">Số tiền</TableHead>
+                        <TableHead className="text-right">Người thu</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {order.payments.map((p: any) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="text-xs font-medium text-slate-500">
+                            {formatDate(p.createdAt)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px] uppercase">
+                              {PAYMENT_METHOD_LABEL[p.method as PaymentMethodValue] ?? p.method}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {p.referenceCode && (
+                              <span className="mr-2 font-mono text-slate-500">
+                                #{p.referenceCode}
+                              </span>
+                            )}
+                            {p.note}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-emerald-600">
+                            {formatCurrency(Number(p.amount))}
+                          </TableCell>
+                          <TableCell className="text-right text-xs">
+                            {p.creator?.fullName || "System"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           )}
 
           {/* Note Input (Only if not terminal) */}
           {!isTerminal && (
-            <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+            <Card className="border-none shadow-sm ring-1 ring-slate-200">
               <CardContent className="px-6">
-                <label
-                  htmlFor="order-status-note"
-                  className="mb-2 block text-sm font-black tracking-wider text-slate-500 uppercase"
-                >
+                <Label htmlFor="order-status-note" className="mb-2">
                   Ghi chú cập nhật (tùy chọn)
-                </label>
+                </Label>
                 <p className="mb-3 -mt-1 text-xs font-medium italic text-slate-400">
                   * Ghi chú này sẽ được lưu vào lịch sử khi bạn nhấn một trong các nút cập nhật
                   trạng thái ở trên (ví dụ: "Xuất kho", "Hoàn tất đơn", "Hủy đơn").
                 </p>
                 <div className="flex gap-4">
-                  <input
+                  <Input
                     id="order-status-note"
-                    className="focus:ring-primary/20 h-10 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 focus:ring-2 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
+                    className="h-10 flex-1 rounded-lg border-slate-200 bg-slate-50 px-3 focus:ring-2 focus:ring-primary/20 focus-visible:ring-0"
                     placeholder="Nhập ghi chú cho lần cập nhật trạng thái này..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -1048,20 +1049,20 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {/* Status History */}
-          <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="gap-0 border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
                 <Clock className="h-5 w-5 text-slate-500" /> Lịch sử trạng thái
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative ml-6 space-y-8 border-l-2 border-slate-100 py-2 pl-6 dark:border-slate-800">
+            <CardContent className="relative ml-6 space-y-8 border-l-2 border-slate-100 py-2 pl-6">
               {order.statusHistory.map((history: any) => {
                 const historyPayment = PAYMENT_BADGE[history.paymentStatus as PaymentStatusValue];
                 const historyFulfillment =
                   FULFILLMENT_BADGE[history.fulfillmentStatus as FulfillmentStatusValue];
                 return (
                   <div key={history.id} className="relative">
-                    <div className="absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white bg-slate-400 dark:border-slate-950"></div>
+                    <div className="absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white bg-slate-400"></div>
                     <div className="flex flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {historyPayment && (
@@ -1086,7 +1087,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                         Cập nhật bởi: {history.creator?.fullName || "Admin"}
                       </span>
                       {history.note && (
-                        <p className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600 italic dark:bg-slate-900 dark:text-slate-400">
+                        <p className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600 italic">
                           "{history.note}"
                         </p>
                       )}
@@ -1107,7 +1108,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             isSubmitting={isCustomerEditSubmitting}
             onSubmit={handleEditCustomer}
           />
-          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-lg font-black tracking-tight uppercase">
                 <span className="flex items-center gap-2">
@@ -1130,16 +1131,14 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                   <AvatarFallback>{order.customer.fullName[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-black text-slate-900 dark:text-white">
-                    {order.customer.fullName}
-                  </div>
+                  <div className="font-black text-slate-900">{order.customer.fullName}</div>
                   <div className="text-xs font-bold text-slate-500 uppercase">
                     {order.customer.customerCode}
                   </div>
                 </div>
               </div>
               <Separator />
-              <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+              <div className="space-y-3 text-sm font-medium text-slate-600">
                 <div className="text-xs font-black uppercase tracking-wider text-slate-400">
                   Giao hàng theo đơn
                 </div>
@@ -1169,7 +1168,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 )}
               </div>
               <Separator />
-              <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+              <div className="space-y-3 text-sm font-medium text-slate-600">
                 <div className="text-xs font-black uppercase tracking-wider text-slate-400">
                   Hồ sơ khách
                 </div>
@@ -1272,8 +1271,8 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           {canDelete && (
             <Button
               variant="outline"
-              className="w-full border-red-200 text-red-500 hover:bg-red-50 hover:text-red-700 dark:border-red-900 dark:hover:bg-red-950"
-              onClick={handleDelete}
+              className="w-full border-red-200 text-red-500 hover:bg-red-50 hover:text-red-700"
+              onClick={() => setShowDeleteConfirm(true)}
               data-testid="delete-order-button"
             >
               <Trash2 className="mr-2 h-4 w-4" /> Xóa đơn hàng
@@ -1281,6 +1280,27 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showCancelConfirm}
+        onOpenChange={setShowCancelConfirm}
+        title="Bạn có chắc chắn muốn hủy đơn hàng này?"
+        confirmLabel="Hủy đơn"
+        onConfirm={() => {
+          setShowCancelConfirm(false);
+          handleCancel();
+        }}
+      />
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Bạn có chắc chắn muốn xóa đơn hàng này không?"
+        confirmLabel="Xóa đơn"
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          handleDelete();
+        }}
+      />
     </div>
   );
 }

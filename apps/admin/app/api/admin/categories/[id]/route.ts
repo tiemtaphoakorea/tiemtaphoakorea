@@ -26,13 +26,14 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
     }
 
     const { id } = await params;
-    const { name, parentId, description, displayOrder, isActive } = parsed.data;
+    const { name, parentId, description, imageUrl, displayOrder, isActive } = parsed.data;
     const slug = await generateCategorySlug(name, id);
 
     const updatedCategory = await updateCategory(id, {
       name,
       parentId: parentId ?? null,
       description,
+      imageUrl: imageUrl ?? null,
       slug,
       displayOrder: displayOrder ?? 0,
       isActive: isActive ?? true,

@@ -57,13 +57,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, parentId, description, displayOrder, isActive } = parsed.data;
+    const { name, parentId, description, imageUrl, displayOrder, isActive } = parsed.data;
     const slug = await generateCategorySlug(name);
 
     const newCategory = await createCategory({
       name,
       parentId: parentId ?? null,
       description,
+      imageUrl: imageUrl ?? null,
       slug,
       displayOrder: displayOrder ?? 0,
       isActive: isActive ?? true,

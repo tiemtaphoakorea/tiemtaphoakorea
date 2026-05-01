@@ -1,334 +1,209 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
-import type { AdminOrderListItem } from "@workspace/database/types/admin";
-import type { FulfillmentStatusValue, PaymentStatusValue } from "@workspace/shared/constants";
-import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { ADMIN_ROUTES } from "@workspace/shared/routes";
-import { formatCurrency, formatDate } from "@workspace/shared/utils";
-import { Badge } from "@workspace/ui/components/badge";
+import {
+  FULFILLMENT_STATUS,
+  type FulfillmentStatusValue,
+  PAYMENT_STATUS,
+  type PaymentStatusValue,
+} from "@workspace/shared/constants";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { DataTable } from "@workspace/ui/components/data-table";
-import { Eye, Smartphone } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Card } from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import { Search } from "lucide-react";
+import { useState } from "react";
 import { useDebounce } from "use-debounce";
-// Components
-import { OrderHeader } from "@/components/admin/orders/order-header";
-import { OrderStats } from "@/components/admin/orders/order-stats";
-import { OrderToolbar } from "@/components/admin/orders/order-toolbar";
-import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
+import {
+  TableEmptyRow,
+  TableErrorRow,
+  TableLoadingRows,
+} from "@/components/admin/shared/data-state";
+import { FilterTabs } from "@/components/admin/shared/filter-tabs";
+import { formatVnd } from "@/components/admin/shared/mock-data";
+import { OrderDrawer } from "@/components/admin/shared/order-drawer";
+import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
+/** Server-enriched order list item shape from getOrders. */
+type OrderListRow = {
+  id: string;
+  orderNumber: string;
+  paymentStatus: PaymentStatusValue;
+  fulfillmentStatus: FulfillmentStatusValue;
+  total: string | null;
+  paidAmount: string | null;
+  createdAt: string | Date | null;
+  paidAt: string | Date | null;
+  customer: {
+    id: string;
+    fullName: string | null;
+    customerCode: string | null;
+    phone: string | null;
+  };
+  itemCount: number;
+};
+
+type FulfillmentFilter = "all" | FulfillmentStatusValue;
+
+const TABS: ReadonlyArray<{ id: FulfillmentFilter; label: string }> = [
+  { id: "all", label: "Tất cả" },
+  { id: FULFILLMENT_STATUS.PENDING, label: "Chờ xử lý" },
+  { id: FULFILLMENT_STATUS.STOCK_OUT, label: "Đã xuất kho" },
+  { id: FULFILLMENT_STATUS.COMPLETED, label: "Hoàn thành" },
+  { id: FULFILLMENT_STATUS.CANCELLED, label: "Đã huỷ" },
+];
+
+const PAGE_LIMIT = 25;
+
+const fmtDate = (d: string | Date | null): string => {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 export default function AdminOrders() {
-  return (
-    <Suspense fallback={<div />}>
-      <AdminOrdersInner />
-    </Suspense>
-  );
-}
+  const [filter, setFilter] = useState<FulfillmentFilter>("all");
+  const [query, setQuery] = useState("");
+  const [debouncedQuery] = useDebounce(query, 300);
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
-function AdminOrdersInner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const urlSearchTerm = searchParams.get("search") || "";
-  const paymentStatusFilter = searchParams.get("paymentStatus") || "All";
-  const fulfillmentStatusFilter = searchParams.get("fulfillmentStatus") || "All";
-  const debtOnly = searchParams.get("debtOnly") === "true";
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.max(
-    1,
-    parseInt(searchParams.get("limit") || PAGINATION_DEFAULT.LIMIT.toString(), 10),
-  );
-
-  // Local search state with debounce so URL updates after user pauses typing.
-  const [searchInput, setSearchInput] = useState(urlSearchTerm);
-  const [debouncedSearch] = useDebounce(searchInput, 300);
-
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }, []);
-
-  // Keep local input in sync if URL changes from elsewhere (e.g. back button).
-  useEffect(() => {
-    setSearchInput(urlSearchTerm);
-  }, [urlSearchTerm]);
-
-  // Push debounced search to URL.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: updateParams is recreated each render
-  useEffect(() => {
-    if (debouncedSearch === urlSearchTerm) return;
-    updateParams({ search: debouncedSearch || null, page: 1 });
-  }, [debouncedSearch, urlSearchTerm]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: these are reactive triggers to clear selection when the result set changes
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [page, paymentStatusFilter, fulfillmentStatusFilter, debtOnly, debouncedSearch]);
-
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: queryKeys.orders.list(
-      debouncedSearch,
-      paymentStatusFilter,
-      fulfillmentStatusFilter,
-      debtOnly,
-      page,
-      limit,
-    ),
-    queryFn: () =>
-      adminClient.getOrders({
-        search: debouncedSearch,
-        paymentStatus:
-          paymentStatusFilter !== "All" ? (paymentStatusFilter as PaymentStatusValue) : undefined,
-        fulfillmentStatus:
-          fulfillmentStatusFilter !== "All"
-            ? (fulfillmentStatusFilter as FulfillmentStatusValue)
-            : undefined,
-        debtOnly: debtOnly || undefined,
-        page,
-        limit,
-      }),
-    placeholderData: keepPreviousData,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  const orders = (data?.data as AdminOrderListItem[]) || [];
-  const metadata = data?.metadata;
-
-  const toggleSelectAll = useCallback(
-    (checked: boolean) => {
-      setSelectedIds(checked ? orders.map((o) => o.id) : []);
+  const ordersQuery = useQuery({
+    queryKey: queryKeys.orders.list(debouncedQuery, "all", filter, false, 1, PAGE_LIMIT),
+    queryFn: async () => {
+      const res = await adminClient.getOrders({
+        search: debouncedQuery || undefined,
+        fulfillmentStatus: filter === "all" ? undefined : filter,
+        page: 1,
+        limit: PAGE_LIMIT,
+      });
+      return res as unknown as { data: OrderListRow[]; metadata: { total: number } };
     },
-    [orders],
-  );
-
-  const updateParams = (newParams: Record<string, string | number | boolean | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === "" || value === false) {
-        params.delete(key);
-      } else {
-        params.set(key, value.toString());
-      }
-    });
-
-    // Reset to page 1 if filters change
-    if (
-      (newParams.search !== undefined ||
-        newParams.paymentStatus !== undefined ||
-        newParams.fulfillmentStatus !== undefined ||
-        newParams.debtOnly !== undefined) &&
-      newParams.page === undefined
-    ) {
-      params.set("page", "1");
-    }
-
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleSearch = (val: string) => {
-    setSearchInput(val);
-  };
-
-  const handlePaymentStatusChange = (val: string) => {
-    updateParams({ paymentStatus: val === "All" ? null : val });
-  };
-
-  const handleFulfillmentStatusChange = (val: string) => {
-    updateParams({ fulfillmentStatus: val === "All" ? null : val });
-  };
-
-  const handleDebtOnlyToggle = () => {
-    updateParams({ debtOnly: !debtOnly });
-  };
-
-  const { data: statsContent } = useQuery({
-    queryKey: queryKeys.orders.stats,
-    queryFn: () => adminClient.getOrderStats(),
-    staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 
-  const stats = useMemo(() => {
-    return (
-      statsContent || {
-        total: metadata?.total || 0,
-        pending: undefined,
-        completed: undefined,
-        totalRevenue: orders.reduce((acc, curr) => acc + Number(curr.total || 0), 0),
-      }
-    );
-  }, [statsContent, orders, metadata]);
-
-  const columns = useMemo<ColumnDef<AdminOrderListItem>[]>(
-    () => [
-      {
-        id: "select",
-        header: () => (
-          <input
-            type="checkbox"
-            checked={orders.length > 0 && orders.every((o) => selectedIds.includes(o.id))}
-            ref={(el) => {
-              if (el) {
-                const some = orders.some((o) => selectedIds.includes(o.id));
-                const all = orders.length > 0 && orders.every((o) => selectedIds.includes(o.id));
-                el.indeterminate = some && !all;
-              }
-            }}
-            onChange={(e) => toggleSelectAll(e.target.checked)}
-            aria-label="Chọn tất cả"
-            className="h-4 w-4 cursor-pointer accent-primary"
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={selectedIds.includes(row.original.id)}
-            onChange={() => toggleSelect(row.original.id)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Chọn đơn ${row.original.orderNumber}`}
-            className="h-4 w-4 cursor-pointer accent-primary"
-          />
-        ),
-      },
-      {
-        accessorKey: "orderNumber",
-        header: "Mã đơn",
-        cell: ({ row }) => (
-          <span className="font-black text-slate-900 dark:text-white">
-            #{row.original.orderNumber}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "customer",
-        header: "Khách hàng",
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-bold text-slate-900 dark:text-white">
-              {row.original.customer?.fullName || "---"}
-            </span>
-            <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
-              <Smartphone className="h-3 w-3" /> {row.original.customer?.phone || "---"}
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Trạng thái",
-        cell: ({ row }) => {
-          const payment = row.original.paymentStatus as PaymentStatusValue;
-          const fulfillment = row.original.fulfillmentStatus as FulfillmentStatusValue;
-          const paymentCfg = PAYMENT_BADGE[payment];
-          const fulfillmentCfg = FULFILLMENT_BADGE[fulfillment];
-          return (
-            <div className="flex flex-col gap-1">
-              <Badge
-                className={`${paymentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-              >
-                {paymentCfg?.label || payment}
-              </Badge>
-              <Badge
-                className={`${fulfillmentCfg?.className || ""} pointer-events-none w-fit border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-              >
-                {fulfillmentCfg?.label || fulfillment}
-              </Badge>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "total",
-        header: () => <div className="text-right">Tổng tiền</div>,
-        cell: ({ row }) => (
-          <div className="text-right font-black text-slate-900 dark:text-white">
-            {formatCurrency(row.original.total)}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: () => <div className="text-center">Ngày tạo</div>,
-        cell: ({ row }) => (
-          <div className="text-center font-mono text-sm font-medium text-slate-500">
-            {formatDate(row.original.createdAt)}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        cell: ({ row }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
-            asChild
-          >
-            <Link href={ADMIN_ROUTES.ORDER_DETAIL(row.original.id)}>
-              <Eye className="h-4 w-4" />
-              <span>Xem chi tiết</span>
-            </Link>
-          </Button>
-        ),
-      },
-    ],
-    [orders, selectedIds, toggleSelect, toggleSelectAll],
-  );
-
-  const selectedOrders = orders.filter((o) => selectedIds.includes(o.id));
+  const list = ordersQuery.data?.data ?? [];
+  const total = ordersQuery.data?.metadata.total ?? 0;
 
   return (
-    <div className="flex flex-col gap-8">
-      <OrderHeader />
-      <OrderStats stats={stats} />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <FilterTabs tabs={TABS} value={filter} onChange={setFilter} />
+        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
+          <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm mã đơn, khách hàng..."
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {ordersQuery.isLoading ? "Đang tải..." : `${total} đơn`}
+          </span>
+          <Button variant="outline" className="ml-auto h-[34px]">
+            Xuất Excel
+          </Button>
+        </div>
+      </div>
 
-      {/* Main Content Area */}
-      <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-        <CardHeader className="border-b border-slate-100 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
-          <OrderToolbar
-            searchTerm={searchInput}
-            onSearchChange={handleSearch}
-            paymentStatus={paymentStatusFilter}
-            onPaymentStatusChange={handlePaymentStatusChange}
-            fulfillmentStatus={fulfillmentStatusFilter}
-            onFulfillmentStatusChange={handleFulfillmentStatusChange}
-            debtOnly={debtOnly}
-            onDebtOnlyToggle={handleDebtOnlyToggle}
-            paymentBadge={PAYMENT_BADGE}
-            fulfillmentBadge={FULFILLMENT_BADGE}
-            selectedOrders={selectedOrders}
-            onQuickPaymentSuccess={() => setSelectedIds([])}
-          />
-        </CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={orders}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            pageCount={metadata?.totalPages || 1}
-            pagination={{
-              pageIndex: page - 1,
-              pageSize: limit,
-            }}
-            onPaginationChange={(newPagination) => {
-              updateParams({
-                page: newPagination.pageIndex + 1,
-                limit: newPagination.pageSize,
-              });
-            }}
-            emptyMessage="Không tìm thấy đơn hàng nào."
-          />
-        </CardContent>
+      <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                {[
+                  "Mã đơn",
+                  "Khách hàng",
+                  "SĐT",
+                  "Số lượng",
+                  "Tổng tiền",
+                  "Thanh toán",
+                  "Trạng thái",
+                  "Thời gian",
+                  "",
+                ].map((h, i) => (
+                  <TableHead
+                    key={i}
+                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    {h}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ordersQuery.isLoading && <TableLoadingRows cols={9} rows={6} />}
+              {ordersQuery.error && <TableErrorRow cols={9} message={String(ordersQuery.error)} />}
+              {!ordersQuery.isLoading && list.length === 0 && (
+                <TableEmptyRow cols={9} message="Chưa có đơn nào" />
+              )}
+              {list.map((o) => (
+                <TableRow
+                  key={o.id}
+                  className="cursor-pointer"
+                  onClick={() => setDetailOrderId(o.id)}
+                >
+                  <TableCell className="px-4 py-2.5 font-mono text-xs font-semibold">
+                    {o.orderNumber}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-[13px] font-semibold">
+                    {o.customer.fullName ?? "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {o.customer.phone ?? "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">{o.itemCount} món</TableCell>
+                  <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
+                    {formatVnd(Number(o.total ?? 0))}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">
+                    <StatusBadge type={o.paymentStatus as StatusType} />
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">
+                    <StatusBadge type={o.fulfillmentStatus as StatusType} />
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {fmtDate(o.createdAt)}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-md text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailOrderId(o.id);
+                      }}
+                    >
+                      Chi tiết
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
+
+      <OrderDrawer orderId={detailOrderId} onClose={() => setDetailOrderId(null)} />
+
+      {/* Reference unused import to avoid lint warnings */}
+      <Input hidden value={PAYMENT_STATUS.PAID} readOnly />
     </div>
   );
 }

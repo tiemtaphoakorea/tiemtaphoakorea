@@ -132,7 +132,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto p-6 sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <SheetTitle className="text-2xl font-black">
             {isEdit ? "Chỉnh sửa banner" : "Thêm banner mới"}
           </SheetTitle>
@@ -154,7 +154,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                   className={`flex-1 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
                     bannerType === t
                       ? "border-primary bg-primary/10 text-primary"
-                      : "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700"
+                      : "border-slate-200 text-slate-600 hover:border-slate-300"
                   }`}
                 >
                   {t === "custom" ? "🖼 Ảnh tùy chọn" : "📂 Từ danh mục"}
@@ -177,7 +177,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? undefined}
                     onValueChange={(value) => field.onChange(value || null)}
                   >
-                    <SelectTrigger className="h-11 w-full bg-slate-50/50 font-medium dark:bg-slate-900/50">
+                    <SelectTrigger className="h-11 w-full bg-slate-50/50 font-medium">
                       <SelectValue placeholder="Chọn danh mục" />
                     </SelectTrigger>
                     <SelectContent>
@@ -238,7 +238,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                   placeholder={
                     bannerType === "category" ? "Tự động từ tên danh mục" : "Nhập tiêu đề..."
                   }
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  className="h-11 bg-slate-50/50 font-medium"
                 />
               )}
             />
@@ -257,7 +257,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value || null)}
                   placeholder="Ví dụ: Ưu đãi đến 50% các dòng mỹ phẩm..."
-                  className="min-h-[80px] bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  className="min-h-[80px] bg-slate-50/50 font-medium"
                 />
               )}
             />
@@ -284,7 +284,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
                     placeholder={bannerType === "category" ? "Danh mục hot" : "Ví dụ: Flash Sale"}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -299,7 +299,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value ?? "violet"} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50">
+                    <SelectTrigger className="h-11 bg-slate-50/50 font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -336,7 +336,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
                     placeholder={bannerType === "category" ? "Xem tất cả" : "Ví dụ: Mua ngay"}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -359,7 +359,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
                     placeholder={bannerType === "category" ? "/products?category=..." : "/products"}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -381,7 +381,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value || null)}
                   placeholder="Ví dụ: Khám phá thêm"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  className="h-11 bg-slate-50/50 font-medium"
                 />
               )}
             />
@@ -401,7 +401,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
                     placeholder="Ví dụ: 50%"
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -419,7 +419,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
                     placeholder="Ví dụ: cho đơn đầu tiên"
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -440,7 +440,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     type="datetime-local"
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -458,7 +458,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     type="datetime-local"
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -480,7 +480,7 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
                     min={0}
                     value={field.value ?? 0}
                     onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                    className="h-11 bg-slate-50/50 font-medium"
                   />
                 )}
               />
@@ -507,12 +507,12 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
           </div>
 
           {errors.root?.serverError?.message && (
-            <p className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            <p className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
               {errors.root.serverError.message}
             </p>
           )}
 
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Button
               type="button"
               variant="outline"

@@ -1,402 +1,241 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
-import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { formatDate } from "@workspace/shared/utils";
-import { Badge } from "@workspace/ui/components/badge";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { DataTable } from "@workspace/ui/components/data-table";
+import { Card } from "@workspace/ui/components/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-import { Calendar, CalendarDays, MoreHorizontal, Truck } from "lucide-react";
-import { Suspense, useMemo, useReducer } from "react";
-import { toast } from "sonner";
-// Components
-import { InventoryAddSheet } from "@/components/admin/inventory/add-sheet";
-import { InventoryDailySummaryTab } from "@/components/admin/inventory/daily-summary-tab";
-import { InventoryHeader } from "@/components/admin/inventory/header";
-import { InventoryMovementsTab } from "@/components/admin/inventory/movements-tab";
-import { InventoryStatusDialog } from "@/components/admin/inventory/status-dialog";
-import { InventoryToolbar } from "@/components/admin/inventory/toolbar";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import { AlertTriangle, Package, Plus } from "lucide-react";
+import { useState } from "react";
+import {
+  TableEmptyRow,
+  TableErrorRow,
+  TableLoadingRows,
+  thumbLabelFromName,
+  thumbToneFromId,
+} from "@/components/admin/shared/data-state";
+import { FilterTabs } from "@/components/admin/shared/filter-tabs";
+import { ProductThumb } from "@/components/admin/shared/product-thumb";
+import { StatCard } from "@/components/admin/shared/stat-card";
+import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  pending: {
-    label: "Chờ xử lý",
-    color: "bg-amber-50 text-amber-600 border-amber-100",
-    icon: Truck,
-  },
-  ordered: {
-    label: "Đã đặt hàng",
-    color: "bg-blue-50 text-blue-600 border-blue-100",
-    icon: Truck,
-  },
-  received: {
-    label: "Đã nhận hàng",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    icon: Truck,
-  },
-  cancelled: {
-    label: "Đã hủy",
-    color: "bg-slate-50 text-slate-600 border-slate-100",
-    icon: Truck,
-  },
-};
+type WarehouseTab = "stock" | "low" | "out";
+const TABS: ReadonlyArray<{ id: WarehouseTab; label: string }> = [
+  { id: "stock", label: "Tồn kho" },
+  { id: "low", label: "Sắp hết" },
+  { id: "out", label: "Hết hàng" },
+];
 
-type UIState = {
-  search: string;
-  status: string;
-  isAddSheetOpen: boolean;
-  isUpdateDialogOpen: boolean;
-  selectedOrder: any | null;
-  pagination: { pageIndex: number; pageSize: number };
-};
+export default function AdminInventory() {
+  const [tab, setTab] = useState<WarehouseTab>("stock");
 
-const initialUIState: UIState = {
-  search: "",
-  status: "All",
-  isAddSheetOpen: false,
-  isUpdateDialogOpen: false,
-  selectedOrder: null,
-  pagination: { pageIndex: 0, pageSize: PAGINATION_DEFAULT.LIMIT },
-};
-
-type UIAction =
-  | { type: "SET_SEARCH"; payload: string }
-  | { type: "SET_STATUS"; payload: string }
-  | { type: "OPEN_ADD" }
-  | { type: "CLOSE_ADD" }
-  | { type: "OPEN_UPDATE"; payload: any }
-  | { type: "CLOSE_UPDATE" }
-  | { type: "SET_PAGINATION"; payload: Partial<{ pageIndex: number; pageSize: number }> };
-
-function uiReducer(state: UIState, action: UIAction): UIState {
-  switch (action.type) {
-    case "SET_SEARCH":
-      return {
-        ...state,
-        search: action.payload,
-        pagination: { ...state.pagination, pageIndex: 0 },
-      };
-    case "SET_STATUS":
-      return {
-        ...state,
-        status: action.payload,
-        pagination: { ...state.pagination, pageIndex: 0 },
-      };
-    case "OPEN_ADD":
-      return { ...state, isAddSheetOpen: true };
-    case "CLOSE_ADD":
-      return { ...state, isAddSheetOpen: false };
-    case "OPEN_UPDATE":
-      return { ...state, isUpdateDialogOpen: true, selectedOrder: action.payload };
-    case "CLOSE_UPDATE":
-      return { ...state, isUpdateDialogOpen: false, selectedOrder: null };
-    case "SET_PAGINATION":
-      return { ...state, pagination: { ...state.pagination, ...action.payload } };
-    default:
-      return state;
-  }
-}
-
-export default function SupplierOrdersPage() {
-  const [ui, dispatch] = useReducer(uiReducer, initialUIState);
-
-  // Destructure for convenience
-  const { search, status, isAddSheetOpen, isUpdateDialogOpen, selectedOrder, pagination } = ui;
-
-  const queryClient = useQueryClient();
-
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: queryKeys.admin.supplierOrders.list(search, status),
-    queryFn: async () => {
-      const orders = await adminClient.getSupplierOrders({
-        search,
-        status: status !== "All" ? status : undefined,
-      });
-      return orders;
-    },
+  const stockQuery = useQuery({
+    queryKey: queryKeys.admin.stockAlerts,
+    queryFn: () => adminClient.getStockAlerts(),
+    staleTime: 60_000,
   });
 
-  // Client-side pagination logic
-  const { paginatedData, pageCount } = useMemo(() => {
-    const start = pagination.pageIndex * pagination.pageSize;
-    const end = start + pagination.pageSize;
-    const currentData = orders.slice(start, end);
-    const pageCount = Math.ceil(orders.length / pagination.pageSize);
-    return { paginatedData: currentData, pageCount };
-  }, [orders, pagination]);
-
-  const { data: productsData = { products: [] } } = useQuery({
-    queryKey: queryKeys.admin.products.withVariants,
-    queryFn: async () => {
-      return adminClient.getProductsWithVariants();
-    },
-    enabled: isAddSheetOpen,
+  const productsQuery = useQuery({
+    queryKey: queryKeys.products.list("", 1, 50, "all"),
+    queryFn: async () => await adminClient.getProducts({ page: 1, limit: 50 }),
+    enabled: tab === "stock",
+    staleTime: 60_000,
   });
 
-  const { data: suppliersData = { suppliers: [] } } = useQuery({
-    queryKey: queryKeys.admin.suppliersActive,
-    queryFn: async () => {
-      return adminClient.getSuppliers(); // Existing method getSuppliers takes optional search
-    },
-    enabled: isAddSheetOpen,
-  });
-
-  const createOrderMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return adminClient.createSupplierOrder(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
-      dispatch({ type: "CLOSE_ADD" });
-      toast.success("Thành công", {
-        description: "Đã tạo đơn nhập hàng mới",
-      });
-    },
-    onError: (error: any) => {
-      toast.error("Lỗi", {
-        description: error.message,
-      });
-    },
-  });
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, ...data }: any) => {
-      return adminClient.updateSupplierOrderStatus(id, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.supplierOrders.all });
-      dispatch({ type: "CLOSE_UPDATE" });
-      toast.success("Thành công", {
-        description: "Đã cập nhật trạng thái đơn hàng",
-      });
-    },
-    onError: (error: any) => {
-      toast.error("Lỗi", {
-        description: error.message,
-      });
-    },
-  });
-
-  const columns = useMemo<ColumnDef<any>[]>(
-    () => [
-      {
-        accessorKey: "orderNumber",
-        header: "Mã đơn gốc",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-black text-slate-900 dark:text-white">
-              {row.original.order?.orderNumber ? `#${row.original.order.orderNumber}` : "-"}
-            </span>
-            <span className="text-[10px] font-bold tracking-tight text-slate-400 uppercase">
-              {row.original.order?.customerName || "-"}
-            </span>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "product",
-        header: "Sản phẩm",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-slate-700 dark:text-slate-300">
-              {row.original.item.productName}
-            </span>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="h-5 bg-slate-50 px-1.5 text-[10px]">
-                {row.original.item.variantName}
-              </Badge>
-              <span className="font-mono text-xs text-slate-500">{row.original.item.sku}</span>
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "quantity",
-        header: "SL",
-        cell: ({ row }) => (
-          <span className="font-bold text-slate-900 dark:text-white">{row.original.quantity}</span>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Trạng thái",
-        cell: ({ row }) => {
-          const orderStatus = row.original.status || "pending";
-          const config = STATUS_CONFIG[orderStatus] || STATUS_CONFIG.pending;
-          const StatusIcon = config.icon;
-          return (
-            <Badge
-              className={`${config.color} pointer-events-none flex w-fit items-center gap-1 border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
-            >
-              {StatusIcon && <StatusIcon className="h-3 w-3" />}
-              {config.label}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: "orderedAt",
-        header: "Ngày đặt",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2 font-mono text-xs font-medium text-slate-600 dark:text-slate-400">
-            {row.original.orderedAt ? (
-              <>
-                <CalendarDays className="h-3 w-3 text-slate-400" />
-                {formatDate(row.original.orderedAt)}
-              </>
-            ) : (
-              "-"
-            )}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "expectedDate",
-        header: "Ngày về (Dự kiến)",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2 font-mono text-xs font-medium text-slate-600 dark:text-slate-400">
-            {row.original.expectedDate ? (
-              <>
-                <Calendar className="h-3 w-3 text-slate-400" />
-                {formatDate(row.original.expectedDate)}
-              </>
-            ) : (
-              "-"
-            )}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 font-bold">
-              <DropdownMenuItem
-                onClick={() => {
-                  dispatch({ type: "OPEN_UPDATE", payload: row.original });
-                }}
-              >
-                Cập nhật trạng thái
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      },
-    ],
-    [],
-  );
+  const lowStock = stockQuery.data?.lowStock ?? [];
+  const outOfStock = stockQuery.data?.outOfStock ?? [];
+  const products = productsQuery.data?.data ?? [];
+  const totalSkus = productsQuery.data?.metadata.total ?? 0;
 
   return (
-    <div className="flex flex-col gap-8">
-      <InventoryHeader onAddClick={() => dispatch({ type: "OPEN_ADD" })} />
-
-      <Tabs defaultValue="orders" className="flex flex-col gap-4">
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="orders">Đơn nhập hàng</TabsTrigger>
-          <TabsTrigger value="movements">Giao dịch kho</TabsTrigger>
-          <TabsTrigger value="daily">Tổng hợp theo ngày</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="orders" className="m-0">
-          <Card className="gap-0 py-0 overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-            <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
-              <InventoryToolbar
-                searchTerm={search}
-                onSearchChange={(v) => dispatch({ type: "SET_SEARCH", payload: v })}
-                statusFilter={status}
-                onStatusChange={(v) => dispatch({ type: "SET_STATUS", payload: v })}
-                statusConfig={STATUS_CONFIG}
-              />
-            </CardHeader>
-            <CardContent className="p-0">
-              <DataTable
-                columns={columns}
-                data={paginatedData}
-                isLoading={isLoading}
-                emptyState={
-                  <div className="flex flex-col items-center justify-center gap-3 py-12">
-                    <Truck className="h-12 w-12 text-slate-300" data-icon="truck" />
-                    <div className="flex flex-col gap-1 text-center">
-                      <p className="text-sm font-semibold text-slate-700">
-                        Không có đơn đặt hàng nào
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Các đơn hàng Pre-order sẽ xuất hiện tại đây
-                      </p>
-                    </div>
-                  </div>
-                }
-                pageCount={pageCount}
-                pagination={pagination}
-                onPaginationChange={(updater) => {
-                  dispatch({ type: "SET_PAGINATION", payload: updater });
-                }}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="movements" className="m-0">
-          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-            <CardContent className="p-4 sm:p-6">
-              <Suspense fallback={<div className="text-sm text-slate-500">Đang tải...</div>}>
-                <InventoryMovementsTab />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="daily" className="m-0">
-          <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-            <CardContent className="p-4 sm:p-6">
-              <InventoryDailySummaryTab />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <InventoryAddSheet
-        isOpen={isAddSheetOpen}
-        onOpenChange={(open) => dispatch({ type: open ? "OPEN_ADD" : "CLOSE_ADD" })}
-        products={productsData.products}
-        suppliers={suppliersData.suppliers}
-        onCreateOrder={createOrderMutation.mutate}
-        isCreatingOrder={createOrderMutation.isPending}
-      />
-
-      {selectedOrder && (
-        <InventoryStatusDialog
-          open={isUpdateDialogOpen}
-          onOpenChange={(open) =>
-            open
-              ? dispatch({ type: "OPEN_UPDATE", payload: selectedOrder })
-              : dispatch({ type: "CLOSE_UPDATE" })
-          }
-          selectedOrder={selectedOrder}
-          statusConfig={STATUS_CONFIG}
-          isSubmitting={updateStatusMutation.isPending}
-          onUpdateStatus={updateStatusMutation.mutate}
-          onClose={() => dispatch({ type: "CLOSE_UPDATE" })}
-        />
+    <div className="flex flex-col gap-4">
+      {(lowStock.length > 0 || outOfStock.length > 0) && (
+        <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-gradient-to-br from-red-50 to-white px-[18px] py-3.5">
+          <AlertTriangle className="h-[18px] w-[18px] shrink-0 text-red-600" strokeWidth={2} />
+          <p className="text-[13px] font-medium leading-snug text-red-600">
+            <b className="font-bold">{lowStock.length} SP sắp hết</b>
+            {outOfStock.length > 0 && (
+              <>
+                {" · "}
+                <b className="font-bold">{outOfStock.length} SP đã hết hàng</b>
+              </>
+            )}
+          </p>
+        </div>
       )}
+
+      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2n)]:max-sm:border-r-0 [&>*:nth-last-child(-n+2)]:max-sm:border-b-0 lg:grid-cols-4">
+        <StatCard
+          label="Tổng SKU"
+          value={totalSkus || "—"}
+          delta="Đang quản lý"
+          icon={Package}
+          tone="primary"
+        />
+        <StatCard
+          label="Còn hàng"
+          value={Math.max(0, totalSkus - lowStock.length - outOfStock.length)}
+          delta="Đủ tồn kho"
+          icon={Package}
+          tone="mint"
+        />
+        <StatCard
+          label="Sắp hết"
+          value={lowStock.length}
+          delta="Cần nhập sớm"
+          direction="down"
+          icon={Package}
+          tone="amber"
+        />
+        <StatCard
+          label="Hết hàng"
+          value={outOfStock.length}
+          delta="Cần nhập gấp"
+          direction="down"
+          icon={Package}
+          tone="danger"
+        />
+      </div>
+
+      <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <FilterTabs tabs={TABS} value={tab} onChange={setTab} />
+          <Button size="sm" className="h-7 gap-1.5 rounded-md text-xs">
+            <Plus className="h-3 w-3" strokeWidth={2.5} />
+            Điều chỉnh kho
+          </Button>
+        </div>
+
+        {tab === "stock" ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  {["Sản phẩm", "Danh mục", "Tồn khả dụng", "Tồn vật lý", "Đã giữ chỗ"].map(
+                    (h, i) => (
+                      <TableHead
+                        key={i}
+                        className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                      >
+                        {h}
+                      </TableHead>
+                    ),
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {productsQuery.isLoading && <TableLoadingRows cols={5} rows={6} />}
+                {productsQuery.error && (
+                  <TableErrorRow cols={5} message={String(productsQuery.error)} />
+                )}
+                {!productsQuery.isLoading && products.length === 0 && (
+                  <TableEmptyRow cols={5} message="Chưa có dữ liệu kho" />
+                )}
+                {products.map((p) => {
+                  const stockClass =
+                    p.totalAvailable === 0
+                      ? "text-red-600 font-bold"
+                      : p.totalAvailable < (p.minLowStockThreshold ?? 30)
+                        ? "text-amber-700 font-bold"
+                        : "text-foreground font-bold";
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <ProductThumb
+                            label={thumbLabelFromName(p.name)}
+                            tone={thumbToneFromId(p.id)}
+                          />
+                          <span className="text-[13px] font-semibold">
+                            {p.name.length > 40 ? `${p.name.slice(0, 40)}…` : p.name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        {p.categoryName ? (
+                          <TonePill tone="indigo">{p.categoryName}</TonePill>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
+                        {p.totalAvailable}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                        {p.totalReserved}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
+                    <TableHead
+                      key={i}
+                      className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {h}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stockQuery.isLoading && <TableLoadingRows cols={3} rows={5} />}
+                {stockQuery.error && <TableErrorRow cols={3} message={String(stockQuery.error)} />}
+                {!stockQuery.isLoading && (tab === "low" ? lowStock : outOfStock).length === 0 && (
+                  <TableEmptyRow
+                    cols={3}
+                    message={tab === "low" ? "Không có SP sắp hết" : "Không có SP hết hàng"}
+                  />
+                )}
+                {(tab === "low" ? lowStock : outOfStock).map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell className="px-4 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <ProductThumb
+                          label={thumbLabelFromName(v.productName)}
+                          tone={thumbToneFromId(v.id)}
+                        />
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[13px] font-semibold">{v.productName}</span>
+                          <span className="font-mono text-[11px] text-muted-foreground">
+                            {v.name} · {v.sku ?? "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className={`px-4 py-2.5 font-bold tabular-nums ${tab === "out" ? "text-red-600" : "text-amber-700"}`}
+                    >
+                      {v.onHand}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
+                      <TonePill tone={tab === "out" ? "red" : "amber"}>
+                        {tab === "out" ? "Hết hàng" : "Sắp hết"}
+                      </TonePill>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

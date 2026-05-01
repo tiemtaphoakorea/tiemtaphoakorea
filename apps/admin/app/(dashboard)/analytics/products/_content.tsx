@@ -27,14 +27,12 @@ export default function AnalyticsProductsPage() {
         >
           ← Báo cáo
         </Link>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-          Sản phẩm bán chạy
-        </h1>
+        <h1 className="text-2xl font-black tracking-tight text-slate-900">Sản phẩm bán chạy</h1>
       </div>
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-200" />
           ))}
         </div>
       ) : (

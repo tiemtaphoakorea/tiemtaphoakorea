@@ -10,28 +10,28 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ room, isConnected, onBack }: ChatHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white/80 px-6 py-0 backdrop-blur-md dark:bg-slate-950/80">
+    <div className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white/80 px-6 py-0 backdrop-blur-md">
       <Button
         variant="ghost"
         size="icon"
         onClick={onBack}
-        className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+        className="rounded-xl hover:bg-slate-100"
       >
         <ChevronLeft className="h-5 w-5" />
       </Button>
 
       <div className="flex flex-1 items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
           <User className="h-6 w-6 text-slate-400" />
         </div>
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-black text-slate-900 dark:text-white">
+          <h2 className="truncate text-lg font-black text-slate-900">
             {room.customer.fullName || "Khách hàng"}
           </h2>
           <div className="mt-0.5 flex items-center gap-2">
             <Badge
               variant="outline"
-              className="border-slate-200 bg-slate-50 px-1.5 py-0 text-[10px] font-black tracking-wider uppercase dark:border-slate-700 dark:bg-slate-800"
+              className="border-slate-200 bg-slate-50 px-1.5 py-0 text-[10px] font-black tracking-wider uppercase"
             >
               {room.customer.customerCode}
             </Badge>

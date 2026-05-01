@@ -2,6 +2,8 @@ export interface ChatWidgetProps {
   userId?: string;
   guestId?: string;
   title?: string;
+  phoneNumber?: string;
+  messengerUrl?: string;
 }
 
 export interface RealtimeChatProps {

@@ -28,7 +28,7 @@ export default function AnalyticsFinancePage() {
           >
             ← Báo cáo
           </Link>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">
             Tài chính & Lợi nhuận
           </h1>
         </div>
@@ -41,9 +41,7 @@ export default function AnalyticsFinancePage() {
       </div>
 
       <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-64 animate-pulse rounded-xl bg-gray-200 dark:bg-slate-700" />}
-        >
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-gray-200" />}>
           <FinanceStats date={financeDate} />
         </Suspense>
       </ErrorBoundary>

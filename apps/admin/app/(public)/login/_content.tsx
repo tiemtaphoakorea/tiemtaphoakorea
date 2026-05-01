@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -88,9 +89,7 @@ export default function AdminLoginPage() {
             )}
             <div className="space-y-4">
               <div className="space-y-3">
-                <label htmlFor="username" className="block text-sm font-medium text-foreground">
-                  Tên đăng nhập
-                </label>
+                <Label htmlFor="username">Tên đăng nhập</Label>
                 <div className="group relative">
                   <div className="text-muted-foreground group-focus-within:text-primary absolute top-1/2 left-4 -translate-y-1/2 transition-colors">
                     <User className="h-4 w-4" />
@@ -112,9 +111,7 @@ export default function AdminLoginPage() {
               </div>
               <div className="space-y-3">
                 <div className="ml-1 flex items-center justify-between">
-                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                    Mật khẩu
-                  </label>
+                  <Label htmlFor="password">Mật khẩu</Label>
                 </div>
                 <div className="group relative">
                   <div className="text-muted-foreground group-focus-within:text-primary absolute top-1/2 left-4 -translate-y-1/2 transition-colors">

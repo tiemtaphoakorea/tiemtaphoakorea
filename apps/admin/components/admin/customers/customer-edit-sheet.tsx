@@ -8,6 +8,7 @@ import {
 } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -69,7 +70,7 @@ export function CustomerEditSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 px-6 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 px-6 pb-6">
           <SheetTitle className="text-2xl font-black">Chỉnh sửa khách hàng</SheetTitle>
           <SheetDescription className="font-medium text-slate-500">
             Cập nhật thông tin chi tiết cho khách hàng {customer?.fullName}.
@@ -78,17 +79,12 @@ export function CustomerEditSheet({
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 px-6 py-6">
           <div className="space-y-4">
             <div className="grid gap-2">
-              <label
-                htmlFor="edit-customer-full-name"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Họ và tên
-              </label>
+              <Label htmlFor="edit-customer-full-name">Họ và tên</Label>
               <Input
                 id="edit-customer-full-name"
                 {...register("fullName")}
                 placeholder="Nguyễn Văn A"
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="h-11 bg-slate-50/50 font-medium"
                 aria-invalid={!!errors.fullName}
               />
               {errors.fullName && (
@@ -97,35 +93,22 @@ export function CustomerEditSheet({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <label
-                  htmlFor="edit-customer-phone"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Số điện thoại
-                </label>
+                <Label htmlFor="edit-customer-phone">Số điện thoại</Label>
                 <Input
                   id="edit-customer-phone"
                   {...register("phone")}
                   placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  className="h-11 bg-slate-50/50 font-medium"
                 />
               </div>
               <div className="grid gap-2">
-                <label
-                  htmlFor="edit-customer-type"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Loại khách hàng
-                </label>
+                <Label htmlFor="edit-customer-type">Loại khách hàng</Label>
                 <Controller
                   name="customerType"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger
-                        id="edit-customer-type"
-                        className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
-                      >
+                      <SelectTrigger id="edit-customer-type" className="h-11 bg-slate-50/50">
                         <SelectValue placeholder="Chọn loại" />
                       </SelectTrigger>
                       <SelectContent>
@@ -138,21 +121,16 @@ export function CustomerEditSheet({
               </div>
             </div>
             <div className="grid gap-2">
-              <label
-                htmlFor="edit-customer-address"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Địa chỉ
-              </label>
+              <Label htmlFor="edit-customer-address">Địa chỉ</Label>
               <Input
                 id="edit-customer-address"
                 {...register("address")}
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="h-11 bg-slate-50/50 font-medium"
               />
             </div>
           </div>
-          <SheetFooter className="border-t border-slate-100 px-6 pt-6 dark:border-slate-800">
+          <SheetFooter className="border-t border-slate-100 px-6 pt-6">
             <div className="flex w-full items-center justify-end gap-3">
               <Button
                 type="button"

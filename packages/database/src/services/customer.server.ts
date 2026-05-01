@@ -9,10 +9,14 @@ export async function getCustomers({
   search = "",
   page = PAGINATION_DEFAULT.PAGE,
   limit = PAGINATION_DEFAULT.LIMIT,
+  customerType,
+  status,
 }: {
   search?: string;
   page?: number;
   limit?: number;
+  customerType?: string;
+  status?: string;
 } = {}) {
   const offset = (page - 1) * limit;
   const whereConditions: (any | undefined)[] = [eq(profiles.role, ROLE.CUSTOMER)];
@@ -27,6 +31,16 @@ export async function getCustomers({
     );
   }
 
+  if (customerType && (customerType === "wholesale" || customerType === "retail")) {
+    whereConditions.push(eq(profiles.customerType, customerType as any));
+  }
+
+  if (status === "Active") {
+    whereConditions.push(eq(profiles.isActive, true));
+  } else if (status === "Inactive") {
+    whereConditions.push(eq(profiles.isActive, false));
+  }
+
   const whereClause = and(...whereConditions.filter((c): c is any => !!c));
 
   // Total count query
@@ -38,7 +52,7 @@ export async function getCustomers({
   const [totalResult] = await totalQuery;
   const total = Number(totalResult?.count || 0);
 
-  // Subquery for total spending and order count
+  // totalSpent excludes cancelled orders; orderCount counts all orders
   const customerStats = await db
     .select({
       id: profiles.id,
@@ -50,7 +64,10 @@ export async function getCustomers({
       avatarUrl: profiles.avatarUrl,
       isActive: profiles.isActive,
       createdAt: profiles.createdAt,
-      totalSpent: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
+      totalSpent:
+        sql<number>`coalesce(sum(case when ${orders.fulfillmentStatus} != 'cancelled' then ${orders.total} else 0 end), 0)`.mapWith(
+          Number,
+        ),
       orderCount: sql<number>`count(${orders.id})`.mapWith(Number),
     })
     .from(profiles)

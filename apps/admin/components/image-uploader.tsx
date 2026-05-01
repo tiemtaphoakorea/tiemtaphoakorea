@@ -87,7 +87,7 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
           {value.map((url, idx) => (
             <div
               key={url}
-              className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900"
+              className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
             >
               <Image
                 src={url}
@@ -114,7 +114,7 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className={cn(
-            "flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 p-8 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900/50",
+            "flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 p-8 transition-colors hover:bg-slate-50",
             isUploading && "pointer-events-none opacity-50",
           )}
         >
@@ -134,10 +134,10 @@ export function ImageUploader({ value = EMPTY_URLS, onChange, maxFiles = 5 }: Im
             </div>
           ) : (
             <div className="flex flex-col items-center text-slate-400">
-              <div className="mb-3 rounded-full bg-slate-100 p-4 dark:bg-slate-800">
+              <div className="mb-3 rounded-full bg-slate-100 p-4">
                 <Upload className="h-8 w-8 text-slate-500" />
               </div>
-              <h3 className="font-bold text-slate-700 dark:text-slate-200">Click để chọn ảnh</h3>
+              <h3 className="font-bold text-slate-700">Click để chọn ảnh</h3>
               <p className="text-sm">Hoặc kéo thả vào đây (Tối đa {maxFiles} ảnh)</p>
             </div>
           )}

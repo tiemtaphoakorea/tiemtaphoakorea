@@ -1,273 +1,234 @@
 "use client";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
-import { PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { formatCurrency } from "@workspace/shared/utils";
-import { Badge } from "@workspace/ui/components/badge";
+import type { Expense } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { DataTable } from "@workspace/ui/components/data-table";
+import { Card } from "@workspace/ui/components/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Input } from "@workspace/ui/components/input";
-import { MoreVertical, Plus, Search, Trash2 } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { ExpenseAddSheet } from "@/components/admin/expense-add-sheet";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import { Plus, Wallet } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
+import {
+  TableEmptyRow,
+  TableErrorRow,
+  TableLoadingRows,
+} from "@/components/admin/shared/data-state";
+import { ExpenseDrawer } from "@/components/admin/shared/expense-drawer";
+import { formatVnd } from "@/components/admin/shared/mock-data";
+import { StatCard } from "@/components/admin/shared/stat-card";
+import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-export default function ExpensesPage() {
-  return (
-    <Suspense fallback={<div />}>
-      <ExpensesPageContent />
-    </Suspense>
-  );
-}
+type ExpenseTypeFilter = "all" | "fixed" | "variable";
+const PAGE_LIMIT = 50;
 
-function ExpensesPageContent() {
+const fmtDate = (d: Date | string): string => new Date(d).toLocaleDateString("vi-VN");
+
+export default function AdminExpenses() {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [typeFilter, setTypeFilter] = useState<ExpenseTypeFilter>("all");
+  const [adding, setAdding] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
 
-  const type = (searchParams.get("type") as "fixed" | "variable" | null) || "";
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.max(
-    1,
-    parseInt(searchParams.get("limit") || String(PAGINATION_DEFAULT.LIMIT), 10),
-  );
-
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.admin.expenses.list(type, page, limit),
-    queryFn: () =>
-      adminClient.getExpenses({
-        type: type || undefined,
-        page,
-        limit,
+  const expensesQuery = useQuery({
+    queryKey: queryKeys.admin.expenses.list(typeFilter, 1, PAGE_LIMIT),
+    queryFn: async () =>
+      await adminClient.getExpenses({
+        month,
+        year,
+        type: typeFilter === "all" ? undefined : typeFilter,
+        page: 1,
+        limit: PAGE_LIMIT,
       }),
     placeholderData: keepPreviousData,
-  });
-
-  const expenses = data?.data || [];
-  const metadata = data?.metadata;
-
-  const updateParams = (newParams: Record<string, string | number | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, String(value));
-      }
-    });
-    if (newParams.type !== undefined && newParams.page === undefined) {
-      params.set("page", "1");
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const createMutation = useMutation({
-    mutationFn: (data: any) => adminClient.createExpense(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
-      setIsAddSheetOpen(false);
-      toast.success("Thành công", { description: "Đã thêm chi phí thành công" });
-    },
-    onError: () => {
-      toast.error("Lỗi", { description: "Không thể thêm chi phí. Vui lòng thử lại." });
-    },
+    staleTime: 60_000,
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminClient.deleteExpense(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.expenses.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.finance.all });
-      toast.success("Thành công", { description: "Đã xóa chi phí" });
-    },
-    onError: () => {
-      toast.error("Lỗi", { description: "Không thể xóa chi phí." });
     },
   });
 
-  const columns = useMemo<ColumnDef<any>[]>(
-    () => [
-      {
-        accessorKey: "date",
-        header: "Ngày ghi nhận",
-        cell: ({ row }) => (
-          <span className="font-medium text-slate-500">
-            {new Date(row.original.date).toLocaleDateString("vi-VN")}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "description",
-        header: "Nội dung chi phí",
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="line-clamp-1 font-bold text-slate-900 dark:text-white">
-              {row.original.description}
-            </span>
-            <span className="text-muted-foreground text-[10px] font-medium tracking-tight uppercase">
-              Người tạo: {row.original.creator?.fullName || "Admin"}
-            </span>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Loại",
-        cell: ({ row }) => (
-          <Badge
-            variant="secondary"
-            className={`rounded-md text-[10px] font-bold uppercase ${
-              row.original.type === "fixed"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-            }`}
-          >
-            {row.original.type === "fixed" ? "Cố định" : "Biến đổi"}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "amount",
-        header: () => <div className="text-right">Số tiền</div>,
-        cell: ({ row }) => (
-          <div className="text-right font-black text-slate-900 dark:text-white">
-            {formatCurrency(parseFloat(row.original.amount))}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        cell: ({ row }) => (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 w-8 rounded-lg p-0 group-hover:bg-white dark:group-hover:bg-slate-800"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 rounded-xl p-2">
-                <DropdownMenuItem
-                  className="cursor-pointer rounded-lg font-bold text-red-500 focus:text-red-500"
-                  onClick={() => {
-                    if (confirm("Bạn có chắc chắn muốn xóa chi phí này?")) {
-                      deleteMutation.mutate(row.original.id);
-                    }
-                  }}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Xóa chi phí
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
-      },
-    ],
-    [deleteMutation],
-  );
+  const list: Expense[] = expensesQuery.data?.data ?? [];
+
+  const totals = useMemo(() => {
+    let total = 0,
+      fixed = 0,
+      variable = 0;
+    for (const e of list) {
+      const a = Number(e.amount ?? 0);
+      total += a;
+      if (e.type === "fixed") fixed += a;
+      else variable += a;
+    }
+    return { total, fixed, variable };
+  }, [list]);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">Quản lý chi phí</h1>
-          <p className="text-muted-foreground font-medium">
-            Theo dõi các khoản chi phí vận hành của cửa hàng.
-          </p>
-        </div>
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2)]:max-sm:border-r-0 [&>*:last-child]:max-sm:col-span-2 [&>*:last-child]:max-sm:border-r-0 [&>*:last-child]:max-sm:border-b-0 sm:grid-cols-3">
+        <StatCard
+          label={`Tổng chi T${month}/${year}`}
+          value={formatVnd(totals.total)}
+          delta={`${list.length} khoản`}
+          direction="down"
+          icon={Wallet}
+          tone="danger"
+        />
+        <StatCard
+          label="Cố định"
+          value={formatVnd(totals.fixed)}
+          delta="Định kỳ hàng tháng"
+          direction="down"
+          icon={Wallet}
+          tone="amber"
+        />
+        <StatCard
+          label="Biến đổi"
+          value={formatVnd(totals.variable)}
+          delta="Phát sinh"
+          direction="down"
+          icon={Wallet}
+          tone="primary"
+        />
+      </div>
 
-        <Button
-          onClick={() => setIsAddSheetOpen(true)}
-          className="shadow-primary/20 h-11 gap-2 rounded-xl font-black shadow-lg"
-        >
-          <Plus className="h-5 w-5" />
-          Ghi nhận chi phí
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+            <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SelectItem key={i} value={String(i + 1)}>
+                  Tháng {i + 1}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+            <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[now.getFullYear() - 1, now.getFullYear()].map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ExpenseTypeFilter)}>
+            <SelectTrigger className="col-span-2 h-[34px] w-full rounded-lg text-[13px] sm:col-span-1 sm:w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả loại</SelectItem>
+              <SelectItem value="fixed">Cố định</SelectItem>
+              <SelectItem value="variable">Biến đổi</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setAdding(true)}>
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+          Ghi chi phí
         </Button>
       </div>
 
-      <Card className="gap-0 py-0 overflow-hidden border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
-        <CardHeader className="border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/50">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div className="flex items-center gap-2">
-              <Button
-                variant={type === "" ? "default" : "outline"}
-                size="sm"
-                onClick={() => updateParams({ type: "" })}
-                className="rounded-lg font-bold"
-              >
-                Tất cả
-              </Button>
-              <Button
-                variant={type === "fixed" ? "default" : "outline"}
-                size="sm"
-                onClick={() => updateParams({ type: "fixed" })}
-                className="rounded-lg font-bold"
-              >
-                Cố định
-              </Button>
-              <Button
-                variant={type === "variable" ? "default" : "outline"}
-                size="sm"
-                onClick={() => updateParams({ type: "variable" })}
-                className="rounded-lg font-bold"
-              >
-                Biến đổi
-              </Button>
-            </div>
-
-            <div className="relative w-full md:w-64">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                placeholder="Tìm nội dung chi..."
-                className="h-10 rounded-xl border-slate-200 pl-9 dark:border-slate-800"
-                readOnly
-                aria-label="Tìm kiếm (xử lý ở backend khi có API)"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={expenses}
-            isLoading={isLoading}
-            pageCount={metadata?.totalPages ?? 1}
-            pagination={{
-              pageIndex: page - 1,
-              pageSize: limit,
-            }}
-            onPaginationChange={(p) =>
-              updateParams({
-                page: p.pageIndex + 1,
-                limit: p.pageSize,
-              })
-            }
-            emptyMessage="Chưa có khoản chi phí nào được ghi nhận."
-          />
-        </CardContent>
+      <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                {["Khoản chi", "Loại", "Số tiền", "Ngày", "Người ghi", ""].map((h, i) => (
+                  <TableHead
+                    key={i}
+                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    {h}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {expensesQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
+              {expensesQuery.error && (
+                <TableErrorRow cols={6} message={String(expensesQuery.error)} />
+              )}
+              {!expensesQuery.isLoading && list.length === 0 && (
+                <TableEmptyRow cols={6} message="Chưa có chi phí" />
+              )}
+              {list.map((e) => (
+                <TableRow key={e.id}>
+                  <TableCell className="px-4 py-2.5 text-[13px] font-semibold">
+                    {e.description}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">
+                    <TonePill tone={e.type === "fixed" ? "indigo" : "amber"}>
+                      {e.type === "fixed" ? "Cố định" : "Biến đổi"}
+                    </TonePill>
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
+                    {formatVnd(Number(e.amount))}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {fmtDate(e.date)}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {e.creator?.fullName ?? "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={deleteMutation.isPending}
+                      className="h-7 rounded-md border-red-200 bg-red-100 text-xs text-red-600 hover:bg-red-200"
+                      onClick={() => setDeleteTarget(e)}
+                    >
+                      Xoá
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
-      <ExpenseAddSheet
-        isOpen={isAddSheetOpen}
-        onOpenChange={setIsAddSheetOpen}
-        onSubmit={(data) => createMutation.mutate(data)}
-        isSubmitting={createMutation.isPending}
+      <ExpenseDrawer open={adding} onClose={() => setAdding(false)} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Xoá chi phí "${deleteTarget?.description}"?`}
+        confirmLabel="Xoá"
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
       />
     </div>
   );

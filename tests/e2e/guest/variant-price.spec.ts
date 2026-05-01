@@ -1,5 +1,5 @@
 import type { Locator } from "@playwright/test";
-import { STOREFRONT_BASE_URL } from "../../../lib/constants";
+import { STOREFRONT_BASE_URL } from "@workspace/shared/constants";
 import { expect, test } from "../fixtures/auth";
 
 /**

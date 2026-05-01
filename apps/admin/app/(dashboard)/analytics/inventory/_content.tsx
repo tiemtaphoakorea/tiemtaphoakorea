@@ -37,29 +37,24 @@ export default function AnalyticsInventoryPage() {
         >
           ← Báo cáo
         </Link>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-          Tồn kho
-        </h1>
+        <h1 className="text-2xl font-black tracking-tight text-slate-900">Tồn kho</h1>
       </div>
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-200 dark:bg-slate-700" />
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-200" />
           ))}
         </div>
       ) : (
         data?.inventory && <InventoryStats data={data.inventory} />
       )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200">
           <CardContent className="pt-6">
             {stockLoading ? (
               <div className="flex flex-col gap-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-10 animate-pulse rounded-lg bg-gray-200 dark:bg-slate-700"
-                  />
+                  <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-200" />
                 ))}
               </div>
             ) : (
@@ -67,15 +62,12 @@ export default function AnalyticsInventoryPage() {
             )}
           </CardContent>
         </Card>
-        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200">
           <CardContent className="pt-6">
             {stockLoading ? (
               <div className="flex flex-col gap-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-10 animate-pulse rounded-lg bg-gray-200 dark:bg-slate-700"
-                  />
+                  <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-200" />
                 ))}
               </div>
             ) : (

@@ -69,7 +69,7 @@ export function ExpenseAddSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-white p-10 sm:max-w-[440px]">
+      <SheetContent className="bg-white p-6 sm:max-w-[440px] sm:p-10">
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex h-full flex-col">
           <SheetHeader className="mb-8 p-0">
             <SheetTitle className="text-2xl font-black">Thêm chi phí</SheetTitle>

@@ -8,6 +8,7 @@ import {
 } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -75,7 +76,7 @@ export function CustomerAddSheet({
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <SheetTitle className="text-2xl font-black">Thêm khách hàng mới</SheetTitle>
           <SheetDescription className="font-medium text-slate-500">
             Nhập thông tin cơ bản để tạo tài khoản khách hàng. Hệ thống sẽ tự động tạo mã định danh
@@ -85,17 +86,12 @@ export function CustomerAddSheet({
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 py-8">
           <div className="space-y-4">
             <div className="grid gap-2">
-              <label
-                htmlFor="add-customer-full-name"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Họ và tên
-              </label>
+              <Label htmlFor="add-customer-full-name">Họ và tên</Label>
               <Input
                 id="add-customer-full-name"
                 {...register("fullName")}
                 placeholder="Nguyễn Văn A"
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="h-11 bg-slate-50/50 font-medium"
                 aria-invalid={!!errors.fullName}
               />
               {errors.fullName && (
@@ -104,35 +100,22 @@ export function CustomerAddSheet({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <label
-                  htmlFor="add-customer-phone"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Số điện thoại
-                </label>
+                <Label htmlFor="add-customer-phone">Số điện thoại</Label>
                 <Input
                   id="add-customer-phone"
                   {...register("phone")}
                   placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                  className="h-11 bg-slate-50/50 font-medium"
                 />
               </div>
               <div className="grid gap-2">
-                <label
-                  htmlFor="add-customer-type"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Loại khách hàng
-                </label>
+                <Label htmlFor="add-customer-type">Loại khách hàng</Label>
                 <Controller
                   name="customerType"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger
-                        id="add-customer-type"
-                        className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
-                      >
+                      <SelectTrigger id="add-customer-type" className="h-11 bg-slate-50/50">
                         <SelectValue placeholder="Chọn loại" />
                       </SelectTrigger>
                       <SelectContent>
@@ -145,21 +128,16 @@ export function CustomerAddSheet({
               </div>
             </div>
             <div className="grid gap-2">
-              <label
-                htmlFor="add-customer-address"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Địa chỉ
-              </label>
+              <Label htmlFor="add-customer-address">Địa chỉ</Label>
               <Input
                 id="add-customer-address"
                 {...register("address")}
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="h-11 bg-slate-50/50 font-medium"
               />
             </div>
           </div>
-          <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+          <SheetFooter className="border-t border-slate-100 pt-6">
             <div className="flex w-full items-center justify-end gap-3">
               <Button
                 type="button"

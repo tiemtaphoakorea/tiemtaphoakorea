@@ -12,9 +12,9 @@ interface AnalyticsStatsProps {
 
 export function AnalyticsStats({ data }: AnalyticsStatsProps) {
   return (
-    <div className="overflow-hidden rounded-xl ring-1 ring-slate-200 dark:ring-slate-800">
-      <div className="grid grid-cols-2 gap-px bg-slate-200 lg:grid-cols-4 dark:bg-slate-800">
-        <div className="bg-white px-6 py-5 dark:bg-slate-950">
+    <div className="overflow-hidden rounded-xl ring-1 ring-slate-200">
+      <div className="grid grid-cols-2 gap-px bg-slate-200 lg:grid-cols-4">
+        <div className="bg-white px-4 py-5 sm:px-6">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">
               Doanh thu
@@ -23,7 +23,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
               <DollarSign className="h-3.5 w-3.5" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-black tabular-nums tracking-tight">
+          <p className="mt-3 truncate text-2xl font-black tabular-nums tracking-tight md:text-3xl">
             {formatCurrency(data.totalRevenue)}
           </p>
           <div className="mt-2 flex items-center gap-1 text-emerald-500">
@@ -32,7 +32,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
           </div>
         </div>
 
-        <div className="bg-white px-6 py-5 dark:bg-slate-950">
+        <div className="bg-white px-4 py-5 sm:px-6">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">
               Đơn hàng
@@ -41,7 +41,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
               <ShoppingBag className="h-3.5 w-3.5" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-black tabular-nums tracking-tight">
+          <p className="mt-3 truncate text-2xl font-black tabular-nums tracking-tight md:text-3xl">
             {data.totalOrders.toLocaleString()}
           </p>
           <div className="mt-2 flex items-center gap-1 text-emerald-500">
@@ -50,7 +50,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
           </div>
         </div>
 
-        <div className="bg-white px-6 py-5 dark:bg-slate-950">
+        <div className="bg-white px-4 py-5 sm:px-6">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">
               Khách hàng
@@ -59,7 +59,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
               <Users className="h-3.5 w-3.5" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-black tabular-nums tracking-tight">
+          <p className="mt-3 truncate text-2xl font-black tabular-nums tracking-tight md:text-3xl">
             {data.totalCustomers.toLocaleString()}
           </p>
           <div className="mt-2 flex items-center gap-1 text-emerald-500">
@@ -70,7 +70,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
           </div>
         </div>
 
-        <div className="bg-white px-6 py-5 dark:bg-slate-950">
+        <div className="bg-white px-4 py-5 sm:px-6">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-black tracking-widest text-slate-400 uppercase">
               Tỷ lệ chuyển đổi
@@ -79,7 +79,7 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
               <TrendingUp className="h-3.5 w-3.5" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-black tabular-nums tracking-tight">
+          <p className="mt-3 truncate text-2xl font-black tabular-nums tracking-tight md:text-3xl">
             {data.conversionRate}%
           </p>
           <div className="mt-2 flex items-center gap-1 text-slate-400">

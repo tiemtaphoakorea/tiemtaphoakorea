@@ -410,7 +410,13 @@ export const adminClient = {
     }>;
   },
 
-  async getCustomers(params?: { search?: string; status?: string; page?: number; limit?: number }) {
+  async getCustomers(params?: {
+    search?: string;
+    status?: string;
+    customerType?: string;
+    page?: number;
+    limit?: number;
+  }) {
     return axios.get<PaginatedResponse<CustomerStatsItem>>(API_ENDPOINTS.ADMIN.CUSTOMERS, {
       params,
     }) as unknown as Promise<PaginatedResponse<CustomerStatsItem>>;
@@ -470,12 +476,6 @@ export const adminClient = {
     ) as unknown as Promise<typeof data>;
   },
 
-  async resetCustomerPassword(id: string) {
-    return axios.post<{ newPassword: string }>(
-      `${API_ENDPOINTS.ADMIN.CUSTOMERS}/${id}/reset-password`,
-    ) as unknown as Promise<{ newPassword: string }>;
-  },
-
   /**
    * Create a new product.
    */
@@ -490,6 +490,24 @@ export const adminClient = {
     return axios.get<{ product: any }>(
       `${API_ENDPOINTS.ADMIN.PRODUCTS}/${id}`,
     ) as unknown as Promise<{ product: any }>;
+  },
+
+  async updateProduct(
+    id: string,
+    data: {
+      name: string;
+      slug?: string;
+      description?: string;
+      categoryId?: string | null;
+      basePrice?: number;
+      isActive?: boolean;
+      variants?: Array<{ id?: string; [key: string]: any }>;
+    },
+  ) {
+    return axios.put<{ success: boolean; product: any }>(
+      `${API_ENDPOINTS.ADMIN.PRODUCTS}/${id}`,
+      data,
+    ) as unknown as Promise<{ success: boolean; product: any }>;
   },
 
   // Supplier Management

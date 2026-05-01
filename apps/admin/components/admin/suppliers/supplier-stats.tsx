@@ -13,7 +13,7 @@ interface SupplierStatsProps {
 export function SupplierStats({ stats }: SupplierStatsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Tổng NCC
@@ -28,7 +28,7 @@ export function SupplierStats({ stats }: SupplierStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Đang hợp tác
@@ -43,7 +43,7 @@ export function SupplierStats({ stats }: SupplierStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm dark:bg-slate-950/50 dark:ring-slate-800">
+      <Card className="border-none bg-white/50 shadow-sm ring-1 ring-slate-200 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Ngừng hợp tác
@@ -58,7 +58,7 @@ export function SupplierStats({ stats }: SupplierStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="ring-primary/10 bg-primary/5 dark:bg-primary/10 border-none shadow-sm ring-1 backdrop-blur-sm">
+      <Card className="ring-primary/10 bg-primary/5 border-none shadow-sm ring-1 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-primary/70 text-sm font-black tracking-wider uppercase">
             Tổng đơn hàng

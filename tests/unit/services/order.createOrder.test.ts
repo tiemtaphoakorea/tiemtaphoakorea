@@ -5,13 +5,13 @@
  * in-memory DB so we can assert the database state after the service runs.
  */
 
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { orders } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
 import { profiles } from "@/db/schema/profiles";
-import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { createOrder } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 

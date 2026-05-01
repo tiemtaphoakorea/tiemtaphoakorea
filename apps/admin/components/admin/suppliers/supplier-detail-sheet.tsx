@@ -65,7 +65,7 @@ export function SupplierDetailSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <div className="flex items-center gap-3">
             <SheetTitle className="text-2xl font-black">{supplier.name}</SheetTitle>
             <Badge variant="outline" className="font-black">
@@ -117,7 +117,7 @@ export function SupplierDetailSheet({
                 Thống kê giao dịch
               </h3>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+                <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
                     <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                       <Package className="h-3 w-3" /> Tổng đơn
@@ -128,7 +128,7 @@ export function SupplierDetailSheet({
                   </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+                <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
                     <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-amber-500 uppercase">
                       <Clock className="h-3 w-3" /> Đang chờ
@@ -141,7 +141,7 @@ export function SupplierDetailSheet({
                   </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+                <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
                     <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-emerald-500 uppercase">
                       <CheckCircle className="h-3 w-3" /> Đã nhận
@@ -176,7 +176,7 @@ export function SupplierDetailSheet({
               <h3 className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Đơn hàng gần đây
               </h3>
-              <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -219,9 +219,7 @@ export function SupplierDetailSheet({
               <h3 className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Ghi chú
               </h3>
-              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-400">
-                {supplier.note}
-              </p>
+              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">{supplier.note}</p>
             </div>
           )}
         </div>

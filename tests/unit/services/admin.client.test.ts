@@ -1,6 +1,6 @@
+import { ADMIN_STATS_SECTION } from "@workspace/shared/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
-import { ADMIN_STATS_SECTION } from "@/lib/constants";
 
 const axiosMock = {
   get: vi.fn(),
@@ -323,17 +323,6 @@ describe("admin.client", () => {
       expect(axiosMock.patch).toHaveBeenCalledWith(`${API_ENDPOINTS.ADMIN.CUSTOMERS}/cus1/status`, {
         isActive: false,
       });
-    });
-
-    it("should reset customer password", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      axiosMock.post.mockResolvedValue({ newPassword: "new123" });
-
-      await adminClient.resetCustomerPassword("cus-1");
-
-      expect(axiosMock.post).toHaveBeenCalledWith(
-        `${API_ENDPOINTS.ADMIN.CUSTOMERS}/cus-1/reset-password`,
-      );
     });
   });
 

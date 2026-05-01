@@ -27,7 +27,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
       <CardHeader>
         <CardTitle className="text-xl font-black">Doanh số theo danh mục</CardTitle>
         <CardDescription className="font-medium">
@@ -65,8 +65,8 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
               content={({ active, payload }) => {
                 if (active && payload?.length) {
                   return (
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-950">
-                      <p className="text-sm font-black text-slate-900 uppercase dark:text-white">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+                      <p className="text-sm font-black text-slate-900 uppercase">
                         {payload[0].payload.category}
                       </p>
                       <p className="text-primary mt-1 text-xs font-bold">
@@ -86,7 +86,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 border-t border-slate-100 pt-6 dark:border-slate-800">
+      <CardFooter className="flex-col items-start gap-2 border-t border-slate-100 pt-6">
         <div className="text-muted-foreground text-[10px] leading-none font-medium">
           Hiển thị số đơn hàng theo danh mục trong năm {currentYear}
         </div>

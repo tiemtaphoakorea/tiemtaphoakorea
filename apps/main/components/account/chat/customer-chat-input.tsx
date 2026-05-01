@@ -28,7 +28,7 @@ export function CustomerChatInput({
   return (
     <div className="bg-card border-t p-4">
       <div className="mx-auto flex max-w-2xl items-center gap-2">
-        <input
+        <Input
           type="file"
           ref={fileInputRef}
           onChange={onImageUpload}

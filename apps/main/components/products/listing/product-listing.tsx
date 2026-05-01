@@ -1,7 +1,8 @@
 import type { ProductListItem } from "@workspace/database/services/product.server";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Eye, Search } from "lucide-react";
+import { Card, CardContent } from "@workspace/ui/components/card";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,23 +15,27 @@ interface ProductListingProps {
 export function ProductListing({ products, viewMode, onResetFilters }: ProductListingProps) {
   if (products.length === 0) {
     return (
-      <div className="py-24 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-          <Search className="h-8 w-8 text-primary/50" />
-        </div>
-        <h3 className="mb-2 text-xl font-semibold text-foreground">Không tìm thấy sản phẩm</h3>
-        <p className="text-sm text-muted-foreground">
-          Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-6 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-white"
-          onClick={onResetFilters}
-        >
-          Xóa tất cả bộ lọc
-        </Button>
-      </div>
+      <Card className="items-center gap-4 border-dashed bg-card py-16 text-center">
+        <CardContent className="flex flex-col items-center gap-3">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-secondary">
+            <Search className="size-7 text-primary/50" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">Không tìm thấy sản phẩm</h3>
+            <p className="text-sm text-muted-foreground">
+              Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onResetFilters}
+            className="mt-2 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            Xóa tất cả bộ lọc
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -39,8 +44,8 @@ export function ProductListing({ products, viewMode, onResetFilters }: ProductLi
       data-testid="product-list"
       className={
         viewMode === "grid"
-          ? "grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-5 2xl:grid-cols-4"
-          : "flex flex-col gap-4"
+          ? "grid grid-cols-2 gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-5"
+          : "flex flex-col gap-3"
       }
     >
       {products.map((product) => (
@@ -57,91 +62,112 @@ function ProductItem({
   product: ProductListItem;
   viewMode: "grid" | "list";
 }) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+
+  const price = product.minPrice || Number(product.basePrice) || 0;
+  const hasPriceRange = product.minPrice && product.maxPrice && product.maxPrice > product.minPrice;
 
   if (viewMode === "list") {
     return (
       <Link
-        href={`/products/${product.slug}`}
+        href={`/product/${product.slug}`}
         data-testid={`product-card-${product.slug}`}
-        className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-3 transition-all duration-300 hover:border-primary/20 hover:shadow-md md:flex-row cursor-pointer"
+        className="group block"
       >
-        <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl md:w-36">
-          <Image
-            src={product.thumbnail}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, 180px"
-          />
-        </div>
-        <div className="flex flex-1 flex-col justify-center py-1.5">
-          <div className="mb-2 flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="border-none bg-secondary text-primary text-[10px] font-bold uppercase tracking-wide"
-            >
-              {product.categoryName}
-            </Badge>
+        <Card className="flex-row gap-0 py-0 transition-all duration-300 hover:ring-primary/30">
+          <div className="relative aspect-square w-32 shrink-0 overflow-hidden bg-muted/40 sm:w-36">
+            <Image
+              src={product.thumbnail || "/placeholder.png"}
+              alt={product.name}
+              fill
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 128px, 144px"
+            />
           </div>
-          <h3 className="mb-2 text-base font-bold text-foreground transition-colors group-hover:text-primary">
-            {product.name}
-          </h3>
-          <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
-          <div className="mt-auto flex items-center gap-4">
-            <span data-testid="product-card-price" className="text-lg font-extrabold text-primary">
-              {formatPrice(product.minPrice || Number(product.basePrice) || 0)}
-            </span>
-          </div>
-        </div>
+          <CardContent className="flex flex-1 items-start gap-4 p-4 sm:p-5">
+            <div className="min-w-0 flex-1">
+              {product.categoryName && (
+                <div className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                  {product.categoryName}
+                </div>
+              )}
+              <h3 className="mb-2 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+                {product.name}
+              </h3>
+              {product.description && (
+                <p className="line-clamp-2 max-w-md text-[13px] leading-relaxed text-muted-foreground">
+                  {product.description}
+                </p>
+              )}
+            </div>
+            <div className="shrink-0 text-right">
+              <span
+                data-testid="product-card-price"
+                className="block text-lg font-extrabold tracking-tight text-primary tabular-nums sm:text-xl"
+              >
+                {formatPrice(price)}
+              </span>
+              {hasPriceRange && (
+                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                  đến {formatPrice(product.maxPrice)}
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </Link>
     );
   }
 
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={`/product/${product.slug}`}
       data-testid={`product-card-${product.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/8 cursor-pointer"
+      className="group block h-full"
     >
-      {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
-        <Image
-          src={product.thumbnail}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 50vw, 33vw"
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/8">
-          <div className="flex h-10 w-10 scale-75 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
-            <Eye className="h-4 w-4 text-primary" />
-          </div>
+      <Card className="h-full gap-0 py-0 transition-all duration-300 hover:-translate-y-0.5 hover:ring-primary/30">
+        <div className="relative aspect-square overflow-hidden bg-muted/30">
+          <Image
+            src={product.thumbnail || "/placeholder.png"}
+            alt={product.name}
+            fill
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
+          />
+          {product.totalStock <= 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[2px]">
+              <Badge variant="secondary" className="bg-background text-xs font-semibold">
+                Hết hàng
+              </Badge>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-          {product.categoryName}
-        </span>
-        <h3 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-          {product.name}
-        </h3>
-        <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3">
-          <span data-testid="product-card-price" className="text-base font-extrabold text-primary">
-            {formatPrice(product.minPrice || Number(product.basePrice) || 0)}
-          </span>
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-primary transition-all group-hover:bg-primary group-hover:text-white">
-            <Eye className="h-3.5 w-3.5" />
+        <CardContent className="flex flex-1 flex-col gap-1 p-3 md:p-3.5">
+          {product.categoryName && (
+            <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              {product.categoryName}
+            </span>
+          )}
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-[13px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary md:text-sm">
+            {product.name}
+          </h3>
+          <div className="mt-auto flex items-baseline gap-1.5 pt-2">
+            <span
+              data-testid="product-card-price"
+              className="text-[15px] font-extrabold tracking-tight text-primary tabular-nums md:text-base"
+            >
+              {formatPrice(price)}
+            </span>
+            {hasPriceRange && (
+              <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                +{formatPrice(product.maxPrice - price)}
+              </span>
+            )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 }

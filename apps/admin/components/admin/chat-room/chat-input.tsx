@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@workspace/database/lib/supabase/client";
 import type { ChatTypingPayload } from "@workspace/shared/types/chat";
+import { Input } from "@workspace/ui/components/input";
 import { Image as ImageIcon, Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -147,7 +148,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-slate-100 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="border-t border-slate-100 bg-white px-4 py-3">
       <input
         type="file"
         ref={fileInputRef}
@@ -155,12 +156,12 @@ export function ChatInput({
         accept="image/jpeg,image/png,image/webp"
         className="hidden"
       />
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 transition-colors focus-within:border-slate-300 focus-within:bg-white dark:border-slate-700 dark:bg-slate-900 dark:focus-within:border-slate-600 dark:focus-within:bg-slate-900">
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 transition-colors focus-within:border-slate-300 focus-within:bg-white">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isSending || isUploading}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
           title="Gửi ảnh"
         >
           {isUploading ? (
@@ -170,7 +171,7 @@ export function ChatInput({
           )}
         </button>
 
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={newMessage}
@@ -178,7 +179,7 @@ export function ChatInput({
           onKeyDown={handleKeyPress}
           placeholder="Viết tin nhắn phản hồi..."
           disabled={isSending || isUploading}
-          className="min-w-0 flex-1 bg-transparent py-1 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none dark:text-slate-200"
+          className="h-auto min-w-0 flex-1 border-0 bg-transparent px-0 py-1 font-medium text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
         />
 
         <button

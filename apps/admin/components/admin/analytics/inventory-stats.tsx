@@ -12,12 +12,12 @@ export function InventoryStats({ data }: InventoryStatsProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase dark:text-white">
+      <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">
         Inventory Report
       </h2>
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
-          <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Giá trị tồn (vốn)
@@ -34,7 +34,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Giá trị tồn (bán)
@@ -53,7 +53,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Lợi nhuận tiềm năng
@@ -63,7 +63,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+              <div className="text-2xl font-black text-emerald-600">
                 {formatCurrency(potentialProfit)}
               </div>
               <p className="mt-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
@@ -72,7 +72,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Sắp hết hàng
@@ -82,16 +82,14 @@ export function InventoryStats({ data }: InventoryStatsProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
-                {data.lowStockCount}
-              </div>
+              <div className="text-2xl font-black text-amber-600">{data.lowStockCount}</div>
               <p className="mt-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
                 Variant dưới ngưỡng tồn
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
                 Hết hàng
@@ -101,9 +99,7 @@ export function InventoryStats({ data }: InventoryStatsProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-red-600 dark:text-red-400">
-                {data.outOfStockCount}
-              </div>
+              <div className="text-2xl font-black text-red-600">{data.outOfStockCount}</div>
               <p className="mt-1 text-[10px] font-bold tracking-tight text-slate-400 uppercase">
                 Variant hết hàng
               </p>

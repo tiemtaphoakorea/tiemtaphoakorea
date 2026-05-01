@@ -5,13 +5,13 @@
  * deductions and fulfillment_status transitions.
  */
 
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { inventoryMovements } from "@/db/schema/inventory";
 import { orders } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
-import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { createOrder, stockOut } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 

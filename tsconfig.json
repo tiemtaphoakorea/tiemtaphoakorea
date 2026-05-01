@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@workspace/shared": ["./packages/shared/src/index.ts"],
+      "@workspace/shared/*": ["./packages/shared/src/*"]
     },
     "baseUrl": ".",
     "target": "ES2017"

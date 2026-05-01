@@ -108,11 +108,11 @@ export default function DebtDetailPage() {
       <BackLink />
 
       {/* Header */}
-      <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+      <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="flex flex-col gap-2">
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900">
                 {customer.fullName || "---"}
               </h1>
               <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
@@ -151,157 +151,163 @@ export default function DebtDetailPage() {
         </TabsList>
 
         <TabsContent value="unpaid">
-          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardContent className="p-0">
               {unpaidOrders.length === 0 ? (
                 <EmptyRow message="Không có đơn nợ." />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mã đơn</TableHead>
-                      <TableHead>Ngày báo hết</TableHead>
-                      <TableHead className="text-right">Tổng tiền</TableHead>
-                      <TableHead className="text-right">Đã trả</TableHead>
-                      <TableHead className="text-right">Còn nợ</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {unpaidOrders.map((o) => {
-                      const debt = Number(o.total ?? 0) - Number(o.paidAmount ?? 0);
-                      return (
-                        <TableRow key={o.id}>
-                          <TableCell>
-                            <Link
-                              href={ADMIN_ROUTES.ORDER_DETAIL(o.id)}
-                              className="text-primary font-bold hover:underline"
-                            >
-                              {o.orderNumber}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {formatYmd(o.stockOutAt)}
-                          </TableCell>
-                          <TableCell className="text-right">{formatCurrency(o.total)}</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(o.paidAmount ?? 0)}
-                          </TableCell>
-                          <TableCell className="text-right font-bold text-red-600 dark:text-red-400">
-                            {formatCurrency(debt)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mã đơn</TableHead>
+                        <TableHead>Ngày báo hết</TableHead>
+                        <TableHead className="text-right">Tổng tiền</TableHead>
+                        <TableHead className="text-right">Đã trả</TableHead>
+                        <TableHead className="text-right">Còn nợ</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {unpaidOrders.map((o) => {
+                        const debt = Number(o.total ?? 0) - Number(o.paidAmount ?? 0);
+                        return (
+                          <TableRow key={o.id}>
+                            <TableCell>
+                              <Link
+                                href={ADMIN_ROUTES.ORDER_DETAIL(o.id)}
+                                className="text-primary font-bold hover:underline"
+                              >
+                                {o.orderNumber}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {formatYmd(o.stockOutAt)}
+                            </TableCell>
+                            <TableCell className="text-right">{formatCurrency(o.total)}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(o.paidAmount ?? 0)}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-red-600">
+                              {formatCurrency(debt)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="history">
-          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardContent className="p-0">
               {paymentHistory.length === 0 ? (
                 <EmptyRow message="Chưa có giao dịch thanh toán." />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ngày</TableHead>
-                      <TableHead>Mã đơn</TableHead>
-                      <TableHead className="text-right">Số tiền</TableHead>
-                      <TableHead>Phương thức</TableHead>
-                      <TableHead>Mã tham chiếu</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paymentHistory.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell className="font-mono text-sm">
-                          {formatDate(p.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            href={ADMIN_ROUTES.ORDER_DETAIL(p.orderId)}
-                            className="text-primary font-bold hover:underline"
-                          >
-                            Xem đơn
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          {formatCurrency(p.amount)}
-                        </TableCell>
-                        <TableCell>{paymentMethodLabel(p.method)}</TableCell>
-                        <TableCell className="text-sm text-slate-500">
-                          {p.referenceCode || "---"}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ngày</TableHead>
+                        <TableHead>Mã đơn</TableHead>
+                        <TableHead className="text-right">Số tiền</TableHead>
+                        <TableHead>Phương thức</TableHead>
+                        <TableHead>Mã tham chiếu</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paymentHistory.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="font-mono text-sm">
+                            {formatDate(p.createdAt)}
+                          </TableCell>
+                          <TableCell>
+                            <Link
+                              href={ADMIN_ROUTES.ORDER_DETAIL(p.orderId)}
+                              className="text-primary font-bold hover:underline"
+                            >
+                              Xem đơn
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            {formatCurrency(p.amount)}
+                          </TableCell>
+                          <TableCell>{paymentMethodLabel(p.method)}</TableCell>
+                          <TableCell className="text-sm text-slate-500">
+                            {p.referenceCode || "---"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="all">
-          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+          <Card className="overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardContent className="p-0">
               {allOrders.length === 0 ? (
                 <EmptyRow message="Không có đơn hàng nào." />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mã đơn</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead className="text-right">Tổng tiền</TableHead>
-                      <TableHead className="text-right">Đã trả</TableHead>
-                      <TableHead>Ngày tạo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {allOrders.map((o) => {
-                      const pBadge = PAYMENT_BADGE[o.paymentStatus as PaymentStatusValue];
-                      const fBadge =
-                        FULFILLMENT_BADGE[o.fulfillmentStatus as FulfillmentStatusValue];
-                      return (
-                        <TableRow key={o.id}>
-                          <TableCell>
-                            <Link
-                              href={ADMIN_ROUTES.ORDER_DETAIL(o.id)}
-                              className="text-primary font-bold hover:underline"
-                            >
-                              {o.orderNumber}
-                            </Link>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap items-center gap-1">
-                              {pBadge && (
-                                <Badge variant="outline" className={pBadge.className}>
-                                  {pBadge.label}
-                                </Badge>
-                              )}
-                              {fBadge && (
-                                <Badge variant="outline" className={fBadge.className}>
-                                  {fBadge.label}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">{formatCurrency(o.total)}</TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(o.paidAmount ?? 0)}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {formatYmd(o.createdAt)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mã đơn</TableHead>
+                        <TableHead>Trạng thái</TableHead>
+                        <TableHead className="text-right">Tổng tiền</TableHead>
+                        <TableHead className="text-right">Đã trả</TableHead>
+                        <TableHead>Ngày tạo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allOrders.map((o) => {
+                        const pBadge = PAYMENT_BADGE[o.paymentStatus as PaymentStatusValue];
+                        const fBadge =
+                          FULFILLMENT_BADGE[o.fulfillmentStatus as FulfillmentStatusValue];
+                        return (
+                          <TableRow key={o.id}>
+                            <TableCell>
+                              <Link
+                                href={ADMIN_ROUTES.ORDER_DETAIL(o.id)}
+                                className="text-primary font-bold hover:underline"
+                              >
+                                {o.orderNumber}
+                              </Link>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap items-center gap-1">
+                                {pBadge && (
+                                  <Badge variant="outline" className={pBadge.className}>
+                                    {pBadge.label}
+                                  </Badge>
+                                )}
+                                {fBadge && (
+                                  <Badge variant="outline" className={fBadge.className}>
+                                    {fBadge.label}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">{formatCurrency(o.total)}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(o.paidAmount ?? 0)}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {formatYmd(o.createdAt)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -333,11 +339,7 @@ export default function DebtDetailPage() {
 function BackLink() {
   return (
     <div>
-      <Button
-        variant="ghost"
-        asChild
-        className="gap-2 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
-      >
+      <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
         <Link href={ADMIN_ROUTES.DEBTS}>
           <ChevronLeft className="h-4 w-4" />
           Quay lại danh sách
@@ -357,13 +359,11 @@ function Stat({
   highlight?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+    <div className="flex flex-col gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-4 py-3">
       <span className="text-xs font-medium text-slate-500">{label}</span>
       <span
         className={
-          highlight
-            ? "text-xl font-black text-red-600 dark:text-red-400"
-            : "text-xl font-black text-slate-900 dark:text-white"
+          highlight ? "text-xl font-black text-red-600" : "text-xl font-black text-slate-900"
         }
       >
         {value}

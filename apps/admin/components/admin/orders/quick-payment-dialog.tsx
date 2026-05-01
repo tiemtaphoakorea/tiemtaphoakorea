@@ -106,7 +106,7 @@ export function QuickPaymentDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-2 rounded-lg border border-slate-100 p-4 dark:border-slate-800">
+          <div className="grid gap-2 rounded-lg border border-slate-100 p-4">
             <div className="flex justify-between text-sm">
               <span>Số đơn đủ điều kiện:</span>
               <span className="font-bold">{eligibleOrders.length}</span>

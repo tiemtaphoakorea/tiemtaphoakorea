@@ -412,8 +412,22 @@ export async function getProductsForListing(params: {
   sort?: (typeof PRODUCT_SORT)[keyof typeof PRODUCT_SORT];
   page?: number;
   limit?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  hasDiscount?: boolean;
+  isNew?: boolean;
 }) {
-  const { search, categorySlug, sort = PRODUCT_SORT.LATEST, page = 1, limit = 12 } = params;
+  const {
+    search,
+    categorySlug,
+    sort = PRODUCT_SORT.LATEST,
+    page = 1,
+    limit = 12,
+    minPrice,
+    maxPrice,
+    hasDiscount,
+    isNew,
+  } = params;
 
   // Resolve category filter: include the matched category AND all its descendants
   let categoryIdFilter: ReturnType<typeof inArray> | undefined;
@@ -452,11 +466,15 @@ export async function getProductsForListing(params: {
 
   let orderBy: SQL | ReturnType<typeof desc> = desc(products.createdAt);
 
-  if (sort === PRODUCT_SORT.PRICE_ASC) {
+  if (sort === PRODUCT_SORT.POPULAR) {
+    orderBy = sql`coalesce((select sum(${orderItems.quantity}) from ${orderItems} join ${productVariants} as pv_oi on ${orderItems.variantId} = pv_oi.id where pv_oi.product_id = ${products.id}), 0) desc`;
+  } else if (sort === PRODUCT_SORT.PRICE_ASC) {
     orderBy = sql`min(${productVariants.price}) asc`;
   } else if (sort === PRODUCT_SORT.PRICE_DESC) {
     orderBy = sql`min(${productVariants.price}) desc`;
   }
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const filters = and(
     eq(products.isActive, true),
@@ -464,6 +482,14 @@ export async function getProductsForListing(params: {
       ? or(ilike(products.name, `%${search}%`), ilike(products.slug, `%${search}%`))
       : undefined,
     categoryIdFilter,
+    isNew ? gte(products.createdAt, thirtyDaysAgo) : undefined,
+  );
+
+  // Price and discount filters apply on the variant level via HAVING
+  const havingClauses = and(
+    minPrice !== undefined ? sql`min(${productVariants.price}) >= ${minPrice}` : undefined,
+    maxPrice !== undefined ? sql`min(${productVariants.price}) <= ${maxPrice}` : undefined,
+    hasDiscount ? sql`min(${productVariants.price}) < ${products.basePrice}` : undefined,
   );
 
   const query = db
@@ -492,24 +518,25 @@ export async function getProductsForListing(params: {
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
     .where(filters)
     .groupBy(products.id, categories.name)
+    .having(havingClauses)
     .orderBy(orderBy)
     .limit(limit)
     .offset((page - 1) * limit);
 
   const countQuery = db
-    .select({
-      count: sql<number>`count(distinct ${products.id})`,
-    })
+    .select({ id: products.id })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
-    .where(filters);
+    .where(filters)
+    .groupBy(products.id, categories.name)
+    .having(havingClauses);
 
   const [productsList, countResult] = await Promise.all([query, countQuery]);
 
   return {
     products: productsList,
-    total: Number(countResult[0]?.count || 0),
+    total: countResult.length,
   };
 }
 

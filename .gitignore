@@ -49,3 +49,8 @@ next-env.d.ts
 .turbo
 .worktrees
 .superpowers
+
+design-system/*
+.repomixignore
+repomix-output.xml
+release-manifest.json

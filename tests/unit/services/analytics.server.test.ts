@@ -1,6 +1,9 @@
+import {
+  ANALYTICS_GROWTH_RANDOM_OFFSET,
+  ANALYTICS_GROWTH_RANDOM_RANGE,
+} from "@workspace/shared/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/db.server";
-import { ANALYTICS_GROWTH_RANDOM_OFFSET, ANALYTICS_GROWTH_RANDOM_RANGE } from "@/lib/constants";
 import { getAnalyticsData } from "@/services/analytics.server";
 
 // Create a self-referential chainable mock

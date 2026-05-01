@@ -1,401 +1,223 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@workspace/database/lib/supabase/client";
-import type { ChatMessage as AdminChatMessage } from "@workspace/database/services/chat.server";
-import type { ChatRoomWithDetails } from "@workspace/database/types/admin";
-import { CHAT_MESSAGE_TYPE } from "@workspace/shared/constants";
-import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar";
-import { Badge } from "@workspace/ui/components/badge";
+import type { ChatMessage, ChatRoomWithDetails } from "@workspace/database/types/admin";
+import { Button } from "@workspace/ui/components/button";
+import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import { cn } from "@workspace/ui/lib/utils";
-import { Search } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { ArrowLeft, Send } from "lucide-react";
+import { Fragment, useState } from "react";
 import { useDebounce } from "use-debounce";
-import { ChatHeader } from "@/components/admin/chat-room/chat-header";
-import { ChatInput } from "@/components/admin/chat-room/chat-input";
-import { CustomerInfoSheet } from "@/components/admin/chat-room/customer-info-sheet";
-import { MessageList } from "@/components/admin/chat-room/message-list";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-export default function ChatPage() {
+const fmtTime = (d: Date | string | null): string => {
+  if (!d) return "";
+  return new Date(d).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+};
+
+export default function AdminMessages() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebounce(search, 300);
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
   const queryClient = useQueryClient();
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch] = useDebounce(searchInput, 300);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
-  const selectedRoomRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    selectedRoomRef.current = selectedRoomId;
-  }, [selectedRoomId]);
-
-  // Get current user profile
-  const { data: user } = useQuery({
-    queryKey: queryKeys.admin.profile,
-    queryFn: adminClient.getProfile,
-    staleTime: Infinity, // Profile doesn't change often
-  });
-
-  // Fetch rooms (filter on backend via debounced search param)
-  const { data: rooms = [] } = useQuery({
+  const roomsQuery = useQuery({
     queryKey: queryKeys.admin.chat.rooms.list(debouncedSearch),
     queryFn: () => adminClient.getChatRooms({ search: debouncedSearch || undefined }),
+    staleTime: 15_000,
   });
 
-  // Fetch messages for selected room
-  const { data: messagesData } = useQuery({
-    queryKey: queryKeys.admin.chat.messages(selectedRoomId),
+  // Auto-select first room on first load.
+  const rooms = roomsQuery.data ?? [];
+  const currentRoomId = activeRoomId ?? rooms[0]?.id ?? null;
+  const currentRoom: ChatRoomWithDetails | undefined = rooms.find((r) => r.id === currentRoomId);
+
+  const messagesQuery = useQuery({
+    queryKey: queryKeys.admin.chat.messages(currentRoomId),
     queryFn: async () => {
-      if (!selectedRoomId) return { messages: [] };
-      return adminClient.getChatMessages(selectedRoomId);
+      if (!currentRoomId) return { messages: [] as ChatMessage[] };
+      return adminClient.getChatMessages(currentRoomId);
     },
-    enabled: !!selectedRoomId,
+    enabled: !!currentRoomId,
+    staleTime: 5_000,
   });
 
-  const messages = useMemo(() => {
-    const rawMessages = ((messagesData as any)?.messages || []) as any[];
-    const seenIds = new Set<string>();
-    return rawMessages.filter((message) => {
-      if (!message?.id || seenIds.has(message.id)) return false;
-      seenIds.add(message.id);
-      return true;
-    });
-  }, [messagesData]);
-
-  // Send message mutation
-  const normalizeApiMessage = (message: any): AdminChatMessage => ({
-    id: message.id,
-    roomId: message.roomId,
-    senderId: message.senderId,
-    content: message.content ?? "",
-    messageType: message.messageType ?? CHAT_MESSAGE_TYPE.TEXT,
-    imageUrl: message.imageUrl ?? null,
-    isRead: message.isRead ?? false,
-    createdAt: message.createdAt ? new Date(message.createdAt) : new Date(),
-    sender: {
-      fullName: message.sender?.fullName ?? user?.fullName ?? "Bạn",
-      role: message.sender?.role ?? user?.role ?? null,
-    },
-  });
-
-  const sendMessageMutation = useMutation({
-    mutationFn: adminClient.sendChatMessage,
-    onMutate: async (variables) => {
-      if (!selectedRoomId || !user) return undefined;
-
-      await queryClient.cancelQueries({
-        queryKey: queryKeys.admin.chat.messages(selectedRoomId),
-      });
-
-      const previousMessages = queryClient.getQueryData<{
-        messages: AdminChatMessage[];
-      }>(queryKeys.admin.chat.messages(selectedRoomId));
-
-      const tempId = `temp-${crypto.randomUUID()}`;
-      const optimisticMessage: AdminChatMessage = {
-        id: tempId,
-        roomId: selectedRoomId,
-        senderId: user.id,
-        content: variables.content,
-        messageType: CHAT_MESSAGE_TYPE.TEXT,
-        imageUrl: null,
-        isRead: false,
-        createdAt: new Date(),
-        sender: {
-          fullName: user.fullName,
-          role: user.role,
-        },
-      };
-
-      queryClient.setQueryData<{ messages: AdminChatMessage[] }>(
-        queryKeys.admin.chat.messages(selectedRoomId),
-        (old) => ({
-          messages: [...(old?.messages || []), optimisticMessage],
-        }),
-      );
-
-      return { previousMessages, tempId, roomId: selectedRoomId };
-    },
-    onError: (_error, _variables, context) => {
-      if (!context) return;
-      queryClient.setQueryData(
-        queryKeys.admin.chat.messages(context.roomId),
-        context.previousMessages,
-      );
-    },
+  const sendMutation = useMutation({
+    mutationFn: ({ roomId, content }: { roomId: string; content: string }) =>
+      adminClient.sendChatMessage({ roomId, content }),
     onSuccess: () => {
-      if (!selectedRoomId) return;
-      // Invalidate rooms to update last message
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.admin.chat.rooms.all,
-      });
-    },
-    onSettled: (result, _error, _variables, context) => {
-      if (!context?.roomId) return;
-
-      if (result?.message) {
-        const confirmedMessage = normalizeApiMessage(result.message);
-        queryClient.setQueryData<{ messages: AdminChatMessage[] }>(
-          queryKeys.admin.chat.messages(context.roomId),
-          (old) => {
-            const currentMessages = old?.messages || [];
-            const withoutTemp = currentMessages.filter((msg) => msg.id !== context.tempId);
-            if (withoutTemp.some((msg) => msg.id === confirmedMessage.id)) {
-              return { messages: withoutTemp };
-            }
-            return { messages: [...withoutTemp, confirmedMessage] };
-          },
-        );
-        return;
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.admin.chat.messages(context.roomId),
-      });
+      setDraft("");
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.chat.messages(currentRoomId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.chat.rooms.all });
     },
   });
 
-  const handleSendMessage = async (content: string) => {
-    if (!selectedRoomId || !user) return;
+  const unreadCount = rooms.reduce((s, r) => s + (r.unreadCountAdmin ?? 0), 0);
+  const messages = messagesQuery.data?.messages ?? [];
 
-    await sendMessageMutation.mutateAsync({
-      roomId: selectedRoomId,
-      content,
-    });
-  };
-
-  const handleUploadImage = async (file: File) => {
-    if (!selectedRoomId) return;
-    await adminClient.uploadChatImage({ roomId: selectedRoomId, file });
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.admin.chat.messages(selectedRoomId),
-    });
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.admin.chat.rooms.all,
-    });
-  };
-
-  const markRoomAsReadInCache = (roomId: string) => {
-    queryClient.setQueriesData<ChatRoomWithDetails[]>(
-      { queryKey: queryKeys.admin.chat.rooms.all },
-      (previous) => {
-        if (!previous) return previous;
-        return previous.map((room) =>
-          room.id === roomId ? { ...room, unreadCountAdmin: 0 } : room,
-        );
-      },
-    );
-  };
-
-  const handleSelectRoom = (roomId: string) => {
-    setSelectedRoomId(roomId);
-    // Optimistic UX: clear unread badge immediately while server marks read.
-    markRoomAsReadInCache(roomId);
-  };
-
-  const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
-
-  useEffect(() => {
-    let supabase;
-    try {
-      supabase = createClient();
-    } catch (error) {
-      console.error("Failed to initialize realtime chat subscriptions:", error);
-      return;
-    }
-
-    const roomsChannel = supabase
-      .channel("admin-chat-rooms")
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_rooms" }, () => {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.admin.chat.rooms.all,
-        });
-      })
-      .subscribe((status) => {
-        setIsRealtimeConnected(status === "SUBSCRIBED");
-      });
-
-    const messagesChannel = supabase
-      .channel("admin-chat-messages")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.admin.chat.rooms.all,
-        });
-        if (selectedRoomRef.current) {
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.admin.chat.messages(selectedRoomRef.current),
-          });
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(roomsChannel);
-      supabase.removeChannel(messagesChannel);
-      setIsRealtimeConnected(false);
-    };
-  }, [queryClient]);
-
-  // Calculate stats for info sheet (mock or fetch)
-  const customerStats = {
-    totalOrders: 0,
-    totalSpent: 0,
-    lastOrderDate: null,
-  }; // TODO: Fetch real stats if needed
+  // On mobile only one pane is visible at a time; desktop shows both via md: classes.
+  const showConversation = !!activeRoomId;
 
   return (
-    <div className="h-[calc(100vh-6.5rem)] md:h-[calc(100vh-8.5rem)]">
-      <div className="flex h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        {/* Sidebar - Room List: full-width on mobile, hidden when a room is selected; fixed width on desktop */}
-        <div className={cn("flex w-full md:flex md:w-80", selectedRoomId && "hidden")}>
-          <ChatSidebar
-            rooms={rooms}
-            selectedRoomId={selectedRoomId}
-            searchTerm={searchInput}
-            onSearchChange={setSearchInput}
-            onSelectRoom={handleSelectRoom}
-          />
-        </div>
-
-        {/* Main Chat Area: hidden on mobile when no room selected; always visible on desktop */}
-        <div
-          className={cn(
-            "min-w-0 flex-1 flex-col bg-slate-50/30 md:flex dark:bg-slate-900/10",
-            selectedRoomId ? "flex" : "hidden",
-          )}
-        >
-          {selectedRoomId && selectedRoom ? (
-            <>
-              <ChatHeader
-                room={selectedRoom}
-                isConnected={isRealtimeConnected}
-                onBack={() => setSelectedRoomId(null)} // For mobile mainly
-              />
-
-              <MessageList
-                roomId={selectedRoomId}
-                messages={messages}
-                currentUserId={user?.id || ""}
-              />
-
-              <ChatInput
-                roomId={selectedRoomId}
-                senderId={user?.id || ""}
-                senderName={user?.fullName || "Agent"}
-                onSendMessage={handleSendMessage}
-                onUploadImage={handleUploadImage}
-                isSending={sendMessageMutation.isPending}
-              />
-
-              <CustomerInfoSheet
-                room={selectedRoom}
-                customerStats={customerStats}
-                isOpen={isInfoOpen}
-                onOpenChange={setIsInfoOpen}
-              />
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Select a chat room to view conversation
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Chat Sidebar component
- */
-function ChatSidebar({
-  rooms,
-  selectedRoomId,
-  searchTerm,
-  onSearchChange,
-  onSelectRoom,
-}: {
-  rooms: ChatRoomWithDetails[];
-  selectedRoomId: string | null;
-  searchTerm: string;
-  onSearchChange: (val: string) => void;
-  onSelectRoom: (id: string) => void;
-}) {
-  return (
-    <div className="flex w-full flex-col border-r border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-      <div className="border-b border-slate-200 p-4 dark:border-slate-800">
-        <div className="relative">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <Card className="grid h-[calc(100vh-54px-48px)] min-h-[400px] grid-cols-1 overflow-hidden border border-border p-0 shadow-none md:grid-cols-[280px_1fr]">
+      {/* Conversations list */}
+      <div
+        className={`flex-col overflow-y-auto border-r border-border bg-white md:flex ${
+          showConversation ? "hidden" : "flex"
+        }`}
+      >
+        <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+          <div className="text-[13px] font-semibold">Hộp thư ({unreadCount} chưa đọc)</div>
           <Input
-            placeholder="Tìm kiếm..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="bg-white pl-9 dark:bg-slate-950"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm khách hàng..."
+            className="h-8 rounded-md border-border bg-muted/40 px-2.5 placeholder:text-muted-foreground/60 focus:border-primary focus:bg-white focus-visible:ring-0"
           />
         </div>
-      </div>
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col">
-          {rooms.map((room) => (
+        {roomsQuery.isLoading && (
+          <div className="flex flex-col gap-1 p-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded" />
+            ))}
+          </div>
+        )}
+        {!roomsQuery.isLoading && rooms.length === 0 && (
+          <div className="px-4 py-10 text-center text-xs text-muted-foreground">
+            Chưa có cuộc trò chuyện
+          </div>
+        )}
+        {rooms.map((r) => {
+          const isActive = r.id === currentRoomId;
+          const initial = r.customer.fullName?.charAt(0) ?? "?";
+          const preview = r.lastMessage?.content ?? "—";
+          return (
             <button
-              key={room.id}
-              onClick={() => onSelectRoom(room.id)}
-              data-testid="chat-room-item"
-              className={cn(
-                "relative flex w-full max-w-full items-start gap-3 overflow-hidden p-4 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800",
-                selectedRoomId === room.id &&
-                  "z-10 bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800",
-              )}
+              key={r.id}
+              type="button"
+              onClick={() => setActiveRoomId(r.id)}
+              className={`flex items-start gap-2.5 border-b border-border px-3.5 py-3 text-left transition-colors ${
+                isActive ? "bg-primary/10" : "hover:bg-muted/40"
+              }`}
             >
-              <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-800">
-                <AvatarFallback className="bg-primary/10 font-bold text-primary">
-                  {room.customer.fullName?.charAt(0) || "K"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="w-0 flex-1 truncate text-sm font-semibold">
-                    {room.customer.fullName || "Khách hàng"}
-                  </span>
-                  <div className="ml-2 flex shrink-0 flex-col items-end gap-1">
-                    {room.lastMessageAt && (
-                      <span className="text-[10px] whitespace-nowrap text-muted-foreground">
-                        {new Date(room.lastMessageAt).toLocaleDateString()}
-                      </span>
-                    )}
+              <div
+                className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
+                  isActive ? "bg-primary" : "bg-blue-500"
+                }`}
+              >
+                {initial}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="text-[13px] font-semibold">{r.customer.fullName ?? "—"}</div>
+                  <div className="ml-2 shrink-0 text-[10px] text-muted-foreground/70">
+                    {fmtTime(r.lastMessageAt)}
                   </div>
                 </div>
-                <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-                  <p className="w-0 flex-1 truncate text-xs font-medium text-muted-foreground">
-                    {room.lastMessage?.content || "Chưa có tin nhắn"}
-                  </p>
-                  {room.unreadCountAdmin > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full p-0 text-[10px]"
-                    >
-                      {room.unreadCountAdmin}
-                    </Badge>
-                  )}
+                <div className="mt-0.5 max-w-[180px] truncate text-xs text-muted-foreground">
+                  {preview}
                 </div>
               </div>
+              {r.unreadCountAdmin > 0 && (
+                <div className="mt-1.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                  {r.unreadCountAdmin}
+                </div>
+              )}
             </button>
-          ))}
-          {rooms.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              Không tìm thấy hội thoại nào
+          );
+        })}
+      </div>
+
+      {/* Active conversation */}
+      <div className={`flex-col bg-slate-50 md:flex ${showConversation ? "flex" : "hidden"}`}>
+        <div className="flex items-center gap-2.5 border-b border-border bg-white px-[18px] py-3.5">
+          <button
+            type="button"
+            onClick={() => setActiveRoomId(null)}
+            aria-label="Quay lại danh sách"
+            className="md:hidden grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-muted/40"
+          >
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+          </button>
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">
+            {currentRoom?.customer.fullName?.charAt(0) ?? "?"}
+          </div>
+          <div className="leading-tight">
+            <b className="text-sm font-semibold">{currentRoom?.customer.fullName ?? "—"}</b>
+            <small className="block text-xs text-muted-foreground">
+              {currentRoom?.customer.phone ?? "Khách hàng"}
+            </small>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-[18px] py-4">
+          {messagesQuery.isLoading && (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-2/3 rounded-xl" />
+              ))}
             </div>
           )}
+          {!messagesQuery.isLoading && messages.length === 0 && (
+            <div className="self-center py-10 text-xs text-muted-foreground">
+              Chưa có tin nhắn — hãy bắt đầu cuộc trò chuyện
+            </div>
+          )}
+          {messages.map((m) => {
+            const fromAdmin = m.sender.role !== "customer";
+            return (
+              <Fragment key={m.id}>
+                <div
+                  className={`max-w-[72%] rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                    fromAdmin
+                      ? "self-end rounded-br-sm bg-primary text-white"
+                      : "self-start rounded-bl-sm border border-border bg-white"
+                  }`}
+                >
+                  {m.imageUrl ? (
+                    // biome-ignore lint/performance/noImgElement: chat upload URL
+                    <img src={m.imageUrl} alt="attachment" className="max-w-[200px] rounded-md" />
+                  ) : (
+                    m.content
+                  )}
+                </div>
+                <div
+                  className={`px-1 text-[10px] text-muted-foreground/70 ${fromAdmin ? "self-end" : "self-start"}`}
+                >
+                  {fmtTime(m.createdAt)}
+                </div>
+              </Fragment>
+            );
+          })}
         </div>
-      </ScrollArea>
-    </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!currentRoomId || !draft.trim() || sendMutation.isPending) return;
+            sendMutation.mutate({ roomId: currentRoomId, content: draft.trim() });
+          }}
+          className="flex gap-2 border-t border-border bg-white px-4 py-3"
+        >
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Nhập tin nhắn..."
+            disabled={!currentRoomId || sendMutation.isPending}
+            className="h-auto flex-1 rounded-lg border-border px-3.5 py-2.5 focus:border-primary focus-visible:ring-0 disabled:opacity-50"
+          />
+          <Button
+            type="submit"
+            disabled={!currentRoomId || !draft.trim() || sendMutation.isPending}
+            className="gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" strokeWidth={2} />
+          </Button>
+        </form>
+      </div>
+    </Card>
   );
 }

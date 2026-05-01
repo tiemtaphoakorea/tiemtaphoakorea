@@ -100,7 +100,7 @@ export function CustomerTable({
               >
                 <TableCell className="py-4">
                   <div className="flex items-center justify-center">
-                    <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-800">
+                    <Avatar className="h-10 w-10 border border-slate-200">
                       <AvatarImage src={customer.avatarUrl || undefined} />
                       <AvatarFallback className="bg-primary/5 text-primary font-bold">
                         {customer.fullName
@@ -113,9 +113,7 @@ export function CustomerTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-black text-slate-900 dark:text-white">
-                      {customer.fullName}
-                    </span>
+                    <span className="font-black text-slate-900">{customer.fullName}</span>
                     <span className="flex items-center gap-1 text-[10px] font-bold tracking-tight text-slate-500 uppercase">
                       <Badge variant="outline" className="h-4 px-1 text-[8px] font-black uppercase">
                         {customer.customerType === "wholesale" ? "Sỉ" : "Lẻ"}
@@ -126,7 +124,7 @@ export function CustomerTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                       <Phone className="h-3 w-3" />
                       {customer.phone || "Không có SĐT"}
                     </div>
@@ -139,13 +137,11 @@ export function CustomerTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <ShoppingBag className="h-4 w-4 text-slate-400" />
-                    <span className="font-bold text-slate-900 dark:text-white">
-                      {customer.orderCount}
-                    </span>
+                    <span className="font-bold text-slate-900">{customer.orderCount}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="font-black text-slate-900 dark:text-white">
+                  <span className="font-black text-slate-900">
                     {formatCurrency(customer.totalSpent)}
                   </span>
                 </TableCell>
@@ -159,10 +155,7 @@ export function CustomerTable({
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
+                      <Button variant="ghost" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -200,13 +193,11 @@ export function CustomerTable({
             <TableRow>
               <TableCell colSpan={7} className="h-64 text-center">
                 <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
                     <Users className="h-8 w-8 text-slate-300" />
                   </div>
                   <div>
-                    <p className="font-black text-slate-900 dark:text-white">
-                      Không tìm thấy khách hàng
-                    </p>
+                    <p className="font-black text-slate-900">Không tìm thấy khách hàng</p>
                     <p className="text-sm font-medium text-slate-500">
                       Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.
                     </p>

@@ -1,3 +1,5 @@
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import {
   Select,
@@ -6,16 +8,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { LayoutGrid, List, Search } from "lucide-react";
+import { LayoutGrid, List, Search, X } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [4, 12, 24, 48];
 
 const SORT_OPTIONS = [
   { value: "latest", label: "Mới nhất" },
-  { value: "price-asc", label: "Giá thấp đến cao" },
-  { value: "price-desc", label: "Giá cao đến thấp" },
+  { value: "price-asc", label: "Giá thấp → cao" },
+  { value: "price-desc", label: "Giá cao → thấp" },
   { value: "rating", label: "Đánh giá tốt nhất" },
 ];
+
+interface FilterTag {
+  key: string;
+  label: string;
+  onRemove: () => void;
+}
 
 interface ProductToolbarProps {
   searchQuery: string;
@@ -27,6 +35,7 @@ interface ProductToolbarProps {
   onSortChange: (sort: string) => void;
   pageSize: number;
   onPageSizeChange: (size: number) => void;
+  activeFilters?: FilterTag[];
 }
 
 export function ProductToolbar({
@@ -39,48 +48,85 @@ export function ProductToolbar({
   onSortChange,
   pageSize,
   onPageSizeChange,
+  activeFilters = [],
 }: ProductToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      {/* Left: Search + count */}
-      <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Left: Search + count + filter tags */}
+      <div className="flex flex-1 flex-wrap items-center gap-3">
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Tìm trong danh mục..."
-            className="h-9 w-52 rounded-full border-border bg-muted pl-9 text-sm focus:bg-background"
+            className="h-9 w-56 rounded-full border-border bg-muted pl-9 text-sm focus-visible:bg-background"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
         <span className="text-sm text-muted-foreground">
-          <span className="font-semibold text-primary">{productsCount}</span> sản phẩm
+          Hiển thị <b className="font-bold text-foreground">{productsCount}</b> sản phẩm
         </span>
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activeFilters.map((tag) => (
+              <Badge
+                key={tag.key}
+                variant="secondary"
+                className="h-7 gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary"
+              >
+                <span>{tag.label}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={tag.onRemove}
+                  aria-label={`Xóa ${tag.label}`}
+                  className="-mr-1.5 size-4 rounded-full text-primary hover:bg-primary/15 hover:text-primary"
+                >
+                  <X className="size-3" />
+                </Button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Right: View toggle + sort + page size */}
       <div className="flex items-center gap-2">
-        {/* Segmented view toggle */}
-        <div className="flex items-center rounded-lg border border-border bg-muted p-0.5">
-          <button
-            type="button"
+        <div
+          role="group"
+          aria-label="Chế độ hiển thị"
+          className="flex items-center rounded-lg border border-border bg-muted p-0.5"
+        >
+          <Button
+            variant={viewMode === "grid" ? "secondary" : "ghost"}
+            size="icon-sm"
             aria-label="Hiển thị dạng lưới"
+            aria-pressed={viewMode === "grid"}
             onClick={() => onViewModeChange("grid")}
-            className={`rounded-md p-1.5 transition-all ${viewMode === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={
+              viewMode === "grid"
+                ? "bg-background text-foreground shadow-sm hover:bg-background"
+                : "text-muted-foreground"
+            }
           >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
+            <LayoutGrid className="size-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="icon-sm"
             aria-label="Hiển thị dạng danh sách"
+            aria-pressed={viewMode === "list"}
             onClick={() => onViewModeChange("list")}
-            className={`rounded-md p-1.5 transition-all ${viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={
+              viewMode === "list"
+                ? "bg-background text-foreground shadow-sm hover:bg-background"
+                : "text-muted-foreground"
+            }
           >
-            <List className="h-4 w-4" />
-          </button>
+            <List className="size-4" />
+          </Button>
         </div>
 
-        {/* Sort Select */}
         <Select value={activeSort} onValueChange={onSortChange}>
           <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-background text-sm">
             <SelectValue />
@@ -94,7 +140,6 @@ export function ProductToolbar({
           </SelectContent>
         </Select>
 
-        {/* Page size Select */}
         <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
           <SelectTrigger className="h-9 w-28 rounded-lg border-border bg-background text-sm">
             <SelectValue />

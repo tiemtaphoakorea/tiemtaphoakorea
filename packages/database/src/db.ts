@@ -36,10 +36,19 @@ if (isTest) {
     import("postgres"),
   ]);
 
+  // Pool tuned for Supabase transaction pooler (port 6543):
+  // - idle_timeout 60s: keep connections warm long enough to survive light
+  //   traffic gaps without forcing a fresh TCP handshake on every request.
+  //   Short values (e.g. 20s) caused intermittent CONNECT_TIMEOUT errors when
+  //   the next request had to re-establish the connection on a transient
+  //   network blip — common when a tab resumes from background sleep.
+  // - connect_timeout 30s: give DNS/TLS more headroom on flaky networks.
+  // - max_lifetime 30min: rotate connections to avoid stale state.
   const client = postgres(process.env.DATABASE_URL, {
     max: 10,
-    idle_timeout: 20,
-    connect_timeout: 10,
+    idle_timeout: 60,
+    connect_timeout: 30,
+    max_lifetime: 60 * 30,
     prepare: false, // Required for Supabase transaction pooler
     connection: {
       search_path: "public", // Ensure unqualified table names resolve to public schema

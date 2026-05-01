@@ -115,9 +115,7 @@ export default function AnalyticsFinanceDetailPage() {
         >
           ← Tài chính
         </Link>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-          Chi tiết theo ngày
-        </h1>
+        <h1 className="text-2xl font-black tracking-tight text-slate-900">Chi tiết theo ngày</h1>
       </div>
 
       <FinanceRangePicker value={range} onChange={handleRangeChange} />
