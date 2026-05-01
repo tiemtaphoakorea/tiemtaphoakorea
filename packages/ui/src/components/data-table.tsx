@@ -148,8 +148,8 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     className={
                       onRowClick
-                        ? "group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
-                        : "group hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                        ? "group cursor-pointer hover:bg-slate-50/50"
+                        : "group hover:bg-slate-50/50"
                     }
                     onClick={
                       onRowClick
@@ -205,7 +205,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {onPaginationChange && pagination && pageCount > 1 && (
-        <div className="border-t border-slate-100 px-6 py-4 dark:border-slate-800">
+        <div className="border-t border-slate-100 px-6 py-4">
           <PaginationControls
             currentPage={pagination.pageIndex + 1}
             totalPages={pageCount}

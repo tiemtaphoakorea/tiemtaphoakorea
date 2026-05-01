@@ -5,14 +5,8 @@ import type { ProductListItem } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { PaginationControls } from "@workspace/ui/components/pagination-controls";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import {
   Table,
   TableBody,
@@ -115,7 +109,7 @@ export default function AdminProducts() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -155,7 +149,7 @@ export default function AdminProducts() {
                           <img
                             src={p.thumbnail}
                             alt={p.name}
-                            className="h-[34px] w-[34px] shrink-0 rounded-lg object-cover"
+                            className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
                           />
                         ) : (
                           <ProductThumb
@@ -216,17 +210,16 @@ export default function AdminProducts() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Hiển thị</span>
-            <Select value={String(pageSize)} onValueChange={(v) => handlePageSizeChange(Number(v))}>
-              <SelectTrigger className="h-8 w-[72px] text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => handlePageSizeChange(Number(v))}
+              className="h-8 w-[72px] text-[13px]"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <SelectOption key={size} value={String(size)}>
+                  {size}
+                </SelectOption>
+              ))}
             </Select>
             <span>
               / trang ·{" "}

@@ -28,8 +28,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { NumberInput } from "@workspace/ui/components/number-input";
 import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
 import { Separator } from "@workspace/ui/components/separator";
@@ -71,7 +71,12 @@ import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sh
 import { ProductSelector } from "@/components/admin/orders/create/product-selector";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
-import { copyInvoiceImage, exportInvoiceImage, printInvoice } from "@/lib/print-invoice";
+import {
+  copyInvoiceImage,
+  exportInvoiceImage,
+  getShopInfo,
+  printInvoice,
+} from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -146,6 +151,36 @@ function paymentReducer(state: PaymentState, action: PaymentAction): PaymentStat
 }
 
 // ---------------------------------------------------------------------------
+// Invoice payload helper
+// ---------------------------------------------------------------------------
+
+function buildInvoicePayload(order: any) {
+  return {
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt ?? new Date(),
+    customer: {
+      fullName: order.customer?.fullName ?? "Khách lẻ",
+      phone: order.customer?.phone,
+      address: order.shippingAddress || order.customer?.address,
+    },
+    items: order.items.map((item: any) => ({
+      productName: item.productName,
+      variantName: item.variantName,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+    subtotal: order.subtotal ?? 0,
+    discount: order.discount,
+    shippingFee: order.shippingFee,
+    total: order.total ?? 0,
+    paidAmount: order.paidAmount,
+    adminNote: order.adminNote,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // PaymentDialog sub-component
 // ---------------------------------------------------------------------------
 
@@ -185,9 +220,9 @@ function PaymentDialog({
           <DialogTitle>Ghi nhận thanh toán</DialogTitle>
           <DialogDescription>Tạo phiếu thu cho đơn hàng #{orderNumber}.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Số tiền thanh toán</Label>
+        <FieldGroup className="py-4">
+          <Field>
+            <FieldLabel>Số tiền thanh toán</FieldLabel>
             <NumberInput
               value={paymentState.amount}
               onValueChange={(values) =>
@@ -195,12 +230,10 @@ function PaymentDialog({
               }
               max={remainingAmount}
             />
-            <p className="text-muted-foreground text-xs">
-              Còn nợ: {formatCurrency(remainingAmount)}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label>Phương thức</Label>
+            <FieldDescription>Còn nợ: {formatCurrency(remainingAmount)}</FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel>Phương thức</FieldLabel>
             <RadioGroup
               value={paymentState.method}
               onValueChange={(v) => paymentDispatch({ type: "SET_METHOD", payload: v })}
@@ -208,37 +241,39 @@ function PaymentDialog({
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={PAYMENT_METHOD.CASH} id="cash" />
-                <Label htmlFor="cash">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CASH]}</Label>
+                <FieldLabel htmlFor="cash">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CASH]}</FieldLabel>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={PAYMENT_METHOD.BANK_TRANSFER} id="bank" />
-                <Label htmlFor="bank">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.BANK_TRANSFER]}</Label>
+                <FieldLabel htmlFor="bank">
+                  {PAYMENT_METHOD_LABEL[PAYMENT_METHOD.BANK_TRANSFER]}
+                </FieldLabel>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={PAYMENT_METHOD.CARD} id="card" />
-                <Label htmlFor="card">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CARD]}</Label>
+                <FieldLabel htmlFor="card">{PAYMENT_METHOD_LABEL[PAYMENT_METHOD.CARD]}</FieldLabel>
               </div>
             </RadioGroup>
-          </div>
+          </Field>
           {paymentState.method === PAYMENT_METHOD.BANK_TRANSFER && (
-            <div className="space-y-2">
-              <Label>Mã tham chiếu (Mã GD)</Label>
+            <Field>
+              <FieldLabel>Mã tham chiếu (Mã GD)</FieldLabel>
               <Input
                 placeholder="VD: FT2332..."
                 value={paymentState.ref}
                 onChange={(e) => paymentDispatch({ type: "SET_REF", payload: e.target.value })}
               />
-            </div>
+            </Field>
           )}
-          <div className="space-y-2">
-            <Label>Ghi chú</Label>
+          <Field>
+            <FieldLabel>Ghi chú</FieldLabel>
             <Input
               placeholder="Ghi chú nội bộ..."
               value={paymentState.note}
               onChange={(e) => paymentDispatch({ type: "SET_NOTE", payload: e.target.value })}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGroup>
         <DialogFooter>
           <Button variant="outline" onClick={() => paymentDispatch({ type: "CLOSE" })}>
             Hủy
@@ -511,137 +546,88 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   };
 
   return (
-    <div className="flex flex-col gap-8 pb-20">
+    <div className="flex flex-col gap-6 pb-10">
       {/* Header */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+          <Button variant="ghost" size="icon" asChild className="mt-0.5 shrink-0">
             <Link href="/orders">
               <ChevronLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">
                 #{order.orderNumber}
               </h1>
               {paymentBadge && (
                 <Badge
-                  className={`${paymentBadge.className} border px-2 py-1 text-xs font-black uppercase`}
+                  className={`${paymentBadge.className} border px-2 py-0.5 text-[10px] font-black uppercase sm:text-xs`}
                 >
                   {paymentBadge.label}
                 </Badge>
               )}
               {fulfillmentBadge && (
                 <Badge
-                  className={`${fulfillmentBadge.className} border px-2 py-1 text-xs font-black uppercase`}
+                  className={`${fulfillmentBadge.className} border px-2 py-0.5 text-[10px] font-black uppercase sm:text-xs`}
                 >
                   {fulfillmentBadge.label}
                 </Badge>
               )}
             </div>
-            <p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-500">
-              <Clock className="h-3 w-3" /> Tạo lúc: {formatDate(order.createdAt)}
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500 sm:text-sm">
+              <Clock className="h-3 w-3 shrink-0" /> Tạo lúc: {formatDate(order.createdAt)}
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 [&_button]:h-8 [&_button]:px-3 [&_button]:text-xs md:justify-end md:gap-2.5 sm:[&_button]:h-9 sm:[&_button]:px-4 sm:[&_button]:text-sm lg:flex-nowrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 font-bold">
-                <Printer className="h-4 w-4" /> Xuất hóa đơn <ChevronDown className="h-4 w-4" />
+              <Button variant="outline" className="group gap-2 font-bold">
+                <Printer className="h-4 w-4" /> Xuất hóa đơn{" "}
+                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent
+              align="end"
+              className="w-[var(--radix-dropdown-menu-trigger-width)] p-1"
+            >
               <DropdownMenuItem
-                onClick={() =>
-                  copyInvoiceImage({
-                    orderNumber: order.orderNumber,
-                    createdAt: order.createdAt ?? new Date(),
-                    customer: {
-                      fullName: order.customer?.fullName ?? "Khách lẻ",
-                      phone: order.customer?.phone,
-                      address: order.shippingAddress || order.customer?.address,
-                    },
-                    items: order.items.map((item: any) => ({
-                      productName: item.productName,
-                      variantName: item.variantName,
-                      sku: item.sku,
-                      quantity: item.quantity,
-                      unitPrice: item.unitPrice,
-                      lineTotal: item.lineTotal,
-                    })),
-                    subtotal: order.subtotal ?? 0,
-                    discount: order.discount,
-                    total: order.total ?? 0,
-                    paidAmount: order.paidAmount,
-                    adminNote: order.adminNote,
-                  })
+                className="group cursor-pointer gap-2 rounded-md px-2 py-1.5 text-sm font-medium data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                onClick={async () =>
+                  copyInvoiceImage(buildInvoicePayload(order), await getShopInfo())
                 }
               >
-                <Copy className="mr-2 h-4 w-4" /> Sao chép
+                <span className="bg-primary/10 text-primary group-data-[highlighted]:bg-primary-foreground/20 group-data-[highlighted]:text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
+                  <Copy className="h-3.5 w-3.5" />
+                </span>
+                Sao chép
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() =>
-                  exportInvoiceImage({
-                    orderNumber: order.orderNumber,
-                    createdAt: order.createdAt ?? new Date(),
-                    customer: {
-                      fullName: order.customer?.fullName ?? "Khách lẻ",
-                      phone: order.customer?.phone,
-                      address: order.shippingAddress || order.customer?.address,
-                    },
-                    items: order.items.map((item: any) => ({
-                      productName: item.productName,
-                      variantName: item.variantName,
-                      sku: item.sku,
-                      quantity: item.quantity,
-                      unitPrice: item.unitPrice,
-                      lineTotal: item.lineTotal,
-                    })),
-                    subtotal: order.subtotal ?? 0,
-                    discount: order.discount,
-                    total: order.total ?? 0,
-                    paidAmount: order.paidAmount,
-                    adminNote: order.adminNote,
-                  })
+                className="group cursor-pointer gap-2 rounded-md px-2 py-1.5 text-sm font-medium data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                onClick={async () =>
+                  exportInvoiceImage(buildInvoicePayload(order), await getShopInfo())
                 }
               >
-                <FileImage className="mr-2 h-4 w-4" /> Xuất file ảnh
+                <span className="bg-primary/10 text-primary group-data-[highlighted]:bg-primary-foreground/20 group-data-[highlighted]:text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
+                  <FileImage className="h-3.5 w-3.5" />
+                </span>
+                Xuất file ảnh
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() =>
-                  printInvoice({
-                    orderNumber: order.orderNumber,
-                    createdAt: order.createdAt ?? new Date(),
-                    customer: {
-                      fullName: order.customer?.fullName ?? "Khách lẻ",
-                      phone: order.customer?.phone,
-                      address: order.shippingAddress || order.customer?.address,
-                    },
-                    items: order.items.map((item: any) => ({
-                      productName: item.productName,
-                      variantName: item.variantName,
-                      sku: item.sku,
-                      quantity: item.quantity,
-                      unitPrice: item.unitPrice,
-                      lineTotal: item.lineTotal,
-                    })),
-                    subtotal: order.subtotal ?? 0,
-                    discount: order.discount,
-                    total: order.total ?? 0,
-                    paidAmount: order.paidAmount,
-                    adminNote: order.adminNote,
-                  })
-                }
+                className="group cursor-pointer gap-2 rounded-md px-2 py-1.5 text-sm font-medium data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground"
+                onClick={async () => printInvoice(buildInvoicePayload(order), await getShopInfo())}
               >
-                <FileText className="mr-2 h-4 w-4" /> Xuất file PDF
+                <span className="bg-primary/10 text-primary group-data-[highlighted]:bg-primary-foreground/20 group-data-[highlighted]:text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md">
+                  <FileText className="h-3.5 w-3.5" />
+                </span>
+                Xuất file PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {fulfillmentStatus === "pending" && (
-            <div className="flex items-center gap-2">
+            <>
               <Button
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg"
                 onClick={handleStockOut}
@@ -669,7 +655,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                   onTriggerClick={handleOpenPayment}
                 />
               )}
-            </div>
+            </>
           )}
           {fulfillmentStatus === "stock_out" && paymentStatus !== "paid" && (
             <PaymentDialog
@@ -696,9 +682,9 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column: Info */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-4 lg:col-span-2 lg:space-y-6">
           {/* Parent Order Link (if child) */}
           {order.parentOrder && (
             <Card className="border-blue-100 bg-blue-50/50">
@@ -820,119 +806,117 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                   <ProductSelector onSelectVariant={handleAddVariantToEdit} />
                 </div>
               )}
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[45%]">Sản phẩm</TableHead>
-                      <TableHead className="text-center">SL</TableHead>
-                      <TableHead className="text-right">Đơn giá</TableHead>
-                      <TableHead className="text-right">Tổng</TableHead>
-                      {isItemEditing && <TableHead className="w-10" />}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
-                      <TableRow key={isItemEditing ? item.variantId : item.id}>
-                        <TableCell className="overflow-hidden !whitespace-normal">
-                          <div className="flex min-w-0 items-center gap-3">
-                            {!isItemEditing && item.variant?.images?.[0] ? (
-                              <Image
-                                src={item.variant.images[0].imageUrl}
-                                alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
-                                width={48}
-                                height={48}
-                                className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                                <ShoppingBag className="h-5 w-5 text-slate-300" />
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <div
-                                className="truncate text-sm font-bold text-slate-900"
-                                title={formatVariantDisplayName(item.productName)}
-                              >
-                                {formatVariantDisplayName(item.productName)}
-                              </div>
-                              <div
-                                className="truncate font-mono text-xs text-slate-500"
-                                title={formatVariantDisplayName(item.variantName)}
-                              >
-                                {formatVariantDisplayName(item.variantName)}
-                              </div>
+              <Table className="table-fixed">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[46%] pl-4 sm:w-[50%] sm:pl-6">Sản phẩm</TableHead>
+                    <TableHead className="w-[12%] text-center">SL</TableHead>
+                    <TableHead className="w-[20%] text-right">Đơn giá</TableHead>
+                    <TableHead className="w-[22%] pr-4 text-right sm:pr-6">Tổng</TableHead>
+                    {isItemEditing && <TableHead className="w-10" />}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(isItemEditing ? editableItems : order.items).map((item: any, idx: number) => (
+                    <TableRow key={isItemEditing ? item.variantId : item.id}>
+                      <TableCell className="!whitespace-normal align-top">
+                        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+                          {!isItemEditing && item.variant?.images?.[0] ? (
+                            <Image
+                              src={item.variant.images[0].imageUrl}
+                              alt={`${formatVariantDisplayName(item.productName)} - ${formatVariantDisplayName(item.variantName)}`}
+                              width={48}
+                              height={48}
+                              className="h-10 w-10 shrink-0 rounded-lg bg-slate-100 object-contain sm:h-12 sm:w-12"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 sm:h-12 sm:w-12">
+                              <ShoppingBag className="h-5 w-5 text-slate-300" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div
+                              className="line-clamp-2 text-sm font-bold break-words text-slate-900"
+                              title={formatVariantDisplayName(item.productName)}
+                            >
+                              {formatVariantDisplayName(item.productName)}
+                            </div>
+                            <div
+                              className="line-clamp-1 font-mono text-xs break-all text-slate-500"
+                              title={formatVariantDisplayName(item.variantName)}
+                            >
+                              {formatVariantDisplayName(item.variantName)}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {isItemEditing ? (
-                            <Input
-                              type="number"
-                              min={1}
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const qty = Math.max(1, Number(e.target.value));
-                                setEditableItems((prev) =>
-                                  prev.map((ei, i) => (i === idx ? { ...ei, quantity: qty } : ei)),
-                                );
-                              }}
-                              className="w-16 text-center"
-                            />
-                          ) : (
-                            <span className="font-bold">{item.quantity}</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isItemEditing ? (
-                            <Input
-                              type="number"
-                              min={0}
-                              value={item.customPrice}
-                              onChange={(e) => {
-                                const price = Math.max(0, Number(e.target.value));
-                                setEditableItems((prev) =>
-                                  prev.map((ei, i) =>
-                                    i === idx ? { ...ei, customPrice: price } : ei,
-                                  ),
-                                );
-                              }}
-                              className="w-28 text-right"
-                            />
-                          ) : (
-                            <span className="font-medium text-slate-600">
-                              {formatCurrency(Number(item.unitPrice))}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-slate-900">
-                          {isItemEditing
-                            ? formatCurrency(item.customPrice * item.quantity)
-                            : formatCurrency(Number(item.lineTotal))}
-                        </TableCell>
-                        {isItemEditing && (
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-400 hover:text-red-600"
-                              onClick={() =>
-                                setEditableItems((prev) => prev.filter((_, i) => i !== idx))
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {isItemEditing ? (
+                          <NumberInput
+                            decimalScale={0}
+                            min={1}
+                            value={item.quantity}
+                            onValueChange={({ floatValue }) => {
+                              const qty = Math.max(1, floatValue ?? 1);
+                              setEditableItems((prev) =>
+                                prev.map((ei, i) => (i === idx ? { ...ei, quantity: qty } : ei)),
+                              );
+                            }}
+                            className="w-16 text-center"
+                          />
+                        ) : (
+                          <span className="font-bold">{item.quantity}</span>
                         )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="flex flex-col items-end gap-2 border-t border-slate-100 bg-slate-50/50 p-6">
-                <div className="flex w-full max-w-xs justify-between text-sm font-medium text-slate-500">
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isItemEditing ? (
+                          <NumberInput
+                            decimalScale={0}
+                            min={0}
+                            value={item.customPrice}
+                            onValueChange={({ floatValue }) => {
+                              const price = Math.max(0, floatValue ?? 0);
+                              setEditableItems((prev) =>
+                                prev.map((ei, i) =>
+                                  i === idx ? { ...ei, customPrice: price } : ei,
+                                ),
+                              );
+                            }}
+                            className="w-28 text-right"
+                          />
+                        ) : (
+                          <span className="font-medium text-slate-600">
+                            {formatCurrency(Number(item.unitPrice))}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-slate-900">
+                        {isItemEditing
+                          ? formatCurrency(item.customPrice * item.quantity)
+                          : formatCurrency(Number(item.lineTotal))}
+                      </TableCell>
+                      {isItemEditing && (
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-600"
+                            onClick={() =>
+                              setEditableItems((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="flex flex-col items-stretch gap-1.5 border-t border-slate-100 bg-slate-50/50 px-4 py-4 sm:items-end sm:px-6 sm:py-5">
+                <div className="flex w-full justify-between text-sm font-medium text-slate-500 sm:max-w-xs">
                   <span>Tạm tính</span>
-                  <span>
+                  <span className="tabular-nums">
                     {isItemEditing
                       ? formatCurrency(
                           editableItems.reduce((s, i) => s + i.customPrice * i.quantity, 0),
@@ -940,31 +924,40 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       : formatCurrency(Number(order.subtotal))}
                   </span>
                 </div>
-                <div className="flex w-full max-w-xs justify-between text-xl font-black text-slate-900">
+                {Number(order.shippingFee || 0) > 0 && (
+                  <div className="flex w-full justify-between text-sm font-medium text-slate-500 sm:max-w-xs">
+                    <span>Phí ship trả hộ</span>
+                    <span className="tabular-nums">
+                      {formatCurrency(Number(order.shippingFee))}
+                    </span>
+                  </div>
+                )}
+                <div className="flex w-full items-baseline justify-between text-lg font-black text-slate-900 sm:max-w-xs sm:text-xl">
                   <span>Tổng cộng</span>
-                  <span className="text-primary">
+                  <span className="text-primary tabular-nums">
                     {isItemEditing
                       ? formatCurrency(
-                          editableItems.reduce((s, i) => s + i.customPrice * i.quantity, 0),
+                          editableItems.reduce((s, i) => s + i.customPrice * i.quantity, 0) +
+                            Number(order.shippingFee || 0),
                         )
                       : formatCurrency(Number(order.total))}
                   </span>
                 </div>
-              </div>
-
-              {/* Payment Summary */}
-              <div className="mt-4 flex w-full flex-col items-end gap-2 border-t border-slate-100 px-6 pt-4 pb-6">
-                <div className="flex w-full max-w-xs justify-between text-sm font-medium text-emerald-600">
-                  <span>Đã thanh toán</span>
-                  <span>{formatCurrency(Number(order.paidAmount || 0))}</span>
-                </div>
-                <div className="flex w-full max-w-xs justify-between text-sm font-bold text-red-500">
-                  <span>Còn lại</span>
-                  <span>
-                    {formatCurrency(
-                      Math.max(0, Number(order.total) - Number(order.paidAmount || 0)),
-                    )}
-                  </span>
+                <div className="mt-2 w-full border-t border-slate-200 pt-2 sm:max-w-xs">
+                  <div className="flex w-full justify-between text-sm font-medium text-emerald-600">
+                    <span>Đã thanh toán</span>
+                    <span className="tabular-nums">
+                      {formatCurrency(Number(order.paidAmount || 0))}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex w-full justify-between text-sm font-bold text-red-500">
+                    <span>Còn lại</span>
+                    <span className="tabular-nums">
+                      {formatCurrency(
+                        Math.max(0, Number(order.total) - Number(order.paidAmount || 0)),
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -1028,22 +1021,19 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
           {!isTerminal && (
             <Card className="border-none shadow-sm ring-1 ring-slate-200">
               <CardContent className="px-6">
-                <Label htmlFor="order-status-note" className="mb-2">
-                  Ghi chú cập nhật (tùy chọn)
-                </Label>
-                <p className="mb-3 -mt-1 text-xs font-medium italic text-slate-400">
-                  * Ghi chú này sẽ được lưu vào lịch sử khi bạn nhấn một trong các nút cập nhật
-                  trạng thái ở trên (ví dụ: "Xuất kho", "Hoàn tất đơn", "Hủy đơn").
-                </p>
-                <div className="flex gap-4">
+                <Field>
+                  <FieldLabel htmlFor="order-status-note">Ghi chú cập nhật (tùy chọn)</FieldLabel>
+                  <FieldDescription>
+                    Ghi chú này sẽ được lưu vào lịch sử khi bạn nhấn một trong các nút cập nhật
+                    trạng thái ở trên (ví dụ: "Xuất kho", "Hoàn tất đơn", "Hủy đơn").
+                  </FieldDescription>
                   <Input
                     id="order-status-note"
-                    className="h-10 flex-1 rounded-lg border-slate-200 bg-slate-50 px-3 focus:ring-2 focus:ring-primary/20 focus-visible:ring-0"
                     placeholder="Nhập ghi chú cho lần cập nhật trạng thái này..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                   />
-                </div>
+                </Field>
               </CardContent>
             </Card>
           )}
@@ -1055,14 +1045,14 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 <Clock className="h-5 w-5 text-slate-500" /> Lịch sử trạng thái
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative ml-6 space-y-8 border-l-2 border-slate-100 py-2 pl-6">
+            <CardContent className="relative ml-3 space-y-6 border-l-2 border-slate-100 py-2 pl-4 sm:ml-6 sm:space-y-8 sm:pl-6">
               {order.statusHistory.map((history: any) => {
                 const historyPayment = PAYMENT_BADGE[history.paymentStatus as PaymentStatusValue];
                 const historyFulfillment =
                   FULFILLMENT_BADGE[history.fulfillmentStatus as FulfillmentStatusValue];
                 return (
                   <div key={history.id} className="relative">
-                    <div className="absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white bg-slate-400"></div>
+                    <div className="absolute top-1 -left-[23px] h-4 w-4 rounded-full border-2 border-white bg-slate-400 sm:-left-[31px]"></div>
                     <div className="flex flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {historyPayment && (
@@ -1100,7 +1090,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
         </div>
 
         {/* Right Column: Customer & Meta */}
-        <div className="space-y-6 lg:col-span-1">
+        <div className="space-y-4 lg:col-span-1 lg:space-y-6">
           <CustomerEditSheet
             isOpen={isCustomerEditOpen}
             onOpenChange={setIsCustomerEditOpen}
@@ -1185,14 +1175,9 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
               {/* Admin Note & Discount - Editable */}
               {editState.isEditing ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="adminNote"
-                      className="text-xs font-black tracking-wider text-slate-400 uppercase"
-                    >
-                      Ghi chú admin
-                    </Label>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="adminNote">Ghi chú admin</FieldLabel>
                     <Textarea
                       id="adminNote"
                       value={editState.editAdminNote}
@@ -1200,14 +1185,9 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       placeholder="Nhập ghi chú..."
                       className="min-h-[80px]"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="discount"
-                      className="text-xs font-black tracking-wider text-slate-400 uppercase"
-                    >
-                      Giảm giá (VND)
-                    </Label>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="discount">Giảm giá (VND)</FieldLabel>
                     <NumberInput
                       id="discount"
                       value={editState.editDiscount}
@@ -1217,7 +1197,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       placeholder="0"
                       decimalScale={0}
                     />
-                  </div>
+                  </Field>
                   <div className="flex gap-2">
                     <Button onClick={handleSaveEdit} className="flex-1 font-bold">
                       Lưu
@@ -1230,7 +1210,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       Hủy
                     </Button>
                   </div>
-                </div>
+                </FieldGroup>
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-1">

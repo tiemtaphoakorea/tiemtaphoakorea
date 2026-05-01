@@ -13,7 +13,7 @@ export function NewArrivals({ products }: NewArrivalsProps) {
   if (products.length === 0) return null;
 
   return (
-    <section className="bg-gray-50/30 py-6 md:py-14 dark:bg-slate-900/10">
+    <section className="bg-gray-50/30 py-6 md:py-14">
       <div className="container mx-auto px-4">
         <div className="mb-4 flex items-end justify-between md:mb-10">
           <div className="space-y-0.5 md:space-y-1.5">

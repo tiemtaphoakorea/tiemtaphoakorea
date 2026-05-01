@@ -45,7 +45,7 @@ export function Navbar({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur-md dark:border-border/50 dark:bg-card/95">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur-md">
       {/* Mobile search + actions bar */}
       <div className="flex items-center gap-2 px-4 py-3 md:hidden">
         <Suspense
@@ -85,6 +85,13 @@ export function Navbar({
         </Suspense>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          <Link
+            href={ACCOUNT_ROUTES.WISHLIST}
+            aria-label="Yêu thích"
+            className="grid h-9 w-9 place-items-center rounded-full bg-rose-50 text-rose-500 transition-colors hover:bg-rose-100"
+          >
+            <Heart className="h-[18px] w-[18px]" />
+          </Link>
           {isCustomerLoggedIn && (
             <Link
               href={ACCOUNT_ROUTES.ROOT}
@@ -98,7 +105,7 @@ export function Navbar({
       </div>
 
       {/* Desktop category nav */}
-      <div className="hidden border-t border-border/60 bg-background/80 md:block dark:bg-card/60">
+      <div className="hidden border-t border-border/60 bg-background/80 md:block">
         <div className="container mx-auto flex items-center">
           <MegaMenu categories={navCategories.length > 0 ? navCategories : categories} />
 
@@ -143,7 +150,7 @@ function NavStripLink({
         accent ? "text-warning" : "text-foreground"
       }`}
     >
-      <GeneratedIcon src={icon} className="h-5 w-5 rounded-md object-cover" />
+      <GeneratedIcon src={icon} className="h-5 w-5 rounded-md object-contain" />
       {label}
     </Link>
   );

@@ -30,6 +30,8 @@ const TABS = [
 export function MobileBottomNav() {
   const pathname = usePathname() ?? "/";
 
+  if (/^\/product\/[^/]+/.test(pathname)) return null;
+
   return (
     <div
       aria-hidden="false"

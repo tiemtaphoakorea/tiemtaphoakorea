@@ -1,15 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Badge } from "@workspace/ui/components/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { Separator } from "@workspace/ui/components/separator";
 import { User } from "lucide-react";
 
@@ -39,24 +33,22 @@ export function OrderCustomerCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="order-customer-select">Chọn khách hàng</Label>
-          <Select value={selectedCustomerId} onValueChange={onCustomerChange}>
-            <SelectTrigger id="order-customer-select" className="h-12 bg-slate-50 font-medium">
-              <SelectValue placeholder="Tìm khách hàng..." />
-            </SelectTrigger>
-            <SelectContent>
-              {customers.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="font-medium">
-                  <span className="flex items-center gap-2">
-                    {c.fullName} -{" "}
-                    <span className="text-xs text-slate-400">{c.phone || "No Phone"}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
+        <Field>
+          <FieldLabel htmlFor="order-customer-select">Chọn khách hàng</FieldLabel>
+          <Select
+            id="order-customer-select"
+            value={selectedCustomerId}
+            onValueChange={onCustomerChange}
+            className="w-full"
+            placeholder="Tìm khách hàng..."
+          >
+            {customers.map((c) => (
+              <SelectOption key={c.id} value={c.id}>
+                {c.fullName} — {c.phone || "No Phone"}
+              </SelectOption>
+            ))}
           </Select>
-        </div>
+        </Field>
 
         {selectedCustomerData && (
           <div className="animate-in fade-in slide-in-from-top-2 space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -83,16 +75,15 @@ export function OrderCustomerCard({
           </div>
         )}
 
-        <div className="space-y-2 pt-2">
-          <Label htmlFor="order-note">Ghi chú đơn hàng</Label>
+        <Field className="pt-2">
+          <FieldLabel htmlFor="order-note">Ghi chú đơn hàng</FieldLabel>
           <Input
             id="order-note"
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
             placeholder="Ghi chú nội bộ..."
-            className="h-12 bg-slate-50 font-medium"
           />
-        </div>
+        </Field>
       </CardContent>
     </Card>
   );

@@ -4,13 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { Expense } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Table,
   TableBody,
@@ -115,39 +109,36 @@ export default function AdminExpenses() {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
-            <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SelectItem key={i} value={String(i + 1)}>
-                  Tháng {i + 1}
-                </SelectItem>
-              ))}
-            </SelectContent>
+          <Select
+            value={String(month)}
+            onValueChange={(v) => setMonth(Number(v))}
+            className="h-[34px] w-full rounded-lg text-[13px] sm:w-[120px]"
+          >
+            {Array.from({ length: 12 }).map((_, i) => (
+              <SelectOption key={i} value={String(i + 1)}>
+                Tháng {i + 1}
+              </SelectOption>
+            ))}
           </Select>
-          <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-            <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[now.getFullYear() - 1, now.getFullYear()].map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
+          <Select
+            value={String(year)}
+            onValueChange={(v) => setYear(Number(v))}
+            className="h-[34px] w-full rounded-lg text-[13px] sm:w-[100px]"
+          >
+            {[now.getFullYear() - 1, now.getFullYear()].map((y) => (
+              <SelectOption key={y} value={String(y)}>
+                {y}
+              </SelectOption>
+            ))}
           </Select>
-          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ExpenseTypeFilter)}>
-            <SelectTrigger className="col-span-2 h-[34px] w-full rounded-lg text-[13px] sm:col-span-1 sm:w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả loại</SelectItem>
-              <SelectItem value="fixed">Cố định</SelectItem>
-              <SelectItem value="variable">Biến đổi</SelectItem>
-            </SelectContent>
+          <Select
+            value={typeFilter}
+            onValueChange={(v) => setTypeFilter(v as ExpenseTypeFilter)}
+            className="col-span-2 h-[34px] w-full rounded-lg text-[13px] sm:col-span-1 sm:w-[160px]"
+          >
+            <SelectOption value="all">Tất cả loại</SelectOption>
+            <SelectOption value="fixed">Cố định</SelectOption>
+            <SelectOption value="variable">Biến đổi</SelectOption>
           </Select>
         </div>
         <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setAdding(true)}>
@@ -156,7 +147,7 @@ export default function AdminExpenses() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

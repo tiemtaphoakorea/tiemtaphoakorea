@@ -183,7 +183,7 @@ export function SearchAutocomplete({ variant }: { variant: Variant }) {
                           src={p.thumbnail}
                           alt={p.name}
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           sizes="48px"
                         />
                       ) : null}

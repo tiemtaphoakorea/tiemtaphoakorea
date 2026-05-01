@@ -9,7 +9,7 @@ interface CustomerInfoSummaryProps {
 export function CustomerInfoSummary({ order }: CustomerInfoSummaryProps) {
   return (
     <div className="flex flex-col gap-6">
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardHeader>
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Thông tin khách hàng
@@ -17,27 +17,23 @@ export function CustomerInfoSummary({ order }: CustomerInfoSummaryProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
               <User className="h-5 w-5 text-slate-500" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                {order.customer.fullName}
-              </span>
-              <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500 dark:bg-slate-800">
+              <span className="text-sm font-bold text-slate-900">{order.customer.fullName}</span>
+              <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">
                 {order.customer.customerCode || "GUEST"}
               </span>
             </div>
           </div>
           <Separator />
           <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
               <Phone className="h-5 w-5 text-slate-500" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                Số điện thoại
-              </span>
+              <span className="text-sm font-bold text-slate-900">Số điện thoại</span>
               <span className="text-sm text-slate-500">
                 {order.customer.phone || order.shippingPhone || "N/A"}
               </span>
@@ -45,13 +41,11 @@ export function CustomerInfoSummary({ order }: CustomerInfoSummaryProps) {
           </div>
           <Separator />
           <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
               <MapPin className="h-5 w-5 text-slate-500" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                Địa chỉ giao hàng
-              </span>
+              <span className="text-sm font-bold text-slate-900">Địa chỉ giao hàng</span>
               <span className="text-sm text-slate-500">
                 {order.shippingAddress || order.customer.address || "N/A"}
               </span>

@@ -5,13 +5,7 @@ import type { AdminProfile } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Table,
   TableBody,
@@ -76,16 +70,15 @@ export default function AdminStaff() {
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả vai trò</SelectItem>
-            <SelectItem value="owner">Owner</SelectItem>
-            <SelectItem value="manager">Manager</SelectItem>
-            <SelectItem value="staff">Staff</SelectItem>
-          </SelectContent>
+        <Select
+          value={roleFilter}
+          onValueChange={setRoleFilter}
+          className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]"
+        >
+          <SelectOption value="all">Tất cả vai trò</SelectOption>
+          <SelectOption value="owner">Owner</SelectOption>
+          <SelectOption value="manager">Manager</SelectOption>
+          <SelectOption value="staff">Staff</SelectOption>
         </Select>
         <span className="text-xs text-muted-foreground">
           {usersQuery.isLoading ? "Đang tải..." : `${total} người dùng`}
@@ -96,7 +89,7 @@ export default function AdminStaff() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

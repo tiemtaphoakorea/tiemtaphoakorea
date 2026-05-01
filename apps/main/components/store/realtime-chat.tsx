@@ -532,7 +532,7 @@ const ChatInputForm = ({
   return (
     <form
       onSubmit={onSendMessage}
-      className="flex w-full shrink-0 gap-2 border-t border-border p-4"
+      className="flex w-full shrink-0 gap-2 border-t border-border p-3"
     >
       <Input
         ref={inputRef}

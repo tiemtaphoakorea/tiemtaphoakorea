@@ -3,22 +3,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateExpenseData } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-
-const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-foreground";
 
 type ExpenseDrawerProps = {
   open: boolean;
@@ -75,42 +68,43 @@ export function ExpenseDrawer({ open, onClose }: ExpenseDrawerProps) {
           <SheetTitle className="text-[15px] font-bold">Ghi chi phí mới</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Mô tả khoản chi</Label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="VD: Thuê kho bãi tháng 5"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Số tiền (đ)</Label>
+        <div className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]">
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Mô tả khoản chi</FieldLabel>
               <Input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="15000000"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="VD: Thuê kho bãi tháng 5"
               />
+            </Field>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field>
+                <FieldLabel>Số tiền (đ)</FieldLabel>
+                <NumberInput
+                  decimalScale={0}
+                  value={amount}
+                  onValueChange={({ value }) => setAmount(value)}
+                  placeholder="15000000"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Loại</FieldLabel>
+                <Select
+                  value={type}
+                  onValueChange={(v) => setType(v as "fixed" | "variable")}
+                  className="w-full"
+                >
+                  <SelectOption value="fixed">Cố định</SelectOption>
+                  <SelectOption value="variable">Biến đổi</SelectOption>
+                </Select>
+              </Field>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Loại</Label>
-              <Select value={type} onValueChange={(v) => setType(v as "fixed" | "variable")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Cố định</SelectItem>
-                  <SelectItem value="variable">Biến đổi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Ngày phát sinh</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
+            <Field>
+              <FieldLabel>Ngày phát sinh</FieldLabel>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </Field>
+          </FieldGroup>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">

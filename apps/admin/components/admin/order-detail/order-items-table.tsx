@@ -47,7 +47,7 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
                             src={item.variant.images[0].imageUrl}
                             alt={formatVariantDisplayName(item.productName)}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                             sizes="48px"
                           />
                         </div>

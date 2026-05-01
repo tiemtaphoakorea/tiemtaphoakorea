@@ -25,13 +25,13 @@ interface CustomerOrderItemsTableProps {
 
 export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps) {
   return (
-    <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+    <Card className="border-none shadow-sm ring-1 ring-slate-200">
       <CardHeader>
         <CardTitle className="text-lg font-bold">Sản phẩm</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
+          <TableHeader className="border-b border-slate-100 bg-slate-50/50">
             <TableRow className="hover:bg-transparent">
               <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
                 Sản phẩm
@@ -52,13 +52,13 @@ export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps)
               <TableRow key={item.id} className="hover:bg-transparent">
                 <TableCell>
                   <div className="flex items-start gap-3">
-                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
                       {item.variant?.product?.images?.[0] || item.variant?.images?.[0] ? (
                         <Image
                           src={item.variant?.images?.[0]?.url || item.variant?.product?.images?.[0]}
                           alt={formatVariantDisplayName(item.productName)}
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           sizes="48px"
                         />
                       ) : (
@@ -68,7 +68,7 @@ export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps)
                       )}
                     </div>
                     <div>
-                      <p className="line-clamp-2 text-sm font-bold text-slate-900 dark:text-white">
+                      <p className="line-clamp-2 text-sm font-bold text-slate-900">
                         {formatVariantDisplayName(item.productName)}
                       </p>
                       <span className="text-xs font-medium text-slate-500">SKU: {item.sku}</span>
@@ -92,14 +92,14 @@ export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps)
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
+      <CardFooter className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/50 p-6">
         <div className="flex w-full items-center justify-between text-sm">
           <span className="font-medium text-slate-500">Tạm tính</span>
           <span className="font-bold">{formatCurrency(order.subtotal)}</span>
         </div>
         <Separator />
         <div className="flex w-full items-center justify-between">
-          <span className="text-base font-black tracking-tight text-slate-900 uppercase dark:text-white">
+          <span className="text-base font-black tracking-tight text-slate-900 uppercase">
             Tổng thanh toán
           </span>
           <span className="text-primary text-xl font-black">{formatCurrency(order.total)}</span>

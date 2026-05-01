@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@workspace/ui/components/button";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -50,20 +51,18 @@ export function ProductStickyBuy({
           {formatPrice(price)}
         </span>
         <div className="flex flex-shrink-0 gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            shape="pill"
             disabled={!canOrder}
-            className="hidden h-11 w-32 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
+            className="hidden w-32 sm:inline-flex"
           >
             + Giỏ hàng
-          </button>
-          <button
-            type="button"
-            disabled={!canOrder}
-            className="flex h-11 w-32 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-40"
-          >
+          </Button>
+          <Button type="button" shape="pill" disabled={!canOrder} className="w-32 sm:w-40">
             {canOrder ? "Mua ngay →" : "Hết hàng"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

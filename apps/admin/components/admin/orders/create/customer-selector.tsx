@@ -11,8 +11,8 @@ import {
   CommandItem,
   CommandList,
 } from "@workspace/ui/components/command";
+import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown, Loader2, Plus, User } from "lucide-react";
@@ -92,24 +92,24 @@ export function CustomerSelector({
           </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="new-name">Tên khách hàng</Label>
+          <Field>
+            <FieldLabel htmlFor="new-name">Tên khách hàng</FieldLabel>
             <Input
               id="new-name"
               value={newCustomer.name}
               onChange={(e) => onNewCustomerChange({ ...newCustomer, name: e.target.value })}
               placeholder="Nhập tên khách hàng"
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-phone">Số điện thoại (tuỳ chọn)</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="new-phone">Số điện thoại (tuỳ chọn)</FieldLabel>
             <Input
               id="new-phone"
               value={newCustomer.phone}
               onChange={(e) => onNewCustomerChange({ ...newCustomer, phone: e.target.value })}
               placeholder="Để trống nếu không có"
             />
-          </div>
+          </Field>
         </div>
       </div>
     );

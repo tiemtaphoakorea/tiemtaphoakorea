@@ -28,39 +28,80 @@ export function CategoryProductCard({ product, variant = "grid" }: CategoryProdu
 
   if (variant === "list") {
     return (
-      <Link href={detailHref} className="group block" data-testid={`product-card-${product.slug}`}>
-        <Card className="flex-row gap-0 overflow-hidden py-0 transition-all duration-300 hover:ring-primary/30">
-          <div className="relative aspect-square w-32 shrink-0 bg-muted/40 sm:w-36">
-            <Image
-              src={product.thumbnail || "/placeholder.png"}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 128px, 144px"
-            />
-            {hasDiscount && (
-              <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-[10px] font-bold text-destructive-foreground">
-                −{discountPct}%
+      <Card
+        className="group flex-row gap-0 overflow-hidden py-0 transition-all duration-300 hover:ring-primary/30"
+        data-testid={`product-card-${product.slug}`}
+      >
+        <Link
+          href={detailHref}
+          className="relative aspect-square w-32 shrink-0 bg-muted/40 sm:w-40"
+        >
+          <Image
+            src={product.thumbnail || "/placeholder.png"}
+            alt={product.name}
+            fill
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 128px, 160px"
+          />
+          {hasDiscount && (
+            <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-[10px] font-bold text-destructive-foreground">
+              −{discountPct}%
+            </Badge>
+          )}
+          {product.totalStock <= 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[2px]">
+              <Badge variant="secondary" className="bg-background text-xs font-semibold">
+                Hết hàng
               </Badge>
+            </div>
+          )}
+        </Link>
+
+        <CardContent className="flex flex-1 items-start gap-3 p-4 sm:p-5">
+          <div className="min-w-0 flex-1">
+            {product.categoryName && (
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                {product.categoryName}
+              </div>
             )}
-          </div>
-          <CardContent className="flex flex-1 items-start gap-4 p-4 sm:p-5">
-            <div className="min-w-0 flex-1">
-              {product.categoryName && (
-                <div className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                  {product.categoryName}
-                </div>
-              )}
+            <Link href={detailHref}>
               <h3 className="mb-2 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                 {product.name}
               </h3>
-              {product.description && (
-                <p className="line-clamp-2 max-w-md text-[13px] leading-relaxed text-muted-foreground">
-                  {product.description}
-                </p>
-              )}
-            </div>
-            <div className="shrink-0 text-right">
+            </Link>
+            {product.description && (
+              <p className="mb-3 line-clamp-3 max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+                {product.description}
+              </p>
+            )}
+            {product.variantNames && product.variantNames.length > 1 && (
+              <div className="mb-3 flex flex-wrap gap-1">
+                {product.variantNames
+                  .filter((name) => name !== product.primaryVariantName)
+                  .slice(0, 5)
+                  .map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                {product.variantNames.filter((n) => n !== product.primaryVariantName).length >
+                  5 && (
+                  <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    +
+                    {product.variantNames.filter((n) => n !== product.primaryVariantName).length -
+                      5}
+                  </span>
+                )}
+              </div>
+            )}
+            <StockBar stock={product.totalAvailable ?? product.totalStock ?? 0} />
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="text-right">
               <span
                 data-testid="product-card-price"
                 className="block text-lg font-extrabold tracking-tight text-destructive tabular-nums sm:text-xl"
@@ -73,9 +114,26 @@ export function CategoryProductCard({ product, variant = "grid" }: CategoryProdu
                 </span>
               )}
             </div>
-          </CardContent>
-        </Card>
-      </Link>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={isFavorited ? "Bỏ yêu thích" : "Thêm yêu thích"}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsFavorited((v) => !v);
+              }}
+              className="size-8 rounded-full border border-border bg-background/90 text-muted-foreground hover:bg-background hover:text-destructive"
+            >
+              <Heart
+                className={`size-4 transition-colors ${isFavorited ? "fill-destructive text-destructive" : ""}`}
+              />
+            </Button>
+            <Button asChild size="sm" className="mt-1 rounded-full text-xs">
+              <Link href={detailHref}>Xem chi tiết</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -89,7 +147,7 @@ export function CategoryProductCard({ product, variant = "grid" }: CategoryProdu
           src={product.thumbnail || "/placeholder.png"}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-contain transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
         />
         {hasDiscount && (

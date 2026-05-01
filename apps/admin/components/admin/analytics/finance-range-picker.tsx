@@ -2,14 +2,8 @@
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { useEffect, useState } from "react";
 
 export type DateRange = { startDate: string; endDate: string };
@@ -135,29 +129,27 @@ export function FinanceRangePicker({ value, onChange }: FinanceRangePickerProps)
         <PopoverContent className="w-56 p-3" align="start">
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
-              <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
-                <SelectTrigger className="h-8 flex-1 text-xs font-bold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m.value} value={String(m.value)} className="text-xs">
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select
+                value={String(month)}
+                onValueChange={(v) => setMonth(Number(v))}
+                className="h-8 flex-1 text-xs font-bold"
+              >
+                {MONTHS.map((m) => (
+                  <SelectOption key={m.value} value={String(m.value)}>
+                    {m.label}
+                  </SelectOption>
+                ))}
               </Select>
-              <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-                <SelectTrigger className="h-8 w-20 text-xs font-bold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y} value={String(y)} className="text-xs">
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select
+                value={String(year)}
+                onValueChange={(v) => setYear(Number(v))}
+                className="h-8 w-20 text-xs font-bold"
+              >
+                {YEARS.map((y) => (
+                  <SelectOption key={y} value={String(y)}>
+                    {y}
+                  </SelectOption>
+                ))}
               </Select>
             </div>
             <Button size="sm" className="h-8 w-full text-xs font-bold" onClick={applyMonth}>

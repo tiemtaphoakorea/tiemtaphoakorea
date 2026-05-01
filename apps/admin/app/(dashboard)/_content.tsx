@@ -146,7 +146,7 @@ export default function AdminDashboard() {
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
-        <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
               <TrendingUp className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
           </div>
           <BarChartMini data={REVENUE_DATA} />
         </Card>
-        <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
               <ShoppingCart className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
       {/* Bottom row */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {/* Top products */}
-        <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
               <Box className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Recent orders / activity */}
-        <Card className="overflow-hidden border border-border p-0 shadow-none">
+        <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
               <Bell className="h-[15px] w-[15px] text-primary" strokeWidth={2} />

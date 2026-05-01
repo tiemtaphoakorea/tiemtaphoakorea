@@ -146,7 +146,7 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                       <img
                         src={it.variant.images[0].imageUrl}
                         alt=""
-                        className="h-[34px] w-[34px] shrink-0 rounded-lg object-cover"
+                        className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
                       />
                     ) : (
                       <ProductThumb

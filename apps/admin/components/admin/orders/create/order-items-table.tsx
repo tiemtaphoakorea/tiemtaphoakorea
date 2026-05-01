@@ -3,7 +3,7 @@
 import type { OrderBuilderItem } from "@workspace/database/types/order";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
   TableBody,
@@ -46,19 +46,19 @@ export function OrderItemsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[35%]">Sản phẩm</TableHead>
-            <TableHead className="text-right">Đơn giá</TableHead>
-            <TableHead className="text-center w-[80px]">Có thể bán</TableHead>
-            <TableHead className="text-center w-[150px]">Số lượng</TableHead>
-            <TableHead className="text-right">Thành tiền</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="min-w-[180px]">Sản phẩm</TableHead>
+            <TableHead className="w-[130px] text-right">Đơn giá</TableHead>
+            <TableHead className="w-[70px] text-center">Tồn kho</TableHead>
+            <TableHead className="w-[160px] text-center">Số lượng</TableHead>
+            <TableHead className="w-[110px] text-right">Thành tiền</TableHead>
+            <TableHead className="w-[46px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.variantId}>
-              <TableCell>
-                <div className="flex w-48 flex-col">
+              <TableCell className="max-w-[220px]">
+                <div className="flex min-w-0 flex-col">
                   <span className="truncate font-medium" title={item.productName}>
                     {item.productName}
                   </span>
@@ -71,16 +71,12 @@ export function OrderItemsTable({
                 </div>
               </TableCell>
               <TableCell className="text-right">
-                <Input
+                <NumberInput
                   className="h-8 w-28 text-right ml-auto"
-                  type="number"
-                  min={0}
+                  decimalScale={0}
                   value={item.customPrice ?? item.price}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    if (!Number.isNaN(val) && val >= 0) {
-                      onUpdatePrice(item.variantId, val);
-                    }
+                  onValueChange={({ floatValue }) => {
+                    if (floatValue !== undefined) onUpdatePrice(item.variantId, floatValue);
                   }}
                 />
               </TableCell>
@@ -99,13 +95,14 @@ export function OrderItemsTable({
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
-                    <Input
+                    <NumberInput
                       className="h-8 w-16 text-center"
+                      decimalScale={0}
+                      min={1}
                       value={item.quantity}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!Number.isNaN(val) && val > 0) {
-                          onUpdateQuantity(item.variantId, val);
+                      onValueChange={({ floatValue }) => {
+                        if (floatValue !== undefined && floatValue > 0) {
+                          onUpdateQuantity(item.variantId, floatValue);
                         }
                       }}
                     />

@@ -3,16 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ExpenseFormValues, expenseSchema } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { NumberInput } from "@workspace/ui/components/number-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -78,85 +72,63 @@ export function ExpenseAddSheet({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 space-y-6">
-            <div className="space-y-2">
-              <Label className="text-xs font-black tracking-widest text-slate-500 uppercase">
-                Mô tả chi phí
-              </Label>
-              <Input
-                {...register("description")}
-                placeholder="Ví dụ: Tiền thuê mặt bằng tháng 1"
-                className="h-12 rounded-xl border-slate-200 bg-white font-medium"
-                aria-invalid={!!errors.description}
-              />
-              {errors.description && (
-                <p className="text-destructive text-sm">{errors.description.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-black tracking-widest text-slate-500 uppercase">
-                  Số tiền (VNĐ)
-                </Label>
-                <Controller
-                  name="amount"
-                  control={control}
-                  render={({ field }) => (
-                    <NumberInput
-                      name={field.name}
-                      allowNegative
-                      required
-                      value={field.value}
-                      onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                      placeholder="0"
-                      className="h-12 rounded-xl border-slate-200 bg-white font-black"
-                      aria-invalid={!!errors.amount}
-                    />
-                  )}
+          <div className="flex-1">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Mô tả chi phí</FieldLabel>
+                <Input
+                  {...register("description")}
+                  placeholder="Ví dụ: Tiền thuê mặt bằng tháng 1"
+                  aria-invalid={!!errors.description}
                 />
-                {errors.amount && (
-                  <p className="text-destructive text-sm">{errors.amount.message}</p>
+                {errors.description && (
+                  <p className="text-destructive text-sm">{errors.description.message}</p>
                 )}
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-black tracking-widest text-slate-500 uppercase">
-                  Loại chi phí
-                </Label>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-12 w-full rounded-xl border-slate-200 bg-white font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="fixed" className="font-bold">
-                          Cố định
-                        </SelectItem>
-                        <SelectItem value="variable" className="font-bold">
-                          Biến đổi
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
+              </Field>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-black tracking-widest text-slate-500 uppercase">
-                Ngày ghi nhận
-              </Label>
-              <Input
-                {...register("date")}
-                type="date"
-                className="h-12 rounded-xl border-slate-200 bg-white font-medium"
-                aria-invalid={!!errors.date}
-              />
-              {errors.date && <p className="text-destructive text-sm">{errors.date.message}</p>}
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Số tiền (VNĐ)</FieldLabel>
+                  <Controller
+                    name="amount"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        name={field.name}
+                        allowNegative
+                        required
+                        value={field.value}
+                        onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                        placeholder="0"
+                        aria-invalid={!!errors.amount}
+                      />
+                    )}
+                  />
+                  {errors.amount && (
+                    <p className="text-destructive text-sm">{errors.amount.message}</p>
+                  )}
+                </Field>
+                <Field>
+                  <FieldLabel>Loại chi phí</FieldLabel>
+                  <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange} className="w-full">
+                        <SelectOption value="fixed">Cố định</SelectOption>
+                        <SelectOption value="variable">Biến đổi</SelectOption>
+                      </Select>
+                    )}
+                  />
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>Ngày ghi nhận</FieldLabel>
+                <Input {...register("date")} type="date" aria-invalid={!!errors.date} />
+                {errors.date && <p className="text-destructive text-sm">{errors.date.message}</p>}
+              </Field>
+            </FieldGroup>
           </div>
 
           <SheetFooter className="mt-8 flex-row justify-end gap-3 border-t border-slate-100 p-0 pt-6">
@@ -164,14 +136,14 @@ export function ExpenseAddSheet({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-12 rounded-xl px-6 font-bold"
+              className="h-12 px-6 font-bold"
             >
               Hủy
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="shadow-primary/20 h-12 rounded-xl px-8 font-black shadow-lg"
+              className="shadow-primary/20 h-12 px-8 font-black shadow-lg"
             >
               {isSubmitting ? "Đang lưu..." : "Lưu chi phí"}
             </Button>

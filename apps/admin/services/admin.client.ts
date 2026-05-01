@@ -256,6 +256,7 @@ export const adminClient = {
     shippingName?: string;
     shippingPhone?: string;
     shippingAddress?: string;
+    shippingFee?: number;
   }) {
     return axios.post<{ success: boolean; order: Order }>(
       API_ENDPOINTS.ADMIN.ORDERS,

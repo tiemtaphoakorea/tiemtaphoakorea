@@ -70,7 +70,7 @@ export default function AdminSuppliers() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

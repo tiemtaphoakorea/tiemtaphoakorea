@@ -125,7 +125,7 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                       >
                         <GeneratedIcon
                           src={visual.icon}
-                          className="h-7 w-7 rounded-lg object-cover"
+                          className="h-7 w-7 rounded-lg object-contain"
                         />
                       </span>
                       <span
@@ -148,7 +148,7 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                 <h4 className="m-0 text-[12px] font-bold uppercase leading-none tracking-[0.08em] text-muted-foreground">
                   <GeneratedIcon
                     src={activeVisual.icon}
-                    className="mr-1 inline-block h-5 w-5 rounded-md object-cover align-middle"
+                    className="mr-1 inline-block h-5 w-5 rounded-md object-contain align-middle"
                   />
                   {activeCategory.name.toUpperCase()}
                 </h4>
@@ -174,7 +174,7 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                       >
                         <GeneratedIcon
                           src={activeVisual.icon}
-                          className="h-7 w-7 rounded-lg object-cover"
+                          className="h-7 w-7 rounded-lg object-contain"
                         />
                       </span>
                       <div className="min-w-0 flex-1">

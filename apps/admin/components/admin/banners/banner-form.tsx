@@ -6,15 +6,10 @@ import { type ApiError, axios } from "@workspace/shared/api-client";
 import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { type BannerFormValues, bannerSchema } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Sheet,
   SheetContent,
@@ -141,378 +136,366 @@ export function BannerForm({ isOpen, onOpenChange, banner, categories }: Props) 
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-6 py-6">
-          {/* Type toggle */}
-          <div className="grid gap-2">
-            <Label className="text-xs font-black tracking-wider uppercase">Loại slide</Label>
-            <div className="flex gap-2">
-              {(["custom", "category"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setValue("type", t, { shouldDirty: true, shouldValidate: true })}
-                  className={`flex-1 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
-                    bannerType === t
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-slate-200 text-slate-600 hover:border-slate-300"
-                  }`}
-                >
-                  {t === "custom" ? "🖼 Ảnh tùy chọn" : "📂 Từ danh mục"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Category selector */}
-          {bannerType === "category" && (
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">
-                Danh mục <span className="text-red-500">*</span>
-              </Label>
-              <Controller
-                name="categoryId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? undefined}
-                    onValueChange={(value) => field.onChange(value || null)}
+        <form onSubmit={onSubmit} className="py-6">
+          <FieldGroup>
+            {/* Type toggle */}
+            <Field>
+              <FieldLabel>Loại slide</FieldLabel>
+              <div className="flex gap-2">
+                {(["custom", "category"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setValue("type", t, { shouldDirty: true, shouldValidate: true })}
+                    className={`flex-1 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+                      bannerType === t
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-slate-200 text-slate-600 hover:border-slate-300"
+                    }`}
                   >
-                    <SelectTrigger className="h-11 w-full bg-slate-50/50 font-medium">
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
+                    {t === "custom" ? "🖼 Ảnh tùy chọn" : "📂 Từ danh mục"}
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            {/* Category selector */}
+            {bannerType === "category" && (
+              <Field>
+                <FieldLabel>
+                  Danh mục <span className="text-red-500">*</span>
+                </FieldLabel>
+                <Controller
+                  name="categoryId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? undefined}
+                      onValueChange={(value) => field.onChange(value || null)}
+                      className="w-full"
+                      placeholder="Chọn danh mục"
+                    >
                       {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
+                        <SelectOption key={cat.id} value={cat.id}>
                           {cat.name}
-                        </SelectItem>
+                        </SelectOption>
                       ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.categoryId?.message && (
-                <p className="text-destructive text-sm">{errors.categoryId.message}</p>
-              )}
-            </div>
-          )}
-
-          {/* Image upload */}
-          {bannerType === "custom" && (
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">
-                Ảnh banner <span className="text-red-500">*</span>
-              </Label>
-              <Controller
-                name="imageUrl"
-                control={control}
-                render={({ field }) => (
-                  <ImageUploader
-                    value={field.value ? [field.value] : []}
-                    onChange={(urls) => field.onChange(urls[0] ?? null)}
-                    maxFiles={1}
-                  />
-                )}
-              />
-              {errors.imageUrl?.message && (
-                <p className="text-destructive text-sm">{errors.imageUrl.message}</p>
-              )}
-            </div>
-          )}
-
-          <div className="grid gap-2">
-            <Label className="text-xs font-black tracking-wider uppercase">
-              Tiêu đề{" "}
-              {bannerType === "category" && (
-                <span className="font-normal normal-case text-slate-400">
-                  (mặc định: tên danh mục)
-                </span>
-              )}
-            </Label>
-            <Controller
-              name="title"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value || null)}
-                  placeholder={
-                    bannerType === "category" ? "Tự động từ tên danh mục" : "Nhập tiêu đề..."
-                  }
-                  className="h-11 bg-slate-50/50 font-medium"
+                    </Select>
+                  )}
                 />
-              )}
-            />
-            {errors.title?.message && (
-              <p className="text-destructive text-sm">{errors.title.message}</p>
+                {errors.categoryId?.message && (
+                  <p className="text-destructive text-sm">{errors.categoryId.message}</p>
+                )}
+              </Field>
             )}
-          </div>
 
-          <div className="grid gap-2">
-            <Label className="text-xs font-black tracking-wider uppercase">Mô tả phụ</Label>
-            <Controller
-              name="subtitle"
-              control={control}
-              render={({ field }) => (
-                <Textarea
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value || null)}
-                  placeholder="Ví dụ: Ưu đãi đến 50% các dòng mỹ phẩm..."
-                  className="min-h-[80px] bg-slate-50/50 font-medium"
+            {/* Image upload */}
+            {bannerType === "custom" && (
+              <Field>
+                <FieldLabel>
+                  Ảnh banner <span className="text-red-500">*</span>
+                </FieldLabel>
+                <Controller
+                  name="imageUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <ImageUploader
+                      value={field.value ? [field.value] : []}
+                      onChange={(urls) => field.onChange(urls[0] ?? null)}
+                      maxFiles={1}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.subtitle?.message && (
-              <p className="text-destructive text-sm">{errors.subtitle.message}</p>
+                {errors.imageUrl?.message && (
+                  <p className="text-destructive text-sm">{errors.imageUrl.message}</p>
+                )}
+              </Field>
             )}
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">
-                Badge{" "}
+            <Field>
+              <FieldLabel>
+                Tiêu đề{" "}
                 {bannerType === "category" && (
                   <span className="font-normal normal-case text-slate-400">
-                    (mặc định: "Danh mục hot")
+                    (mặc định: tên danh mục)
                   </span>
                 )}
-              </Label>
+              </FieldLabel>
               <Controller
-                name="badgeText"
+                name="title"
                 control={control}
                 render={({ field }) => (
                   <Input
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value || null)}
-                    placeholder={bannerType === "category" ? "Danh mục hot" : "Ví dụ: Flash Sale"}
-                    className="h-11 bg-slate-50/50 font-medium"
+                    placeholder={
+                      bannerType === "category" ? "Tự động từ tên danh mục" : "Nhập tiêu đề..."
+                    }
                   />
                 )}
               />
-              {errors.badgeText?.message && (
-                <p className="text-destructive text-sm">{errors.badgeText.message}</p>
+              {errors.title?.message && (
+                <p className="text-destructive text-sm">{errors.title.message}</p>
               )}
-            </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Màu accent</Label>
+            </Field>
+
+            <Field>
+              <FieldLabel>Mô tả phụ</FieldLabel>
               <Controller
-                name="accentColor"
+                name="subtitle"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value ?? "violet"} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-11 bg-slate-50/50 font-medium">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
+                  <Textarea
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value || null)}
+                    placeholder="Ví dụ: Ưu đãi đến 50% các dòng mỹ phẩm..."
+                    className="min-h-[80px]"
+                  />
+                )}
+              />
+              {errors.subtitle?.message && (
+                <p className="text-destructive text-sm">{errors.subtitle.message}</p>
+              )}
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel>
+                  Badge{" "}
+                  {bannerType === "category" && (
+                    <span className="font-normal normal-case text-slate-400">
+                      (mặc định: "Danh mục hot")
+                    </span>
+                  )}
+                </FieldLabel>
+                <Controller
+                  name="badgeText"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      placeholder={bannerType === "category" ? "Danh mục hot" : "Ví dụ: Flash Sale"}
+                    />
+                  )}
+                />
+                {errors.badgeText?.message && (
+                  <p className="text-destructive text-sm">{errors.badgeText.message}</p>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>Màu accent</FieldLabel>
+                <Controller
+                  name="accentColor"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? "violet"}
+                      onValueChange={field.onChange}
+                      className="w-full"
+                    >
                       {ACCENT_COLORS.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
+                        <SelectOption key={c.value} value={c.value}>
                           {c.label}
-                        </SelectItem>
+                        </SelectOption>
                       ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.accentColor?.message && (
-                <p className="text-destructive text-sm">{errors.accentColor.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">
-                Nút CTA{" "}
-                {bannerType === "category" && (
-                  <span className="font-normal normal-case text-slate-400">
-                    (mặc định: "Xem tất cả")
-                  </span>
-                )}
-              </Label>
-              <Controller
-                name="ctaLabel"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    placeholder={bannerType === "category" ? "Xem tất cả" : "Ví dụ: Mua ngay"}
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.ctaLabel?.message && (
-                <p className="text-destructive text-sm">{errors.ctaLabel.message}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">
-                Link CTA{" "}
-                {bannerType === "category" && (
-                  <span className="font-normal normal-case text-slate-400">(tự động)</span>
-                )}
-              </Label>
-              <Controller
-                name="ctaUrl"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    placeholder={bannerType === "category" ? "/products?category=..." : "/products"}
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.ctaUrl?.message && (
-                <p className="text-destructive text-sm">{errors.ctaUrl.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-xs font-black tracking-wider uppercase">
-              Nút phụ (tùy chọn)
-            </Label>
-            <Controller
-              name="ctaSecondaryLabel"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value || null)}
-                  placeholder="Ví dụ: Khám phá thêm"
-                  className="h-11 bg-slate-50/50 font-medium"
+                    </Select>
+                  )}
                 />
+                {errors.accentColor?.message && (
+                  <p className="text-destructive text-sm">{errors.accentColor.message}</p>
+                )}
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel>
+                  Nút CTA{" "}
+                  {bannerType === "category" && (
+                    <span className="font-normal normal-case text-slate-400">
+                      (mặc định: "Xem tất cả")
+                    </span>
+                  )}
+                </FieldLabel>
+                <Controller
+                  name="ctaLabel"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      placeholder={bannerType === "category" ? "Xem tất cả" : "Ví dụ: Mua ngay"}
+                    />
+                  )}
+                />
+                {errors.ctaLabel?.message && (
+                  <p className="text-destructive text-sm">{errors.ctaLabel.message}</p>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>
+                  Link CTA{" "}
+                  {bannerType === "category" && (
+                    <span className="font-normal normal-case text-slate-400">(tự động)</span>
+                  )}
+                </FieldLabel>
+                <Controller
+                  name="ctaUrl"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      placeholder={
+                        bannerType === "category" ? "/products?category=..." : "/products"
+                      }
+                    />
+                  )}
+                />
+                {errors.ctaUrl?.message && (
+                  <p className="text-destructive text-sm">{errors.ctaUrl.message}</p>
+                )}
+              </Field>
+            </div>
+
+            <Field>
+              <FieldLabel>Nút phụ (tùy chọn)</FieldLabel>
+              <Controller
+                name="ctaSecondaryLabel"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value || null)}
+                    placeholder="Ví dụ: Khám phá thêm"
+                  />
+                )}
+              />
+              {errors.ctaSecondaryLabel?.message && (
+                <p className="text-destructive text-sm">{errors.ctaSecondaryLabel.message}</p>
               )}
-            />
-            {errors.ctaSecondaryLabel?.message && (
-              <p className="text-destructive text-sm">{errors.ctaSecondaryLabel.message}</p>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel>Tag giảm giá</FieldLabel>
+                <Controller
+                  name="discountTag"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      placeholder="Ví dụ: 50%"
+                    />
+                  )}
+                />
+                {errors.discountTag?.message && (
+                  <p className="text-destructive text-sm">{errors.discountTag.message}</p>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>Chú thích tag</FieldLabel>
+                <Controller
+                  name="discountTagSub"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      placeholder="Ví dụ: cho đơn đầu tiên"
+                    />
+                  )}
+                />
+                {errors.discountTagSub?.message && (
+                  <p className="text-destructive text-sm">{errors.discountTagSub.message}</p>
+                )}
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel>Bắt đầu từ</FieldLabel>
+                <Controller
+                  name="startsAt"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      type="datetime-local"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  )}
+                />
+                {errors.startsAt?.message && (
+                  <p className="text-destructive text-sm">{errors.startsAt.message}</p>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>Kết thúc lúc</FieldLabel>
+                <Controller
+                  name="endsAt"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      type="datetime-local"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  )}
+                />
+                {errors.endsAt?.message && (
+                  <p className="text-destructive text-sm">{errors.endsAt.message}</p>
+                )}
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel>Thứ tự hiển thị</FieldLabel>
+                <Controller
+                  name="sortOrder"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      decimalScale={0}
+                      min={0}
+                      value={field.value ?? 0}
+                      onValueChange={({ floatValue }) => field.onChange(floatValue ?? 0)}
+                    />
+                  )}
+                />
+                {errors.sortOrder?.message && (
+                  <p className="text-destructive text-sm">{errors.sortOrder.message}</p>
+                )}
+              </Field>
+              <div className="flex items-end gap-3 pb-1">
+                <Controller
+                  name="isActive"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      id="banner-active"
+                    />
+                  )}
+                />
+                <FieldLabel htmlFor="banner-active" className="text-sm font-bold cursor-pointer">
+                  Hiển thị
+                </FieldLabel>
+              </div>
+            </div>
+
+            {errors.root?.serverError?.message && (
+              <p className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
+                {errors.root.serverError.message}
+              </p>
             )}
-          </div>
+          </FieldGroup>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Tag giảm giá</Label>
-              <Controller
-                name="discountTag"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    placeholder="Ví dụ: 50%"
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.discountTag?.message && (
-                <p className="text-destructive text-sm">{errors.discountTag.message}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Chú thích tag</Label>
-              <Controller
-                name="discountTagSub"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    placeholder="Ví dụ: cho đơn đầu tiên"
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.discountTagSub?.message && (
-                <p className="text-destructive text-sm">{errors.discountTagSub.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Bắt đầu từ</Label>
-              <Controller
-                name="startsAt"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="datetime-local"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.startsAt?.message && (
-                <p className="text-destructive text-sm">{errors.startsAt.message}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Kết thúc lúc</Label>
-              <Controller
-                name="endsAt"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="datetime-local"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.endsAt?.message && (
-                <p className="text-destructive text-sm">{errors.endsAt.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label className="text-xs font-black tracking-wider uppercase">Thứ tự hiển thị</Label>
-              <Controller
-                name="sortOrder"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="number"
-                    min={0}
-                    value={field.value ?? 0}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="h-11 bg-slate-50/50 font-medium"
-                  />
-                )}
-              />
-              {errors.sortOrder?.message && (
-                <p className="text-destructive text-sm">{errors.sortOrder.message}</p>
-              )}
-            </div>
-            <div className="flex items-end gap-3 pb-1">
-              <Controller
-                name="isActive"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    id="banner-active"
-                  />
-                )}
-              />
-              <Label htmlFor="banner-active" className="text-sm font-bold cursor-pointer">
-                Hiển thị
-              </Label>
-            </div>
-          </div>
-
-          {errors.root?.serverError?.message && (
-            <p className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600">
-              {errors.root.serverError.message}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Button
               type="button"
               variant="outline"

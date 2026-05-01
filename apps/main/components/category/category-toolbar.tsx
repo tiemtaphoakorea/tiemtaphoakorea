@@ -109,8 +109,8 @@ export function CategoryToolbar({
             onClick={() => onViewModeChange("grid")}
             className={
               viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm hover:bg-background"
-                : "text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
             }
           >
             <LayoutGrid className="size-4" />
@@ -123,8 +123,8 @@ export function CategoryToolbar({
             onClick={() => onViewModeChange("list")}
             className={
               viewMode === "list"
-                ? "bg-background text-foreground shadow-sm hover:bg-background"
-                : "text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
             }
           >
             <List className="size-4" />

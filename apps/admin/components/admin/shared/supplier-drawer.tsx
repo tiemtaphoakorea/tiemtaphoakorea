@@ -7,8 +7,8 @@ import type {
   UpdateSupplierData,
 } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
@@ -16,8 +16,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-
-const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-foreground";
 
 type SupplierDrawerProps = {
   open: boolean;
@@ -101,51 +99,53 @@ export function SupplierDrawer({ open, supplier, onClose }: SupplierDrawerProps)
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Tên nhà cung cấp</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Lotte Trading Korea"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Số điện thoại</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Email</Label>
+        <div className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]">
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Tên nhà cung cấp</FieldLabel>
               <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contact@..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="VD: Lotte Trading Korea"
               />
+            </Field>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field>
+                <FieldLabel>Số điện thoại</FieldLabel>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </Field>
+              <Field>
+                <FieldLabel>Email</FieldLabel>
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="contact@..."
+                />
+              </Field>
             </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Địa chỉ</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Điều khoản thanh toán</Label>
-            <Input
-              value={paymentTerms}
-              onChange={(e) => setPaymentTerms(e.target.value)}
-              placeholder="VD: NET 30, COD..."
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Ghi chú</Label>
-            <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
-          </div>
-          {supplier && (
-            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
-              <span className="text-[13px] font-medium">Đang hoạt động</span>
-              <Switch checked={isActive} onCheckedChange={setIsActive} />
-            </div>
-          )}
+            <Field>
+              <FieldLabel>Địa chỉ</FieldLabel>
+              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            </Field>
+            <Field>
+              <FieldLabel>Điều khoản thanh toán</FieldLabel>
+              <Input
+                value={paymentTerms}
+                onChange={(e) => setPaymentTerms(e.target.value)}
+                placeholder="VD: NET 30, COD..."
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Ghi chú</FieldLabel>
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
+            </Field>
+            {supplier && (
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
+                <span className="text-[13px] font-medium">Đang hoạt động</span>
+                <Switch checked={isActive} onCheckedChange={setIsActive} />
+              </div>
+            )}
+          </FieldGroup>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">

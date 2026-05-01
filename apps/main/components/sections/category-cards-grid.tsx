@@ -30,7 +30,7 @@ function CategoryCard({ card }: { card: CategoryCardItem }) {
             src={card.imageUrl}
             alt={card.title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 1024px) 50vw, 25vw"
           />
         ) : (

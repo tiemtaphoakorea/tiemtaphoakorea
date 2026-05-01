@@ -32,6 +32,8 @@ export type ProductListItem = {
   thumbnail: string;
   skus?: string | null;
   minLowStockThreshold?: number | null;
+  variantNames?: string[] | null;
+  primaryVariantName?: string | null;
 };
 
 export type CreateProductData = {
@@ -512,6 +514,20 @@ export async function getProductsForListing(params: {
         order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
         limit 1
       ), '')`,
+      primaryVariantName: sql<string | null>`(
+        select pv_primary.name
+        from ${productVariants} pv_primary
+        join ${variantImages} vi_primary on vi_primary.variant_id = pv_primary.id
+        where pv_primary.product_id = ${products.id}
+        order by vi_primary.is_primary desc, vi_primary.display_order asc
+        limit 1
+      )`,
+      variantNames: sql<string[] | null>`(
+        select array_agg(pv.name order by pv.name)
+        from ${productVariants} pv
+        where pv.product_id = ${products.id}
+        and pv.is_active = true
+      )`,
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))

@@ -15,16 +15,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { NumberInput } from "@workspace/ui/components/number-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Switch } from "@workspace/ui/components/switch";
 import {
   Table,
@@ -118,28 +113,24 @@ function VariantGenerator({ attributes, dispatch, onGenerate }: VariantGenerator
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase">
-              Thuộc tính 1: {attributes[0].name}
-            </Label>
+          <Field>
+            <FieldLabel>Thuộc tính 1: {attributes[0].name}</FieldLabel>
             <Input
               placeholder="Ví dụ: Đỏ, Xanh..."
               onChange={(e) =>
                 dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 0, valString: e.target.value })
               }
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase">
-              Thuộc tính 2: {attributes[1].name}
-            </Label>
+          </Field>
+          <Field>
+            <FieldLabel>Thuộc tính 2: {attributes[1].name}</FieldLabel>
             <Input
               placeholder="Ví dụ: S, M..."
               onChange={(e) =>
                 dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 1, valString: e.target.value })
               }
             />
-          </div>
+          </Field>
         </div>
         <Button
           type="button"
@@ -651,107 +642,101 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
             {/* Tab 1: General Info */}
             <TabsContent value="info" className="space-y-6">
               <Card className="border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200">
-                <CardContent className="space-y-6 p-6">
-                  <div className="grid gap-3">
-                    <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                      Tên sản phẩm *
-                    </Label>
-                    <Input
-                      {...form.register("name")}
-                      placeholder="Ví dụ: Áo Thun Premium Cotton"
-                      className="h-12 text-lg font-bold"
-                      aria-invalid={!!form.formState.errors.name}
-                      required
-                    />
-                    {form.formState.errors.name && (
-                      <p className="text-sm text-destructive">
-                        {form.formState.errors.name.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="grid gap-3">
-                      <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                        Danh mục
-                      </Label>
-                      <Controller
-                        name="categoryId"
-                        control={form.control}
-                        render={({ field }) => (
-                          <CategoryTreeSelector
-                            categories={categories}
-                            value={field.value ?? ""}
-                            onValueChange={field.onChange}
-                          />
-                        )}
+                <CardContent className="p-6">
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Tên sản phẩm *</FieldLabel>
+                      <Input
+                        {...form.register("name")}
+                        placeholder="Ví dụ: Áo Thun Premium Cotton"
+                        className="h-12 text-lg font-bold"
+                        aria-invalid={!!form.formState.errors.name}
+                        required
                       />
-                    </div>
-                    <div className="grid gap-3">
-                      <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                        Giá niêm yết (Base Price)
-                      </Label>
-                      <Controller
-                        name="basePrice"
-                        control={form.control}
-                        render={({ field }) => (
-                          <NumberInput
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                            className="h-11 font-mono font-bold"
-                            aria-invalid={!!form.formState.errors.basePrice}
-                          />
-                        )}
-                      />
-                      {form.formState.errors.basePrice && (
+                      {form.formState.errors.name && (
                         <p className="text-sm text-destructive">
-                          {form.formState.errors.basePrice.message}
+                          {form.formState.errors.name.message}
                         </p>
                       )}
-                      <p className="text-[10px] font-medium text-slate-500">
-                        Giá này sẽ được áp dụng làm mặc định cho các biến thể tạo mới.
-                      </p>
+                    </Field>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <Field>
+                        <FieldLabel>Danh mục</FieldLabel>
+                        <Controller
+                          name="categoryId"
+                          control={form.control}
+                          render={({ field }) => (
+                            <CategoryTreeSelector
+                              categories={categories}
+                              value={field.value ?? ""}
+                              onValueChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Giá niêm yết (Base Price)</FieldLabel>
+                        <Controller
+                          name="basePrice"
+                          control={form.control}
+                          render={({ field }) => (
+                            <NumberInput
+                              name={field.name}
+                              value={field.value}
+                              onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                              className="font-mono font-bold"
+                              aria-invalid={!!form.formState.errors.basePrice}
+                            />
+                          )}
+                        />
+                        {form.formState.errors.basePrice && (
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.basePrice.message}
+                          </p>
+                        )}
+                        <p className="text-[10px] font-medium text-slate-500">
+                          Giá này sẽ được áp dụng làm mặc định cho các biến thể tạo mới.
+                        </p>
+                      </Field>
                     </div>
-                  </div>
 
-                  <div className="grid gap-3">
-                    <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                      Mô tả sản phẩm
-                    </Label>
-                    <Textarea
-                      {...form.register("description")}
-                      placeholder="Thông tin chi tiết về sản phẩm..."
-                      className="min-h-[150px] resize-none text-base"
-                    />
-                  </div>
+                    <Field>
+                      <FieldLabel>Mô tả sản phẩm</FieldLabel>
+                      <Textarea
+                        {...form.register("description")}
+                        placeholder="Thông tin chi tiết về sản phẩm..."
+                        className="min-h-[150px] resize-none text-base"
+                      />
+                    </Field>
 
-                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <Controller
-                      name="isActive"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                    <Label className="cursor-pointer font-bold">Hiển thị sản phẩm</Label>
-                  </div>
-
-                  <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <Controller
-                      name="isFeatured"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                    <div>
-                      <Label className="cursor-pointer font-bold">Bán chạy / Nổi bật</Label>
-                      <p className="text-[11px] text-slate-500">
-                        Hiển thị trong mục "Bán chạy" trên trang chủ
-                      </p>
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <Controller
+                        name="isActive"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        )}
+                      />
+                      <Label className="cursor-pointer font-bold">Hiển thị sản phẩm</Label>
                     </div>
-                  </div>
+
+                    <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                      <Controller
+                        name="isFeatured"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        )}
+                      />
+                      <div>
+                        <Label className="cursor-pointer font-bold">Bán chạy / Nổi bật</Label>
+                        <p className="text-[11px] text-slate-500">
+                          Hiển thị trong mục "Bán chạy" trên trang chủ
+                        </p>
+                      </div>
+                    </div>
+                  </FieldGroup>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -770,28 +755,23 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 <CardContent>
                   {variants.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="max-w-sm space-y-2">
-                        <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                          Chọn biến thể
-                        </Label>
+                      <Field className="max-w-sm">
+                        <FieldLabel>Chọn biến thể</FieldLabel>
                         <Select
                           value={selectedMediaVariantId}
                           onValueChange={(value) =>
                             dispatch({ type: "SET_SELECTED_MEDIA_VARIANT", payload: value })
                           }
+                          className="w-full"
+                          placeholder="Chọn biến thể"
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn biến thể" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {variants.map((variant) => (
-                              <SelectItem key={variant.id} value={variant.id}>
-                                {variant.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                          {variants.map((variant) => (
+                            <SelectOption key={variant.id} value={variant.id}>
+                              {variant.name}
+                            </SelectOption>
+                          ))}
                         </Select>
-                      </div>
+                      </Field>
                       <ImageUploader
                         value={selectedMediaVariant?.images ?? []}
                         onChange={(urls) => {

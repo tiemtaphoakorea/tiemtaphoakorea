@@ -34,9 +34,13 @@ function getAccentGradient(color: string | null | undefined): string {
 
 type Props = {
   slides: BannerSlide[];
+  heightClass?: string;
 };
 
-export function HeroBannerCarousel({ slides }: Props) {
+export function HeroBannerCarousel({
+  slides,
+  heightClass = "h-[320px] md:h-[460px] lg:h-[560px]",
+}: Props) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [failedImageUrls, setFailedImageUrls] = useState<Record<string, true>>({});
@@ -86,7 +90,7 @@ export function HeroBannerCarousel({ slides }: Props) {
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Slides */}
-      <div className="relative h-[320px] md:h-[460px] lg:h-[560px]">
+      <div className={`relative ${heightClass}`}>
         {slides.map((s, i) => (
           <div
             key={s.id}

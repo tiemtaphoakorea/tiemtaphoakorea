@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { NumberInput } from "@workspace/ui/components/number-input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Controller, useForm } from "react-hook-form";
@@ -79,59 +79,63 @@ export function InventoryStatusDialog({
               Cập nhật thông tin cho đơn đặt hàng #{selectedOrder?.order?.orderNumber}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Trạng thái</Label>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id={key}
-                      value={key}
-                      {...register("status")}
-                      className="peer text-primary focus:ring-primary h-4 w-4 border-gray-300"
-                    />
-                    <Label
-                      htmlFor={key}
-                      className="cursor-pointer text-sm font-medium text-slate-700"
-                    >
-                      {config.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              {errors.status && <p className="text-destructive text-sm">{errors.status.message}</p>}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="actualCostPrice">Giá vốn thực tế (VND)</Label>
-              <Controller
-                name="actualCostPrice"
-                control={control}
-                render={({ field }) => (
-                  <NumberInput
-                    id="actualCostPrice"
-                    value={field.value}
-                    onValueChange={(values) => field.onChange(values.value ?? "")}
-                    placeholder="Nhập giá vốn nếu có thay đổi"
-                  />
+          <div className="py-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Trạng thái</FieldLabel>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(statusConfig).map(([key, config]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id={key}
+                        value={key}
+                        {...register("status")}
+                        className="peer text-primary focus:ring-primary h-4 w-4 border-gray-300"
+                      />
+                      <FieldLabel
+                        htmlFor={key}
+                        className="cursor-pointer text-sm font-medium text-slate-700"
+                      >
+                        {config.label}
+                      </FieldLabel>
+                    </div>
+                  ))}
+                </div>
+                {errors.status && (
+                  <p className="text-destructive text-sm">{errors.status.message}</p>
                 )}
-              />
-            </div>
+              </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="expectedDate">Ngày dự kiến về</Label>
-              <Input id="expectedDate" type="date" {...register("expectedDate")} />
-            </div>
+              <Field>
+                <FieldLabel htmlFor="actualCostPrice">Giá vốn thực tế (VND)</FieldLabel>
+                <Controller
+                  name="actualCostPrice"
+                  control={control}
+                  render={({ field }) => (
+                    <NumberInput
+                      id="actualCostPrice"
+                      value={field.value}
+                      onValueChange={(values) => field.onChange(values.value ?? "")}
+                      placeholder="Nhập giá vốn nếu có thay đổi"
+                    />
+                  )}
+                />
+              </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="note">Ghi chú</Label>
-              <Textarea id="note" {...register("note")} placeholder="Ghi chú thêm..." />
-              <p className="text-[10px] font-medium text-slate-400">
-                * Ghi chú này sẽ được lưu lại khi bạn nhấn nút "Lưu thay đổi".
-              </p>
-            </div>
+              <Field>
+                <FieldLabel htmlFor="expectedDate">Ngày dự kiến về</FieldLabel>
+                <Input id="expectedDate" type="date" {...register("expectedDate")} />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="note">Ghi chú</FieldLabel>
+                <Textarea id="note" {...register("note")} placeholder="Ghi chú thêm..." />
+                <p className="text-[10px] font-medium text-slate-400">
+                  * Ghi chú này sẽ được lưu lại khi bạn nhấn nút "Lưu thay đổi".
+                </p>
+              </Field>
+            </FieldGroup>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

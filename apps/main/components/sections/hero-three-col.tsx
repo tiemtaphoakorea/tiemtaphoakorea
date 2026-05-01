@@ -1,10 +1,11 @@
+import type { BannerSlide } from "@workspace/database/services/banner.server";
+import { getBanners } from "@workspace/database/services/banner.server";
 import { getNavCategoriesWithCounts } from "@workspace/database/services/category.server";
-import { getNewArrivals } from "@workspace/database/services/product.server";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
-import { ArrowRight, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { GENERATED_ICONS, GeneratedIcon } from "./generated-icon";
+import { HeroBannerCarousel } from "./hero-banner-carousel";
 
 const SIDE_PALETTE = [
   { icon: GENERATED_ICONS.ramen, bg: "#FFD9DB" },
@@ -18,11 +19,56 @@ const SIDE_PALETTE = [
   { icon: GENERATED_ICONS.gift, bg: "#DCE6F8" },
 ];
 
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+const FALLBACK_SLIDES: BannerSlide[] = [
+  {
+    id: "fallback-default",
+    type: "custom",
+    categoryId: null,
+    categorySlug: null,
+    imageUrl: "/banners/k-smart-hero-fallback.png",
+    title: "NÂNG TẦM\nVẺ ĐẸP HÀN",
+    subtitle: "Ưu đãi đến 50% các dòng mỹ phẩm cao cấp. Nhập khẩu trực tiếp từ Seoul.",
+    badgeText: "Hàng chính hãng từ Seoul",
+    ctaLabel: "Mua ngay",
+    ctaUrl: PUBLIC_ROUTES.PRODUCTS,
+    ctaSecondaryLabel: "Khám phá thêm",
+    discountTag: "50%",
+    discountTagSub: "cho đơn đầu tiên",
+    accentColor: "violet",
+    isActive: true,
+    sortOrder: 0,
+    startsAt: null,
+    endsAt: null,
+  },
+  {
+    id: "fallback-skincare",
+    type: "custom",
+    categoryId: null,
+    categorySlug: null,
+    imageUrl: "/banners/k-smart-hero-skincare.png",
+    title: "CHĂM DA\nCHUẨN SEOUL",
+    subtitle: "Routine Hàn Quốc cho làn da căng khỏe, sáng mịn mỗi ngày.",
+    badgeText: "Skincare chính hãng",
+    ctaLabel: "Xem mỹ phẩm",
+    ctaUrl: PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY("personal-care"),
+    ctaSecondaryLabel: "Tư vấn routine",
+    discountTag: "35%",
+    discountTagSub: "skincare chọn lọc",
+    accentColor: "rose",
+    isActive: true,
+    sortOrder: 1,
+    startsAt: null,
+    endsAt: null,
+  },
+];
 
 export async function HeroThreeCol() {
-  const [cats, newProducts] = await Promise.all([getNavCategoriesWithCounts(), getNewArrivals(8)]);
+  const [cats, bannersData] = await Promise.all([
+    getNavCategoriesWithCounts(),
+    getBanners().catch(() => []),
+  ]);
+
+  const slides = bannersData.length > 0 ? bannersData : FALLBACK_SLIDES;
 
   const sideCats = cats.slice(0, 9).map((c, idx) => ({
     label: c.name,
@@ -50,7 +96,7 @@ export async function HeroThreeCol() {
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-lg"
                   style={{ background: c.bg }}
                 >
-                  <GeneratedIcon src={c.icon} className="h-5 w-5 rounded-md object-cover" />
+                  <GeneratedIcon src={c.icon} className="h-5 w-5 rounded-md object-contain" />
                 </span>
                 <span className="flex-1">{c.label}</span>
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
@@ -58,51 +104,8 @@ export async function HeroThreeCol() {
             ))}
           </aside>
 
-          {/* New arrivals panel */}
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-5 py-3">
-              <span className="text-sm font-bold text-foreground">Hàng mới về</span>
-              <Link
-                href={PUBLIC_ROUTES.PRODUCTS}
-                className="group inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Xem tất cả
-                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-4 gap-px bg-border">
-              {newProducts.slice(0, 8).map((p) => (
-                <Link
-                  key={p.id}
-                  href={PUBLIC_ROUTES.PRODUCT_DETAIL(p.slug)}
-                  className="group flex flex-col gap-2 bg-card p-3 transition-colors hover:bg-secondary/50"
-                >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-secondary">
-                    {p.image ? (
-                      <Image
-                        src={p.image}
-                        alt={p.name}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="(max-width: 1280px) 15vw, 180px"
-                      />
-                    ) : (
-                      <div className="h-full w-full" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[12px] font-medium leading-tight text-foreground">
-                      {p.name}
-                    </p>
-                    <p className="mt-0.5 text-[12px] font-bold text-primary">
-                      {formatPrice(p.price)}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          {/* Hero banner */}
+          <HeroBannerCarousel slides={slides} heightClass="h-[420px] lg:h-[460px]" />
         </div>
       </div>
     </section>

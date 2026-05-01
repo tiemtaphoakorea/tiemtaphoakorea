@@ -9,13 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Table,
   TableBody,
@@ -24,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { Edit, Filter, MoreHorizontal, Package, Search, Trash2 } from "lucide-react";
+import { Edit, MoreHorizontal, Package, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -73,19 +67,18 @@ export function ProductTable({
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
-          <Select value={currentCategoryId} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-full border-slate-200 bg-white md:w-[200px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Danh mục" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">Tất cả danh mục</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
+          <Select
+            value={currentCategoryId}
+            onValueChange={onCategoryChange}
+            className="w-full md:w-[200px]"
+            placeholder="Danh mục"
+          >
+            <SelectOption value="All">Tất cả danh mục</SelectOption>
+            {categories.map((c) => (
+              <SelectOption key={c.id} value={c.id}>
+                {c.name}
+              </SelectOption>
+            ))}
           </Select>
         </div>
 
@@ -137,7 +130,7 @@ export function ProductTable({
                                 src={product.imageUrl}
                                 alt={product.name}
                                 fill
-                                className="object-cover"
+                                className="object-contain"
                                 sizes="48px"
                               />
                             </div>

@@ -18,7 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
@@ -28,7 +30,6 @@ import {
 } from "@/components/admin/shared/data-state";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/mock-data";
-import { OrderDrawer } from "@/components/admin/shared/order-drawer";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -75,10 +76,10 @@ const fmtDate = (d: string | Date | null): string => {
 };
 
 export default function AdminOrders() {
+  const router = useRouter();
   const [filter, setFilter] = useState<FulfillmentFilter>("all");
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
-  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.orders.list(debouncedQuery, "all", filter, false, 1, PAGE_LIMIT),
@@ -118,10 +119,16 @@ export default function AdminOrders() {
           <Button variant="outline" className="ml-auto h-[34px]">
             Xuất Excel
           </Button>
+          <Button asChild className="h-[34px] gap-1.5">
+            <Link href="/orders/new">
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              Tạo đơn
+            </Link>
+          </Button>
         </div>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -156,7 +163,7 @@ export default function AdminOrders() {
                 <TableRow
                   key={o.id}
                   className="cursor-pointer"
-                  onClick={() => setDetailOrderId(o.id)}
+                  onClick={() => router.push(`/orders/${o.id}`)}
                 >
                   <TableCell className="px-4 py-2.5 font-mono text-xs font-semibold">
                     {o.orderNumber}
@@ -180,17 +187,9 @@ export default function AdminOrders() {
                   <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
                     {fmtDate(o.createdAt)}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 rounded-md text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDetailOrderId(o.id);
-                      }}
-                    >
-                      Chi tiết
+                  <TableCell className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <Button asChild variant="outline" size="sm" className="h-7 rounded-md text-xs">
+                      <Link href={`/orders/${o.id}`}>Chi tiết</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -199,8 +198,6 @@ export default function AdminOrders() {
           </Table>
         </div>
       </Card>
-
-      <OrderDrawer orderId={detailOrderId} onClose={() => setDetailOrderId(null)} />
 
       {/* Reference unused import to avoid lint warnings */}
       <Input hidden value={PAYMENT_STATUS.PAID} readOnly />

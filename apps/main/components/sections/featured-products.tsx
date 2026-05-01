@@ -27,7 +27,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             <h2 className="m-0 inline-flex items-center gap-2.5 text-base font-bold tracking-[-0.02em] text-foreground md:text-2xl md:leading-tight">
               <GeneratedIcon
                 src={GENERATED_ICONS.flash}
-                className="hidden h-7 w-7 rounded-lg object-cover md:block"
+                className="hidden h-7 w-7 rounded-lg object-contain md:block"
               />
               <span>Hàng hot tuần này</span>
             </h2>

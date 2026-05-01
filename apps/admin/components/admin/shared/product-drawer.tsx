@@ -3,15 +3,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateProductData, ProductListItem } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
+import { ImageUploader } from "@/components/image-uploader";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -21,8 +22,6 @@ type ProductDrawerProps = {
   product: ProductListItem | null;
   onClose: () => void;
 };
-
-const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-foreground";
 
 /** Slugify Vietnamese — lowercase, strip diacritics, replace whitespace with `-`. */
 function slugify(s: string): string {
@@ -42,10 +41,12 @@ export function ProductDrawer({ open, product, onClose }: ProductDrawerProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState<string>("");
   const [stock, setStock] = useState<string>("0");
   const [isActive, setIsActive] = useState(true);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Sync state when product or open changes.
@@ -53,16 +54,18 @@ export function ProductDrawer({ open, product, onClose }: ProductDrawerProps) {
     if (!open) return;
     setName(product?.name ?? "");
     setSlug(product?.slug ?? "");
+    setSlugTouched(Boolean(product?.slug));
     setDescription(product?.description ?? "");
     setBasePrice(product?.basePrice ? String(Number(product.basePrice)) : "");
     setStock(product ? String(product.totalAvailable) : "0");
     setIsActive(product?.isActive ?? true);
+    setImageUrls(product?.thumbnail ? [product.thumbnail] : []);
   }, [product, open]);
 
-  // Auto-derive slug from name on first input when adding new.
+  // Auto-derive slug from name when adding new, until user manually edits it.
   useEffect(() => {
-    if (!product && name && !slug) setSlug(slugify(name));
-  }, [name, slug, product]);
+    if (!product && !slugTouched) setSlug(slugify(name));
+  }, [name, slugTouched, product]);
 
   const createMutation = useMutation({
     mutationFn: (data: CreateProductData) => adminClient.createProduct(data),
@@ -133,6 +136,7 @@ export function ProductDrawer({ open, product, onClose }: ProductDrawerProps) {
           sku: `${finalSlug.slice(0, 24).toUpperCase()}-DEFAULT`,
           price: priceNum,
           onHand: Number(stock) || 0,
+          images: imageUrls.length > 0 ? imageUrls : undefined,
         },
       ],
     });
@@ -147,80 +151,80 @@ export function ProductDrawer({ open, product, onClose }: ProductDrawerProps) {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-          <div className="flex h-[110px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[10px] border-2 border-dashed border-border bg-muted/40 transition-colors hover:border-primary hover:bg-primary/5">
-            <Upload className="h-6 w-6 text-muted-foreground/60" strokeWidth={1.5} />
-            <span className="text-xs font-medium text-muted-foreground">
-              Kéo thả hoặc click để tải ảnh lên
-            </span>
-          </div>
+        <div className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]">
+          <FieldGroup>
+            <ImageUploader value={imageUrls} onChange={setImageUrls} maxFiles={1} />
 
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Tên sản phẩm</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Mì cay Shin Ramyun..."
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Slug URL</Label>
-            <Input
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="mi-cay-shin-ramyun"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Giá bán (đ)</Label>
+            <Field>
+              <FieldLabel>Tên sản phẩm</FieldLabel>
               <Input
-                type="number"
-                value={basePrice}
-                onChange={(e) => setBasePrice(e.target.value)}
-                placeholder="329000"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="VD: Mì cay Shin Ramyun..."
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className={labelClass}>Tồn kho khởi tạo</Label>
+            </Field>
+
+            <Field>
+              <FieldLabel>Slug URL</FieldLabel>
               <Input
-                type="number"
-                value={stock}
-                onChange={(e) => setStock(e.target.value)}
-                placeholder="0"
-                disabled={!!product}
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value);
+                  setSlugTouched(true);
+                }}
+                placeholder="mi-cay-shin-ramyun"
               />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field>
+                <FieldLabel>Giá bán (đ)</FieldLabel>
+                <NumberInput
+                  decimalScale={0}
+                  value={basePrice}
+                  onValueChange={({ value }) => setBasePrice(value)}
+                  placeholder="329000"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Tồn kho khởi tạo</FieldLabel>
+                <NumberInput
+                  decimalScale={0}
+                  value={stock}
+                  onValueChange={({ value }) => setStock(value)}
+                  placeholder="0"
+                  disabled={!!product}
+                />
+              </Field>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Mô tả sản phẩm</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả chi tiết, thành phần..."
-              rows={4}
-            />
-          </div>
+            <Field>
+              <FieldLabel>Mô tả sản phẩm</FieldLabel>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Mô tả chi tiết, thành phần..."
+                rows={4}
+              />
+            </Field>
 
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
-            <span className="text-[13px] font-medium">Đang bán</span>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-          </div>
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
+              <span className="text-[13px] font-medium">Đang bán</span>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
 
-          {product && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={deleteMutation.isPending}
-              className="self-start border-red-200 bg-red-100 text-red-600 hover:bg-red-200"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              Xoá sản phẩm
-            </Button>
-          )}
+            {product && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={deleteMutation.isPending}
+                className="self-start border-red-200 bg-red-100 text-red-600 hover:bg-red-200"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Xoá sản phẩm
+              </Button>
+            )}
+          </FieldGroup>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">

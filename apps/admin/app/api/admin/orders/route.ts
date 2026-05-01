@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       shippingName,
       shippingPhone,
       shippingAddress,
+      shippingFee,
     } = body;
 
     const idem = await beginIdempotency({
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
         shippingName,
         shippingPhone,
         shippingAddress,
+        shippingFee,
       },
     });
     if ("replay" in idem) return idem.replay;
@@ -142,6 +144,7 @@ export async function POST(request: Request) {
       shippingName,
       shippingPhone,
       shippingAddress,
+      shippingFee: shippingFee != null ? Number(shippingFee) : undefined,
     };
 
     let result:

@@ -20,24 +20,20 @@ export function Footer() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <footer className="bg-foreground text-background dark:bg-card dark:text-foreground">
+    <footer className="bg-foreground text-background">
       {/* Newsletter Band — hidden on desktop where NewsletterCta runs above the footer */}
-      <div className="border-b border-white/10 md:hidden dark:border-border">
+      <div className="border-b border-white/10 md:hidden">
         <div className="container mx-auto px-4 py-10">
           <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
             <div className="space-y-1 text-center lg:text-left">
-              <h3 className="font-display text-2xl font-bold text-white dark:text-foreground">
-                Nhận ưu đãi độc quyền
-              </h3>
-              <p className="text-sm text-white/60 dark:text-muted-foreground">
-                Voucher 50k cho đơn hàng đầu tiên của bạn
-              </p>
+              <h3 className="font-display text-2xl font-bold text-white">Nhận ưu đãi độc quyền</h3>
+              <p className="text-sm text-white/60">Voucher 50k cho đơn hàng đầu tiên của bạn</p>
             </div>
-            <div className="flex w-full max-w-md overflow-hidden rounded-full border border-white/15 bg-white/8 dark:border-border dark:bg-muted">
+            <div className="flex w-full max-w-md overflow-hidden rounded-full border border-white/15 bg-white/8">
               <Input
                 type="email"
                 placeholder="Email của bạn..."
-                className="h-auto min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-sm text-white shadow-none placeholder:text-white/40 focus-visible:ring-0 dark:text-foreground dark:placeholder:text-muted-foreground"
+                className="h-auto min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-sm text-white shadow-none placeholder:text-white/40 focus-visible:ring-0"
               />
               <button
                 type="button"
@@ -62,11 +58,11 @@ export function Footer() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/40 transition-all group-hover:shadow-primary/60">
               <Zap className="h-5 w-5 fill-white text-white" />
             </div>
-            <span className="font-display text-xl font-bold text-white dark:text-foreground">
+            <span className="font-display text-xl font-bold text-white">
               K<span className="text-primary">-</span>SMART
             </span>
           </Link>
-          <p className="text-sm leading-relaxed text-white/55 dark:text-muted-foreground">
+          <p className="text-sm leading-relaxed text-white/55">
             Nền tảng thương mại điện tử chuyên cung cấp mỹ phẩm và đồ gia dụng chính hãng từ Hàn
             Quốc tại Việt Nam.
           </p>
@@ -79,7 +75,7 @@ export function Footer() {
 
         {/* Links */}
         <div>
-          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40 dark:text-muted-foreground">
+          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">
             Về chúng tôi
           </h4>
           <ul className="space-y-3">
@@ -92,9 +88,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40 dark:text-muted-foreground">
-            Hỗ trợ
-          </h4>
+          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">Hỗ trợ</h4>
           <ul className="space-y-3">
             <FooterLink label="Trung tâm trợ giúp" />
             <FooterLink label="Vận chuyển & Giao hàng" />
@@ -105,68 +99,62 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40 dark:text-muted-foreground">
+          <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">
             Văn phòng
           </h4>
           <div className="space-y-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 dark:text-muted-foreground">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30">
                 Trụ sở chính
               </p>
-              <p className="mt-1 text-sm font-semibold text-white/80 dark:text-foreground">
-                Seoul, South Korea
-              </p>
+              <p className="mt-1 text-sm font-semibold text-white/80">Seoul, South Korea</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 dark:text-muted-foreground">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30">
                 Văn phòng đại diện
               </p>
-              <p className="mt-1 text-sm font-semibold text-white/80 dark:text-foreground">
-                Hồ Chí Minh, Việt Nam
-              </p>
-              <p className="mt-0.5 text-xs text-white/40 dark:text-muted-foreground">
-                Quận 1, TP. Hồ Chí Minh
-              </p>
+              <p className="mt-1 text-sm font-semibold text-white/80">Hồ Chí Minh, Việt Nam</p>
+              <p className="mt-0.5 text-xs text-white/40">Quận 1, TP. Hồ Chí Minh</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/8 dark:border-border">
+      <div className="border-t border-white/8">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-5 md:flex-row">
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/40 dark:text-muted-foreground md:justify-start">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/40 md:justify-start">
             <Link
               href={PUBLIC_ROUTES.HOME}
-              className="transition-colors hover:text-white dark:hover:text-foreground cursor-pointer"
+              className="transition-colors hover:text-white cursor-pointer"
             >
               Điều khoản sử dụng
             </Link>
             <Link
               href={PUBLIC_ROUTES.HOME}
-              className="transition-colors hover:text-white dark:hover:text-foreground cursor-pointer"
+              className="transition-colors hover:text-white cursor-pointer"
             >
               Chính sách bảo mật
             </Link>
             <Link
               href={PUBLIC_ROUTES.HOME}
-              className="transition-colors hover:text-white dark:hover:text-foreground cursor-pointer"
+              className="transition-colors hover:text-white cursor-pointer"
             >
               Câu hỏi thường gặp
             </Link>
           </div>
-          <div className="flex items-center gap-5 text-xs text-white/40 dark:text-muted-foreground">
+          <div className="flex items-center gap-5 text-xs text-white/40">
             <button
               type="button"
               aria-label="Chọn ngôn ngữ"
-              className="inline-flex items-center gap-1 transition-colors hover:text-white dark:hover:text-foreground cursor-pointer"
+              className="inline-flex items-center gap-1 transition-colors hover:text-white cursor-pointer"
             >
               <Globe className="h-3 w-3" /> Tiếng Việt
             </button>
             <button
               type="button"
               aria-label="Chọn tiền tệ"
-              className="inline-flex items-center gap-1 transition-colors hover:text-white dark:hover:text-foreground cursor-pointer"
+              className="inline-flex items-center gap-1 transition-colors hover:text-white cursor-pointer"
             >
               <CircleDollarSign className="h-3 w-3" /> VND
             </button>
@@ -197,7 +185,7 @@ function SocialBtn({ icon, label }: { icon: React.ReactNode; label: string }) {
     <button
       type="button"
       aria-label={label}
-      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 text-white/60 transition-all hover:border-primary/50 hover:bg-primary/20 hover:text-white dark:border-border dark:text-muted-foreground dark:hover:text-foreground"
+      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 text-white/60 transition-all hover:border-primary/50 hover:bg-primary/20 hover:text-white"
     >
       {icon}
     </button>
@@ -209,7 +197,7 @@ function FooterLink({ label }: { label: string }) {
     <li>
       <Link
         href="/"
-        className="cursor-pointer text-sm text-white/55 transition-colors hover:text-white dark:text-muted-foreground dark:hover:text-foreground"
+        className="cursor-pointer text-sm text-white/55 transition-colors hover:text-white"
       >
         {label}
       </Link>

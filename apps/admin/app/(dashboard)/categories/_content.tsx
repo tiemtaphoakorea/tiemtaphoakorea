@@ -71,7 +71,7 @@ export default function AdminCategories() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -103,7 +103,7 @@ export default function AdminCategories() {
                         <img
                           src={c.imageUrl}
                           alt={c.name}
-                          className="h-7 w-7 shrink-0 rounded object-cover"
+                          className="h-7 w-7 shrink-0 rounded object-contain"
                         />
                       ) : (
                         <div className="grid h-7 w-7 shrink-0 place-items-center rounded bg-primary/10 text-primary">

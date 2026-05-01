@@ -53,7 +53,7 @@ export function TrustStrip() {
         {ITEMS.slice(0, 3).map((it) => (
           <div key={it.title} className="text-center">
             <div className="grid place-items-center">
-              <GeneratedIcon src={it.mobileIcon} className="h-7 w-7 rounded-lg object-cover" />
+              <GeneratedIcon src={it.mobileIcon} className="h-7 w-7 rounded-lg object-contain" />
             </div>
             <ShieldCheck className="hidden" />
             <div className="mt-1 text-[11px] font-bold text-foreground">{it.title}</div>

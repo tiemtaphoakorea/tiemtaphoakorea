@@ -61,7 +61,7 @@ export function DealOfDay() {
                   Săn ngay
                   <GeneratedIcon
                     src={GENERATED_ICONS.flash}
-                    className="h-5 w-5 rounded-md object-cover"
+                    className="h-5 w-5 rounded-md object-contain"
                   />
                 </Link>
                 <Link
@@ -120,7 +120,9 @@ function Testimonial({
       >
         {tag}
       </span>
-      {iconSrc ? <GeneratedIcon src={iconSrc} className="h-7 w-7 rounded-lg object-cover" /> : null}
+      {iconSrc ? (
+        <GeneratedIcon src={iconSrc} className="h-7 w-7 rounded-lg object-contain" />
+      ) : null}
       <div className="text-[14px] font-semibold leading-none text-warning">★★★★★</div>
       <p className="m-0 flex-1 text-[13px] font-normal leading-[1.55] text-foreground">{quote}</p>
       <div className="flex items-center gap-2 text-[12px] font-medium leading-none text-muted-foreground">

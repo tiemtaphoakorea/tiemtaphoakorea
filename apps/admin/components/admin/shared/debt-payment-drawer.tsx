@@ -2,15 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Textarea } from "@workspace/ui/components/textarea";
@@ -20,8 +15,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 import { formatVnd } from "./mock-data";
 import { StatusBadge, type StatusType } from "./status-badge";
-
-const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-foreground";
 
 type DebtPaymentDrawerProps = {
   /** Customer id to display unpaid orders for. null/undefined = closed. */
@@ -120,7 +113,7 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
           )}
           {debtQuery.error && <div className="text-sm text-red-600">Lỗi tải dữ liệu</div>}
           {debt && (
-            <>
+            <FieldGroup>
               {/* Summary */}
               <div className="rounded-[10px] border border-border bg-muted/40 p-3.5">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -135,8 +128,8 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
               </div>
 
               {/* Unpaid order picker */}
-              <div className="flex flex-col gap-1.5">
-                <Label className={labelClass}>Chọn đơn cần ghi thanh toán</Label>
+              <Field>
+                <FieldLabel>Chọn đơn cần ghi thanh toán</FieldLabel>
                 <div className="flex flex-col gap-1.5">
                   {debt.unpaidOrders.length === 0 && (
                     <p className="text-xs text-muted-foreground">Không còn đơn nào.</p>
@@ -177,49 +170,44 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
                     );
                   })}
                 </div>
-              </div>
+              </Field>
 
               {selectedOrderId && (
                 <>
                   <div className="grid grid-cols-2 gap-2.5">
-                    <div className="flex flex-col gap-1.5">
-                      <Label className={labelClass}>Số tiền (đ)</Label>
-                      <Input
-                        type="number"
+                    <Field>
+                      <FieldLabel>Số tiền (đ)</FieldLabel>
+                      <NumberInput
+                        decimalScale={0}
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onValueChange={({ value }) => setAmount(value)}
                       />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className={labelClass}>Phương thức</Label>
-                      <Select value={method} onValueChange={setMethod}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cash">Tiền mặt</SelectItem>
-                          <SelectItem value="bank_transfer">Chuyển khoản</SelectItem>
-                          <SelectItem value="card">Thẻ</SelectItem>
-                          <SelectItem value="other">Khác</SelectItem>
-                        </SelectContent>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Phương thức</FieldLabel>
+                      <Select value={method} onValueChange={setMethod} className="w-full">
+                        <SelectOption value="cash">Tiền mặt</SelectOption>
+                        <SelectOption value="bank_transfer">Chuyển khoản</SelectOption>
+                        <SelectOption value="card">Thẻ</SelectOption>
+                        <SelectOption value="other">Khác</SelectOption>
                       </Select>
-                    </div>
+                    </Field>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className={labelClass}>Mã tham chiếu (nếu có)</Label>
+                  <Field>
+                    <FieldLabel>Mã tham chiếu (nếu có)</FieldLabel>
                     <Input
                       value={refCode}
                       onChange={(e) => setRefCode(e.target.value)}
                       placeholder="VD: TXN12345"
                     />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className={labelClass}>Ghi chú</Label>
+                  </Field>
+                  <Field>
+                    <FieldLabel>Ghi chú</FieldLabel>
                     <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
-                  </div>
+                  </Field>
                 </>
               )}
-            </>
+            </FieldGroup>
           )}
         </div>
 

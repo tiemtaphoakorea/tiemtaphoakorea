@@ -1,8 +1,8 @@
 import type { Supplier } from "@workspace/database/types/admin";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import {
   Sheet,
   SheetContent,
@@ -42,77 +42,72 @@ export function SupplierEditSheet({
             Cập nhật thông tin nhà cung cấp.
           </SheetDescription>
         </SheetHeader>
-        <form method="post" className="flex flex-col gap-6 py-8">
+        <form method="post" className="py-8">
           <Input type="hidden" name="intent" value="edit" />
           <Input type="hidden" name="id" value={supplier.id} />
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-supplier-name">
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-name">
                 Tên nhà cung cấp <span className="text-red-500">*</span>
-              </Label>
+              </FieldLabel>
               <Input
                 id="edit-supplier-name"
                 name="name"
                 defaultValue={supplier.name}
                 placeholder="Công ty TNHH ABC"
-                className="h-11 bg-slate-50/50 font-medium"
                 required
               />
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-supplier-phone">Số điện thoại</Label>
+              <Field>
+                <FieldLabel htmlFor="edit-supplier-phone">Số điện thoại</FieldLabel>
                 <Input
                   id="edit-supplier-phone"
                   name="phone"
                   defaultValue={supplier.phone || ""}
                   placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-supplier-email">Email</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="edit-supplier-email">Email</FieldLabel>
                 <Input
                   id="edit-supplier-email"
                   name="email"
                   type="email"
                   defaultValue={supplier.email || ""}
                   placeholder="contact@supplier.com"
-                  className="h-11 bg-slate-50/50 font-medium"
                 />
-              </div>
+              </Field>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-supplier-address">Địa chỉ</Label>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-address">Địa chỉ</FieldLabel>
               <Input
                 id="edit-supplier-address"
                 name="address"
                 defaultValue={supplier.address || ""}
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium"
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-supplier-payment-terms">Điều khoản thanh toán</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-payment-terms">Điều khoản thanh toán</FieldLabel>
               <Input
                 id="edit-supplier-payment-terms"
                 name="paymentTerms"
                 defaultValue={supplier.paymentTerms || ""}
                 placeholder="VD: Thanh toán sau 30 ngày, COD, ..."
-                className="h-11 bg-slate-50/50 font-medium"
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-supplier-note">Ghi chú</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-note">Ghi chú</FieldLabel>
               <Textarea
                 id="edit-supplier-note"
                 name="note"
                 defaultValue={supplier.note || ""}
                 placeholder="Thông tin thêm về nhà cung cấp..."
-                className="min-h-[80px] bg-slate-50/50 font-medium"
+                className="min-h-[80px]"
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
           <SheetFooter className="border-t border-slate-100 pt-6">
             <div className="flex w-full items-center justify-end gap-3">
               <Button

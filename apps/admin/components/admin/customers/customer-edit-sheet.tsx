@@ -7,15 +7,17 @@ import {
   objectToFormData,
 } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { FieldGroup } from "@workspace/ui/components/field";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Sheet,
   SheetContent,
@@ -24,7 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@workspace/ui/components/sheet";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 interface CustomerEditSheetProps {
   isOpen: boolean;
@@ -41,12 +43,7 @@ export function CustomerEditSheet({
   isSubmitting,
   onSubmit,
 }: CustomerEditSheetProps) {
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<CustomerFormValues>({
+  const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     values: customer
       ? {
@@ -59,11 +56,7 @@ export function CustomerEditSheet({
   });
 
   const onFormSubmit = (data: CustomerFormValues) => {
-    const fd = objectToFormData({
-      ...data,
-      intent: "edit",
-      id: customer?.id,
-    });
+    const fd = objectToFormData({ ...data, intent: "edit", id: customer?.id });
     onSubmit(fd);
   };
 
@@ -76,80 +69,93 @@ export function CustomerEditSheet({
             Cập nhật thông tin chi tiết cho khách hàng {customer?.fullName}.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 px-6 py-6">
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-customer-full-name">Họ và tên</Label>
-              <Input
-                id="edit-customer-full-name"
-                {...register("fullName")}
-                placeholder="Nguyễn Văn A"
-                className="h-11 bg-slate-50/50 font-medium"
-                aria-invalid={!!errors.fullName}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onFormSubmit)} className="px-6 py-6">
+            <FieldGroup>
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Họ và tên</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nguyễn Văn A" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.fullName && (
-                <p className="text-destructive text-sm">{errors.fullName.message}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-customer-phone">Số điện thoại</Label>
-                <Input
-                  id="edit-customer-phone"
-                  {...register("phone")}
-                  placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-customer-type">Loại khách hàng</Label>
-                <Controller
-                  name="customerType"
-                  control={control}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="edit-customer-type" className="h-11 bg-slate-50/50">
-                        <SelectValue placeholder="Chọn loại" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="retail">Khách lẻ</SelectItem>
-                        <SelectItem value="wholesale">Khách sỉ</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormItem>
+                      <FormLabel>Số điện thoại</FormLabel>
+                      <FormControl>
+                        <Input placeholder="09xx xxx xxx" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="customerType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loại khách hàng</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="w-full"
+                          placeholder="Chọn loại"
+                        >
+                          <SelectOption value="retail">Khách lẻ</SelectOption>
+                          <SelectOption value="wholesale">Khách sỉ</SelectOption>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-customer-address">Địa chỉ</Label>
-              <Input
-                id="edit-customer-address"
-                {...register("address")}
-                placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium"
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Địa chỉ</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
-          <SheetFooter className="border-t border-slate-100 px-6 pt-6">
-            <div className="flex w-full items-center justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 px-6 font-bold"
-                onClick={() => onOpenChange(false)}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="shadow-primary/20 h-11 px-6 font-bold shadow-lg"
-              >
-                {isSubmitting ? "Đang cập nhật..." : "Lưu thay đổi"}
-              </Button>
-            </div>
-          </SheetFooter>
-        </form>
+            </FieldGroup>
+            <SheetFooter className="border-t border-slate-100 px-6 pt-6">
+              <div className="flex w-full items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 px-6 font-bold"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="shadow-primary/20 h-11 px-6 font-bold shadow-lg"
+                >
+                  {isSubmitting ? "Đang cập nhật..." : "Lưu thay đổi"}
+                </Button>
+              </div>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

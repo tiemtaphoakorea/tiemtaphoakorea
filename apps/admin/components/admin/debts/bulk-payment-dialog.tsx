@@ -14,16 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { NumberInput } from "@workspace/ui/components/number-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Controller, useForm } from "react-hook-form";
 import { adminClient } from "@/services/admin.client";
@@ -158,72 +152,74 @@ export function BulkPaymentDialog({
               tiền sẽ được phân bổ lần lượt từ đơn cũ nhất.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="bulk-payment-amount">Số tiền (VND)</Label>
-              <Controller
-                control={control}
-                name="amount"
-                render={({ field }) => (
-                  <NumberInput
-                    id="bulk-payment-amount"
-                    value={field.value}
-                    onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                    placeholder="Nhập số tiền"
-                    max={totalDebt}
-                  />
-                )}
-              />
-              {errors.amount?.message ? (
-                <p className="text-sm text-destructive">{errors.amount.message}</p>
-              ) : null}
-            </div>
+          <div className="py-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="bulk-payment-amount">Số tiền (VND)</FieldLabel>
+                <Controller
+                  control={control}
+                  name="amount"
+                  render={({ field }) => (
+                    <NumberInput
+                      id="bulk-payment-amount"
+                      value={field.value}
+                      onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                      placeholder="Nhập số tiền"
+                      max={totalDebt}
+                    />
+                  )}
+                />
+                {errors.amount?.message ? (
+                  <p className="text-sm text-destructive">{errors.amount.message}</p>
+                ) : null}
+              </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="bulk-payment-method">Phương thức</Label>
-              <Controller
-                control={control}
-                name="method"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="bulk-payment-method">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectItem>
-                      <SelectItem value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.method?.message ? (
-                <p className="text-sm text-destructive">{errors.method.message}</p>
-              ) : null}
-            </div>
+              <Field>
+                <FieldLabel htmlFor="bulk-payment-method">Phương thức</FieldLabel>
+                <Controller
+                  control={control}
+                  name="method"
+                  render={({ field }) => (
+                    <Select
+                      id="bulk-payment-method"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="w-full"
+                    >
+                      <SelectOption value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectOption>
+                      <SelectOption value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectOption>
+                    </Select>
+                  )}
+                />
+                {errors.method?.message ? (
+                  <p className="text-sm text-destructive">{errors.method.message}</p>
+                ) : null}
+              </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="bulk-payment-ref">Mã tham chiếu (tuỳ chọn)</Label>
-              <Input
-                id="bulk-payment-ref"
-                {...register("referenceCode")}
-                placeholder="Mã giao dịch nếu có"
-              />
-              {errors.referenceCode?.message ? (
-                <p className="text-sm text-destructive">{errors.referenceCode.message}</p>
-              ) : null}
-            </div>
+              <Field>
+                <FieldLabel htmlFor="bulk-payment-ref">Mã tham chiếu (tuỳ chọn)</FieldLabel>
+                <Input
+                  id="bulk-payment-ref"
+                  {...register("referenceCode")}
+                  placeholder="Mã giao dịch nếu có"
+                />
+                {errors.referenceCode?.message ? (
+                  <p className="text-sm text-destructive">{errors.referenceCode.message}</p>
+                ) : null}
+              </Field>
 
-            <div className="grid gap-2">
-              <Label htmlFor="bulk-payment-note">Ghi chú (tuỳ chọn)</Label>
-              <Textarea
-                id="bulk-payment-note"
-                {...register("note")}
-                placeholder="Ghi chú thêm..."
-              />
-              {errors.note?.message ? (
-                <p className="text-sm text-destructive">{errors.note.message}</p>
-              ) : null}
-            </div>
+              <Field>
+                <FieldLabel htmlFor="bulk-payment-note">Ghi chú (tuỳ chọn)</FieldLabel>
+                <Textarea
+                  id="bulk-payment-note"
+                  {...register("note")}
+                  placeholder="Ghi chú thêm..."
+                />
+                {errors.note?.message ? (
+                  <p className="text-sm text-destructive">{errors.note.message}</p>
+                ) : null}
+              </Field>
+            </FieldGroup>
           </div>
           <DialogFooter>
             <Button

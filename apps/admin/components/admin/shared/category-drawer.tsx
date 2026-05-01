@@ -3,8 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CategoryWithChildren, NewCategory } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
@@ -13,8 +13,6 @@ import { toast } from "sonner";
 import { ImageUploader } from "@/components/image-uploader";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-
-const labelClass = "text-[11px] font-semibold uppercase tracking-wider text-foreground";
 
 type CategoryDrawerProps = {
   open: boolean;
@@ -37,6 +35,7 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [displayOrder, setDisplayOrder] = useState<string>("0");
@@ -46,16 +45,17 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
     if (!open) return;
     setName(category?.name ?? "");
     setSlug(category?.slug ?? "");
+    setSlugTouched(Boolean(category?.slug));
     setImageUrl(category?.imageUrl ?? null);
     setDescription(category?.description ?? "");
     setDisplayOrder(category ? String(category.displayOrder) : "0");
     setIsActive(category?.isActive ?? true);
   }, [category, open]);
 
-  // Auto-derive slug for new categories.
+  // Auto-derive slug for new categories until user manually edits it.
   useEffect(() => {
-    if (!category && name && !slug) setSlug(slugify(name));
-  }, [name, slug, category]);
+    if (!category && !slugTouched) setSlug(slugify(name));
+  }, [name, slugTouched, category]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
 
@@ -112,39 +112,48 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Tên danh mục</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="VD: K-Food"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Slug URL</Label>
-            <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="k-food" />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Ảnh danh mục</Label>
-            <ImageUploader
-              value={imageUrl ? [imageUrl] : []}
-              onChange={(urls) => setImageUrl(urls[0] ?? null)}
-              maxFiles={1}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label className={labelClass}>Mô tả</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
-            <span className="text-[13px] font-medium">Đang hiển thị</span>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-          </div>
+        <div className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]">
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Tên danh mục</FieldLabel>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="VD: K-Food"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Slug URL</FieldLabel>
+              <Input
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value);
+                  setSlugTouched(true);
+                }}
+                placeholder="k-food"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Ảnh danh mục</FieldLabel>
+              <ImageUploader
+                value={imageUrl ? [imageUrl] : []}
+                onChange={(urls) => setImageUrl(urls[0] ?? null)}
+                maxFiles={1}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Mô tả</FieldLabel>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
+            </Field>
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
+              <span className="text-[13px] font-medium">Đang hiển thị</span>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
+          </FieldGroup>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">

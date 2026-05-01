@@ -21,7 +21,7 @@ export function BestSellers({ products }: BestSellersProps) {
             <h2 className="m-0 inline-flex items-center gap-2.5 text-base font-bold tracking-[-0.02em] text-foreground md:text-2xl md:leading-tight">
               <GeneratedIcon
                 src={GENERATED_ICONS.beauty}
-                className="hidden h-7 w-7 rounded-lg object-cover md:block"
+                className="hidden h-7 w-7 rounded-lg object-contain md:block"
               />
               <span>Bán chạy nhất</span>
             </h2>

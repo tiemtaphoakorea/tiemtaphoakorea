@@ -18,7 +18,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   const categories = allCategories.filter((c) => c.isActive);
 
   return (
-    <div className="bg-background flex min-h-screen flex-col font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary dark:text-slate-50">
+    <div className="bg-background flex min-h-screen flex-col font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary">
       <AnnouncementBar />
       <Navbar categories={categories} navCategories={navCategories} />
       <main className="w-full flex-1 pb-16 md:pb-0">{children}</main>

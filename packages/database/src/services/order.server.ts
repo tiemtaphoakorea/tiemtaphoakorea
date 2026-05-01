@@ -152,6 +152,8 @@ export async function createOrder(data: {
   shippingName?: string | null;
   shippingPhone?: string | null;
   shippingAddress?: string | null;
+  /** Shipping fee paid on behalf of customer (added to total). 0 / undefined = none. */
+  shippingFee?: number | null;
 }) {
   // Resolve customerId - handle both string ID and customer info object
   let resolvedCustomerId: string;
@@ -249,8 +251,10 @@ export async function createOrder(data: {
       totalCost += Number(variant.costPrice || 0) * item.quantity;
     });
 
-    const total = subtotal;
-    const profit = total - totalCost;
+    const shippingFee = Math.max(0, Number(data.shippingFee ?? 0));
+    const total = subtotal + shippingFee;
+    // Profit excludes shipping fee — it's pass-through reimbursement, not revenue.
+    const profit = subtotal - totalCost;
 
     // Create Order: no legacy `status`; use paymentStatus + fulfillmentStatus
     const [newOrder] = await tx
@@ -261,6 +265,7 @@ export async function createOrder(data: {
         paymentStatus: PAYMENT_STATUS.UNPAID,
         fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
         subtotal: subtotal.toString(),
+        shippingFee: shippingFee.toString(),
         total: total.toString(),
         totalCost: totalCost.toString(),
         profit: profit.toString(),

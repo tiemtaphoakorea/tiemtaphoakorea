@@ -105,7 +105,7 @@ export default function AdminInventory() {
         />
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">
           <FilterTabs tabs={TABS} value={tab} onChange={setTab} />
           <Button size="sm" className="h-7 gap-1.5 rounded-md text-xs">

@@ -15,7 +15,7 @@ export default function WishlistPage() {
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-50">
           <PackageOpen className="h-9 w-9 text-rose-400" />
         </div>
-        <h1 className="text-2xl font-black">Danh sách yêu thích trống</h1>
+        <h1 className="text-foreground text-2xl font-black">Danh sách yêu thích trống</h1>
         <p className="text-muted-foreground mt-2 max-w-xs text-sm">
           Bấm vào biểu tượng trái tim trên sản phẩm để lưu vào đây nhé!
         </p>
@@ -34,7 +34,7 @@ export default function WishlistPage() {
     <section className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black">Yêu thích</h1>
+          <h1 className="text-foreground text-2xl font-black">Yêu thích</h1>
           <p className="text-muted-foreground mt-1 text-sm">{items.length} sản phẩm đã lưu</p>
         </div>
         <button
@@ -61,7 +61,7 @@ export default function WishlistPage() {
                 src={item.image || "/placeholder.png"}
                 alt={item.name}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
             </Link>
@@ -76,7 +76,7 @@ export default function WishlistPage() {
             <div className="p-3">
               <Link
                 href={item.slug ? PUBLIC_ROUTES.PRODUCT_DETAIL(item.slug) : PUBLIC_ROUTES.PRODUCTS}
-                className="line-clamp-2 text-sm font-semibold leading-snug hover:text-primary"
+                className="text-foreground line-clamp-2 text-sm font-semibold leading-snug hover:text-primary"
               >
                 {item.name}
               </Link>

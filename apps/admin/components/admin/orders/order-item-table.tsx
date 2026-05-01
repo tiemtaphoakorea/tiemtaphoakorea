@@ -1,6 +1,7 @@
 import type { OrderItemTableItem } from "@workspace/database/types/order";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import Image from "next/image";
 
 interface OrderItemTableProps {
   items: OrderItemTableItem[];
-  onUpdateQuantity: (variantId: string, delta: number) => void;
+  onUpdateQuantity: (variantId: string, delta: number, absolute?: number) => void;
   onRemoveItem: (variantId: string) => void;
 }
 
@@ -39,7 +40,13 @@ export function OrderItemTable({ items, onUpdateQuantity, onRemoveItem }: OrderI
                   <div className="flex items-center gap-3">
                     {item.image ? (
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                        <Image src={item.image} alt="" fill className="object-cover" sizes="40px" />
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          className="object-contain"
+                          sizes="40px"
+                        />
                       </div>
                     ) : (
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
@@ -59,10 +66,21 @@ export function OrderItemTable({ items, onUpdateQuantity, onRemoveItem }: OrderI
                       size="icon"
                       className="h-7 w-7 rounded-lg"
                       onClick={() => onUpdateQuantity(item.variantId, -1)}
+                      disabled={item.quantity <= 1}
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
-                    <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+                    <NumberInput
+                      className="h-7 w-14 text-center text-sm font-bold"
+                      decimalScale={0}
+                      min={1}
+                      value={item.quantity}
+                      onValueChange={({ floatValue }) => {
+                        if (floatValue !== undefined && floatValue > 0) {
+                          onUpdateQuantity(item.variantId, 0, floatValue);
+                        }
+                      }}
+                    />
                     <Button
                       variant="outline"
                       size="icon"

@@ -45,7 +45,7 @@ export async function CategoryStripEight() {
                 >
                   <GeneratedIcon
                     src={visual.icon}
-                    className="h-9 w-9 rounded-lg object-cover md:h-11 md:w-11 md:rounded-xl"
+                    className="h-9 w-9 rounded-lg object-contain md:h-11 md:w-11 md:rounded-xl"
                   />
                 </span>
                 <b className="text-[11px] font-semibold leading-tight text-foreground md:text-[13px]">
@@ -91,7 +91,7 @@ export function SectionTitle({
             </span>
           ) : null}
           {iconSrc ? (
-            <GeneratedIcon src={iconSrc} className="h-7 w-7 rounded-lg object-cover" />
+            <GeneratedIcon src={iconSrc} className="h-7 w-7 rounded-lg object-contain" />
           ) : null}
           {title}
         </h2>

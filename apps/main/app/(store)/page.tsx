@@ -51,13 +51,10 @@ function ProductGridSkeleton() {
   return (
     <section className="py-6 md:py-9">
       <div className="container mx-auto px-4">
-        <div className="mb-4 h-6 w-40 animate-pulse rounded bg-gray-200 md:h-10 md:w-48 dark:bg-slate-700" />
+        <div className="mb-4 h-6 w-40 animate-pulse rounded bg-gray-200 md:h-10 md:w-48" />
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-3.5 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-64 animate-pulse rounded-2xl bg-gray-200 md:h-80 dark:bg-slate-700"
-            />
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 md:h-80" />
           ))}
         </div>
       </div>
@@ -70,10 +67,7 @@ function MobileCategoryCardsSkeleton() {
     <div className="container mx-auto mt-6 px-4 md:hidden">
       <div className="grid grid-cols-2 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200 dark:bg-slate-700"
-          />
+          <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-gray-200" />
         ))}
       </div>
     </div>

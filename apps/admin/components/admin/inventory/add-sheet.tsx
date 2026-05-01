@@ -12,8 +12,8 @@ import {
   CommandItem,
   CommandList,
 } from "@workspace/ui/components/command";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import { NumberInput } from "@workspace/ui/components/number-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import {
@@ -106,217 +106,194 @@ export function InventoryAddSheet({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold tracking-wider text-slate-500 uppercase">
-                Sản phẩm & Biến thể
-              </Label>
-              <Controller
-                name="variantId"
-                control={control}
-                render={({ field }) => (
-                  <Popover open={variantOpen} onOpenChange={setVariantOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={variantOpen}
-                        aria-controls="variant-combobox-list"
-                        className="h-12 w-full justify-between border-slate-200 font-medium"
-                      >
-                        {selectedVariant ? (
-                          <span className="truncate">
-                            {selectedVariant.name} ({selectedVariant.sku})
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">Chọn biến thể sản phẩm...</span>
-                        )}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[var(--radix-popover-trigger-width)] p-0"
-                      align="start"
-                    >
-                      <Command>
-                        <CommandInput
-                          placeholder="Tìm sản phẩm, SKU..."
-                          className="h-12"
-                          aria-label="Tìm sản phẩm, SKU"
-                        />
-                        <CommandList id="variant-combobox-list">
-                          <CommandEmpty>Không tìm thấy sản phẩm nào.</CommandEmpty>
-                          <CommandGroup>
-                            {variants.map((variant) => (
-                              <CommandItem
-                                key={variant.id}
-                                value={`${variant.name} ${variant.sku}`}
-                                onSelect={() => field.onChange(variant.id)}
-                                className="flex items-center justify-between py-3"
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-bold">{variant.name}</span>
-                                  <span className="font-mono text-xs text-slate-500">
-                                    {variant.sku}
-                                  </span>
-                                </div>
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4 transition-opacity",
-                                    variantId === variant.id ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-              {errors.variantId && (
-                <p className="text-sm text-destructive">{errors.variantId.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-bold tracking-wider text-slate-500 uppercase">
-                Nhà cung cấp
-              </Label>
-              <Controller
-                name="supplierId"
-                control={control}
-                render={({ field }) => (
-                  <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={supplierOpen}
-                        aria-controls="supplier-combobox-list"
-                        className="h-12 w-full justify-between border-slate-200 font-medium"
-                      >
-                        {selectedSupplier ? (
-                          <span className="truncate">
-                            {selectedSupplier.name} ({selectedSupplier.code})
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">
-                            Chọn nhà cung cấp (không bắt buộc)...
-                          </span>
-                        )}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[var(--radix-popover-trigger-width)] p-0"
-                      align="start"
-                    >
-                      <Command>
-                        <CommandInput placeholder="Tìm nhà cung cấp..." className="h-12" />
-                        <CommandList id="supplier-combobox-list">
-                          <CommandEmpty>Không tìm thấy NCC nào.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem
-                              value="none"
-                              onSelect={() => field.onChange("")}
-                              className="flex items-center justify-between py-3"
-                            >
-                              <span className="font-medium text-slate-400">Không chọn</span>
-                              <Check
-                                className={cn(
-                                  "h-4 w-4 transition-opacity",
-                                  !supplierId ? "opacity-100" : "opacity-0",
-                                )}
-                              />
-                            </CommandItem>
-                            {suppliers.map((supplier) => (
-                              <CommandItem
-                                key={supplier.id}
-                                value={`${supplier.name} ${supplier.code}`}
-                                onSelect={() => field.onChange(supplier.id)}
-                                className="flex items-center justify-between py-3"
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-bold">{supplier.name}</span>
-                                  <span className="font-mono text-xs text-slate-500">
-                                    {supplier.code}
-                                  </span>
-                                </div>
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4 transition-opacity",
-                                    supplierId === supplier.id ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="quantity"
-                  className="text-sm font-bold tracking-wider text-slate-500 uppercase"
-                >
-                  Số lượng nhập
-                </Label>
+          <div className="flex-1">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Sản phẩm & Biến thể</FieldLabel>
                 <Controller
-                  name="quantity"
+                  name="variantId"
                   control={control}
                   render={({ field }) => (
-                    <NumberInput
-                      id="quantity"
-                      decimalScale={0}
-                      value={field.value}
-                      onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                      className="h-12 border-slate-200 font-bold"
-                      aria-invalid={!!errors.quantity}
-                    />
+                    <Popover open={variantOpen} onOpenChange={setVariantOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={variantOpen}
+                          aria-controls="variant-combobox-list"
+                          className="h-12 w-full justify-between border-slate-200 font-medium"
+                        >
+                          {selectedVariant ? (
+                            <span className="truncate">
+                              {selectedVariant.name} ({selectedVariant.sku})
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">Chọn biến thể sản phẩm...</span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                        align="start"
+                      >
+                        <Command>
+                          <CommandInput
+                            placeholder="Tìm sản phẩm, SKU..."
+                            className="h-12"
+                            aria-label="Tìm sản phẩm, SKU"
+                          />
+                          <CommandList id="variant-combobox-list">
+                            <CommandEmpty>Không tìm thấy sản phẩm nào.</CommandEmpty>
+                            <CommandGroup>
+                              {variants.map((variant) => (
+                                <CommandItem
+                                  key={variant.id}
+                                  value={`${variant.name} ${variant.sku}`}
+                                  onSelect={() => field.onChange(variant.id)}
+                                  className="flex items-center justify-between py-3"
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-bold">{variant.name}</span>
+                                    <span className="font-mono text-xs text-slate-500">
+                                      {variant.sku}
+                                    </span>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4 transition-opacity",
+                                      variantId === variant.id ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 />
-                {errors.quantity && (
-                  <p className="text-sm text-destructive">{errors.quantity.message}</p>
+                {errors.variantId && (
+                  <p className="text-sm text-destructive">{errors.variantId.message}</p>
                 )}
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="expectedDate"
-                  className="text-sm font-bold tracking-wider text-slate-500 uppercase"
-                >
-                  Ngày dự kiến về
-                </Label>
-                <Input
-                  id="expectedDate"
-                  type="date"
-                  {...register("expectedDate")}
-                  className="h-12 border-slate-200 font-medium"
-                />
-              </div>
-            </div>
+              </Field>
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="note"
-                className="text-sm font-bold tracking-wider text-slate-500 uppercase"
-              >
-                Ghi chú
-              </Label>
-              <Textarea
-                id="note"
-                {...register("note")}
-                placeholder="Thông tin thêm về chuyến hàng, nhà cung cấp..."
-                className="min-h-[120px] border-slate-200"
-              />
-            </div>
+              <Field>
+                <FieldLabel>Nhà cung cấp</FieldLabel>
+                <Controller
+                  name="supplierId"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={supplierOpen}
+                          aria-controls="supplier-combobox-list"
+                          className="h-12 w-full justify-between border-slate-200 font-medium"
+                        >
+                          {selectedSupplier ? (
+                            <span className="truncate">
+                              {selectedSupplier.name} ({selectedSupplier.code})
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">
+                              Chọn nhà cung cấp (không bắt buộc)...
+                            </span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                        align="start"
+                      >
+                        <Command>
+                          <CommandInput placeholder="Tìm nhà cung cấp..." className="h-12" />
+                          <CommandList id="supplier-combobox-list">
+                            <CommandEmpty>Không tìm thấy NCC nào.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value="none"
+                                onSelect={() => field.onChange("")}
+                                className="flex items-center justify-between py-3"
+                              >
+                                <span className="font-medium text-slate-400">Không chọn</span>
+                                <Check
+                                  className={cn(
+                                    "h-4 w-4 transition-opacity",
+                                    !supplierId ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                              </CommandItem>
+                              {suppliers.map((supplier) => (
+                                <CommandItem
+                                  key={supplier.id}
+                                  value={`${supplier.name} ${supplier.code}`}
+                                  onSelect={() => field.onChange(supplier.id)}
+                                  className="flex items-center justify-between py-3"
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-bold">{supplier.name}</span>
+                                    <span className="font-mono text-xs text-slate-500">
+                                      {supplier.code}
+                                    </span>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "h-4 w-4 transition-opacity",
+                                      supplierId === supplier.id ? "opacity-100" : "opacity-0",
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+              </Field>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel htmlFor="quantity">Số lượng nhập</FieldLabel>
+                  <Controller
+                    name="quantity"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberInput
+                        id="quantity"
+                        decimalScale={0}
+                        value={field.value}
+                        onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                        aria-invalid={!!errors.quantity}
+                      />
+                    )}
+                  />
+                  {errors.quantity && (
+                    <p className="text-sm text-destructive">{errors.quantity.message}</p>
+                  )}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="expectedDate">Ngày dự kiến về</FieldLabel>
+                  <Input id="expectedDate" type="date" {...register("expectedDate")} />
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel htmlFor="note">Ghi chú</FieldLabel>
+                <Textarea
+                  id="note"
+                  {...register("note")}
+                  placeholder="Thông tin thêm về chuyến hàng, nhà cung cấp..."
+                  className="min-h-[120px] border-slate-200"
+                />
+              </Field>
+            </FieldGroup>
           </div>
 
           <SheetFooter className="mt-8 flex-row justify-end gap-3 border-t border-slate-100 p-0 pt-6">

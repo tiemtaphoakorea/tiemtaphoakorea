@@ -66,7 +66,7 @@ export function FlashSale({ products }: Props) {
           >
             <GeneratedIcon
               src={GENERATED_ICONS.flash}
-              className="h-8 w-8 rounded-lg object-cover"
+              className="h-8 w-8 rounded-lg object-contain"
             />
             FLASH SALE
           </h2>

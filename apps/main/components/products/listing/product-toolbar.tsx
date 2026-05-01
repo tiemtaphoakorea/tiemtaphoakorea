@@ -98,29 +98,29 @@ export function ProductToolbar({
           className="flex items-center rounded-lg border border-border bg-muted p-0.5"
         >
           <Button
-            variant={viewMode === "grid" ? "secondary" : "ghost"}
+            variant="ghost"
             size="icon-sm"
             aria-label="Hiển thị dạng lưới"
             aria-pressed={viewMode === "grid"}
             onClick={() => onViewModeChange("grid")}
             className={
               viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm hover:bg-background"
-                : "text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
             }
           >
             <LayoutGrid className="size-4" />
           </Button>
           <Button
-            variant={viewMode === "list" ? "secondary" : "ghost"}
+            variant="ghost"
             size="icon-sm"
             aria-label="Hiển thị dạng danh sách"
             aria-pressed={viewMode === "list"}
             onClick={() => onViewModeChange("list")}
             className={
               viewMode === "list"
-                ? "bg-background text-foreground shadow-sm hover:bg-background"
-                : "text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
             }
           >
             <List className="size-4" />

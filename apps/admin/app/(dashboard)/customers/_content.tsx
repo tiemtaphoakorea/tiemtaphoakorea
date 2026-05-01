@@ -5,13 +5,7 @@ import type { CustomerStatsItem } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Table,
   TableBody,
@@ -82,15 +76,14 @@ export default function AdminCustomers() {
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="active">Đang hoạt động</SelectItem>
-            <SelectItem value="inactive">Ngừng hoạt động</SelectItem>
-          </SelectContent>
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]"
+        >
+          <SelectOption value="all">Tất cả trạng thái</SelectOption>
+          <SelectOption value="active">Đang hoạt động</SelectOption>
+          <SelectOption value="inactive">Ngừng hoạt động</SelectOption>
         </Select>
         <span className="text-xs text-muted-foreground">
           {customersQuery.isLoading ? "Đang tải..." : `${total} khách hàng`}
@@ -106,7 +99,7 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-      <Card className="overflow-hidden border border-border p-0 shadow-none">
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

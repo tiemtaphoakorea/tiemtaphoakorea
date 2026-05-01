@@ -60,7 +60,7 @@ export function MobileCategoryRail({ categories }: Props) {
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary">
             <GeneratedIcon
               src={GENERATED_ICONS.home}
-              className="h-10 w-10 rounded-xl object-cover"
+              className="h-10 w-10 rounded-xl object-contain"
             />
           </div>
           <span className="text-[10px] font-bold leading-tight text-primary">Tất cả</span>
@@ -74,7 +74,7 @@ export function MobileCategoryRail({ categories }: Props) {
             <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--primary-soft,#EEF2FF)]">
               <GeneratedIcon
                 src={getIcon(cat.slug)}
-                className="h-10 w-10 rounded-xl object-cover"
+                className="h-10 w-10 rounded-xl object-contain"
               />
             </div>
             <span className="line-clamp-1 max-w-16 text-center text-[10px] font-medium leading-tight text-muted-foreground">

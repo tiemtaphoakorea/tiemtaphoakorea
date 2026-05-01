@@ -18,7 +18,7 @@ export function NewsletterCta() {
                 Nhận voucher <em className="not-italic text-warning">50k</em> ngay khi đăng ký
                 <GeneratedIcon
                   src={GENERATED_ICONS.voucher}
-                  className="h-8 w-8 rounded-lg object-cover"
+                  className="h-8 w-8 rounded-lg object-contain"
                 />
               </span>
             </h3>
@@ -56,7 +56,7 @@ export function NewsletterCta() {
                   Nhận voucher
                   <GeneratedIcon
                     src={GENERATED_ICONS.voucher}
-                    className="h-5 w-5 rounded-md object-cover"
+                    className="h-5 w-5 rounded-md object-contain"
                   />
                 </span>
               )}

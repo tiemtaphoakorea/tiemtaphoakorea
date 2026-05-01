@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product } from "@workspace/shared/types/product";
+import { Button } from "@workspace/ui/components/button";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { ProductPerksGrid } from "./product-perks-grid";
@@ -107,13 +108,9 @@ export function ProductInfoActions({
             </button>
           </div>
 
-          <button
-            type="button"
-            disabled={!canOrder}
-            className="flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button type="button" size="lg" shape="pill" disabled={!canOrder} className="flex-[1.4]">
             {canOrder ? "Mua ngay →" : "Hết hàng"}
-          </button>
+          </Button>
         </div>
         <p className="text-center text-xs text-muted-foreground">
           {canOrder ? (

@@ -50,7 +50,8 @@ next-env.d.ts
 .worktrees
 .superpowers
 
-design-system/*
+design-system/
+.playwright-mcp/
 .repomixignore
 repomix-output.xml
 release-manifest.json
