@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { categories } from "./categories";
 import { expenses } from "./expenses";
+import { homepageCollectionProducts, homepageCollections } from "./homepage-collections";
 import { inventoryMovements } from "./inventory";
 import { orderItems, orderStatusHistory, orders, payments, supplierOrders } from "./orders";
 import { costPriceHistory, products, productVariants, variantImages } from "./products";
@@ -151,3 +152,25 @@ export const inventoryMovementsRelations = relations(inventoryMovements, ({ one 
     references: [profiles.id],
   }),
 }));
+
+export const homepageCollectionsRelations = relations(homepageCollections, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [homepageCollections.categoryId],
+    references: [categories.id],
+  }),
+  products: many(homepageCollectionProducts),
+}));
+
+export const homepageCollectionProductsRelations = relations(
+  homepageCollectionProducts,
+  ({ one }) => ({
+    collection: one(homepageCollections, {
+      fields: [homepageCollectionProducts.collectionId],
+      references: [homepageCollections.id],
+    }),
+    product: one(products, {
+      fields: [homepageCollectionProducts.productId],
+      references: [products.id],
+    }),
+  }),
+);

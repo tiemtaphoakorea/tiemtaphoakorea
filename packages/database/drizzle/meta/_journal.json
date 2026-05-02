@@ -43,6 +43,13 @@
       "when": 1777800000000,
       "tag": "0005_orders_shipping_fee",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777692633339,
+      "tag": "0006_steady_white_queen",
+      "breakpoints": true
     }
   ]
 }

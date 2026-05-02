@@ -3,6 +3,7 @@ export * from "./categories";
 export * from "./chat";
 export * from "./enums";
 export * from "./expenses";
+export * from "./homepage-collections";
 export * from "./idempotency";
 export * from "./inventory";
 export * from "./notifications";

@@ -1,7 +1,12 @@
-import * as dotenv from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env từ root workspace
+config({ path: path.resolve(__dirname, "../../.env") });
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");

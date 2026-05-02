@@ -9,15 +9,16 @@
  *   1  pending migrations, or tracking table missing (run db:mark-baseline first)
  *   2  environment / connection problem
  */
-import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { config } from "dotenv";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import postgres from "postgres";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+config({ path: path.resolve(__dirname, "../../../.env") });
 const MIGRATIONS_FOLDER = path.resolve(__dirname, "../drizzle");
 const JOURNAL_PATH = path.join(MIGRATIONS_FOLDER, "meta", "_journal.json");
 
