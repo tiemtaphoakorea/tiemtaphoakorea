@@ -147,6 +147,11 @@ export const queryKeys = {
   banners: {
     all: ["banners"] as const,
   },
+  homepageCollections: {
+    all: ["homepage-collections"] as const,
+    list: ["homepage-collections", "list"] as const,
+    detail: (id: string) => ["homepage-collections", "detail", id] as const,
+  },
   debts: {
     all: [QK.debtsRoot] as const,
     list: (search: string, minAgeDays: number | null, page: number, limit: number) =>

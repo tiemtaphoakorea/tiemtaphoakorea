@@ -707,4 +707,77 @@ export const adminClient = {
       body,
     ) as unknown as Promise<InventoryMovement>;
   },
+
+  // Homepage Collections
+  async listHomepageCollections() {
+    return axios.get<{
+      collections: Array<{
+        id: string;
+        type: "manual" | "best_sellers" | "new_arrivals" | "by_category";
+        title: string;
+        subtitle: string | null;
+        iconKey: string | null;
+        viewAllUrl: string | null;
+        itemLimit: number;
+        isActive: boolean;
+        sortOrder: number;
+        categoryId: string | null;
+        daysWindow: number | null;
+        productCount: number;
+      }>;
+    }>("/api/admin/homepage-collections") as unknown as Promise<{
+      collections: Array<{
+        id: string;
+        type: "manual" | "best_sellers" | "new_arrivals" | "by_category";
+        title: string;
+        subtitle: string | null;
+        iconKey: string | null;
+        viewAllUrl: string | null;
+        itemLimit: number;
+        isActive: boolean;
+        sortOrder: number;
+        categoryId: string | null;
+        daysWindow: number | null;
+        productCount: number;
+      }>;
+    }>;
+  },
+
+  async getHomepageCollection(id: string) {
+    return axios.get<{ collection: Record<string, unknown> }>(
+      `/api/admin/homepage-collections/${id}`,
+    ) as unknown as Promise<{ collection: Record<string, unknown> }>;
+  },
+
+  async createHomepageCollection(payload: Record<string, unknown>) {
+    return axios.post<{ success: boolean; collection: Record<string, unknown> }>(
+      "/api/admin/homepage-collections",
+      payload,
+    ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
+  },
+
+  async updateHomepageCollection(id: string, payload: Record<string, unknown>) {
+    return axios.patch<{ success: boolean; collection: Record<string, unknown> }>(
+      `/api/admin/homepage-collections/${id}`,
+      payload,
+    ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
+  },
+
+  async deleteHomepageCollection(id: string) {
+    return axios.delete<{ success: boolean }>(
+      `/api/admin/homepage-collections/${id}`,
+    ) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async reorderHomepageCollections(ids: string[]) {
+    return axios.post<{ success: boolean }>("/api/admin/homepage-collections/reorder", {
+      ids,
+    }) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async setHomepageCollectionProducts(id: string, productIds: string[]) {
+    return axios.put<{ success: boolean }>(`/api/admin/homepage-collections/${id}/products`, {
+      productIds,
+    }) as unknown as Promise<{ success: boolean }>;
+  },
 };
