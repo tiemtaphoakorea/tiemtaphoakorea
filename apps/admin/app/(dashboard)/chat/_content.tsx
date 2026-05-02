@@ -6,8 +6,8 @@ import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { ArrowLeft, Send } from "lucide-react";
-import { Fragment, useState } from "react";
+import { ArrowLeft, ImageIcon, Send } from "lucide-react";
+import { Fragment, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -22,6 +22,7 @@ export default function AdminMessages() {
   const [debouncedSearch] = useDebounce(search, 300);
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const roomsQuery = useQuery({
@@ -54,6 +55,22 @@ export default function AdminMessages() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.chat.rooms.all });
     },
   });
+
+  const uploadMutation = useMutation({
+    mutationFn: ({ roomId, file }: { roomId: string; file: File }) =>
+      adminClient.uploadChatImage({ roomId, file }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.chat.messages(currentRoomId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.chat.rooms.all });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !currentRoomId || uploadMutation.isPending) return;
+    uploadMutation.mutate({ roomId: currentRoomId, file });
+  };
 
   const unreadCount = rooms.reduce((s, r) => s + (r.unreadCountAdmin ?? 0), 0);
   const messages = messagesQuery.data?.messages ?? [];
@@ -202,6 +219,24 @@ export default function AdminMessages() {
           }}
           className="flex gap-2 border-t border-border bg-white px-4 py-3"
         >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            aria-label="Tải ảnh lên"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!currentRoomId || uploadMutation.isPending}
+            aria-label="Gửi ảnh"
+            className="gap-1.5"
+          >
+            <ImageIcon className="h-3.5 w-3.5" strokeWidth={2} />
+          </Button>
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

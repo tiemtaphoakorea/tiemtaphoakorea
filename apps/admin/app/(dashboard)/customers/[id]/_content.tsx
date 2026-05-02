@@ -26,6 +26,8 @@ export default function CustomerDetailPage() {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery<{ customer?: CustomerDetail }>({
     queryKey: queryKeys.customer(id),
@@ -53,6 +55,36 @@ export default function CustomerDetailPage() {
       toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!customer) return;
+    const nextActive = !customer.isActive;
+    if (!nextActive && !window.confirm("Chặn khách hàng này?")) return;
+    setIsToggling(true);
+    try {
+      await adminClient.toggleCustomerStatus(id, nextActive);
+      toast.success(nextActive ? "Đã mở chặn khách hàng" : "Đã chặn khách hàng");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customer(id) });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!customer) return;
+    if (!window.confirm("Xóa khách hàng này? Hành động không thể hoàn tác.")) return;
+    setIsDeleting(true);
+    try {
+      await adminClient.deleteCustomer(id);
+      toast.success("Đã xóa khách hàng");
+      router.push("/admin/customers");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
+      setIsDeleting(false);
     }
   };
 
@@ -110,9 +142,27 @@ export default function CustomerDetailPage() {
             Quay lại
           </Link>
         </Button>
-        <Button onClick={() => setIsEditOpen(true)} className="font-bold">
-          Chỉnh sửa
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleToggleStatus}
+            disabled={isToggling}
+            className="font-bold"
+          >
+            {customer.isActive ? "Chặn" : "Mở chặn"}
+          </Button>
+          <Button onClick={() => setIsEditOpen(true)} className="font-bold">
+            Chỉnh sửa
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="font-bold"
+          >
+            Xóa KH
+          </Button>
+        </div>
       </div>
 
       <CustomerEditSheet

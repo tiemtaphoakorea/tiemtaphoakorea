@@ -27,6 +27,7 @@ import { TonePill } from "@/components/admin/shared/status-badge";
 import { UserDrawer } from "@/components/admin/shared/user-drawer";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
+import { UserRowActions } from "./_components/user-row-actions";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
@@ -147,14 +148,7 @@ export default function AdminStaff() {
                       {u.email ?? "—"}
                     </TableCell>
                     <TableCell className="px-4 py-2.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 rounded-md text-xs"
-                        onClick={() => setEditing(u)}
-                      >
-                        Sửa
-                      </Button>
+                      <UserRowActions user={u} onEdit={setEditing} />
                     </TableCell>
                   </TableRow>
                 );

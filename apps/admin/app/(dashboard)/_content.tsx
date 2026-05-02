@@ -20,7 +20,7 @@ import {
 } from "@workspace/ui/components/table";
 import { AlertTriangle, Bell, Box, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
-import { BarChartMini } from "@/components/admin/shared/bar-chart-mini";
+import { BarChartMini, type BarPoint } from "@/components/admin/shared/bar-chart-mini";
 import {
   TableEmptyRow,
   TableErrorRow,
@@ -35,25 +35,47 @@ import { StatusBadge, type StatusType, TonePill } from "@/components/admin/share
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-// 7-day series — kept as static placeholder until backend exposes time-series endpoint.
-const REVENUE_DATA = [
-  { l: "T2", v: 42 },
-  { l: "T3", v: 68 },
-  { l: "T4", v: 55 },
-  { l: "T5", v: 80 },
-  { l: "T6", v: 72 },
-  { l: "T7", v: 95 },
-  { l: "CN", v: 110 },
-];
-const ORDERS_DATA = [
-  { l: "T2", v: 18 },
-  { l: "T3", v: 31 },
-  { l: "T4", v: 24 },
-  { l: "T5", v: 37 },
-  { l: "T6", v: 29 },
-  { l: "T7", v: 44 },
-  { l: "CN", v: 52 },
-];
+const WEEKDAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Build inclusive date range YYYY-MM-DD strings ending at `endDate`, spanning `days` days. */
+function buildRange(endDate: Date, days: number): { startDate: string; endDate: string } {
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+  const start = new Date(end.getTime() - (days - 1) * DAY_MS);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return { startDate: fmt(start), endDate: fmt(end) };
+}
+
+/** Map dailyData rows by date key for O(1) lookup. */
+function indexByDate<T extends { date: string }>(rows: T[]): Map<string, T> {
+  return new Map(rows.map((r) => [r.date.slice(0, 10), r]));
+}
+
+/** Project a 7-day window into BarPoint[] using the indexed daily rows. */
+function projectWeekly(
+  endDate: Date,
+  byDate: Map<string, { revenue: number; orderCount: number }>,
+  field: "revenue" | "orderCount",
+): BarPoint[] {
+  const points: BarPoint[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(endDate.getTime() - i * DAY_MS);
+    day.setHours(0, 0, 0, 0);
+    const key = day.toISOString().slice(0, 10);
+    const row = byDate.get(key);
+    points.push({
+      l: WEEKDAY_LABELS[day.getDay()] ?? "?",
+      v: row ? Number(row[field]) : 0,
+    });
+  }
+  return points;
+}
+
+function pctDelta(current: number, previous: number): number | null {
+  if (previous <= 0) return current > 0 ? null : 0;
+  return Math.round(((current - previous) / previous) * 100);
+}
 
 /** Convert backend fulfillment_status to UI StatusBadge type. */
 const orderStatusType = (status: string): StatusType => {
@@ -90,6 +112,30 @@ export default function AdminDashboard() {
       (await adminClient.getRecentOrders()).recentOrders as DashboardRecentOrder[],
     staleTime: 60_000,
   });
+
+  const today = new Date();
+  const currentRange = buildRange(today, 7);
+  const previousRange = buildRange(new Date(today.getTime() - 7 * DAY_MS), 7);
+
+  const dailyStatsQuery = useQuery({
+    queryKey: queryKeys.admin.finance.daily(currentRange),
+    queryFn: async () => await adminClient.getDailyFinancialStats(currentRange),
+    staleTime: 60_000,
+  });
+
+  const previousStatsQuery = useQuery({
+    queryKey: queryKeys.admin.finance.daily(previousRange),
+    queryFn: async () => await adminClient.getDailyFinancialStats(previousRange),
+    staleTime: 60_000,
+  });
+
+  const dailyByDate = indexByDate(dailyStatsQuery.data?.dailyData ?? []);
+  const revenueData = projectWeekly(today, dailyByDate, "revenue");
+  const ordersData = projectWeekly(today, dailyByDate, "orderCount");
+
+  const currentRevenue = dailyStatsQuery.data?.summary.revenue ?? 0;
+  const previousRevenue = previousStatsQuery.data?.summary.revenue ?? 0;
+  const revenueDelta = pctDelta(currentRevenue, previousRevenue);
 
   const k = kpisQuery.data;
 
@@ -152,9 +198,20 @@ export default function AdminDashboard() {
               <TrendingUp className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
               Doanh thu 7 ngày
             </h3>
-            <TonePill tone="green">+18% tuần trước</TonePill>
+            {revenueDelta === null ? (
+              <TonePill tone="gray">—</TonePill>
+            ) : (
+              <TonePill tone={revenueDelta >= 0 ? "green" : "red"}>
+                {revenueDelta >= 0 ? "+" : ""}
+                {revenueDelta}% tuần trước
+              </TonePill>
+            )}
           </div>
-          <BarChartMini data={REVENUE_DATA} />
+          {dailyStatsQuery.isLoading ? (
+            <Skeleton className="m-[18px] h-[120px] rounded" />
+          ) : (
+            <BarChartMini data={revenueData} />
+          )}
         </Card>
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
@@ -164,7 +221,15 @@ export default function AdminDashboard() {
             </h3>
             <TonePill tone="blue">{k ? `${k.todayOrdersCount} hôm nay` : "—"}</TonePill>
           </div>
-          <BarChartMini data={ORDERS_DATA} highlightClass="bg-amber-500" baseClass="bg-amber-200" />
+          {dailyStatsQuery.isLoading ? (
+            <Skeleton className="m-[18px] h-[120px] rounded" />
+          ) : (
+            <BarChartMini
+              data={ordersData}
+              highlightClass="bg-amber-500"
+              baseClass="bg-amber-200"
+            />
+          )}
         </Card>
       </div>
 

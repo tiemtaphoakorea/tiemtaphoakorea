@@ -76,7 +76,9 @@ export function BannerList({ banners, isLoading, editingId, onEdit, onCloseEdit 
 
   function handleToggle(id: string, isActive: boolean) {
     queryClient.setQueryData<ListCache>(queryKeys.banners.list, (prev) =>
-      prev ? { ...prev, banners: prev.banners.map((b) => (b.id === id ? { ...b, isActive } : b)) } : prev,
+      prev
+        ? { ...prev, banners: prev.banners.map((b) => (b.id === id ? { ...b, isActive } : b)) }
+        : prev,
     );
     toggleMutation.mutate({ id, isActive });
   }

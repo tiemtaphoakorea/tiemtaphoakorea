@@ -14,7 +14,6 @@ import type {
   CustomerStatsItem,
   DashboardKPIs,
   DashboardRecentOrder,
-  DashboardStats,
   DashboardTopProduct,
   DebtListItem,
   Expense,

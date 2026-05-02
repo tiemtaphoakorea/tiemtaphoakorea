@@ -161,5 +161,6 @@ export const queryKeys = {
   customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
   settings: {
     shopInfo: ["settings", "shop-info"] as const,
+    branding: ["settings", "branding"] as const,
   },
 } as const;

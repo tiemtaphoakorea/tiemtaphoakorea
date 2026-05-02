@@ -101,7 +101,13 @@ export function CollectionRow({
             <Pencil className="h-3.5 w-3.5" />
           )}
         </Button>
-        <Button variant="ghost-destructive" size="sm" onClick={onDelete} aria-label="Xoá" disabled={isEditing}>
+        <Button
+          variant="ghost-destructive"
+          size="sm"
+          onClick={onDelete}
+          aria-label="Xoá"
+          disabled={isEditing}
+        >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>

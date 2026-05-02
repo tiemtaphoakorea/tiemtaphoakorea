@@ -7,6 +7,8 @@ interface CustomerFinancialStatsProps {
 }
 
 export function CustomerFinancialStats({ totalSpent, orderCount }: CustomerFinancialStatsProps) {
+  const avgOrderValue = orderCount > 0 ? totalSpent / orderCount : 0;
+
   return (
     <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
       <CardHeader>
@@ -30,9 +32,9 @@ export function CustomerFinancialStats({ totalSpent, orderCount }: CustomerFinan
           </div>
           <div className="space-y-1 rounded-3xl bg-slate-50 p-4">
             <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-              Tỉ lệ hoàn
+              Giá trị TB / đơn
             </span>
-            <div className="text-xl font-black">0%</div>
+            <div className="text-xl font-black">{formatCurrency(avgOrderValue)}</div>
           </div>
         </div>
       </CardContent>

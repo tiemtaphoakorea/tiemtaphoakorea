@@ -14,8 +14,8 @@ import {
 } from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useEffect, useState } from "react";
-import { uploadImage } from "@/lib/upload-image";
 import { queryKeys } from "@/lib/query-keys";
+import { uploadImage } from "@/lib/upload-image";
 import { adminClient } from "@/services/admin.client";
 
 const ACCENT_COLORS = [
@@ -71,9 +71,7 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
   const detailQuery = useQuery({
     queryKey: ["banner-detail", bannerId],
     queryFn: () =>
-      adminClient
-        .listBanners()
-        .then((r) => r.banners.find((b) => b.id === bannerId) ?? null),
+      adminClient.listBanners().then((r) => r.banners.find((b) => b.id === bannerId) ?? null),
     enabled: isEdit,
     staleTime: 30_000,
   });
@@ -143,8 +141,13 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel>Loại</FieldLabel>
-            <Select value={form.type} onValueChange={(v) => set("type", v as "custom" | "category")}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.type}
+              onValueChange={(v) => set("type", v as "custom" | "category")}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom (ảnh tự upload)</SelectItem>
                 <SelectItem value="category">Theo danh mục</SelectItem>
@@ -154,10 +157,14 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
           <Field>
             <FieldLabel>Màu accent</FieldLabel>
             <Select value={form.accentColor} onValueChange={(v) => set("accentColor", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {ACCENT_COLORS.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -182,10 +189,14 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
           <Field>
             <FieldLabel>Danh mục *</FieldLabel>
             <Select value={form.categoryId} onValueChange={(v) => set("categoryId", v)}>
-              <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn danh mục" />
+              </SelectTrigger>
               <SelectContent>
                 {(categoriesQuery.data?.flatCategories ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -195,44 +206,78 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel>Tiêu đề</FieldLabel>
-            <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="NÂNG TẦM VẺ ĐẸP HÀN" />
+            <Input
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              placeholder="NÂNG TẦM VẺ ĐẸP HÀN"
+            />
           </Field>
           <Field>
             <FieldLabel>Badge text</FieldLabel>
-            <Input value={form.badgeText} onChange={(e) => set("badgeText", e.target.value)} placeholder="Hàng chính hãng từ Seoul" />
+            <Input
+              value={form.badgeText}
+              onChange={(e) => set("badgeText", e.target.value)}
+              placeholder="Hàng chính hãng từ Seoul"
+            />
           </Field>
         </div>
 
         <Field>
           <FieldLabel>Phụ đề</FieldLabel>
-          <Textarea value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} rows={2} />
+          <Textarea
+            value={form.subtitle}
+            onChange={(e) => set("subtitle", e.target.value)}
+            rows={2}
+          />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel>CTA label</FieldLabel>
-            <Input value={form.ctaLabel} onChange={(e) => set("ctaLabel", e.target.value)} placeholder="Mua ngay" />
+            <Input
+              value={form.ctaLabel}
+              onChange={(e) => set("ctaLabel", e.target.value)}
+              placeholder="Mua ngay"
+            />
           </Field>
           <Field>
             <FieldLabel>CTA URL</FieldLabel>
-            <Input value={form.ctaUrl} onChange={(e) => set("ctaUrl", e.target.value)} placeholder="/products" />
+            <Input
+              value={form.ctaUrl}
+              onChange={(e) => set("ctaUrl", e.target.value)}
+              placeholder="/products"
+            />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel>Discount tag</FieldLabel>
-            <Input value={form.discountTag} onChange={(e) => set("discountTag", e.target.value)} placeholder="50%" />
+            <Input
+              value={form.discountTag}
+              onChange={(e) => set("discountTag", e.target.value)}
+              placeholder="50%"
+            />
           </Field>
           <Field>
             <FieldLabel>Discount sub</FieldLabel>
-            <Input value={form.discountTagSub} onChange={(e) => set("discountTagSub", e.target.value)} placeholder="cho đơn đầu tiên" />
+            <Input
+              value={form.discountTagSub}
+              onChange={(e) => set("discountTagSub", e.target.value)}
+              placeholder="cho đơn đầu tiên"
+            />
           </Field>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>Huỷ</Button>
-          <Button size="sm" disabled={!canSave || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Huỷ
+          </Button>
+          <Button
+            size="sm"
+            disabled={!canSave || saveMutation.isPending}
+            onClick={() => saveMutation.mutate()}
+          >
             {saveMutation.isPending ? "Đang lưu..." : "Lưu"}
           </Button>
         </div>

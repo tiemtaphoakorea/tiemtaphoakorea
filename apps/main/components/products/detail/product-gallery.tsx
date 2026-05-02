@@ -24,11 +24,21 @@ export function ProductGallery({
   discountPercent,
 }: ProductGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [fading, setFading] = useState(false);
   const { isInWishlist, toggleItem } = useWishlist();
 
   const safeImages = images.length > 0 ? images : ["/placeholder.png"];
   const currentImage = safeImages[selectedImageIndex] || safeImages[0]!;
   const wishlisted = productId ? isInWishlist(productId) : false;
+
+  const handleSelectImage = (index: number) => {
+    if (index === selectedImageIndex) return;
+    setFading(true);
+    setTimeout(() => {
+      setSelectedImageIndex(index);
+      setFading(false);
+    }, 180);
+  };
 
   const handleWishlistToggle = () => {
     if (!productId) return;
@@ -44,14 +54,20 @@ export function ProductGallery({
   return (
     <div className="flex flex-col gap-3 lg:sticky lg:top-20">
       <div className="group relative aspect-square overflow-hidden rounded-3xl border border-border bg-secondary shadow-sm transition-shadow hover:shadow-lg">
-        <Image
-          src={currentImage}
-          alt={productName}
-          fill
-          className="cursor-zoom-in object-contain transition-transform duration-700 group-hover:scale-[1.03]"
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          priority
-        />
+        <div
+          className={`absolute inset-0 transition-[opacity,transform] duration-[180ms] ease-in-out ${
+            fading ? "scale-[0.97] opacity-0" : "scale-100 opacity-100"
+          }`}
+        >
+          <Image
+            src={currentImage}
+            alt={productName}
+            fill
+            className="cursor-zoom-in object-contain transition-transform duration-700 group-hover:scale-[1.03]"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+          />
+        </div>
 
         <div className="absolute left-4 top-4 flex flex-col gap-1.5">
           {discountPercent !== undefined && discountPercent > 0 && (
@@ -84,7 +100,7 @@ export function ProductGallery({
             <button
               key={`${img}-${index}`}
               type="button"
-              onClick={() => setSelectedImageIndex(index)}
+              onClick={() => handleSelectImage(index)}
               aria-label={`Ảnh ${index + 1}`}
               className={`relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-xl border-2 transition-colors ${
                 selectedImageIndex === index

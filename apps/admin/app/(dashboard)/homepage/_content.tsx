@@ -10,7 +10,11 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { Image, Layout, Plus, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DEFAULT_HOMEPAGE_CONFIG, HOMEPAGE_SETTING_KEY, type HomepageConfig } from "@/lib/homepage-config";
+import {
+  DEFAULT_HOMEPAGE_CONFIG,
+  HOMEPAGE_SETTING_KEY,
+  type HomepageConfig,
+} from "@/lib/homepage-config";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 import { BannerFormPanel } from "./_components/banner-form-panel";
@@ -22,7 +26,9 @@ export default function HomepageContent() {
   const queryClient = useQueryClient();
 
   // Collections state
-  const [editingCollectionId, setEditingCollectionId] = useState<string | null | undefined>(undefined);
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null | undefined>(
+    undefined,
+  );
   const collectionsQuery = useQuery({
     queryKey: queryKeys.homepageCollections.list,
     queryFn: () => adminClient.listHomepageCollections(),
@@ -105,7 +111,10 @@ export default function HomepageContent() {
             <div className="border-b border-border px-4 py-2.5 text-sm font-semibold">
               Tạo collection mới
             </div>
-            <CollectionFormPanel collectionId={null} onClose={() => setEditingCollectionId(undefined)} />
+            <CollectionFormPanel
+              collectionId={null}
+              onClose={() => setEditingCollectionId(undefined)}
+            />
           </div>
         )}
 
@@ -160,14 +169,18 @@ export default function HomepageContent() {
               <FieldLabel>SEO — Tiêu đề trang chủ</FieldLabel>
               <Input
                 value={config.seo.title}
-                onChange={(e) => setConfig((c) => ({ ...c, seo: { ...c.seo, title: e.target.value } }))}
+                onChange={(e) =>
+                  setConfig((c) => ({ ...c, seo: { ...c.seo, title: e.target.value } }))
+                }
               />
             </Field>
             <Field>
               <FieldLabel>SEO — Mô tả meta</FieldLabel>
               <Textarea
                 value={config.seo.description}
-                onChange={(e) => setConfig((c) => ({ ...c, seo: { ...c.seo, description: e.target.value } }))}
+                onChange={(e) =>
+                  setConfig((c) => ({ ...c, seo: { ...c.seo, description: e.target.value } }))
+                }
                 rows={2}
               />
             </Field>

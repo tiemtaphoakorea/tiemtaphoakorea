@@ -25,19 +25,13 @@ import {
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
-import { type BadgeTone, TonePill } from "@/components/admin/shared/status-badge";
+import { TonePill } from "@/components/admin/shared/status-badge";
+import { resolveCustomerTier } from "@/lib/customer-tier";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
-
-/** Tier inference from totalSpent — replicates business rule until tier-config is wired. */
-function customerTier(totalSpent: number): { label: string; tone: BadgeTone } {
-  if (totalSpent >= 5_000_000) return { label: "VIP", tone: "amber" };
-  if (totalSpent >= 1_000_000) return { label: "Regular", tone: "indigo" };
-  return { label: "New", tone: "gray" };
-}
 
 const fmtDate = (d: Date | string | null): string => {
   if (!d) return "—";
@@ -63,6 +57,12 @@ export default function AdminCustomers() {
       }),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+  });
+
+  const tierConfigQuery = useQuery({
+    queryKey: queryKeys.customers.tierConfig,
+    queryFn: async () => await adminClient.getCustomerTierConfig(),
+    staleTime: 5 * 60_000,
   });
 
   const list: CustomerStatsItem[] = customersQuery.data?.data ?? [];
@@ -143,7 +143,7 @@ export default function AdminCustomers() {
                 <TableEmptyRow cols={7} message="Chưa có khách hàng" />
               )}
               {list.map((c) => {
-                const tier = customerTier(c.totalSpent);
+                const tier = resolveCustomerTier(c.totalSpent, c.orderCount, tierConfigQuery.data);
                 const initial = c.fullName?.charAt(0) ?? "?";
                 return (
                   <TableRow key={c.id} className="cursor-pointer" onClick={() => setEditing(c)}>
