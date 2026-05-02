@@ -26,18 +26,6 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
   const config: HomepageConfig = {
-    sections: {
-      hero: Boolean(body.sections?.hero ?? true),
-      flashSale: Boolean(body.sections?.flashSale ?? true),
-      categories: Boolean(body.sections?.categories ?? true),
-      bestSellers: Boolean(body.sections?.bestSellers ?? true),
-      newArrivals: Boolean(body.sections?.newArrivals ?? true),
-      blog: Boolean(body.sections?.blog ?? false),
-    },
-    productsPerSection: Number(body.productsPerSection ?? 8),
-    defaultSort: ["bestseller", "newest", "price-asc"].includes(body.defaultSort)
-      ? body.defaultSort
-      : "bestseller",
     seo: {
       title: String(body.seo?.title ?? "").trim(),
       description: String(body.seo?.description ?? "").trim(),

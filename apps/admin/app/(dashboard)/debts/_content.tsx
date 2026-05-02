@@ -25,7 +25,7 @@ import {
 } from "@/components/admin/shared/data-state";
 import { DebtPaymentDrawer } from "@/components/admin/shared/debt-payment-drawer";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
-import { formatVnd } from "@/components/admin/shared/mock-data";
+import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { StatCard } from "@/components/admin/shared/stat-card";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";

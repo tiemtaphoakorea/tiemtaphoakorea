@@ -1,9 +1,6 @@
 "use client";
 
 import type { Product } from "@workspace/shared/types/product";
-import { Button } from "@workspace/ui/components/button";
-import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
 import { ProductPerksGrid } from "./product-perks-grid";
 import { ProductPriceBlock } from "./product-price-block";
 import { ProductVariantChips } from "./product-variant-chips";
@@ -24,8 +21,6 @@ export function ProductInfoActions({
   selectedVariantId,
   setSelectedVariantId,
 }: ProductInfoActionsProps) {
-  const [qty, setQty] = useState(1);
-
   const selectedVariant =
     product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
 
@@ -84,45 +79,11 @@ export function ProductInfoActions({
         onSelect={setSelectedVariantId}
       />
 
-      <div className="flex flex-col gap-3">
-        <div className="flex items-stretch gap-3">
-          <div className="flex items-center overflow-hidden rounded-xl border-[1.5px] border-border">
-            <button
-              type="button"
-              aria-label="Giảm số lượng"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="flex h-12 w-10 items-center justify-center bg-secondary text-foreground transition-colors hover:bg-border"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <div className="flex h-12 w-12 items-center justify-center border-x-[1.5px] border-border bg-card text-base font-bold tabular-nums">
-              {qty}
-            </div>
-            <button
-              type="button"
-              aria-label="Tăng số lượng"
-              onClick={() => setQty((q) => Math.min(stock || 99, q + 1))}
-              className="flex h-12 w-10 items-center justify-center bg-secondary text-foreground transition-colors hover:bg-border"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-
-          <Button type="button" size="lg" shape="pill" disabled={!canOrder} className="flex-[1.4]">
-            {canOrder ? "Mua ngay →" : "Hết hàng"}
-          </Button>
-        </div>
+      {!canOrder && (
         <p className="text-center text-xs text-muted-foreground">
-          {canOrder ? (
-            <>
-              Còn <b className="text-destructive">{stock}</b> sản phẩm trong kho · Freeship đơn từ
-              299k
-            </>
-          ) : (
-            <>Sản phẩm tạm hết hàng — vui lòng quay lại sau</>
-          )}
+          Sản phẩm tạm hết hàng — vui lòng quay lại sau
         </p>
-      </div>
+      )}
 
       <ProductPerksGrid />
     </div>

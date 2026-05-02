@@ -100,6 +100,7 @@ export async function HeroThreeCol() {
                         src={p.thumbnail}
                         alt={p.name}
                         fill
+                        priority={idx < 3}
                         className="object-contain"
                         sizes="40px"
                       />

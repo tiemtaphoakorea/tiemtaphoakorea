@@ -146,6 +146,7 @@ export const queryKeys = {
   },
   banners: {
     all: ["banners"] as const,
+    list: ["banners", "list"] as const,
   },
   homepageCollections: {
     all: ["homepage-collections"] as const,

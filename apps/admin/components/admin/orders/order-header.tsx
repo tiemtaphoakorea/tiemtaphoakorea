@@ -1,3 +1,5 @@
+"use client";
+
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Button } from "@workspace/ui/components/button";
 import { Download, Plus } from "lucide-react";
@@ -17,6 +19,7 @@ export function OrderHeader() {
         <Button
           variant="outline"
           className="h-11 gap-2 rounded-xl border-slate-200 px-6 font-black"
+          onClick={() => window.open("/api/admin/orders/export")}
         >
           <Download className="h-5 w-5" />
           Xuất Excel

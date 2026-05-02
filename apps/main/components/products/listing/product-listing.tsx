@@ -46,8 +46,8 @@ export function ProductListing({ products, viewMode, onResetFilters }: ProductLi
           : "flex flex-col gap-3"
       }
     >
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} layout={viewMode} />
+      {products.map((product, i) => (
+        <ProductCard key={product.id} product={product} layout={viewMode} priority={i < 4} />
       ))}
     </div>
   );

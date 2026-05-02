@@ -1,5 +1,5 @@
 import { formatCurrency } from "@workspace/shared/utils";
-import { DollarSign, ShoppingBag, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { DollarSign, ShoppingBag, TrendingUp, Users } from "lucide-react";
 import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
 
 interface AnalyticsStatsProps {
@@ -7,7 +7,6 @@ interface AnalyticsStatsProps {
     totalRevenue: number;
     totalOrders: number;
     totalCustomers: number;
-    conversionRate: number;
   };
 }
 
@@ -44,17 +43,6 @@ export function AnalyticsStats({ data }: AnalyticsStatsProps) {
         icon: <TrendingUp className="h-3 w-3" />,
         text: "Tài khoản đã đăng ký",
         className: "text-emerald-500",
-      },
-    },
-    {
-      label: "Tỷ lệ chuyển đổi",
-      value: `${data.conversionRate}%`,
-      icon: <TrendingUp className="h-3.5 w-3.5" />,
-      iconClassName: "bg-emerald-500/10 text-emerald-500",
-      trend: {
-        icon: <TrendingDown className="h-3 w-3" />,
-        text: "Ổn định",
-        className: "text-muted-foreground",
       },
     },
   ];

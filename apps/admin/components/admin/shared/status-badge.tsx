@@ -1,17 +1,12 @@
 import { Badge } from "@workspace/ui/components/badge";
 
-/** Status types covering UI-only states + real backend payment/fulfillment statuses. */
+/** Status types covering product + real backend payment/fulfillment statuses. */
 export type StatusType =
   // Product / generic
   | "active"
   | "draft"
   | "outstock"
   | "inactive"
-  // UI fulfillment aliases (kept for compat with mock screens)
-  | "new"
-  | "processing"
-  | "delivering"
-  | "done"
   // Backend fulfillment_status values
   | "pending"
   | "stock_out"
@@ -29,11 +24,6 @@ const STATUS_MAP: Record<StatusType, { tone: BadgeTone; label: string }> = {
   draft: { tone: "gray", label: "Nháp" },
   outstock: { tone: "red", label: "Hết hàng" },
   inactive: { tone: "gray", label: "Ngừng hoạt động" },
-  // UI aliases
-  new: { tone: "indigo", label: "Mới" },
-  processing: { tone: "amber", label: "Đang xử lý" },
-  delivering: { tone: "blue", label: "Đang giao" },
-  done: { tone: "green", label: "Hoàn thành" },
   // Backend fulfillment
   pending: { tone: "amber", label: "Chờ xử lý" },
   stock_out: { tone: "blue", label: "Đã xuất kho" },

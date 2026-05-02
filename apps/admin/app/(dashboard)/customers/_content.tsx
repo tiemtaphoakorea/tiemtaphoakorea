@@ -24,7 +24,7 @@ import {
   TableErrorRow,
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
-import { formatVnd } from "@/components/admin/shared/mock-data";
+import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { type BadgeTone, TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -97,7 +97,11 @@ export default function AdminCustomers() {
           <SelectOption value="inactive">Ngừng hoạt động</SelectOption>
         </Select>
         <div className="flex items-center gap-2 sm:ml-auto">
-          <Button variant="outline" className="h-[34px] flex-1 sm:flex-none">
+          <Button
+            variant="outline"
+            className="h-[34px] flex-1 sm:flex-none"
+            onClick={() => window.open("/api/admin/customers/export")}
+          >
             Xuất danh sách
           </Button>
           <Button className="h-[34px] flex-1 gap-1.5 sm:flex-none" onClick={() => setEditing(null)}>

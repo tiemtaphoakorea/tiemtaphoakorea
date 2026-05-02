@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Button } from "./button";
+import { AlertCircle, RefreshCw } from "lucide-react"
+import { Component, type ErrorInfo, type ReactNode } from "react"
+import { Button } from "./button"
 
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: ReactNode
+  fallback?: ReactNode
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
+  hasError: boolean
+  error: Error | null
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-  };
+  }
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo)
   }
 
   public render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback;
+        return this.props.fallback
       }
 
       return (
@@ -51,8 +51,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  this.setState({ hasError: false, error: null });
-                  window.location.reload();
+                  this.setState({ hasError: false, error: null })
+                  window.location.reload()
                 }}
                 className="mt-2 border-red-200 bg-white font-bold text-red-600 hover:bg-red-50"
               >
@@ -62,9 +62,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
           </div>
         </div>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }

@@ -53,7 +53,8 @@ export function Footer({ footer = {}, social = {} }: FooterProps) {
   const copyright = footer.copyright || DEFAULTS.copyright;
 
   return (
-    <footer className="bg-foreground text-background">
+    // pb-20 mirrors <main>'s padding so the fixed mobile bottom-nav doesn't cover the bottom-bar.
+    <footer className="bg-foreground pb-20 md:pb-0 text-background">
       {/* Newsletter Band — hidden on desktop where NewsletterCta runs above the footer */}
       <div className="border-b border-white/10 md:hidden">
         <div className="container mx-auto px-4 py-10">

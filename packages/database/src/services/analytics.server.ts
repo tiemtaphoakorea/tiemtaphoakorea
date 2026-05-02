@@ -1,10 +1,4 @@
-import {
-  ANALYTICS_DEFAULT_CONVERSION_RATE,
-  ANALYTICS_GROWTH_RANDOM_OFFSET,
-  ANALYTICS_GROWTH_RANDOM_RANGE,
-  ANALYTICS_TOP_PRODUCTS_LIMIT,
-  ROLE,
-} from "@workspace/shared/constants";
+import { ANALYTICS_TOP_PRODUCTS_LIMIT, ROLE } from "@workspace/shared/constants";
 import { and, asc, desc, eq, gt, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories, products, productVariants } from "../schema";
@@ -118,18 +112,13 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       totalRevenue: kpis[0]?.totalRevenue || 0,
       totalOrders: kpis[0]?.totalOrders || 0,
       totalCustomers: customers[0]?.count || 0,
-      conversionRate: ANALYTICS_DEFAULT_CONVERSION_RATE, // Mocked for now as we don't track visits
+      conversionRate: null,
       monthlyRevenue,
       categorySales: categorySales.map((c, i) => ({
         ...c,
         color: `hsl(var(--chart-${(i % 5) + 1}))`,
       })),
-      topProducts: topProducts.map((p) => ({
-        ...p,
-        growth:
-          Math.floor(Math.random() * ANALYTICS_GROWTH_RANDOM_RANGE) +
-          ANALYTICS_GROWTH_RANDOM_OFFSET, // Mocked growth
-      })),
+      topProducts: topProducts.map((p) => ({ ...p })),
       inventory: {
         totalCostValue: inventoryStats[0]?.totalCostValue || 0,
         totalRetailValue: inventoryStats[0]?.totalRetailValue || 0,
@@ -145,7 +134,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       totalRevenue: 0,
       totalOrders: 0,
       totalCustomers: 0,
-      conversionRate: 0,
+      conversionRate: null,
       monthlyRevenue: [],
       categorySales: [],
       topProducts: [],

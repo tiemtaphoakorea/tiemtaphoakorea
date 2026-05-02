@@ -59,6 +59,7 @@ export function ChatWidget({
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -93,6 +94,19 @@ export function ChatWidget({
     };
   }, []);
 
+  // Hide FAB while the footer is in viewport — newsletter input/Đăng ký button sits beneath
+  // the FAB at right-4 bottom-20 on mobile, otherwise gets visually obstructed.
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry?.isIntersecting ?? false),
+      { rootMargin: "0px" },
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [mounted]);
+
   const sanitizedPhone = phoneNumber?.replace(/[^\d+]/g, "");
   const state = isOpen ? "open" : "closed";
   // Stagger delay grows from bottom-most secondary FAB upward.
@@ -119,8 +133,8 @@ export function ChatWidget({
         className={cn(
           "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 transition-all duration-200 ease-out md:bottom-4",
           isChatOpen && "hidden",
-          // Auto-hide while reading — only when speed-dial is collapsed.
-          hidden && !isOpen && "pointer-events-none translate-y-[140%] opacity-0",
+          // Auto-hide while reading or when footer is in view — only when speed-dial is collapsed.
+          (hidden || footerVisible) && !isOpen && "pointer-events-none translate-y-[140%] opacity-0",
         )}
       >
         {/* AI Chat — secondary FAB (top of stack). */}

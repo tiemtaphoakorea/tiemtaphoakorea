@@ -13,13 +13,7 @@ import { HomepageCollection } from "@/components/sections/homepage-collection";
 import { MobileGreeting } from "@/components/sections/mobile-greeting";
 import { TrustStrip } from "@/components/sections/trust-strip";
 
-type HomepageSections = {
-  hero: boolean;
-  categories: boolean;
-};
-
 type HomepageConfig = {
-  sections: HomepageSections & Record<string, boolean>;
   seo: { title: string; description: string };
 };
 
@@ -99,34 +93,21 @@ async function HomepageCollectionsSection() {
 }
 
 export default async function Home() {
-  const config = await getSetting<HomepageConfig>("homepage_config");
-  const sections = config?.sections ?? { hero: true, categories: true };
-
   return (
     <>
       <MobileGreeting />
 
-      {sections.hero !== false && (
-        <>
-          {/* Mobile hero (carousel) */}
-          <div className="md:hidden">
-            <Hero />
-          </div>
-          {/* Desktop hero — 3-col layout (categories + banner + mini banners) */}
-          <HeroThreeCol />
-        </>
-      )}
+      <div className="md:hidden">
+        <Hero />
+      </div>
+      <HeroThreeCol />
 
       <TrustStrip />
 
-      {sections.categories !== false && (
-        <>
-          <CategoryStripEight />
-          <Suspense fallback={<MobileCategoryCardsSkeleton />}>
-            <MobileCategoryCardsSection />
-          </Suspense>
-        </>
-      )}
+      <CategoryStripEight />
+      <Suspense fallback={<MobileCategoryCardsSkeleton />}>
+        <MobileCategoryCardsSection />
+      </Suspense>
 
       <Suspense fallback={<ProductGridSkeleton />}>
         <HomepageCollectionsSection />

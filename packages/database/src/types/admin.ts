@@ -414,7 +414,7 @@ export interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers: number;
-  conversionRate: number;
+  conversionRate: number | null;
   monthlyRevenue: AnalyticsMonthlyRevenue[];
   categorySales: AnalyticsCategorySale[];
   topProducts: AnalyticsTopProduct[];
