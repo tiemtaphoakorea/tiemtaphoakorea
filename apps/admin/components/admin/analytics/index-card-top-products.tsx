@@ -33,7 +33,7 @@ export function IndexCardTopProducts({ data, isLoading }: IndexCardTopProductsPr
         <div className="space-y-1.5">
           <div className="text-[15px] font-bold leading-tight">Sản phẩm bán chạy</div>
           <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
-            Top 3 sản phẩm tháng này
+            Top 3 sản phẩm bán chạy nhất
           </div>
         </div>
 
