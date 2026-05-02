@@ -178,6 +178,7 @@ export const ADMIN_ROUTE_NAMES: Record<string, string> = {
   customers: "Khách hàng",
   analytics: "Báo cáo",
   chat: "Tin nhắn",
+  homepage: "Trang chủ",
   settings: "Cài đặt",
   new: "Tạo mới",
   edit: "Chỉnh sửa",
