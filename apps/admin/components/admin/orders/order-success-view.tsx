@@ -9,9 +9,7 @@ export function OrderSuccessView() {
         <CheckCircle2 className="h-12 w-12" />
       </div>
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white">
-          Tạo đơn hàng thành công!
-        </h1>
+        <h1 className="text-3xl font-black text-slate-900">Tạo đơn hàng thành công!</h1>
         <p className="font-medium text-slate-500">
           Đơn hàng mới đã được khởi tạo và đang chờ xử lý.
         </p>

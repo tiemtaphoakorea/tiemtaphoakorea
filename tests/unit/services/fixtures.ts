@@ -8,13 +8,13 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { ROLE } from "@workspace/shared/constants";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/db.server";
 import { categories } from "@/db/schema/categories";
 import { orderItems, orders, supplierOrders } from "@/db/schema/orders";
 import { products, productVariants } from "@/db/schema/products";
 import { profiles } from "@/db/schema/profiles";
-import { ROLE } from "@/lib/constants";
 
 export type OrderTestFixture = {
   testId: string;

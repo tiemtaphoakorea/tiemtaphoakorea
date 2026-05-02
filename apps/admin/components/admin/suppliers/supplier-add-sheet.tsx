@@ -1,4 +1,5 @@
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
@@ -28,105 +29,63 @@ export function SupplierAddSheet({ isOpen, onOpenChange, isSubmitting }: Supplie
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <SheetTitle className="text-2xl font-black">Thêm nhà cung cấp mới</SheetTitle>
           <SheetDescription className="font-medium text-slate-500">
             Nhập thông tin nhà cung cấp. Hệ thống sẽ tự động tạo mã NCC.
           </SheetDescription>
         </SheetHeader>
-        <form method="post" className="flex flex-col gap-6 py-8">
-          <input type="hidden" name="intent" value="add" />
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-supplier-name"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
+        <form method="post" className="py-8">
+          <Input type="hidden" name="intent" value="add" />
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="add-supplier-name">
                 Tên nhà cung cấp <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="add-supplier-name"
-                name="name"
-                placeholder="Công ty TNHH ABC"
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                required
-              />
-            </div>
+              </FieldLabel>
+              <Input id="add-supplier-name" name="name" placeholder="Công ty TNHH ABC" required />
+            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="add-supplier-phone"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Số điện thoại
-                </label>
-                <Input
-                  id="add-supplier-phone"
-                  name="phone"
-                  placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  htmlFor="add-supplier-email"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Email
-                </label>
+              <Field>
+                <FieldLabel htmlFor="add-supplier-phone">Số điện thoại</FieldLabel>
+                <Input id="add-supplier-phone" name="phone" placeholder="09xx xxx xxx" />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="add-supplier-email">Email</FieldLabel>
                 <Input
                   id="add-supplier-email"
                   name="email"
                   type="email"
                   placeholder="contact@supplier.com"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                 />
-              </div>
+              </Field>
             </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-supplier-address"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Địa chỉ
-              </label>
+            <Field>
+              <FieldLabel htmlFor="add-supplier-address">Địa chỉ</FieldLabel>
               <Input
                 id="add-supplier-address"
                 name="address"
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
               />
-            </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-supplier-payment-terms"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Điều khoản thanh toán
-              </label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="add-supplier-payment-terms">Điều khoản thanh toán</FieldLabel>
               <Input
                 id="add-supplier-payment-terms"
                 name="paymentTerms"
                 placeholder="VD: Thanh toán sau 30 ngày, COD, ..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
               />
-            </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-supplier-note"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Ghi chú
-              </label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="add-supplier-note">Ghi chú</FieldLabel>
               <Textarea
                 id="add-supplier-note"
                 name="note"
                 placeholder="Thông tin thêm về nhà cung cấp..."
-                className="min-h-[80px] bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="min-h-[80px]"
               />
-            </div>
-          </div>
-          <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+            </Field>
+          </FieldGroup>
+          <SheetFooter className="border-t border-slate-100 pt-6">
             <div className="flex w-full items-center justify-end gap-3">
               <Button
                 type="button"

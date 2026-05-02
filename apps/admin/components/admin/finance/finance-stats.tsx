@@ -28,7 +28,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Revenue */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
               Tổng doanh thu
@@ -45,7 +45,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
         </Card>
 
         {/* COGS */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
               Giá vốn hàng bán
@@ -61,7 +61,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
         </Card>
 
         {/* Expenses */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
               Chi phí vận hành
@@ -77,7 +77,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
         </Card>
 
         {/* Net Profit */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
               Lợi nhuận ròng
@@ -101,25 +101,23 @@ export function FinanceStats({ date }: FinanceStatsProps) {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-        <Card className="flex flex-col gap-0 overflow-hidden rounded-2xl border-none bg-white py-0 shadow-sm ring-1 ring-slate-200 lg:col-span-2 dark:bg-slate-900/50 dark:ring-slate-800">
-          <CardHeader className="border-b border-slate-100 p-6 dark:border-slate-800">
+        <Card className="flex flex-col gap-0 overflow-hidden rounded-2xl border-none bg-white py-0 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+          <CardHeader className="border-b border-slate-100 p-6">
             <CardTitle className="flex items-center gap-2 text-base font-black tracking-widest uppercase">
               <span className="inline-block h-6 w-1 rounded-full bg-blue-500"></span>
               Chi tiết các khoản lợi nhuận
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-slate-100">
               {/* Revenue */}
-              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/20 dark:text-blue-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110">
                     <DollarSign className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-base font-bold text-slate-800 dark:text-slate-200">
-                      Doanh thu gộp
-                    </div>
+                    <div className="text-base font-bold text-slate-800">Doanh thu gộp</div>
                     <div className="mt-0.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
                       Tổng giá trị đơn hàng
                     </div>
@@ -131,13 +129,13 @@ export function FinanceStats({ date }: FinanceStatsProps) {
               </div>
 
               {/* COGS */}
-              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-transform group-hover:scale-110 dark:bg-orange-900/20 dark:text-orange-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-transform group-hover:scale-110">
                     <PieChart className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-base font-bold text-slate-800 dark:text-slate-200">
+                    <div className="text-base font-bold text-slate-800">
                       Giá vốn hàng bán (COGS)
                     </div>
                     <div className="mt-0.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
@@ -151,25 +149,23 @@ export function FinanceStats({ date }: FinanceStatsProps) {
               </div>
 
               {/* Gross Profit Subtotal */}
-              <div className="flex items-center justify-between border-y border-dashed border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-slate-700/50 dark:bg-slate-800/40">
+              <div className="flex items-center justify-between border-y border-dashed border-slate-200 bg-slate-50/80 px-5 py-4">
                 <div className="pl-16 text-xs font-bold tracking-widest text-slate-500 uppercase">
                   Lợi nhuận gộp
                 </div>
-                <div className="text-lg font-black text-slate-700 dark:text-slate-300">
+                <div className="text-lg font-black text-slate-700">
                   {formatCurrency(stats.grossProfit || 0)}
                 </div>
               </div>
 
               {/* Expenses */}
-              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition-transform group-hover:scale-110 dark:bg-red-900/20 dark:text-red-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition-transform group-hover:scale-110">
                     <Wallet className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-base font-bold text-slate-800 dark:text-slate-200">
-                      Chi phí vận hành
-                    </div>
+                    <div className="text-base font-bold text-slate-800">Chi phí vận hành</div>
                     <div className="mt-0.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
                       Mặt bằng, nhân sự, marketing...
                     </div>
@@ -181,7 +177,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
               </div>
 
               {/* Net Profit Final */}
-              <div className="flex items-center justify-between border-t border-slate-100 p-5 dark:border-slate-800">
+              <div className="flex flex-col gap-3 border-t border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-primary shadow-primary/30 rounded-lg p-2 text-white shadow-lg">
                     <TrendingUp className="h-5 w-5" />
@@ -191,7 +187,7 @@ export function FinanceStats({ date }: FinanceStatsProps) {
                   </span>
                 </div>
                 <div
-                  className={`text-3xl font-black tracking-tight ${
+                  className={`text-2xl font-black tracking-tight md:text-3xl ${
                     (stats.netProfit || 0) >= 0 ? "text-primary" : "text-red-500"
                   }`}
                 >
@@ -203,26 +199,24 @@ export function FinanceStats({ date }: FinanceStatsProps) {
         </Card>
 
         {/* Financial Health Scorecard */}
-        <Card className="group relative flex flex-col overflow-hidden rounded-2xl border-none bg-gradient-to-br from-white to-slate-50 p-0 shadow-sm ring-1 ring-slate-200 dark:from-slate-900 dark:to-slate-900/50 dark:ring-slate-800">
+        <Card className="group relative flex flex-col overflow-hidden rounded-2xl border-none bg-gradient-to-br from-white to-slate-50 p-0 shadow-sm ring-1 ring-slate-200">
           <div className="bg-primary/5 group-hover:bg-primary/10 absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full blur-3xl transition-all" />
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl transition-all group-hover:bg-blue-500/10" />
 
           <div className="z-10 flex flex-1 flex-col items-center justify-center space-y-6 p-8 text-center">
             <div className="relative">
-              <div className="text-primary flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl ring-4 shadow-slate-200/50 ring-slate-50 dark:bg-slate-800 dark:shadow-black/20 dark:ring-slate-900">
+              <div className="text-primary flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl ring-4 shadow-slate-200/50 ring-slate-50">
                 <TrendingUp className="h-10 w-10" />
               </div>
               <div
-                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-[10px] font-bold text-white shadow-lg dark:border-slate-800 ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
+                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-[10px] font-bold text-white shadow-lg ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
               >
                 {(stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-200">
-                Sức khỏe tài chính
-              </h3>
+              <h3 className="text-xl font-black text-slate-800">Sức khỏe tài chính</h3>
               <div className="text-primary flex items-baseline justify-center gap-1">
                 <span className="text-4xl font-black tracking-tighter">
                   {stats.revenue ? ((stats.netProfit / stats.revenue) * 100).toFixed(1) : 0}

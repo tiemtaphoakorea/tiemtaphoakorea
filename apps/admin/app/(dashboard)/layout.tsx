@@ -1,8 +1,11 @@
 "use client";
 
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { QueryClient, useQuery } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ADMIN_ROUTE_NAMES, ADMIN_TITLE } from "@workspace/shared/constants";
 import { getBreadcrumbName } from "@workspace/shared/utils";
+import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,14 +14,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb";
-import { Separator } from "@workspace/ui/components/separator";
+import { Input } from "@workspace/ui/components/input";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@workspace/ui/components/sidebar";
+import { Search } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Fragment, type ReactNode, Suspense, useEffect, useState } from "react";
-import { AdminSidebar } from "@/components/layout/admin-sidebar";
+
+const AdminSidebar = dynamic(
+  () => import("@/components/layout/admin-sidebar").then((m) => m.AdminSidebar),
+  { ssr: false },
+);
+
 import { ChatNotificationBell } from "@/components/layout/chat-notification-bell";
-import { queryKeys } from "@/lib/query-keys";
+import { QUERY_CACHE_PERSIST_KEY, queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 function AdminLayoutContent({ children }: { children: ReactNode }) {
@@ -28,44 +38,35 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
     document.title = ADMIN_TITLE;
   }, []);
 
-  // Generate breadcrumbs from pathname (router has no /admin prefix)
   const pathSegments = pathname.split("/").filter(Boolean);
 
-  const { data: user, isError } = useQuery({
+  // Auth redirect handled by axios interceptor — 401 → window.location.href = "/login".
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: queryKeys.admin.profile,
     queryFn: async () => {
       const data = await adminClient.getProfile();
-      // eslint_disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data as any)?.profile;
     },
     retry: 1,
     enabled: typeof window !== "undefined",
-    // Profile changes rarely — cache for 5 minutes so navigating between pages
-    // doesn't refetch; eliminates the blocking spinner on subsequent visits.
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   });
 
-  // Only redirect on confirmed error, not while loading.
-  // This lets the sidebar shell and page content render immediately in parallel
-  // with the profile fetch, instead of blocking behind a full-screen spinner.
-  if (isError) {
-    redirect("/login");
-  }
-
   return (
-    <SidebarProvider>
-      <AdminSidebar user={user} />
-      <SidebarInset className="bg-muted/40 transition-[margin] peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ml-[--sidebar-width] md:peer-data-[variant=inset]:rounded-none">
-        <header className="glass-header flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground -ml-1 h-10 w-10 rounded-lg transition-colors" />
-          <Separator orientation="vertical" className="mr-2 h-full" />
+    <SidebarProvider style={{ "--sidebar-width": "13.75rem" } as React.CSSProperties}>
+      <AdminSidebar user={user} isLoading={userLoading} />
+      <SidebarInset className="bg-[#F4F5F7]">
+        {/* Topbar — matches Admin CMS design: trigger · breadcrumb · search · bell · avatar */}
+        <header className="sticky top-0 z-30 flex h-[54px] shrink-0 items-center gap-3 border-b border-border bg-white px-6">
+          <SidebarTrigger className="h-[34px] w-[34px] rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
           <Breadcrumb className="flex-1">
-            <BreadcrumbList>
+            <BreadcrumbList className="text-[13px]">
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink
                   asChild
-                  className="text-muted-foreground hover:text-primary font-bold transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Link href="/">Admin</Link>
                 </BreadcrumbLink>
@@ -75,7 +76,9 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                 <>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage className="text-primary font-bold">Dashboard</BreadcrumbPage>
+                    <BreadcrumbPage className="font-semibold text-foreground">
+                      Dashboard
+                    </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               )}
@@ -90,11 +93,13 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>
                       {isLast ? (
-                        <BreadcrumbPage className="text-primary font-bold">{name}</BreadcrumbPage>
+                        <BreadcrumbPage className="font-semibold text-foreground">
+                          {name}
+                        </BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink
                           asChild
-                          className="text-muted-foreground hover:text-primary font-bold transition-colors"
+                          className="text-muted-foreground hover:text-primary transition-colors"
                         >
                           <Link href={href}>{name}</Link>
                         </BreadcrumbLink>
@@ -105,10 +110,30 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
               })}
             </BreadcrumbList>
           </Breadcrumb>
+
+          {/* Quick search — visual only for now (no global search wired). */}
+          <div className="relative hidden h-[34px] w-[300px] items-center md:flex">
+            <Search
+              className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground/60"
+              strokeWidth={1.8}
+            />
+            <Input
+              type="search"
+              placeholder="Tìm kiếm nhanh..."
+              className="h-full w-full border-border bg-[#F4F5F7] pl-9 pr-3 transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:bg-white focus-visible:ring-0"
+            />
+          </div>
+
           <ChatNotificationBell />
+          <Avatar className="h-8 w-8 cursor-pointer">
+            <AvatarFallback className="bg-primary text-xs font-bold text-white">
+              {user?.fullName?.charAt(0) ?? "A"}
+            </AvatarFallback>
+          </Avatar>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:p-8">
-          <div key={pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+        <main className="flex flex-1 flex-col gap-4 p-5 md:p-6">
+          <div key={pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>
         </main>
@@ -118,11 +143,51 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  // Create a client for the component tree
-  const [queryClient] = useState(() => new QueryClient());
+  // Defaults tuned for mobile/background-tab resilience:
+  // refetchOnWindowFocus + refetchOnReconnect for stale data refresh,
+  // retry: 1 (skip 401/403/404), networkMode: "always" for mobile transitions.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
+            networkMode: "always",
+            gcTime: 24 * 60 * 60 * 1000,
+            retry: (failureCount, error) => {
+              const status = (error as { status?: number })?.status ?? 0;
+              if ([401, 403, 404].includes(status)) return false;
+              return failureCount < 1;
+            },
+          },
+          mutations: { networkMode: "always" },
+        },
+      }),
+  );
+
+  const [persister] = useState(() =>
+    createSyncStoragePersister({
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      key: QUERY_CACHE_PERSIST_KEY,
+    }),
+  );
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 24 * 60 * 60 * 1000,
+        // Only persist profile query — operational data is too volatile to cache across sessions.
+        dehydrateOptions: {
+          shouldDehydrateQuery: (query) => {
+            const [root, leaf] = query.queryKey as string[];
+            return root === "admin" && leaf === "profile";
+          },
+        },
+      }}
+    >
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center">
@@ -132,6 +197,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       >
         <AdminLayoutContent>{children}</AdminLayoutContent>
       </Suspense>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { SUPPLIER_ORDER_STATUS } from "@/lib/constants";
+import { SUPPLIER_ORDER_STATUS } from "@workspace/shared/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { TEST_CUSTOMERS, TEST_PRODUCTS } from "../fixtures/data";
 import {

@@ -1,4 +1,4 @@
-export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://admin.localhost:3000";
+export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://admin.localhost:3001";
 export const STOREFRONT_BASE_URL = process.env.STOREFRONT_BASE_URL || "http://localhost:3000";
 
 export const ROLE = {
@@ -95,6 +95,7 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethodValue, string> = {
 };
 
 export const PRODUCT_SORT = {
+  POPULAR: "popular",
   LATEST: "latest",
   PRICE_ASC: "price-asc",
   PRICE_DESC: "price-desc",
@@ -173,7 +174,7 @@ export const ADMIN_ROUTE_NAMES: Record<string, string> = {
   expenses: "Chi phí",
   products: "Sản phẩm",
   orders: "Đơn hàng",
-  "supplier-orders": "Đơn nhập hàng",
+  inventory: "Quản lý kho",
   customers: "Khách hàng",
   analytics: "Báo cáo",
   chat: "Tin nhắn",

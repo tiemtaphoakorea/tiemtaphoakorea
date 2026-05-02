@@ -24,7 +24,7 @@ interface RevenueChartProps {
 
 export function RevenueChart({ data }: RevenueChartProps) {
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 lg:col-span-2 dark:shadow-none dark:ring-slate-800">
+    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 lg:col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -66,7 +66,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
               content={({ active, payload }) => {
                 if (active && payload?.length) {
                   return (
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xl">
                       <p className="mb-2 text-[10px] font-black text-slate-400 uppercase">
                         {payload[0].payload.month}
                       </p>

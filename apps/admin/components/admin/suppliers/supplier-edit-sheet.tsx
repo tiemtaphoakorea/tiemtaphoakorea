@@ -1,6 +1,7 @@
 import type { Supplier } from "@workspace/database/types/admin";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import {
   Sheet,
@@ -30,7 +31,7 @@ export function SupplierEditSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <div className="flex items-center gap-3">
             <SheetTitle className="text-2xl font-black">Chỉnh sửa nhà cung cấp</SheetTitle>
             <Badge variant="outline" className="font-black">
@@ -41,106 +42,73 @@ export function SupplierEditSheet({
             Cập nhật thông tin nhà cung cấp.
           </SheetDescription>
         </SheetHeader>
-        <form method="post" className="flex flex-col gap-6 py-8">
-          <input type="hidden" name="intent" value="edit" />
-          <input type="hidden" name="id" value={supplier.id} />
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <label
-                htmlFor="edit-supplier-name"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
+        <form method="post" className="py-8">
+          <Input type="hidden" name="intent" value="edit" />
+          <Input type="hidden" name="id" value={supplier.id} />
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-name">
                 Tên nhà cung cấp <span className="text-red-500">*</span>
-              </label>
+              </FieldLabel>
               <Input
                 id="edit-supplier-name"
                 name="name"
                 defaultValue={supplier.name}
                 placeholder="Công ty TNHH ABC"
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                 required
               />
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="edit-supplier-phone"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Số điện thoại
-                </label>
+              <Field>
+                <FieldLabel htmlFor="edit-supplier-phone">Số điện thoại</FieldLabel>
                 <Input
                   id="edit-supplier-phone"
                   name="phone"
                   defaultValue={supplier.phone || ""}
                   placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                 />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  htmlFor="edit-supplier-email"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Email
-                </label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="edit-supplier-email">Email</FieldLabel>
                 <Input
                   id="edit-supplier-email"
                   name="email"
                   type="email"
                   defaultValue={supplier.email || ""}
                   placeholder="contact@supplier.com"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
                 />
-              </div>
+              </Field>
             </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="edit-supplier-address"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Địa chỉ
-              </label>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-address">Địa chỉ</FieldLabel>
               <Input
                 id="edit-supplier-address"
                 name="address"
                 defaultValue={supplier.address || ""}
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
               />
-            </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="edit-supplier-payment-terms"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Điều khoản thanh toán
-              </label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-payment-terms">Điều khoản thanh toán</FieldLabel>
               <Input
                 id="edit-supplier-payment-terms"
                 name="paymentTerms"
                 defaultValue={supplier.paymentTerms || ""}
                 placeholder="VD: Thanh toán sau 30 ngày, COD, ..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
               />
-            </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="edit-supplier-note"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Ghi chú
-              </label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-supplier-note">Ghi chú</FieldLabel>
               <Textarea
                 id="edit-supplier-note"
                 name="note"
                 defaultValue={supplier.note || ""}
                 placeholder="Thông tin thêm về nhà cung cấp..."
-                className="min-h-[80px] bg-slate-50/50 font-medium dark:bg-slate-900/50"
+                className="min-h-[80px]"
               />
-            </div>
-          </div>
-          <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
+            </Field>
+          </FieldGroup>
+          <SheetFooter className="border-t border-slate-100 pt-6">
             <div className="flex w-full items-center justify-end gap-3">
               <Button
                 type="button"

@@ -45,7 +45,13 @@ next-env.d.ts
 .husky/_/
 .__pycache__
 .obsidian
-.claude
+# .claude
 .turbo
 .worktrees
 .superpowers
+
+design-system/
+.playwright-mcp/
+.repomixignore
+repomix-output.xml
+release-manifest.json

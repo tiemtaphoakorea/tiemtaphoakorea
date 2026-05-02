@@ -3,8 +3,17 @@
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import type { ProductFilterCategory } from "@workspace/shared/types/product";
 import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
-import { ChevronDown, Filter, X } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@workspace/ui/components/sheet";
+import { ChevronDown, Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
@@ -16,9 +25,8 @@ interface ProductFiltersProps {
 function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Auto-expand the parent of the active category
   const initialExpanded = new Set(
     categories
       .filter(
@@ -41,225 +49,196 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
 
   const handleCategoryChange = (categorySlug: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (!categorySlug) {
-      params.delete("category");
-    } else {
-      params.set("category", categorySlug);
-    }
-    // Reset page on category change
+    if (!categorySlug) params.delete("category");
+    else params.set("category", categorySlug);
     params.delete("page");
+    const query = params.toString();
+    router.push(query ? `${PUBLIC_ROUTES.PRODUCTS}?${query}` : PUBLIC_ROUTES.PRODUCTS);
+    setIsMobileOpen(false);
+  };
 
-    router.push(`${PUBLIC_ROUTES.PRODUCTS}?${params.toString()}`);
-    setIsMobileSidebarOpen(false);
+  const handleClearAll = () => {
+    router.push(PUBLIC_ROUTES.PRODUCTS);
+    setIsMobileOpen(false);
   };
 
   const scrollToChat = () => {
     document.getElementById("store-realtime-chat")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const hasActiveFilter = Boolean(activeCategorySlug);
+
+  const categoryTree = (
+    <CategoryTree
+      categories={categories}
+      activeCategorySlug={activeCategorySlug}
+      expandedSlugs={expandedSlugs}
+      onToggleExpanded={toggleExpanded}
+      onCategoryChange={handleCategoryChange}
+    />
+  );
+
   return (
     <>
       {/* Sidebar Filters - Desktop */}
-      <aside className="sticky top-32 hidden h-fit w-64 space-y-8 lg:block">
-        <div>
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Danh mục
-          </h3>
-          <div className="space-y-0.5">
-            {/* "Tất cả" */}
-            <CategoryFilterItem
-              name="Tất cả"
-              slug=""
-              active={activeCategorySlug === ""}
-              onClick={handleCategoryChange}
-            />
-            {categories.map((cat) => {
-              const hasChildren = (cat.children?.length ?? 0) > 0;
-              const isExpanded = expandedSlugs.has(cat.slug);
-              return (
-                <div key={cat.slug}>
-                  <div className="flex items-center">
-                    <CategoryFilterItem
-                      name={cat.name}
-                      slug={cat.slug}
-                      active={activeCategorySlug === cat.slug}
-                      onClick={handleCategoryChange}
-                      className="flex-1"
-                    />
-                    {hasChildren && (
-                      <button
-                        onClick={() => toggleExpanded(cat.slug)}
-                        className="mr-1 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                    )}
-                  </div>
-                  {hasChildren && isExpanded && (
-                    <div className="ml-3 border-l border-border/50 pl-2">
-                      {cat.children!.map((child) => (
-                        <CategoryFilterItem
-                          key={child.slug}
-                          name={child.name}
-                          slug={child.slug}
-                          active={activeCategorySlug === child.slug}
-                          onClick={handleCategoryChange}
-                          isChild
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <aside className="sticky top-24 hidden h-fit flex-col gap-4 lg:flex">
+        <Card className="gap-0 py-0">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-4">
+            <CardTitle className="text-sm font-bold text-foreground">Bộ lọc</CardTitle>
+            {hasActiveFilter && (
+              <Button
+                variant="link"
+                size="xs"
+                onClick={handleClearAll}
+                className="h-auto px-0 text-xs font-medium"
+              >
+                Xóa tất cả
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="px-5 py-4">
+            <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              Danh mục
+            </h4>
+            {categoryTree}
+          </CardContent>
+        </Card>
 
-        <Separator className="bg-border/50" />
-
-        <div className="rounded-2xl bg-secondary p-4">
-          <h4 className="mb-2 text-sm font-semibold text-primary">Cần tư vấn?</h4>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Đội ngũ chuyên gia của K-SMART luôn sẵn sàng hỗ trợ bạn chọn sản phẩm phù hợp.
-          </p>
-          <Button
-            variant="outline"
-            className="w-full rounded-full border-primary/30 text-xs font-semibold text-primary hover:bg-primary hover:text-white"
-            onClick={scrollToChat}
-          >
-            Chat với chúng tôi
-          </Button>
-        </div>
+        <Card className="gap-2 bg-secondary py-0 ring-0">
+          <CardContent className="px-5 py-5">
+            <h4 className="mb-2 text-sm font-bold text-primary">Cần tư vấn?</h4>
+            <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+              Đội ngũ K-SMART sẵn sàng hỗ trợ bạn chọn sản phẩm phù hợp.
+            </p>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={scrollToChat}
+              className="w-full rounded-full border-primary/30 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              Chat với chúng tôi
+            </Button>
+          </CardContent>
+        </Card>
       </aside>
 
-      {/* Mobile Filter Toggle & Quick Categories */}
-      <div className="no-scrollbar mb-4 flex items-center gap-2 overflow-x-auto pb-2 lg:hidden">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-shrink-0 gap-2 rounded-full border-border"
-          onClick={() => setIsMobileSidebarOpen(true)}
-        >
-          <Filter className="h-4 w-4" /> Bộ lọc
-        </Button>
-        {[{ name: "Tất cả", slug: "" }, ...categories].slice(0, 5).map((cat) => (
-          <button
-            key={cat.slug}
-            onClick={() => handleCategoryChange(cat.slug)}
-            className={`rounded-full border px-4 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
-              activeCategorySlug === cat.slug
-                ? "border-primary bg-primary text-white"
-                : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-primary"
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
+      {/* Mobile filter trigger + sheet */}
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <div className="mb-1 flex lg:hidden">
+          <SheetTrigger asChild>
+            <Button variant="outline" size="lg" className="gap-2 rounded-full">
+              <Filter className="size-4" /> Bộ lọc
+            </Button>
+          </SheetTrigger>
+        </div>
 
-      {/* Mobile Menu Backdrop */}
-      {isMobileSidebarOpen && (
-        <div
-          role="button"
-          tabIndex={0}
-          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setIsMobileSidebarOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") setIsMobileSidebarOpen(false);
-          }}
-        />
-      )}
+        <SheetContent side="left" className="w-[85%] max-w-sm gap-0 p-0">
+          <SheetHeader className="border-b border-border px-6 py-4">
+            <SheetTitle className="text-base font-semibold">Bộ lọc</SheetTitle>
+          </SheetHeader>
 
-      {/* Mobile Filter Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-[70] w-[80%] max-w-sm transform bg-white transition-transform duration-300 lg:hidden ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-      >
-        <div className="flex h-full flex-col p-6">
-          <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-            <h2 className="text-base font-semibold">Bộ lọc</h2>
-            <button
-              onClick={() => setIsMobileSidebarOpen(false)}
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="no-scrollbar flex-1 space-y-8 overflow-y-auto">
+          <div className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-6 py-4">
             <div>
-              <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                 Danh mục
-              </h3>
-              <div className="grid grid-cols-1 gap-1">
-                {[
-                  { name: "Tất cả", slug: "", children: [] as ProductFilterCategory[] },
-                  ...categories,
-                ].map((cat) => {
-                  const hasChildren = (cat.children?.length ?? 0) > 0;
-                  const isExpanded = expandedSlugs.has(cat.slug);
-                  return (
-                    <div key={cat.slug}>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleCategoryChange(cat.slug)}
-                          className={`flex-1 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all ${
-                            activeCategorySlug === cat.slug
-                              ? "bg-primary text-white"
-                              : "bg-gray-50 text-muted-foreground"
-                          }`}
-                        >
-                          {cat.name}
-                        </button>
-                        {hasChildren && (
-                          <button
-                            onClick={() => toggleExpanded(cat.slug)}
-                            className="rounded-2xl bg-gray-50 p-3 text-muted-foreground transition-colors hover:text-foreground"
-                          >
-                            <ChevronDown
-                              className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                            />
-                          </button>
-                        )}
-                      </div>
-                      {hasChildren && isExpanded && (
-                        <div className="mt-1 ml-4 space-y-1">
-                          {cat.children!.map((child) => (
-                            <button
-                              key={child.slug}
-                              onClick={() => handleCategoryChange(child.slug)}
-                              className={`w-full rounded-xl px-4 py-2 text-left text-sm transition-all ${
-                                activeCategorySlug === child.slug
-                                  ? "bg-primary/10 font-semibold text-primary"
-                                  : "text-muted-foreground hover:text-foreground"
-                              }`}
-                            >
-                              {child.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              </h4>
+              {categoryTree}
             </div>
           </div>
-          <div className="mt-auto border-t pt-6">
+
+          <Separator />
+          <SheetFooter className="px-6 py-4">
+            {hasActiveFilter && (
+              <Button variant="ghost" size="lg" onClick={handleClearAll}>
+                Xóa bộ lọc
+              </Button>
+            )}
             <Button
+              size="lg"
               className="h-12 w-full rounded-2xl font-bold"
-              onClick={() => setIsMobileSidebarOpen(false)}
+              onClick={() => setIsMobileOpen(false)}
             >
               Xem kết quả
             </Button>
-          </div>
-        </div>
-      </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
 
-function CategoryFilterItem({
+function CategoryTree({
+  categories,
+  activeCategorySlug,
+  expandedSlugs,
+  onToggleExpanded,
+  onCategoryChange,
+}: {
+  categories: ProductFilterCategory[];
+  activeCategorySlug: string;
+  expandedSlugs: Set<string>;
+  onToggleExpanded: (slug: string) => void;
+  onCategoryChange: (slug: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <CategoryRow
+        name="Tất cả sản phẩm"
+        slug=""
+        active={activeCategorySlug === ""}
+        onClick={onCategoryChange}
+      />
+      {categories.map((cat) => {
+        const hasChildren = (cat.children?.length ?? 0) > 0;
+        const isExpanded = expandedSlugs.has(cat.slug);
+        return (
+          <div key={cat.slug}>
+            <div className="flex items-center gap-1">
+              <CategoryRow
+                name={cat.name}
+                slug={cat.slug}
+                active={activeCategorySlug === cat.slug}
+                onClick={onCategoryChange}
+                className="flex-1"
+              />
+              {hasChildren && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => onToggleExpanded(cat.slug)}
+                  aria-label={isExpanded ? "Thu gọn" : "Mở rộng"}
+                  className="text-muted-foreground"
+                >
+                  <ChevronDown
+                    className={`size-3.5 transition-transform duration-200 ${
+                      isExpanded ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+              )}
+            </div>
+            {hasChildren && isExpanded && (
+              <div className="mt-1 ml-3 space-y-0.5 border-l border-border pl-2">
+                {cat.children!.map((child) => (
+                  <CategoryRow
+                    key={child.slug}
+                    name={child.name}
+                    slug={child.slug}
+                    active={activeCategorySlug === child.slug}
+                    onClick={onCategoryChange}
+                    isChild
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CategoryRow({
   name,
   slug,
   active,
@@ -275,21 +254,24 @@ function CategoryFilterItem({
   className?: string;
 }) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="lg"
       onClick={() => onClick(slug)}
-      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-all ${
-        isChild ? "text-xs" : "text-sm"
+      className={`h-auto w-full justify-start gap-2 rounded-lg px-2.5 py-2 text-left font-medium ${
+        isChild ? "text-xs" : "text-[13px]"
       } ${
         active
-          ? "font-semibold text-primary"
-          : "font-medium text-muted-foreground hover:text-foreground"
+          ? "bg-primary/10 font-semibold text-primary hover:bg-primary/15 hover:text-primary"
+          : "text-foreground"
       } ${className}`}
     >
       <span
-        className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-primary" : "bg-transparent"}`}
+        className={`size-1.5 shrink-0 rounded-full ${active ? "bg-primary" : "bg-transparent"}`}
+        aria-hidden
       />
-      {name}
-    </button>
+      <span className="flex-1 truncate">{name}</span>
+    </Button>
   );
 }
 

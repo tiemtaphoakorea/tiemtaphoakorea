@@ -20,6 +20,7 @@ export const categories = pgTable(
     parentId: uuid("parent_id").references((): AnyPgColumn => categories.id, {
       onDelete: "set null",
     }),
+    imageUrl: varchar("image_url", { length: 1024 }),
     displayOrder: integer("display_order").default(0),
     isActive: boolean("is_active").default(true),
     showInNav: boolean("show_in_nav").default(true).notNull(),

@@ -18,7 +18,7 @@ export function CustomerOrderHeader({ order, statusInfo, formatDate }: CustomerO
           variant="outline"
           size="icon"
           asChild
-          className="h-10 w-10 rounded-xl border-slate-200 dark:border-slate-800"
+          className="h-10 w-10 rounded-xl border-slate-200"
         >
           <Link href={ACCOUNT_ROUTES.ORDERS}>
             <ArrowLeft className="h-5 w-5" />
@@ -26,7 +26,7 @@ export function CustomerOrderHeader({ order, statusInfo, formatDate }: CustomerO
         </Button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
               Đơn hàng #{order.orderNumber}
             </h1>
             <Badge

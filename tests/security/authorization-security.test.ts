@@ -33,7 +33,7 @@ describe("Authorization/RBAC Security", () => {
 
   describe("Role Hierarchy", () => {
     it("ROLE constants are defined with correct string values", async () => {
-      const { ROLE } = await import("@/lib/constants");
+      const { ROLE } = await import("@workspace/shared/constants");
       expect(ROLE).toBeDefined();
       expect(ROLE.OWNER).toBe("owner");
       expect(ROLE.MANAGER).toBe("manager");

@@ -77,7 +77,7 @@ export function AnalyticsHubCards() {
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {cards.map(({ href, icon: Icon, label, headline, sub, color }) => (
         <Link key={href} href={href} className="group block">
-          <Card className="h-full border-none shadow-sm ring-1 ring-slate-200 transition-shadow group-hover:shadow-md dark:ring-slate-800">
+          <Card className="h-full border-none shadow-sm ring-1 ring-slate-200 transition-shadow group-hover:shadow-md">
             <CardContent className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black tracking-widest text-slate-500 uppercase">
@@ -86,9 +86,14 @@ export function AnalyticsHubCards() {
                 <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
               </div>
               <Icon className={`h-5 w-5 ${color}`} />
-              <div>
-                <div className={`truncate text-xl font-black ${color}`}>{headline}</div>
-                <p className="mt-0.5 truncate text-xs font-medium text-slate-500">{sub}</p>
+              <div className="min-w-0">
+                <div
+                  className={`truncate text-base font-black md:text-xl ${color}`}
+                  title={headline}
+                >
+                  {headline}
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-xs font-medium text-slate-500">{sub}</p>
               </div>
             </CardContent>
           </Card>

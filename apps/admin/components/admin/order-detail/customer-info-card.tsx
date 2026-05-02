@@ -10,7 +10,7 @@ interface CustomerInfoCardProps {
 
 export function CustomerInfoCard({ customer, adminNote }: CustomerInfoCardProps) {
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight uppercase">
           <User className="text-primary h-5 w-5" /> Khách hàng
@@ -23,14 +23,14 @@ export function CustomerInfoCard({ customer, adminNote }: CustomerInfoCardProps)
             <AvatarFallback>{customer.fullName[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-black text-slate-900 dark:text-white">{customer.fullName}</div>
+            <div className="font-black text-slate-900">{customer.fullName}</div>
             <div className="text-xs font-bold text-slate-500 uppercase">
               {customer.customerCode}
             </div>
           </div>
         </div>
         <Separator />
-        <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+        <div className="space-y-3 text-sm font-medium text-slate-600">
           <div className="flex items-start gap-2">
             <Phone className="mt-0.5 h-4 w-4 text-slate-400" />
             <span>{customer.phone || "Không có SĐT"}</span>

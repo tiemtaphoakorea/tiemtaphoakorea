@@ -48,8 +48,8 @@ export function CustomerSidebar({ profile }: { profile: any }) {
   };
 
   return (
-    <Sidebar variant="inset" className="border-r border-gray-100 dark:border-slate-800">
-      <SidebarHeader className="flex h-16 items-center border-b border-gray-100 px-4 dark:border-slate-800">
+    <Sidebar variant="inset" className="border-r border-gray-100">
+      <SidebarHeader className="flex h-16 items-center border-b border-gray-100 px-4">
         <Link href={PUBLIC_ROUTES.HOME} className="group flex items-center gap-2">
           <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
             <span className="text-lg font-bold text-white">K</span>
@@ -91,10 +91,10 @@ export function CustomerSidebar({ profile }: { profile: any }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-gray-100 p-4 dark:border-slate-800">
+      <SidebarFooter className="border-t border-gray-100 p-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="group flex h-14 w-full items-center gap-3 rounded-xl p-2 transition-colors hover:bg-gray-50 dark:hover:bg-slate-900">
+            <button className="group flex h-14 w-full items-center gap-3 rounded-xl p-2 transition-colors hover:bg-gray-50">
               <Avatar className="border-primary/10 h-10 w-10 border-2">
                 <AvatarImage src={profile?.avatarUrl || "https://github.com/shadcn.png"} />
                 <AvatarFallback>

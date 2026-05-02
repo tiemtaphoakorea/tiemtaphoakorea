@@ -73,9 +73,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-black text-slate-900 dark:text-white">
-                      {supplier.name}
-                    </span>
+                    <span className="font-black text-slate-900">{supplier.name}</span>
                     {supplier.address && (
                       <span className="flex max-w-[200px] items-center gap-1 truncate text-[10px] font-medium text-slate-500">
                         <MapPin className="h-3 w-3" />
@@ -87,7 +85,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     {supplier.phone && (
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                         <Phone className="h-3 w-3" />
                         {supplier.phone}
                       </div>
@@ -104,16 +102,14 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  <span className="text-sm font-medium text-slate-600">
                     {supplier.paymentTerms || "Chưa cập nhật"}
                   </span>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <ShoppingCart className="h-4 w-4 text-slate-400" />
-                    <span className="font-bold text-slate-900 dark:text-white">
-                      {supplier.totalOrders}
-                    </span>
+                    <span className="font-bold text-slate-900">{supplier.totalOrders}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -126,10 +122,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
+                      <Button variant="ghost" className="h-8 w-8 rounded-lg p-0 hover:bg-slate-100">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -161,13 +154,11 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
             <TableRow>
               <TableCell colSpan={7} className="h-64 text-center">
                 <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
                     <Truck className="h-8 w-8 text-slate-300" />
                   </div>
                   <div>
-                    <p className="font-black text-slate-900 dark:text-white">
-                      Chưa có nhà cung cấp nào
-                    </p>
+                    <p className="font-black text-slate-900">Chưa có nhà cung cấp nào</p>
                     <p className="text-sm font-medium text-slate-500">
                       Hãy thêm nhà cung cấp đầu tiên của bạn.
                     </p>

@@ -3,7 +3,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 
 export function DashboardRecentOrdersSkeleton() {
   return (
-    <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+    <Card className="border-none shadow-sm ring-1 ring-slate-200">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-2">
           <Skeleton className="h-6 w-40" />
@@ -13,7 +13,7 @@ export function DashboardRecentOrdersSkeleton() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-4 w-24" />

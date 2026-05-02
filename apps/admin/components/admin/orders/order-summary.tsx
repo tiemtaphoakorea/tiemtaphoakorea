@@ -28,7 +28,7 @@ export function OrderSummary({
         <span>Tạm tính:</span>
         <span>{formatCurrency(subtotal)}</span>
       </div>
-      <div className="flex items-center justify-between text-lg font-black text-slate-900 dark:text-white">
+      <div className="flex items-center justify-between text-lg font-black text-slate-900">
         <span>Tổng tiền:</span>
         <span className="text-primary">{formatCurrency(total)}</span>
       </div>

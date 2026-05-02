@@ -37,7 +37,7 @@ export function OrderProductSheet({
         </Button>
       </SheetTrigger>
       <SheetContent className="flex h-full w-full flex-col p-0 sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 p-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 p-6">
           <SheetTitle>Thêm sản phẩm</SheetTitle>
           <SheetDescription>Tìm kiếm và chọn sản phẩm để thêm vào đơn hàng.</SheetDescription>
           <div className="relative mt-4">
@@ -54,10 +54,10 @@ export function OrderProductSheet({
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="hover:border-primary/50 rounded-xl border border-slate-200 p-4 transition-colors dark:border-slate-800"
+              className="hover:border-primary/50 rounded-xl border border-slate-200 p-4 transition-colors"
             >
               <div className="mb-3 flex items-start justify-between">
-                <h4 className="font-bold text-slate-900 dark:text-white">{product.name}</h4>
+                <h4 className="font-bold text-slate-900">{product.name}</h4>
                 <Badge variant="outline" className="text-[10px]">
                   {product.category?.name}
                 </Badge>
@@ -66,7 +66,7 @@ export function OrderProductSheet({
                 {product.variants.map((variant: any) => (
                   <div
                     key={variant.id}
-                    className="group flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-900"
+                    className="group flex items-center justify-between rounded-lg bg-slate-50 p-2"
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{variant.name}</span>

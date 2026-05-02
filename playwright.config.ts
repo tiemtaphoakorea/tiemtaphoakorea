@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { ADMIN_BASE_URL } from "./lib/constants";
+import { ADMIN_BASE_URL } from "@workspace/shared/constants";
 
 /**
  * E2E Test Configuration

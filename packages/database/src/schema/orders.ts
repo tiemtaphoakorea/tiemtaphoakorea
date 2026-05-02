@@ -38,6 +38,8 @@ export const orders = pgTable(
 
     subtotal: decimal("subtotal", { precision: 15, scale: 2 }).default("0"),
     discount: decimal("discount", { precision: 15, scale: 2 }).default("0"),
+    /** Shipping fee paid on behalf of customer; added to total. 0 if shop doesn't advance. */
+    shippingFee: decimal("shipping_fee", { precision: 15, scale: 2 }).default("0"),
     total: decimal("total", { precision: 15, scale: 2 }).default("0"),
 
     totalCost: decimal("total_cost", { precision: 15, scale: 2 }).default("0"),

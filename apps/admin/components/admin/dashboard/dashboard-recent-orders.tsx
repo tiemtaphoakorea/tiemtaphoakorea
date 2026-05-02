@@ -53,7 +53,7 @@ export function DashboardRecentOrders() {
   if (!recentOrders) return null;
 
   return (
-    <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+    <Card className="border-none shadow-sm ring-1 ring-slate-200">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-1">
           <CardTitle className="font-black">Đơn hàng vừa đặt</CardTitle>
@@ -67,44 +67,46 @@ export function DashboardRecentOrders() {
       </CardHeader>
       <CardContent>
         {recentOrders.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mã đơn</TableHead>
-                <TableHead>Khách hàng</TableHead>
-                <TableHead className="text-right">Tổng tiền</TableHead>
-                <TableHead className="text-center">Trạng thái</TableHead>
-                <TableHead className="w-[140px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="text-primary font-black">
-                    <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>{order.orderNumber}</Link>
-                  </TableCell>
-                  <TableCell className="font-medium">{order.customerName}</TableCell>
-                  <TableCell className="text-right font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(order.total || 0)}
-                  </TableCell>
-                  <TableCell className="text-center">{getStatusBadge(order.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
-                      asChild
-                    >
-                      <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>
-                        <Eye className="h-4 w-4" />
-                        Xem chi tiết
-                      </Link>
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mã đơn</TableHead>
+                  <TableHead>Khách hàng</TableHead>
+                  <TableHead className="text-right">Tổng tiền</TableHead>
+                  <TableHead className="text-center">Trạng thái</TableHead>
+                  <TableHead className="w-[140px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {recentOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="text-primary font-black">
+                      <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>{order.orderNumber}</Link>
+                    </TableCell>
+                    <TableCell className="font-medium">{order.customerName}</TableCell>
+                    <TableCell className="text-right font-bold text-slate-900">
+                      {formatCurrency(order.total || 0)}
+                    </TableCell>
+                    <TableCell className="text-center">{getStatusBadge(order.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary hover:bg-primary/5 gap-2 px-3 font-bold"
+                        asChild
+                      >
+                        <Link href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}>
+                          <Eye className="h-4 w-4" />
+                          Xem chi tiết
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="font-medium text-slate-500 italic">Chưa có đơn hàng nào trong hôm nay</p>

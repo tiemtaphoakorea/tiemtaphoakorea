@@ -33,11 +33,24 @@ async function resetDb() {
   console.log("🧹 Resetting database...");
 
   try {
-    // Set statement timeout to 30 seconds
-    await client.unsafe(`SET statement_timeout = '30s';`);
+    await client.unsafe(`SET statement_timeout = '60s';`);
+    await client.unsafe(`SET lock_timeout = '10s';`);
 
-    const tableList = TABLES.map((t) => `"${t}"`).join(", ");
-    await client.unsafe(`TRUNCATE ${tableList} RESTART IDENTITY CASCADE;`);
+    // DELETE in dependency order (children first) to avoid FK conflicts.
+    // Using DELETE instead of TRUNCATE to avoid ACCESS EXCLUSIVE lock contention
+    // with idle app connections that can't be terminated without SUPERUSER.
+    for (const table of TABLES) {
+      await client.unsafe(`DELETE FROM "${table}";`);
+    }
+
+    // Reset sequences separately (TRUNCATE RESTART IDENTITY equivalent)
+    const seqRows = await client.unsafe<{ relname: string }[]>(`
+      SELECT relname FROM pg_class
+      WHERE relkind = 'S' AND relnamespace = 'public'::regnamespace
+    `);
+    for (const { relname } of seqRows) {
+      await client.unsafe(`ALTER SEQUENCE "${relname}" RESTART WITH 1;`).catch(() => {});
+    }
 
     console.log("✅ Database reset complete.");
   } finally {

@@ -116,6 +116,10 @@ export async function getBanners(): Promise<BannerSlide[]> {
     ORDER BY b.sort_order ASC
   `)) as BannerRow[];
 
+  // Strip legacy Unsplash URLs so the storefront never tries to fetch them (they 404).
+  const stripUnsplash = (url: string | null | undefined): string =>
+    !url || url.includes("images.unsplash.com") ? "" : url;
+
   return rows.map((row) => ({
     id: row.id,
     type: row.type,
@@ -126,7 +130,9 @@ export async function getBanners(): Promise<BannerSlide[]> {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     imageUrl:
-      row.image_url || (row.type === "category" ? (row.category_image_url ?? "") : "") || "",
+      stripUnsplash(row.image_url) ||
+      (row.type === "category" ? stripUnsplash(row.category_image_url) : "") ||
+      "",
     title: row.title || (row.type === "category" ? (row.category_name ?? "") : "") || "",
     subtitle: row.subtitle,
     badgeText: row.badge_text || (row.type === "category" ? "Danh mục hot" : null),

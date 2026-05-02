@@ -1,0 +1,241 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@workspace/ui/components/button";
+import { Card } from "@workspace/ui/components/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import { AlertTriangle, Package, Plus } from "lucide-react";
+import { useState } from "react";
+import {
+  TableEmptyRow,
+  TableErrorRow,
+  TableLoadingRows,
+  thumbLabelFromName,
+  thumbToneFromId,
+} from "@/components/admin/shared/data-state";
+import { FilterTabs } from "@/components/admin/shared/filter-tabs";
+import { ProductThumb } from "@/components/admin/shared/product-thumb";
+import { StatCard } from "@/components/admin/shared/stat-card";
+import { TonePill } from "@/components/admin/shared/status-badge";
+import { queryKeys } from "@/lib/query-keys";
+import { adminClient } from "@/services/admin.client";
+
+type WarehouseTab = "stock" | "low" | "out";
+const TABS: ReadonlyArray<{ id: WarehouseTab; label: string }> = [
+  { id: "stock", label: "Tồn kho" },
+  { id: "low", label: "Sắp hết" },
+  { id: "out", label: "Hết hàng" },
+];
+
+export default function AdminInventory() {
+  const [tab, setTab] = useState<WarehouseTab>("stock");
+
+  const stockQuery = useQuery({
+    queryKey: queryKeys.admin.stockAlerts,
+    queryFn: () => adminClient.getStockAlerts(),
+    staleTime: 60_000,
+  });
+
+  const productsQuery = useQuery({
+    queryKey: queryKeys.products.list("", 1, 50, "all"),
+    queryFn: async () => await adminClient.getProducts({ page: 1, limit: 50 }),
+    enabled: tab === "stock",
+    staleTime: 60_000,
+  });
+
+  const lowStock = stockQuery.data?.lowStock ?? [];
+  const outOfStock = stockQuery.data?.outOfStock ?? [];
+  const products = productsQuery.data?.data ?? [];
+  const totalSkus = productsQuery.data?.metadata.total ?? 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {(lowStock.length > 0 || outOfStock.length > 0) && (
+        <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-gradient-to-br from-red-50 to-white px-[18px] py-3.5">
+          <AlertTriangle className="h-[18px] w-[18px] shrink-0 text-red-600" strokeWidth={2} />
+          <p className="text-[13px] font-medium leading-snug text-red-600">
+            <b className="font-bold">{lowStock.length} SP sắp hết</b>
+            {outOfStock.length > 0 && (
+              <>
+                {" · "}
+                <b className="font-bold">{outOfStock.length} SP đã hết hàng</b>
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2n)]:max-sm:border-r-0 [&>*:nth-last-child(-n+2)]:max-sm:border-b-0 lg:grid-cols-4">
+        <StatCard
+          label="Tổng SKU"
+          value={totalSkus || "—"}
+          delta="Đang quản lý"
+          icon={Package}
+          tone="primary"
+        />
+        <StatCard
+          label="Còn hàng"
+          value={Math.max(0, totalSkus - lowStock.length - outOfStock.length)}
+          delta="Đủ tồn kho"
+          icon={Package}
+          tone="mint"
+        />
+        <StatCard
+          label="Sắp hết"
+          value={lowStock.length}
+          delta="Cần nhập sớm"
+          direction="down"
+          icon={Package}
+          tone="amber"
+        />
+        <StatCard
+          label="Hết hàng"
+          value={outOfStock.length}
+          delta="Cần nhập gấp"
+          direction="down"
+          icon={Package}
+          tone="danger"
+        />
+      </div>
+
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
+        <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <FilterTabs tabs={TABS} value={tab} onChange={setTab} />
+          <Button size="sm" className="h-7 gap-1.5 rounded-md text-xs">
+            <Plus className="h-3 w-3" strokeWidth={2.5} />
+            Điều chỉnh kho
+          </Button>
+        </div>
+
+        {tab === "stock" ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  {["Sản phẩm", "Danh mục", "Tồn khả dụng", "Tồn vật lý", "Đã giữ chỗ"].map(
+                    (h, i) => (
+                      <TableHead
+                        key={i}
+                        className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                      >
+                        {h}
+                      </TableHead>
+                    ),
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {productsQuery.isLoading && <TableLoadingRows cols={5} rows={6} />}
+                {productsQuery.error && (
+                  <TableErrorRow cols={5} message={String(productsQuery.error)} />
+                )}
+                {!productsQuery.isLoading && products.length === 0 && (
+                  <TableEmptyRow cols={5} message="Chưa có dữ liệu kho" />
+                )}
+                {products.map((p) => {
+                  const stockClass =
+                    p.totalAvailable === 0
+                      ? "text-red-600 font-bold"
+                      : p.totalAvailable < (p.minLowStockThreshold ?? 30)
+                        ? "text-amber-700 font-bold"
+                        : "text-foreground font-bold";
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <ProductThumb
+                            label={thumbLabelFromName(p.name)}
+                            tone={thumbToneFromId(p.id)}
+                          />
+                          <span className="text-[13px] font-semibold">
+                            {p.name.length > 40 ? `${p.name.slice(0, 40)}…` : p.name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        {p.categoryName ? (
+                          <TonePill tone="indigo">{p.categoryName}</TonePill>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
+                        {p.totalAvailable}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                        {p.totalReserved}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
+                    <TableHead
+                      key={i}
+                      className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {h}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stockQuery.isLoading && <TableLoadingRows cols={3} rows={5} />}
+                {stockQuery.error && <TableErrorRow cols={3} message={String(stockQuery.error)} />}
+                {!stockQuery.isLoading && (tab === "low" ? lowStock : outOfStock).length === 0 && (
+                  <TableEmptyRow
+                    cols={3}
+                    message={tab === "low" ? "Không có SP sắp hết" : "Không có SP hết hàng"}
+                  />
+                )}
+                {(tab === "low" ? lowStock : outOfStock).map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell className="px-4 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <ProductThumb
+                          label={thumbLabelFromName(v.productName)}
+                          tone={thumbToneFromId(v.id)}
+                        />
+                        <div className="flex flex-col leading-tight">
+                          <span className="text-[13px] font-semibold">{v.productName}</span>
+                          <span className="font-mono text-[11px] text-muted-foreground">
+                            {v.name} · {v.sku ?? "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className={`px-4 py-2.5 font-bold tabular-nums ${tab === "out" ? "text-red-600" : "text-amber-700"}`}
+                    >
+                      {v.onHand}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
+                      <TonePill tone={tab === "out" ? "red" : "amber"}>
+                        {tab === "out" ? "Hết hàng" : "Sắp hết"}
+                      </TonePill>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

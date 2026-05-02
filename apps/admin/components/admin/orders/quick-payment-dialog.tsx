@@ -12,14 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+import { Field, FieldLabel } from "@workspace/ui/components/field";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { useState } from "react";
 import { toast } from "sonner";
 import { adminClient } from "@/services/admin.client";
@@ -93,20 +87,20 @@ export function QuickPaymentDialog({
           <DialogTitle>Thanh toán nhanh đơn hàng</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label>Chọn phương thức thanh toán</Label>
-            <Select value={method} onValueChange={setMethod} disabled={isSubmitting}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectItem>
-                <SelectItem value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectItem>
-                <SelectItem value={PAYMENT_METHOD.CARD}>Quẹt thẻ</SelectItem>
-              </SelectContent>
+          <Field>
+            <FieldLabel>Chọn phương thức thanh toán</FieldLabel>
+            <Select
+              value={method}
+              onValueChange={setMethod}
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              <SelectOption value={PAYMENT_METHOD.CASH}>Tiền mặt</SelectOption>
+              <SelectOption value={PAYMENT_METHOD.BANK_TRANSFER}>Chuyển khoản</SelectOption>
+              <SelectOption value={PAYMENT_METHOD.CARD}>Quẹt thẻ</SelectOption>
             </Select>
-          </div>
-          <div className="grid gap-2 rounded-lg border border-slate-100 p-4 dark:border-slate-800">
+          </Field>
+          <div className="grid gap-2 rounded-lg border border-slate-100 p-4">
             <div className="flex justify-between text-sm">
               <span>Số đơn đủ điều kiện:</span>
               <span className="font-bold">{eligibleOrders.length}</span>

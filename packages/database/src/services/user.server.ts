@@ -1,6 +1,6 @@
 import { DEFAULT_PASSWORD_LENGTH, ERROR_MESSAGE, ROLE } from "@workspace/shared/constants";
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { invalidateProfileCache } from "../lib/auth";
 import { hashPassword } from "../lib/security";
@@ -105,6 +105,14 @@ export async function createUser(data: CreateUserData) {
   }
 }
 
+async function countOwners() {
+  const [result] = await db
+    .select({ count: count() })
+    .from(profiles)
+    .where(eq(profiles.role, ROLE.OWNER as any));
+  return result?.count ?? 0;
+}
+
 export async function updateUserRole(userId: string, newRole: UserRole) {
   const [updatedProfile] = await db
     .update(profiles)
@@ -117,6 +125,13 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 }
 
 export async function toggleUserStatus(userId: string, isActive: boolean) {
+  if (!isActive) {
+    const target = await db.query.profiles.findFirst({ where: eq(profiles.id, userId) });
+    if (target?.role === ROLE.OWNER && (await countOwners()) <= 1) {
+      throw new Error("Phải có ít nhất 1 Owner trong hệ thống");
+    }
+  }
+
   const [updatedProfile] = await db
     .update(profiles)
     .set({ isActive, updatedAt: new Date() })
@@ -128,6 +143,13 @@ export async function toggleUserStatus(userId: string, isActive: boolean) {
 }
 
 export async function updateUser(userId: string, data: UpdateUserData) {
+  if (data.role && data.role !== ROLE.OWNER) {
+    const target = await db.query.profiles.findFirst({ where: eq(profiles.id, userId) });
+    if (target?.role === ROLE.OWNER && (await countOwners()) <= 1) {
+      throw new Error("Phải có ít nhất 1 Owner trong hệ thống");
+    }
+  }
+
   const [updatedProfile] = await db
     .update(profiles)
     .set({
@@ -142,6 +164,11 @@ export async function updateUser(userId: string, data: UpdateUserData) {
 }
 
 export async function deleteUser(userId: string) {
+  const target = await db.query.profiles.findFirst({ where: eq(profiles.id, userId) });
+  if (target?.role === ROLE.OWNER && (await countOwners()) <= 1) {
+    throw new Error("Phải có ít nhất 1 Owner trong hệ thống");
+  }
+
   const [deleted] = await db.delete(profiles).where(eq(profiles.id, userId)).returning();
   return deleted;
 }

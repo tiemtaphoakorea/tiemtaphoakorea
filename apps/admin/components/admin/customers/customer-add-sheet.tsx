@@ -7,14 +7,17 @@ import {
   objectToFormData,
 } from "@workspace/shared/schemas";
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
+import { FieldGroup } from "@workspace/ui/components/field";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +29,7 @@ import {
 } from "@workspace/ui/components/sheet";
 import { UserPlus } from "lucide-react";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 interface CustomerAddSheetProps {
   isOpen: boolean;
@@ -41,13 +44,7 @@ export function CustomerAddSheet({
   isSubmitting,
   onSubmit,
 }: CustomerAddSheetProps) {
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CustomerFormValues>({
+  const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       fullName: "",
@@ -58,8 +55,8 @@ export function CustomerAddSheet({
   });
 
   useEffect(() => {
-    if (!isOpen) reset();
-  }, [isOpen, reset]);
+    if (!isOpen) form.reset();
+  }, [isOpen, form]);
 
   const onFormSubmit = (data: CustomerFormValues) => {
     const fd = objectToFormData({ ...data, intent: "add" });
@@ -75,110 +72,100 @@ export function CustomerAddSheet({
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader className="border-b border-slate-100 pb-6 dark:border-slate-800">
+        <SheetHeader className="border-b border-slate-100 pb-6">
           <SheetTitle className="text-2xl font-black">Thêm khách hàng mới</SheetTitle>
           <SheetDescription className="font-medium text-slate-500">
             Nhập thông tin cơ bản để tạo tài khoản khách hàng. Hệ thống sẽ tự động tạo mã định danh
             và mật khẩu.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 py-8">
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-customer-full-name"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Họ và tên
-              </label>
-              <Input
-                id="add-customer-full-name"
-                {...register("fullName")}
-                placeholder="Nguyễn Văn A"
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                aria-invalid={!!errors.fullName}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onFormSubmit)} className="py-8">
+            <FieldGroup>
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Họ và tên</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nguyễn Văn A" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.fullName && (
-                <p className="text-destructive text-sm">{errors.fullName.message}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="add-customer-phone"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Số điện thoại
-                </label>
-                <Input
-                  id="add-customer-phone"
-                  {...register("phone")}
-                  placeholder="09xx xxx xxx"
-                  className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
-                />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  htmlFor="add-customer-type"
-                  className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-                >
-                  Loại khách hàng
-                </label>
-                <Controller
-                  name="customerType"
-                  control={control}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger
-                        id="add-customer-type"
-                        className="h-11 bg-slate-50/50 dark:bg-slate-900/50"
-                      >
-                        <SelectValue placeholder="Chọn loại" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="retail">Khách lẻ</SelectItem>
-                        <SelectItem value="wholesale">Khách sỉ</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormItem>
+                      <FormLabel>Số điện thoại</FormLabel>
+                      <FormControl>
+                        <Input placeholder="09xx xxx xxx" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="customerType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loại khách hàng</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="w-full"
+                          placeholder="Chọn loại"
+                        >
+                          <SelectOption value="retail">Khách lẻ</SelectOption>
+                          <SelectOption value="wholesale">Khách sỉ</SelectOption>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
-            </div>
-            <div className="grid gap-2">
-              <label
-                htmlFor="add-customer-address"
-                className="text-sm font-black tracking-wider text-slate-700 uppercase dark:text-slate-300"
-              >
-                Địa chỉ
-              </label>
-              <Input
-                id="add-customer-address"
-                {...register("address")}
-                placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
-                className="h-11 bg-slate-50/50 font-medium dark:bg-slate-900/50"
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Địa chỉ</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
-          <SheetFooter className="border-t border-slate-100 pt-6 dark:border-slate-800">
-            <div className="flex w-full items-center justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 px-6 font-bold"
-                onClick={() => onOpenChange(false)}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="shadow-primary/20 h-11 px-6 font-bold shadow-lg"
-              >
-                {isSubmitting ? "Đang xử lý..." : "Tạo tài khoản"}
-              </Button>
-            </div>
-          </SheetFooter>
-        </form>
+            </FieldGroup>
+            <SheetFooter className="border-t border-slate-100 pt-6">
+              <div className="flex w-full items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 px-6 font-bold"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="shadow-primary/20 h-11 px-6 font-bold shadow-lg"
+                >
+                  {isSubmitting ? "Đang xử lý..." : "Tạo tài khoản"}
+                </Button>
+              </div>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

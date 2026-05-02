@@ -5,11 +5,11 @@
  * payment_status='paid' (DB CHECK constraint). Uses real PGlite in-memory DB.
  */
 
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { orderStatusHistory } from "@/db/schema/orders";
-import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
 import { completeOrder, createOrder, recordPayment, stockOut } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 

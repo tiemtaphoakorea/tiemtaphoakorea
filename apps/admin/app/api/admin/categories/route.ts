@@ -4,8 +4,10 @@ import {
   generateCategorySlug,
   getCategories,
   getFlatCategories,
+  getFlatCategoriesPaginated,
 } from "@workspace/database/services/category.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { getPaginationParams } from "@workspace/shared/pagination";
 import { categorySchema } from "@workspace/shared/schemas";
 import { NextResponse } from "next/server";
 
@@ -18,8 +20,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") || undefined;
   const flatOnly = searchParams.get("flat") === "true";
+  const paginated = searchParams.has("page") || searchParams.has("limit");
+  const { page, limit } = getPaginationParams(request);
 
   try {
+    // Paginated flat list for admin list view
+    if (paginated) {
+      const result = await getFlatCategoriesPaginated({ search, page, limit });
+      return NextResponse.json(result);
+    }
+
     // When ?flat=true, skip building the full category tree (saves one DB query + JS tree-build)
     if (flatOnly) {
       const flatCategories = await getFlatCategories();
@@ -57,13 +67,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, parentId, description, displayOrder, isActive } = parsed.data;
+    const { name, parentId, description, imageUrl, displayOrder, isActive } = parsed.data;
     const slug = await generateCategorySlug(name);
 
     const newCategory = await createCategory({
       name,
       parentId: parentId ?? null,
       description,
+      imageUrl: imageUrl ?? null,
       slug,
       displayOrder: displayOrder ?? 0,
       isActive: isActive ?? true,

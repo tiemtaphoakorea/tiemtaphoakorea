@@ -9,15 +9,50 @@ import { hashPassword, verifyPassword, verifySession } from "./security";
 // In-memory TTL cache for profile lookups.
 // Avoids a round-trip DB query on every API call for the same user.
 // TTL: 60s — safe because role/isActive changes are infrequent admin operations.
-const _profileCache = new Map<string, { value: typeof profiles.$inferSelect | null; expiresAt: number }>();
+const _profileCache = new Map<
+  string,
+  { value: typeof profiles.$inferSelect | null; expiresAt: number }
+>();
 const PROFILE_CACHE_TTL = 60_000;
+
+// Transient errors thrown by postgres-js / Supabase pooler when a connection
+// is dropped or DNS/TCP handshake fails. These are usually fixed by retrying
+// once because the pool establishes a fresh connection on the next attempt.
+const TRANSIENT_DB_ERROR_CODES = new Set([
+  "CONNECT_TIMEOUT",
+  "CONNECTION_ENDED",
+  "CONNECTION_DESTROYED",
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "ENOTFOUND",
+]);
+
+function isTransientDbError(error: unknown) {
+  const code =
+    (error as { code?: string })?.code ??
+    (error as { errno?: string })?.errno ??
+    (error as { cause?: { code?: string } })?.cause?.code;
+  return code ? TRANSIENT_DB_ERROR_CODES.has(code) : false;
+}
 
 async function getCachedProfile(userId: string) {
   const now = Date.now();
   const cached = _profileCache.get(userId);
   if (cached && cached.expiresAt > now) return cached.value;
 
-  const profile = await db.query.profiles.findFirst({ where: eq(profiles.id, userId) }) ?? null;
+  // Retry once on transient connection errors. The pooler occasionally drops
+  // idle connections; the next attempt usually succeeds with a fresh socket.
+  let profile: typeof profiles.$inferSelect | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      profile = (await db.query.profiles.findFirst({ where: eq(profiles.id, userId) })) ?? null;
+      break;
+    } catch (error) {
+      if (attempt === 0 && isTransientDbError(error)) continue;
+      throw error;
+    }
+  }
+
   _profileCache.set(userId, { value: profile, expiresAt: now + PROFILE_CACHE_TTL });
   return profile;
 }
@@ -145,6 +180,8 @@ export async function getInternalUser(request?: Request) {
   if (!userProfile) return null;
   if (!userProfile.isActive) return null;
   if (!INTERNAL_ROLES.includes(userProfile.role as any)) return null;
+  // Role changed since JWT was issued → force re-login so new permissions take effect
+  if (user.role !== userProfile.role) return null;
 
   return { user, profile: userProfile };
 }

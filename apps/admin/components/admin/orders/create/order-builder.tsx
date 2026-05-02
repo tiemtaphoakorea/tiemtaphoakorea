@@ -10,10 +10,12 @@ import type {
 import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+import { NumberInput } from "@workspace/ui/components/number-input";
+import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { Loader2, Save, ShoppingCart } from "lucide-react";
+import { Loader2, Save, ShoppingCart, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner"; // Assuming sonner or use-toast is used
@@ -35,6 +37,8 @@ export function OrderBuilder() {
   const [shippingName, setShippingName] = React.useState("");
   const [shippingPhone, setShippingPhone] = React.useState("");
   const [shippingAddress, setShippingAddress] = React.useState("");
+  const [advanceShipping, setAdvanceShipping] = React.useState(false);
+  const [shippingFee, setShippingFee] = React.useState(0);
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
@@ -61,6 +65,7 @@ export function OrderBuilder() {
         shippingName: shippingName.trim() || undefined,
         shippingPhone: shippingPhone.trim() || undefined,
         shippingAddress: shippingAddress.trim() || undefined,
+        shippingFee: advanceShipping && shippingFee > 0 ? shippingFee : undefined,
       };
 
       return adminClient.createOrder(payload);
@@ -118,6 +123,8 @@ export function OrderBuilder() {
     (acc, item) => acc + (item.customPrice ?? item.price) * item.quantity,
     0,
   );
+  const effectiveShippingFee = advanceShipping ? shippingFee : 0;
+  const total = subtotal + effectiveShippingFee;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 h-full">
@@ -182,35 +189,80 @@ export function OrderBuilder() {
           <CardHeader>
             <CardTitle className="text-lg">Địa chỉ giao hàng</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="ship-name">Người nhận</Label>
-              <Input
-                id="ship-name"
-                value={shippingName}
-                onChange={(e) => setShippingName(e.target.value)}
-                placeholder="Họ tên người nhận (tuỳ chọn)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ship-phone">SĐT nhận hàng</Label>
-              <Input
-                id="ship-phone"
-                value={shippingPhone}
-                onChange={(e) => setShippingPhone(e.target.value)}
-                placeholder="Số liên hệ khi giao (tuỳ chọn)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ship-address">Địa chỉ giao hàng</Label>
-              <Textarea
-                id="ship-address"
-                className="min-h-[80px]"
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)}
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
-              />
-            </div>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="ship-name">Người nhận</FieldLabel>
+                <Input
+                  id="ship-name"
+                  value={shippingName}
+                  onChange={(e) => setShippingName(e.target.value)}
+                  placeholder="Họ tên người nhận (tuỳ chọn)"
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ship-phone">SĐT nhận hàng</FieldLabel>
+                <Input
+                  id="ship-phone"
+                  value={shippingPhone}
+                  onChange={(e) => setShippingPhone(e.target.value)}
+                  placeholder="Số liên hệ khi giao (tuỳ chọn)"
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ship-address">Địa chỉ giao hàng</FieldLabel>
+                <Textarea
+                  id="ship-address"
+                  className="min-h-[80px]"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
+                />
+              </Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Phí ship
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Field>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <FieldLabel htmlFor="advance-shipping" className="cursor-pointer">
+                    Trả phí ship hộ khách
+                  </FieldLabel>
+                  <FieldDescription>
+                    Cộng vào tổng đơn để khách hoàn lại khi nhận hàng.
+                  </FieldDescription>
+                </div>
+                <Switch
+                  id="advance-shipping"
+                  checked={advanceShipping}
+                  onCheckedChange={(v) => {
+                    setAdvanceShipping(v);
+                    if (!v) setShippingFee(0);
+                  }}
+                />
+              </div>
+            </Field>
+            {advanceShipping && (
+              <Field className="mt-3">
+                <FieldLabel htmlFor="shipping-fee">Số tiền (VND)</FieldLabel>
+                <NumberInput
+                  id="shipping-fee"
+                  value={shippingFee}
+                  onValueChange={(values) => setShippingFee(values.floatValue ?? 0)}
+                  placeholder="0"
+                  decimalScale={0}
+                />
+              </Field>
+            )}
           </CardContent>
         </Card>
 
@@ -221,13 +273,18 @@ export function OrderBuilder() {
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tạm tính:</span>
-              <span>{formatCurrency(subtotal)}</span>
+              <span className="tabular-nums">{formatCurrency(subtotal)}</span>
             </div>
-            {/* Add tax/shipping here if needed in future */}
+            {effectiveShippingFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Phí ship trả hộ:</span>
+                <span className="tabular-nums">{formatCurrency(effectiveShippingFee)}</span>
+              </div>
+            )}
 
             <div className="flex justify-between font-bold text-lg pt-4 border-t">
               <span>Tổng cộng:</span>
-              <span className="text-primary">{formatCurrency(subtotal)}</span>
+              <span className="text-primary tabular-nums">{formatCurrency(total)}</span>
             </div>
 
             <Button

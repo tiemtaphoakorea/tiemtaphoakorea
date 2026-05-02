@@ -3,7 +3,12 @@
 import { useSyncExternalStore } from "react";
 import { ChatWidget } from "@/components/store/chat-widget";
 
-export function ChatWidgetInitializer() {
+interface ChatWidgetInitializerProps {
+  phoneNumber?: string;
+  messengerUrl?: string;
+}
+
+export function ChatWidgetInitializer({ phoneNumber, messengerUrl }: ChatWidgetInitializerProps) {
   const guestId = useSyncExternalStore(
     () => () => {},
     () => {
@@ -18,5 +23,12 @@ export function ChatWidgetInitializer() {
   );
 
   if (!guestId) return null;
-  return <ChatWidget guestId={guestId} title="Store Support" />;
+  return (
+    <ChatWidget
+      guestId={guestId}
+      title="Store Support"
+      phoneNumber={phoneNumber}
+      messengerUrl={messengerUrl}
+    />
+  );
 }

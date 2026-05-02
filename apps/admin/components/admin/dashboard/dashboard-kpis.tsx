@@ -24,7 +24,7 @@ export function DashboardKPIs() {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Doanh thu hôm nay
@@ -38,7 +38,7 @@ export function DashboardKPIs() {
           </p>
         </CardContent>
       </Card>
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Đơn hàng mới
@@ -52,7 +52,7 @@ export function DashboardKPIs() {
           </p>
         </CardContent>
       </Card>
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Khách hàng mới
@@ -66,7 +66,7 @@ export function DashboardKPIs() {
           </p>
         </CardContent>
       </Card>
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
             Cảnh báo kho

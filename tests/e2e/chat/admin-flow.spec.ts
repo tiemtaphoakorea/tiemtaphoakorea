@@ -1,4 +1,4 @@
-import { STOREFRONT_BASE_URL } from "../../../lib/constants";
+import { STOREFRONT_BASE_URL } from "@workspace/shared/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import { getChatRooms } from "../helpers/api";
 

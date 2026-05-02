@@ -11,8 +11,8 @@
  * Uses the real PGlite in-memory DB.
  */
 
+import { PAYMENT_STATUS } from "@workspace/shared/constants";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PAYMENT_STATUS } from "@/lib/constants";
 import { cancelOrder, createOrder, recordPayment } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 

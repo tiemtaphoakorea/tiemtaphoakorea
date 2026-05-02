@@ -5,12 +5,12 @@
  * (reserved -= qty) and does NOT touch on_hand. Uses real PGlite in-memory DB.
  */
 
+import { FULFILLMENT_STATUS } from "@workspace/shared/constants";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db/db.server";
 import { orderStatusHistory } from "@/db/schema/orders";
 import { productVariants } from "@/db/schema/products";
-import { FULFILLMENT_STATUS } from "@/lib/constants";
 import { cancelOrder, createOrder, stockOut } from "@/services/order.server";
 import { cleanOrderTest, type OrderTestFixture, seedOrderTest } from "./fixtures";
 

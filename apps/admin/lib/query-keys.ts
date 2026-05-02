@@ -2,6 +2,8 @@
  * Central React Query key definitions. Do not use ad-hoc string tuples in components.
  */
 
+export const QUERY_CACHE_PERSIST_KEY = "admin-query-cache";
+
 const QK = {
   adminRoot: "admin",
   profile: "profile",
@@ -103,14 +105,20 @@ export const queryKeys = {
     all: [QK.customersRoot] as const,
     stats: [QK.customersRoot, "stats"] as const,
     tierConfig: [QK.customersRoot, "tier-config"] as const,
-    list: (searchTerm: string, statusFilter: string, page: number, limit: number) =>
-      [QK.customersRoot, searchTerm, statusFilter, page, limit] as const,
+    list: (
+      searchTerm: string,
+      statusFilter: string,
+      page: number,
+      limit: number,
+      typeFilter?: string,
+    ) => [QK.customersRoot, searchTerm, statusFilter, page, limit, typeFilter] as const,
     search: (debouncedSearch: string) =>
       [QK.customersRoot, QK.customerSearchLeaf, debouncedSearch] as const,
   },
   categories: {
     all: [QK.categoriesRoot] as const,
-    list: (searchTerm: string) => [QK.categoriesRoot, searchTerm] as const,
+    list: (searchTerm: string, page: number, limit: number) =>
+      [QK.categoriesRoot, searchTerm, page, limit] as const,
   },
   orders: {
     list: (
@@ -133,7 +141,8 @@ export const queryKeys = {
   },
   suppliers: {
     all: [QK.suppliersRoot] as const,
-    list: (searchTerm: string) => [QK.suppliersRoot, searchTerm] as const,
+    list: (searchTerm: string, page: number, limit: number) =>
+      [QK.suppliersRoot, searchTerm, page, limit] as const,
   },
   banners: {
     all: ["banners"] as const,

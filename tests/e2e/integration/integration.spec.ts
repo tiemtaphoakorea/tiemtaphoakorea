@@ -1,4 +1,4 @@
-import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@/lib/constants";
+import { FULFILLMENT_STATUS, PAYMENT_STATUS } from "@workspace/shared/constants";
 import { expect, loginAsAdmin, test } from "../fixtures/auth";
 import {
   apiGet,

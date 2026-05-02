@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
-import { Manrope, Syne } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Be_Vietnam_Pro, Syne } from "next/font/google";
 import "@workspace/ui/styles/globals.css";
 import { Toaster } from "@workspace/ui/components/sonner";
 
-const manrope = Manrope({
-  subsets: ["latin"],
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-sans",
 });
 
@@ -19,6 +20,13 @@ export const metadata: Metadata = {
   description: "K-SMART Pure Beauty",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,7 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${syne.variable} antialiased`} suppressHydrationWarning>
+      <body
+        className={`${beVietnamPro.variable} ${syne.variable} antialiased`}
+        suppressHydrationWarning
+      >
         {children}
         <Toaster />
       </body>

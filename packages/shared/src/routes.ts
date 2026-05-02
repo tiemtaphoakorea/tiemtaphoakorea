@@ -8,10 +8,10 @@
 // ============================================================================
 export const PUBLIC_ROUTES = {
   HOME: "/",
-  PRODUCTS: "/products",
-  PRODUCTS_BY_CATEGORY: (category: string) => `/products?category=${encodeURIComponent(category)}`,
-  PRODUCTS_BY_SORT: (sort: string) => `/products?sort=${sort}`,
-  PRODUCT_DETAIL: (id: string | number) => `/products/${id}`,
+  PRODUCTS: "/product",
+  PRODUCTS_BY_CATEGORY: (category: string) => `/product?category=${encodeURIComponent(category)}`,
+  PRODUCTS_BY_SORT: (sort: string) => `/product?sort=${sort}`,
+  PRODUCT_DETAIL: (id: string | number) => `/product/${id}`,
 } as const;
 
 // ============================================================================
@@ -34,9 +34,8 @@ export const ADMIN_ROUTES = {
   ORDERS_NEW: "/orders/new",
   ORDER_DETAIL: (id: string | number) => `/orders/${id}`,
 
-  // Supplier Orders
-  SUPPLIER_ORDERS: "/supplier-orders",
-  SUPPLIER_ORDERS_NEW: "/supplier-orders-new",
+  // Inventory (đơn nhập hàng + biến động kho)
+  INVENTORY: "/inventory",
 
   // Suppliers
   SUPPLIERS: "/suppliers",
@@ -69,6 +68,9 @@ export const ADMIN_ROUTES = {
 
   // Site Settings (includes homepage banners + nav config)
   SETTINGS: "/settings",
+
+  // Design System reference (owner-only)
+  DESIGN_SYSTEM: "/design-system",
 } as const;
 
 // ============================================================================
@@ -80,6 +82,7 @@ export const ACCOUNT_ROUTES = {
   ORDERS: "/account/orders",
   ORDER_DETAIL: (id: string | number) => `/account/orders/${id}`,
   CHAT: "/account/chat",
+  WISHLIST: "/account/wishlist",
 } as const;
 
 // ============================================================================

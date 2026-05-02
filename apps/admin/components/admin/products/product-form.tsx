@@ -15,16 +15,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { NumberInput } from "@workspace/ui/components/number-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Switch } from "@workspace/ui/components/switch";
 import {
   Table,
@@ -108,7 +103,7 @@ type VariantGeneratorProps = {
 
 function VariantGenerator({ attributes, dispatch, onGenerate }: VariantGeneratorProps) {
   return (
-    <Card className="border-none shadow-inner ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
+    <Card className="border-none shadow-inner ring-1 ring-slate-200">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Wand2 className="h-5 w-5 text-purple-500" />
@@ -117,34 +112,30 @@ function VariantGenerator({ attributes, dispatch, onGenerate }: VariantGenerator
         <CardDescription>Nhập các thuộc tính để tạo nhanh biến thể.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase">
-              Thuộc tính 1: {attributes[0].name}
-            </Label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel>Thuộc tính 1: {attributes[0].name}</FieldLabel>
             <Input
               placeholder="Ví dụ: Đỏ, Xanh..."
               onChange={(e) =>
                 dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 0, valString: e.target.value })
               }
             />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase">
-              Thuộc tính 2: {attributes[1].name}
-            </Label>
+          </Field>
+          <Field>
+            <FieldLabel>Thuộc tính 2: {attributes[1].name}</FieldLabel>
             <Input
               placeholder="Ví dụ: S, M..."
               onChange={(e) =>
                 dispatch({ type: "UPDATE_ATTRIBUTE_VALUE", index: 1, valString: e.target.value })
               }
             />
-          </div>
+          </Field>
         </div>
         <Button
           type="button"
           onClick={onGenerate}
-          className="mt-2 w-full gap-2 border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
+          className="mt-2 w-full gap-2 border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100"
         >
           <RefreshCw className="h-4 w-4" /> Tạo danh sách biến thể
         </Button>
@@ -161,8 +152,8 @@ type VariantsTableProps = {
 
 function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
   return (
-    <Card className="gap-0 overflow-hidden border-none py-0 shadow-lg ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 bg-white py-4 dark:border-slate-800 dark:bg-slate-950">
+    <Card className="gap-0 overflow-hidden border-none py-0 shadow-lg ring-1 shadow-slate-200/50 ring-slate-200">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 bg-white py-4">
         <CardTitle className="text-lg">Danh sách biến thể ({variants.length})</CardTitle>
         <Button
           size="sm"
@@ -591,7 +582,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">
               {mode === "create" ? "Thêm sản phẩm mới" : "Chỉnh sửa sản phẩm"}
             </h1>
             {mode === "edit" && (
@@ -599,7 +590,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 {initialData?.name}
               </Badge>
             )}
-            <p className="mt-1 font-medium text-slate-500 dark:text-slate-400">
+            <p className="mt-1 font-medium text-slate-500">
               {mode === "create"
                 ? "Tạo sản phẩm và các biến thể của nó."
                 : "Cập nhật thông tin và biến thể sản phẩm."}
@@ -608,7 +599,10 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         </div>
       </div>
 
-      <form onSubmit={form.handleSubmit(onValidSubmit)} className="flex items-start gap-8">
+      <form
+        onSubmit={form.handleSubmit(onValidSubmit)}
+        className="flex flex-col items-start gap-6 lg:flex-row lg:gap-8"
+      >
         <div className="w-full flex-1 space-y-8">
           <Tabs defaultValue="info" className="w-full">
             <TabsList className="mb-6 w-full justify-start gap-1 rounded-lg border border-border p-1">
@@ -647,115 +641,109 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
 
             {/* Tab 1: General Info */}
             <TabsContent value="info" className="space-y-6">
-              <Card className="border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-                <CardContent className="space-y-6 p-6">
-                  <div className="grid gap-3">
-                    <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                      Tên sản phẩm *
-                    </Label>
-                    <Input
-                      {...form.register("name")}
-                      placeholder="Ví dụ: Áo Thun Premium Cotton"
-                      className="h-12 text-lg font-bold"
-                      aria-invalid={!!form.formState.errors.name}
-                      required
-                    />
-                    {form.formState.errors.name && (
-                      <p className="text-sm text-destructive">
-                        {form.formState.errors.name.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="grid gap-3">
-                      <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                        Danh mục
-                      </Label>
-                      <Controller
-                        name="categoryId"
-                        control={form.control}
-                        render={({ field }) => (
-                          <CategoryTreeSelector
-                            categories={categories}
-                            value={field.value ?? ""}
-                            onValueChange={field.onChange}
-                          />
-                        )}
+              <Card className="border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200">
+                <CardContent className="p-6">
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Tên sản phẩm *</FieldLabel>
+                      <Input
+                        {...form.register("name")}
+                        placeholder="Ví dụ: Áo Thun Premium Cotton"
+                        className="h-12 text-lg font-bold"
+                        aria-invalid={!!form.formState.errors.name}
+                        required
                       />
-                    </div>
-                    <div className="grid gap-3">
-                      <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                        Giá niêm yết (Base Price)
-                      </Label>
-                      <Controller
-                        name="basePrice"
-                        control={form.control}
-                        render={({ field }) => (
-                          <NumberInput
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
-                            className="h-11 font-mono font-bold"
-                            aria-invalid={!!form.formState.errors.basePrice}
-                          />
-                        )}
-                      />
-                      {form.formState.errors.basePrice && (
+                      {form.formState.errors.name && (
                         <p className="text-sm text-destructive">
-                          {form.formState.errors.basePrice.message}
+                          {form.formState.errors.name.message}
                         </p>
                       )}
-                      <p className="text-[10px] font-medium text-slate-500">
-                        Giá này sẽ được áp dụng làm mặc định cho các biến thể tạo mới.
-                      </p>
+                    </Field>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <Field>
+                        <FieldLabel>Danh mục</FieldLabel>
+                        <Controller
+                          name="categoryId"
+                          control={form.control}
+                          render={({ field }) => (
+                            <CategoryTreeSelector
+                              categories={categories}
+                              value={field.value ?? ""}
+                              onValueChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </Field>
+                      <Field>
+                        <FieldLabel>Giá niêm yết (Base Price)</FieldLabel>
+                        <Controller
+                          name="basePrice"
+                          control={form.control}
+                          render={({ field }) => (
+                            <NumberInput
+                              name={field.name}
+                              value={field.value}
+                              onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                              className="font-mono font-bold"
+                              aria-invalid={!!form.formState.errors.basePrice}
+                            />
+                          )}
+                        />
+                        {form.formState.errors.basePrice && (
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.basePrice.message}
+                          </p>
+                        )}
+                        <p className="text-[10px] font-medium text-slate-500">
+                          Giá này sẽ được áp dụng làm mặc định cho các biến thể tạo mới.
+                        </p>
+                      </Field>
                     </div>
-                  </div>
 
-                  <div className="grid gap-3">
-                    <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                      Mô tả sản phẩm
-                    </Label>
-                    <Textarea
-                      {...form.register("description")}
-                      placeholder="Thông tin chi tiết về sản phẩm..."
-                      className="min-h-[150px] resize-none text-base"
-                    />
-                  </div>
+                    <Field>
+                      <FieldLabel>Mô tả sản phẩm</FieldLabel>
+                      <Textarea
+                        {...form.register("description")}
+                        placeholder="Thông tin chi tiết về sản phẩm..."
+                        className="min-h-[150px] resize-none text-base"
+                      />
+                    </Field>
 
-                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-                    <Controller
-                      name="isActive"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                    <Label className="cursor-pointer font-bold">Hiển thị sản phẩm</Label>
-                  </div>
-
-                  <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
-                    <Controller
-                      name="isFeatured"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                    <div>
-                      <Label className="cursor-pointer font-bold">Bán chạy / Nổi bật</Label>
-                      <p className="text-[11px] text-slate-500">
-                        Hiển thị trong mục "Bán chạy" trên trang chủ
-                      </p>
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <Controller
+                        name="isActive"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        )}
+                      />
+                      <Label className="cursor-pointer font-bold">Hiển thị sản phẩm</Label>
                     </div>
-                  </div>
+
+                    <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                      <Controller
+                        name="isFeatured"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        )}
+                      />
+                      <div>
+                        <Label className="cursor-pointer font-bold">Bán chạy / Nổi bật</Label>
+                        <p className="text-[11px] text-slate-500">
+                          Hiển thị trong mục "Bán chạy" trên trang chủ
+                        </p>
+                      </div>
+                    </div>
+                  </FieldGroup>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* Tab 3: Media */}
             <TabsContent value="media">
-              <Card className="min-h-[300px] border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
+              <Card className="min-h-[300px] border-none shadow-lg ring-1 shadow-slate-200/50 ring-slate-200">
                 <CardHeader>
                   <CardTitle>Hình ảnh sản phẩm</CardTitle>
                   <CardDescription>
@@ -767,28 +755,23 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 <CardContent>
                   {variants.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="max-w-sm space-y-2">
-                        <Label className="text-xs font-black tracking-wider text-slate-500 uppercase">
-                          Chọn biến thể
-                        </Label>
+                      <Field className="max-w-sm">
+                        <FieldLabel>Chọn biến thể</FieldLabel>
                         <Select
                           value={selectedMediaVariantId}
                           onValueChange={(value) =>
                             dispatch({ type: "SET_SELECTED_MEDIA_VARIANT", payload: value })
                           }
+                          className="w-full"
+                          placeholder="Chọn biến thể"
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn biến thể" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {variants.map((variant) => (
-                              <SelectItem key={variant.id} value={variant.id}>
-                                {variant.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                          {variants.map((variant) => (
+                            <SelectOption key={variant.id} value={variant.id}>
+                              {variant.name}
+                            </SelectOption>
+                          ))}
                         </Select>
-                      </div>
+                      </Field>
                       <ImageUploader
                         value={selectedMediaVariant?.images ?? []}
                         onChange={(urls) => {
@@ -814,9 +797,9 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         </div>
 
         {/* Sidebar Actions */}
-        <div className="sticky top-6 w-[300px] shrink-0 space-y-4">
-          <Card className="border-none bg-white shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:bg-slate-950 dark:shadow-none dark:ring-slate-800">
-            <CardHeader className="border-b border-slate-100 pb-4 dark:border-slate-800">
+        <div className="w-full shrink-0 space-y-4 lg:sticky lg:top-6 lg:w-[300px]">
+          <Card className="border-none bg-white shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
+            <CardHeader className="border-b border-slate-100 pb-4">
               <CardTitle className="text-base">Hành động</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">

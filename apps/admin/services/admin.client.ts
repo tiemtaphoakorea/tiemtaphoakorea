@@ -182,7 +182,7 @@ export const adminClient = {
   },
 
   /**
-   * Fetch admin categories.
+   * Fetch admin categories (tree + flat, for dropdowns).
    */
   async getCategories(params?: { search?: string }) {
     return axios.get<{
@@ -192,6 +192,15 @@ export const adminClient = {
       categories: CategoryWithChildren[];
       flatCategories: CategoryWithChildren[];
     }>;
+  },
+
+  /**
+   * Paginated flat category list for the admin list view.
+   */
+  async getCategoriesList(params?: { search?: string; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<CategoryWithChildren>>(API_ENDPOINTS.ADMIN.CATEGORIES, {
+      params,
+    }) as unknown as Promise<PaginatedResponse<CategoryWithChildren>>;
   },
 
   /**
@@ -256,6 +265,7 @@ export const adminClient = {
     shippingName?: string;
     shippingPhone?: string;
     shippingAddress?: string;
+    shippingFee?: number;
   }) {
     return axios.post<{ success: boolean; order: Order }>(
       API_ENDPOINTS.ADMIN.ORDERS,
@@ -410,7 +420,13 @@ export const adminClient = {
     }>;
   },
 
-  async getCustomers(params?: { search?: string; status?: string; page?: number; limit?: number }) {
+  async getCustomers(params?: {
+    search?: string;
+    status?: string;
+    customerType?: string;
+    page?: number;
+    limit?: number;
+  }) {
     return axios.get<PaginatedResponse<CustomerStatsItem>>(API_ENDPOINTS.ADMIN.CUSTOMERS, {
       params,
     }) as unknown as Promise<PaginatedResponse<CustomerStatsItem>>;
@@ -470,12 +486,6 @@ export const adminClient = {
     ) as unknown as Promise<typeof data>;
   },
 
-  async resetCustomerPassword(id: string) {
-    return axios.post<{ newPassword: string }>(
-      `${API_ENDPOINTS.ADMIN.CUSTOMERS}/${id}/reset-password`,
-    ) as unknown as Promise<{ newPassword: string }>;
-  },
-
   /**
    * Create a new product.
    */
@@ -492,11 +502,29 @@ export const adminClient = {
     ) as unknown as Promise<{ product: any }>;
   },
 
+  async updateProduct(
+    id: string,
+    data: {
+      name: string;
+      slug?: string;
+      description?: string;
+      categoryId?: string | null;
+      basePrice?: number;
+      isActive?: boolean;
+      variants?: Array<{ id?: string; [key: string]: any }>;
+    },
+  ) {
+    return axios.put<{ success: boolean; product: any }>(
+      `${API_ENDPOINTS.ADMIN.PRODUCTS}/${id}`,
+      data,
+    ) as unknown as Promise<{ success: boolean; product: any }>;
+  },
+
   // Supplier Management
-  async getSuppliers(params?: { search?: string }) {
-    return axios.get<{ suppliers: Supplier[] }>(API_ENDPOINTS.ADMIN.SUPPLIERS, {
+  async getSuppliers(params?: { search?: string; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<Supplier>>(API_ENDPOINTS.ADMIN.SUPPLIERS, {
       params,
-    }) as unknown as Promise<{ suppliers: Supplier[] }>;
+    }) as unknown as Promise<PaginatedResponse<Supplier>>;
   },
 
   async createSupplier(data: CreateSupplierData) {

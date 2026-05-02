@@ -27,8 +27,8 @@ interface CustomerOrderHistoryTableProps {
 
 export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderHistoryTableProps) {
   return (
-    <Card className="h-full overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 dark:shadow-none dark:ring-slate-800">
-      <CardHeader className="border-b border-slate-100 bg-white px-8 py-6 dark:border-slate-800 dark:bg-slate-950">
+    <Card className="h-full overflow-hidden border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
+      <CardHeader className="border-b border-slate-100 bg-white px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-black tracking-tight uppercase">
@@ -75,13 +75,13 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="bg-white text-[10px] font-black tracking-tight uppercase dark:bg-slate-950"
+                        className="bg-white text-[10px] font-black tracking-tight uppercase"
                       >
                         {order.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="font-black text-slate-900 dark:text-white">
+                      <span className="font-black text-slate-900">
                         {formatCurrency(Number(order.total))}
                       </span>
                     </TableCell>
@@ -104,7 +104,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                 <TableRow>
                   <TableCell colSpan={5} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-900">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
                         <ShoppingBag className="h-8 w-8 text-slate-200" />
                       </div>
                       <p className="text-xs font-black tracking-widest text-slate-400 uppercase">

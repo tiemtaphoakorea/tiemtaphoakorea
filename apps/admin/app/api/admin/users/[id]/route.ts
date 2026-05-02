@@ -70,9 +70,10 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
     return NextResponse.json({ success: true, profile: updatedProfile });
   } catch (error: any) {
     console.error("Failed to update user:", error);
+    const isLastOwnerError = error?.message === "Phải có ít nhất 1 Owner trong hệ thống";
     return NextResponse.json(
-      { error: "Đã có lỗi xảy ra khi cập nhật nhân viên." },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { error: isLastOwnerError ? error.message : "Đã có lỗi xảy ra khi cập nhật nhân viên." },
+      { status: isLastOwnerError ? HTTP_STATUS.BAD_REQUEST : HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -90,9 +91,10 @@ export async function DELETE(request: NextRequest, { params }: IdRouteParams) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Failed to delete user:", error);
+    const isLastOwnerError = error?.message === "Phải có ít nhất 1 Owner trong hệ thống";
     return NextResponse.json(
-      { error: "Đã có lỗi xảy ra khi xóa nhân viên." },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      { error: isLastOwnerError ? error.message : "Đã có lỗi xảy ra khi xóa nhân viên." },
+      { status: isLastOwnerError ? HTTP_STATUS.BAD_REQUEST : HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

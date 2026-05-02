@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   FULFILLMENT_STATUS,
   INTERNAL_CHAT_ROLES,
@@ -6,7 +5,8 @@ import {
   PRODUCT_SORT,
   ROLE,
   VARIANT_ID_PREFIX,
-} from "@/lib/constants";
+} from "@workspace/shared/constants";
+import { describe, expect, it } from "vitest";
 
 describe("constants", () => {
   it("should expose role constants", () => {

@@ -4,21 +4,28 @@ import {
   SUPPLIER_CODE_PREFIX,
   SUPPLIER_ORDER_STATUS,
 } from "@workspace/shared/constants";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { supplierOrders } from "../schema/orders";
 import { suppliers } from "../schema/suppliers";
 
 /**
- * Get list of suppliers with search functionality
+ * Get paginated list of suppliers with search functionality
  */
 export async function getSuppliers({
   search = "",
   includeInactive = false,
+  page = PAGINATION_DEFAULT.PAGE,
+  limit = PAGINATION_DEFAULT.LIMIT,
 }: {
   search?: string;
   includeInactive?: boolean;
+  page?: number;
+  limit?: number;
 } = {}) {
+  const offset = (page - 1) * limit;
+
   const whereConditions: (any | undefined)[] = [];
 
   if (!includeInactive) {
@@ -36,29 +43,39 @@ export async function getSuppliers({
     );
   }
 
-  const supplierList = await db
-    .select({
-      id: suppliers.id,
-      code: suppliers.code,
-      name: suppliers.name,
-      phone: suppliers.phone,
-      email: suppliers.email,
-      address: suppliers.address,
-      paymentTerms: suppliers.paymentTerms,
-      note: suppliers.note,
-      isActive: suppliers.isActive,
-      createdAt: suppliers.createdAt,
-      updatedAt: suppliers.updatedAt,
-      // Count of supplier orders
-      totalOrders: sql<number>`count(${supplierOrders.id})`.mapWith(Number),
-    })
-    .from(suppliers)
-    .leftJoin(supplierOrders, eq(suppliers.id, supplierOrders.supplierId))
-    .where(and(...whereConditions.filter((c): c is any => !!c)))
-    .groupBy(suppliers.id)
-    .orderBy(desc(suppliers.createdAt));
+  const where = and(...whereConditions.filter((c): c is any => !!c));
 
-  return supplierList;
+  const [countRow, supplierList] = await Promise.all([
+    db
+      .select({ c: count(suppliers.id) })
+      .from(suppliers)
+      .where(where)
+      .then((r) => Number(r[0]?.c ?? 0)),
+    db
+      .select({
+        id: suppliers.id,
+        code: suppliers.code,
+        name: suppliers.name,
+        phone: suppliers.phone,
+        email: suppliers.email,
+        address: suppliers.address,
+        paymentTerms: suppliers.paymentTerms,
+        note: suppliers.note,
+        isActive: suppliers.isActive,
+        createdAt: suppliers.createdAt,
+        updatedAt: suppliers.updatedAt,
+        totalOrders: sql<number>`count(${supplierOrders.id})`.mapWith(Number),
+      })
+      .from(suppliers)
+      .leftJoin(supplierOrders, eq(suppliers.id, supplierOrders.supplierId))
+      .where(where)
+      .groupBy(suppliers.id)
+      .orderBy(desc(suppliers.createdAt))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  return { data: supplierList, metadata: calculateMetadata(countRow, page, limit) };
 }
 
 /**

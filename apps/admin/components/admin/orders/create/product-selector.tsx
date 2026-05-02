@@ -13,15 +13,8 @@ import {
   CommandList,
 } from "@workspace/ui/components/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronsUpDown, Loader2, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { useDebounce } from "use-debounce";
@@ -44,6 +37,9 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
 
   // Variant Selection State
   const [selectedVariantId, setSelectedVariantId] = React.useState<string>("");
+  const [openVariant, setOpenVariant] = React.useState(false);
+
+  const selectedVariant = selectedProduct?.variants.find((v) => v.id === selectedVariantId);
 
   // Fetch Products
   const { data, isLoading } = useQuery({
@@ -83,8 +79,6 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
     }
   };
 
-  const _selectedVariant = selectedProduct?.variants.find((v) => v.id === selectedVariantId);
-
   return (
     <div className="flex flex-col gap-4 p-4 border rounded-lg bg-muted/20">
       <div className="flex flex-col gap-1">
@@ -118,7 +112,7 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
                 <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
+            <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-[300px]" align="start">
               <Command shouldFilter={false}>
                 <CommandInput
                   placeholder="Tìm tên hoặc SKU..."
@@ -162,7 +156,7 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
                                   alt={product.name ?? "Product image"}
                                   width={32}
                                   height={32}
-                                  className="h-8 w-8 rounded-md object-cover border bg-muted"
+                                  className="h-8 w-8 rounded-md object-contain border bg-muted"
                                   sizes="32px"
                                   unoptimized
                                 />
@@ -184,55 +178,77 @@ export function ProductSelector({ onSelectVariant }: ProductSelectorProps) {
               </Command>
             </PopoverContent>
           </Popover>
-          {selectedProduct && (
-            <Button
-              variant="ghost"
-              className="h-auto p-0 text-xs text-muted-foreground hover:text-red-500 self-start"
-              onClick={() => {
-                setSelectedProduct(null);
-                setSelectedVariantId("");
-              }}
-            >
-              <X className="h-3 w-3 mr-1" /> Bỏ chọn
-            </Button>
-          )}
         </div>
 
         {/* Step 2: Select Variant */}
         <div className="flex min-w-0 flex-col gap-2">
-          <Select
-            value={selectedVariantId}
-            onValueChange={setSelectedVariantId}
-            disabled={!selectedProduct}
-          >
-            <SelectTrigger className="w-full min-w-0 max-w-full">
-              <SelectValue placeholder="Chọn phân loại / Biến thể..." />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {selectedProduct?.variants.map((variant) => {
-                const available = variant.onHand - variant.reserved;
-
-                return (
-                  <SelectItem key={variant.id} value={variant.id}>
-                    <div className="flex items-center justify-between w-full gap-4">
-                      <span className="font-medium">{variant.name || "Default"}</span>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{variant.sku}</span>
-                        <span>|</span>
-                        <span className={available > 0 ? "text-green-600" : "text-orange-600"}>
-                          {available > 0 ? `Còn lại: ${available}` : "Hết hàng"}
-                        </span>
-                        <span>|</span>
-                        <span className="font-semibold text-primary">
-                          {formatCurrency(Number(variant.price))}
-                        </span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <Popover open={openVariant} onOpenChange={(o) => selectedProduct && setOpenVariant(o)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openVariant}
+                aria-controls="variant-combobox-list"
+                disabled={!selectedProduct}
+                className="min-w-0 shrink justify-between gap-2 overflow-hidden w-full"
+              >
+                {selectedVariant ? (
+                  <span className="min-w-0 flex-1 truncate text-left font-medium">
+                    {selectedVariant.name || "Default"}
+                  </span>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">
+                    Chọn phân loại / Biến thể...
+                  </span>
+                )}
+                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-[300px]" align="start">
+              <Command>
+                <CommandInput placeholder="Tìm phân loại hoặc SKU..." />
+                <CommandList id="variant-combobox-list">
+                  <CommandEmpty>Không có phân loại.</CommandEmpty>
+                  <CommandGroup>
+                    {selectedProduct?.variants.map((variant) => {
+                      const available = variant.onHand - variant.reserved;
+                      return (
+                        <CommandItem
+                          key={variant.id}
+                          value={`${variant.name ?? "Default"} ${variant.sku}`}
+                          onSelect={() => {
+                            setSelectedVariantId(variant.id);
+                            setOpenVariant(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              selectedVariantId === variant.id ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <div className="flex min-w-0 flex-col overflow-hidden flex-1">
+                            <span className="truncate font-medium">
+                              {variant.name || "Default"}
+                            </span>
+                            <span className="truncate text-xs text-muted-foreground">
+                              {variant.sku} ·{" "}
+                              <span
+                                className={available > 0 ? "text-green-600" : "text-orange-600"}
+                              >
+                                {available > 0 ? `Còn ${available}` : "Hết hàng"}
+                              </span>{" "}
+                              · {formatCurrency(Number(variant.price))}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Step 3: Add Button */}

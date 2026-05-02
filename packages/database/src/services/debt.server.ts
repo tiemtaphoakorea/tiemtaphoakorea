@@ -60,7 +60,7 @@ export async function getDebtSummary({
     .$dynamic();
 
   if (minAgeDays != null) {
-    const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000).toISOString();
     query = query.where(sql`${subquery.oldestDebtDate} <= ${cutoff}`);
   }
 
@@ -72,7 +72,7 @@ export async function getDebtSummary({
     .from(subquery)
     .$dynamic();
   if (minAgeDays != null) {
-    const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000).toISOString();
     countQuery = countQuery.where(sql`${subquery.oldestDebtDate} <= ${cutoff}`);
   }
   const [countRow] = await countQuery;
