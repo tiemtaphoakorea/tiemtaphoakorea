@@ -47,7 +47,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         navCategories={navCategories}
         featuredByCategory={featuredByCategory}
       />
-      <main className="w-full flex-1 pb-36 md:pb-0">{children}</main>
+      <main className="w-full flex-1 pb-20 md:pb-0">{children}</main>
       <Footer footer={footerConfig ?? {}} social={socialConfig ?? {}} />
       <MobileBottomNav />
       <ChatWidgetInitializer

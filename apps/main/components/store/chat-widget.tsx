@@ -58,6 +58,7 @@ export function ChatWidget({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -67,6 +68,29 @@ export function ChatWidget({
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Hide FAB while scrolling down past 120px; re-show on scroll up.
+  // Material Design FAB pattern — keeps the last row of content reachable while reading.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y > 120 && dy > 5) setHidden(true);
+        else if (dy < -5) setHidden(false);
+        lastY = y;
+        raf = 0;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const sanitizedPhone = phoneNumber?.replace(/[^\d+]/g, "");
@@ -93,8 +117,10 @@ export function ChatWidget({
       {/* FAB stack */}
       <div
         className={cn(
-          "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 md:bottom-4",
+          "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 transition-all duration-200 ease-out md:bottom-4",
           isChatOpen && "hidden",
+          // Auto-hide while reading — only when speed-dial is collapsed.
+          hidden && !isOpen && "pointer-events-none translate-y-[140%] opacity-0",
         )}
       >
         {/* AI Chat — secondary FAB (top of stack). */}
