@@ -9,13 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeStorefrontHref } from "./normalize-storefront-href";
 
 const AUTOPLAY_INTERVAL = 5000;
-const HERO_FALLBACK_IMAGES = [
-  "/banners/k-smart-hero-fallback.png",
-  "/banners/k-smart-hero-skincare.png",
-  "/banners/k-smart-hero-snacks.png",
-  "/banners/k-smart-hero-homecare.png",
-  "/banners/k-smart-hero-wellness.png",
-];
+const HERO_FALLBACK_IMAGE = "/banners/k-smart-hero-fallback.png";
 
 const ACCENT_COLOR_MAP: Record<string, string> = {
   violet: "from-violet-600/80 via-black/40 to-transparent",
@@ -100,11 +94,7 @@ export function HeroBannerCarousel({
             aria-hidden={i !== current}
           >
             <Image
-              src={
-                s.imageUrl && !failedImageUrls[s.imageUrl]
-                  ? s.imageUrl
-                  : HERO_FALLBACK_IMAGES[i % HERO_FALLBACK_IMAGES.length]
-              }
+              src={s.imageUrl && !failedImageUrls[s.imageUrl] ? s.imageUrl : HERO_FALLBACK_IMAGE}
               alt={s.title}
               fill
               className="object-cover"

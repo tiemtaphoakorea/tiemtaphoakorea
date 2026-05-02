@@ -1,4 +1,3 @@
-import type { BannerSlide } from "@workspace/database/services/banner.server";
 import { getBanners } from "@workspace/database/services/banner.server";
 import { getBestSellers } from "@workspace/database/services/product.server";
 import { PRODUCT_SORT } from "@workspace/shared/constants";
@@ -6,60 +5,18 @@ import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroBannerCarousel } from "./hero-banner-carousel";
+import { HeroEmpty } from "./hero-empty";
+
+const HERO_HEIGHT_CLASS = "h-full min-h-[430px] lg:min-h-[480px] 2xl:aspect-[16/9] 2xl:min-h-0";
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
 
-const FALLBACK_SLIDES: BannerSlide[] = [
-  {
-    id: "fallback-default",
-    type: "custom",
-    categoryId: null,
-    categorySlug: null,
-    imageUrl: "/banners/k-smart-hero-fallback.png",
-    title: "NÂNG TẦM\nVẺ ĐẸP HÀN",
-    subtitle: "Ưu đãi đến 50% các dòng mỹ phẩm cao cấp. Nhập khẩu trực tiếp từ Seoul.",
-    badgeText: "Hàng chính hãng từ Seoul",
-    ctaLabel: "Mua ngay",
-    ctaUrl: PUBLIC_ROUTES.PRODUCTS,
-    ctaSecondaryLabel: "Khám phá thêm",
-    discountTag: "50%",
-    discountTagSub: "cho đơn đầu tiên",
-    accentColor: "violet",
-    isActive: true,
-    sortOrder: 0,
-    startsAt: null,
-    endsAt: null,
-  },
-  {
-    id: "fallback-skincare",
-    type: "custom",
-    categoryId: null,
-    categorySlug: null,
-    imageUrl: "/banners/k-smart-hero-skincare.png",
-    title: "CHĂM DA\nCHUẨN SEOUL",
-    subtitle: "Routine Hàn Quốc cho làn da căng khỏe, sáng mịn mỗi ngày.",
-    badgeText: "Skincare chính hãng",
-    ctaLabel: "Xem mỹ phẩm",
-    ctaUrl: PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY("personal-care"),
-    ctaSecondaryLabel: "Tư vấn routine",
-    discountTag: "35%",
-    discountTagSub: "skincare chọn lọc",
-    accentColor: "rose",
-    isActive: true,
-    sortOrder: 1,
-    startsAt: null,
-    endsAt: null,
-  },
-];
-
 export async function HeroThreeCol() {
-  const [bestSellers, bannersData] = await Promise.all([
+  const [bestSellers, slides] = await Promise.all([
     getBestSellers(8),
     getBanners().catch(() => []),
   ]);
-
-  const slides = bannersData.length > 0 ? bannersData : FALLBACK_SLIDES;
 
   const topProducts = bestSellers.map((p) => {
     const minPrice = p.minPrice ?? parseFloat(p.basePrice ?? "0");
@@ -123,10 +80,11 @@ export async function HeroThreeCol() {
           </aside>
 
           {/* Hero banner */}
-          <HeroBannerCarousel
-            slides={slides}
-            heightClass="h-full min-h-[430px] lg:min-h-[480px] 2xl:aspect-[16/9] 2xl:min-h-0"
-          />
+          {slides.length > 0 ? (
+            <HeroBannerCarousel slides={slides} heightClass={HERO_HEIGHT_CLASS} />
+          ) : (
+            <HeroEmpty heightClass={HERO_HEIGHT_CLASS} />
+          )}
         </div>
       </div>
     </section>
