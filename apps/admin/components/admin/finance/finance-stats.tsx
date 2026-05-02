@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { ArrowUpRight, DollarSign, PieChart, TrendingUp, Wallet } from "lucide-react";
+import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -24,81 +25,54 @@ export function FinanceStats({ date }: FinanceStatsProps) {
 
   if (!stats) return null;
 
+  const topItems: MetricStatItem[] = [
+    {
+      label: "Tổng doanh thu",
+      value: formatCurrency(stats.revenue || 0),
+      icon: <DollarSign className="h-3.5 w-3.5" />,
+      iconClassName: "bg-blue-500/10 text-blue-500",
+      trend: {
+        icon: <ArrowUpRight className="h-3 w-3" />,
+        text: "Ghi nhận theo đơn hoàn thành",
+        className: "text-muted-foreground",
+      },
+    },
+    {
+      label: "Giá vốn hàng bán",
+      value: formatCurrency(stats.cogs || 0),
+      icon: <PieChart className="h-3.5 w-3.5" />,
+      iconClassName: "bg-orange-500/10 text-orange-500",
+      trend: {
+        text: `${stats.orderCount || 0} đơn hàng đã bán`,
+        className: "text-muted-foreground",
+      },
+    },
+    {
+      label: "Chi phí vận hành",
+      value: formatCurrency(stats.expenses || 0),
+      icon: <Wallet className="h-3.5 w-3.5" />,
+      iconClassName: "bg-red-500/10 text-red-500",
+      trend: { text: "Chi phí cố định & biến phí", className: "text-muted-foreground" },
+    },
+    {
+      label: "Lợi nhuận ròng",
+      value: (
+        <span className={(stats.netProfit || 0) >= 0 ? "text-primary" : "text-red-500"}>
+          {formatCurrency(stats.netProfit || 0)}
+        </span>
+      ),
+      icon: <TrendingUp className="h-3.5 w-3.5" />,
+      iconClassName: "bg-primary/10 text-primary",
+      trend: {
+        text: `Margin ${stats.revenue ? ((stats.netProfit / stats.revenue) * 100).toFixed(1) : 0}%`,
+        className: (stats.netProfit || 0) >= 0 ? "text-emerald-500" : "text-red-500",
+      },
+    },
+  ];
+
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Revenue */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
-              Tổng doanh thu
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black">{formatCurrency(stats.revenue || 0)}</div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-              <ArrowUpRight className="h-3 w-3" />
-              <span>GHI NHẬN THEO ĐƠN HOÀN THÀNH</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* COGS */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
-              Giá vốn hàng bán
-            </CardTitle>
-            <PieChart className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black">{formatCurrency(stats.cogs || 0)}</div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-              <span>{stats.orderCount || 0} ĐƠN HÀNG ĐÃ BÁN</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Expenses */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
-              Chi phí vận hành
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black">{formatCurrency(stats.expenses || 0)}</div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-              <span>CHI PHÍ CỐ ĐỊNH & BIẾN PHÍ</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Net Profit */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black tracking-widest text-slate-500 uppercase">
-              Lợi nhuận ròng
-            </CardTitle>
-            <TrendingUp className="text-primary h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-black ${(stats.netProfit || 0) >= 0 ? "text-primary" : "text-red-500"}`}
-            >
-              {formatCurrency(stats.netProfit || 0)}
-            </div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-              <span data-testid="profit-margin">
-                {stats.revenue ? ((stats.netProfit / stats.revenue) * 100).toFixed(1) : 0}
-              </span>
-              <span>%</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricStatBar items={topItems} />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <Card className="flex flex-col gap-0 overflow-hidden rounded-2xl border-none bg-white py-0 shadow-sm ring-1 ring-slate-200 lg:col-span-2">

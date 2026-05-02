@@ -49,9 +49,9 @@ export function IndexCardRevenueMix({ data, isLoading }: IndexCardRevenueMixProp
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Tổng hợp doanh thu</div>
+          <div className="text-[15px] font-bold leading-tight">Cơ cấu danh mục</div>
           <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
-            Cơ cấu doanh thu theo danh mục
+            Tỷ trọng doanh thu theo danh mục
           </div>
         </div>
 

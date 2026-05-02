@@ -148,28 +148,21 @@ export function AnalyticsHeader({ data }: AnalyticsHeaderProps) {
   };
 
   return (
-    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Báo cáo & Thống kê</h1>
-        <p className="mt-1 font-medium text-slate-500">
-          Dữ liệu hiệu suất kinh doanh năm {currentYear}.
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <Button variant="outline" className="h-11 gap-2 border-slate-200 font-bold">
-          <Calendar className="h-4 w-4" />
-          {currentYear}
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-        <Button
-          onClick={handleExportPDF}
-          disabled={isExporting}
-          className="shadow-primary/20 h-11 gap-2 px-6 font-bold shadow-lg"
-        >
-          <Download className="h-5 w-5" />
-          {isExporting ? "Đang xuất..." : "Export PDF"}
-        </Button>
-      </div>
-    </div>
+    <>
+      <Button variant="outline" className="h-9 gap-2 border-slate-200 font-bold" size="sm">
+        <Calendar className="h-4 w-4" />
+        {currentYear}
+        <ChevronDown className="h-4 w-4 opacity-50" />
+      </Button>
+      <Button
+        onClick={handleExportPDF}
+        disabled={isExporting}
+        size="sm"
+        className="gap-2 px-4 font-bold"
+      >
+        <Download className="h-4 w-4" />
+        {isExporting ? "Đang xuất..." : "Export PDF"}
+      </Button>
+    </>
   );
 }

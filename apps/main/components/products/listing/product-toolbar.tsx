@@ -95,36 +95,34 @@ export function ProductToolbar({
         <div
           role="group"
           aria-label="Chế độ hiển thị"
-          className="flex items-center rounded-lg border border-border bg-muted p-0.5"
+          className="flex items-center rounded-[12px] border border-primary/30 bg-primary/5 p-0.5"
         >
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          <button
+            type="button"
             aria-label="Hiển thị dạng lưới"
             aria-pressed={viewMode === "grid"}
             onClick={() => onViewModeChange("grid")}
             className={
               viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
-                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
+                ? "size-9 rounded-[10px] inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
+                : "size-9 rounded-[10px] inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
             }
           >
             <LayoutGrid className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          </button>
+          <button
+            type="button"
             aria-label="Hiển thị dạng danh sách"
             aria-pressed={viewMode === "list"}
             onClick={() => onViewModeChange("list")}
             className={
               viewMode === "list"
-                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
-                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
+                ? "size-9 rounded-[10px] inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
+                : "size-9 rounded-[10px] inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
             }
           >
             <List className="size-4" />
-          </Button>
+          </button>
         </div>
 
         <Select value={activeSort} onValueChange={onSortChange}>

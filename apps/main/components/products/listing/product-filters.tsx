@@ -81,7 +81,7 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
   return (
     <>
       {/* Sidebar Filters - Desktop */}
-      <aside className="sticky top-24 hidden h-fit flex-col gap-4 lg:flex">
+      <aside className="sticky top-32 hidden h-fit flex-col gap-4 lg:flex">
         <Card className="gap-0 py-0">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-4">
             <CardTitle className="text-sm font-bold text-foreground">Bộ lọc</CardTitle>

@@ -2,9 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "@workspace/database/types/admin";
-import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import Link from "next/link";
+import { AnalyticsSubpageHeader } from "@/components/admin/analytics/analytics-subpage-header";
 import { InventoryStats } from "@/components/admin/analytics/inventory-stats";
 import { LowStockList } from "@/components/admin/analytics/low-stock-list";
 import { OutOfStockList } from "@/components/admin/analytics/out-of-stock-list";
@@ -30,15 +29,7 @@ export default function AnalyticsInventoryPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-10">
-      <div className="flex items-center gap-3">
-        <Link
-          href={ADMIN_ROUTES.ANALYTICS}
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ← Báo cáo
-        </Link>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900">Tồn kho</h1>
-      </div>
+      <AnalyticsSubpageHeader title="Tồn kho" />
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (

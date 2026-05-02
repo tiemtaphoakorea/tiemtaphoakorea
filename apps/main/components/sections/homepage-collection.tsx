@@ -1,10 +1,12 @@
 "use client";
 
+import type { ProductListItem } from "@workspace/database/services/product.server";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { type FeaturedProduct, ProductCard } from "@/components/products/product-card";
+import { ProductCard } from "@/components/products/product-card";
 import { GENERATED_ICONS, GeneratedIcon } from "./generated-icon";
+import { normalizeStorefrontHref } from "./normalize-storefront-href";
 
 export type HomepageCollectionData = {
   id: string;
@@ -12,7 +14,7 @@ export type HomepageCollectionData = {
   subtitle: string | null;
   iconKey: string | null;
   viewAllUrl: string | null;
-  products: FeaturedProduct[];
+  products: ProductListItem[];
 };
 
 type Props = {
@@ -27,7 +29,7 @@ export function HomepageCollection({ collection }: Props) {
       ? GENERATED_ICONS[collection.iconKey as keyof typeof GENERATED_ICONS]
       : null;
 
-  const viewAllHref = collection.viewAllUrl ?? PUBLIC_ROUTES.PRODUCTS;
+  const viewAllHref = normalizeStorefrontHref(collection.viewAllUrl ?? PUBLIC_ROUTES.PRODUCTS);
 
   return (
     <section className="bg-background py-6 md:py-9">
@@ -58,9 +60,14 @@ export function HomepageCollection({ collection }: Props) {
             <ArrowRight className="hidden h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 md:block" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-3.5 lg:grid-cols-4">
-          {collection.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-6 gap-3 overflow-x-auto px-6 pb-1 pt-1 md:gap-3.5 md:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-0">
+          {collection.products.map((product, i) => (
+            <div
+              key={product.id}
+              className="w-[64vw] max-w-[240px] shrink-0 snap-start md:w-[34vw] md:max-w-[280px] lg:w-auto lg:max-w-none"
+            >
+              <ProductCard product={product} priority={i < 4} />
+            </div>
           ))}
         </div>
       </div>

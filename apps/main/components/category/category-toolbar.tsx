@@ -99,7 +99,7 @@ export function CategoryToolbar({
         <div
           role="group"
           aria-label="Chế độ hiển thị"
-          className="flex items-center rounded-lg border border-border bg-muted p-0.5"
+          className="flex items-center rounded-[12px] border border-primary/30 bg-primary/5 p-0.5"
         >
           <Button
             variant="ghost"
@@ -109,8 +109,8 @@ export function CategoryToolbar({
             onClick={() => onViewModeChange("grid")}
             className={
               viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
-                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
+                ? "border-transparent bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground"
+                : "border-transparent bg-transparent text-muted-foreground hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
             }
           >
             <LayoutGrid className="size-4" />
@@ -123,8 +123,8 @@ export function CategoryToolbar({
             onClick={() => onViewModeChange("list")}
             className={
               viewMode === "list"
-                ? "bg-background text-foreground shadow-sm hover:bg-background border-transparent"
-                : "bg-transparent border-transparent text-muted-foreground hover:bg-transparent hover:border-transparent"
+                ? "border-transparent bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground"
+                : "border-transparent bg-transparent text-muted-foreground hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
             }
           >
             <List className="size-4" />

@@ -2,11 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { AnalyticsData } from "@workspace/database/types/admin";
-import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { AnalyticsHeader } from "@/components/admin/analytics/analytics-header";
 import { AnalyticsStats } from "@/components/admin/analytics/analytics-stats";
+import { AnalyticsSubpageHeader } from "@/components/admin/analytics/analytics-subpage-header";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -38,15 +37,15 @@ export default function AnalyticsOverviewPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-8 pb-10">
-        <div className="h-24 animate-pulse rounded-xl bg-gray-200" />
+        <div className="h-10 animate-pulse rounded-lg bg-muted" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-200" />
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
           ))}
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="h-80 animate-pulse rounded-xl bg-gray-200 lg:col-span-2" />
-          <div className="h-80 animate-pulse rounded-xl bg-gray-200" />
+          <div className="h-80 animate-pulse rounded-2xl bg-muted lg:col-span-2" />
+          <div className="h-80 animate-pulse rounded-2xl bg-muted" />
         </div>
       </div>
     );
@@ -64,15 +63,10 @@ export default function AnalyticsOverviewPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-10">
-      <div className="flex items-center gap-3">
-        <Link
-          href={ADMIN_ROUTES.ANALYTICS}
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ← Báo cáo
-        </Link>
-      </div>
-      <AnalyticsHeader data={data} />
+      <AnalyticsSubpageHeader
+        title="Báo cáo & Thống kê"
+        actions={<AnalyticsHeader data={data} />}
+      />
       <AnalyticsStats data={data} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <RevenueChart data={data.monthlyRevenue} />

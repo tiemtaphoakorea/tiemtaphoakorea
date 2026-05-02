@@ -39,7 +39,7 @@ export function IconSelect({ value, onChange }: Props) {
           title={key}
           aria-label={key}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* biome-ignore lint/performance/noImgElement: inline SVG data URL, next/image not applicable */}
           <img src={GENERATED_ICONS[key]} alt={key} className="h-full w-full object-contain" />
         </button>
       ))}

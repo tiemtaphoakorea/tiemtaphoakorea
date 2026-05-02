@@ -32,7 +32,8 @@ function SubCategoryChipsInner({
   const items: ProductFilterCategory[] = [{ name: "Tất cả", slug: "" }, ...categories];
 
   return (
-    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+    // Right-edge fade hints horizontal scrollability when content overflows on narrow viewports.
+    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)] [-webkit-mask-image:linear-gradient(to_right,black_calc(100%-32px),transparent)]">
       {items.map((cat) => {
         const active = activeCategorySlug === cat.slug;
         return (

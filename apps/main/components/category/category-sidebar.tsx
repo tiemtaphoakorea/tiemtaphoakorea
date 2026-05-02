@@ -20,7 +20,7 @@ import { useFilter } from "./category-filter-context";
 
 interface CategorySidebarProps {
   categories: ProductFilterCategory[];
-  activeCategorySlug: string;
+  activeCategorySlugs: string[];
   basePath: string;
   activeMinPrice?: number;
   activeMaxPrice?: number;
@@ -44,7 +44,7 @@ function getActivePriceRangeId(min?: number, max?: number) {
 
 function CategorySidebarInner({
   categories,
-  activeCategorySlug,
+  activeCategorySlugs,
   basePath,
   activeMinPrice,
   activeMaxPrice,
@@ -61,12 +61,18 @@ function CategorySidebarInner({
     router.push(query ? `${basePath}?${query}` : basePath);
   };
 
-  const handleCategoryChange = (slug: string) => {
+  const handleCategoryToggle = (slug: string) => {
     const params = buildParams();
-    if (!slug) params.delete("category");
-    else params.set("category", slug);
+    params.delete("category");
+    if (slug) {
+      // Toggle: if already selected remove it, otherwise add it alongside existing
+      const existing = activeCategorySlugs.filter((s) => s !== slug);
+      const next = activeCategorySlugs.includes(slug) ? existing : [...existing, slug];
+      for (const s of next) params.append("category", s);
+    }
+    // If slug is empty ("Tất cả"), clear all — params already deleted above
     pushParams(params);
-    setIsMobileOpen(false);
+    if (!slug) setIsMobileOpen(false);
   };
 
   const handlePriceRangeChange = (id: string) => {
@@ -90,7 +96,7 @@ function CategorySidebarInner({
   };
 
   const activePriceId = getActivePriceRangeId(activeMinPrice, activeMaxPrice);
-  const hasActiveFilter = Boolean(activeCategorySlug) || activePriceId !== "all";
+  const hasActiveFilter = activeCategorySlugs.length > 0 || activePriceId !== "all";
 
   const inner = (
     <div className="flex flex-col">
@@ -98,8 +104,8 @@ function CategorySidebarInner({
         <CategoryCheckbox
           id="cat-all"
           label="Tất cả sản phẩm"
-          checked={!activeCategorySlug}
-          onCheckedChange={() => handleCategoryChange("")}
+          checked={activeCategorySlugs.length === 0}
+          onCheckedChange={() => handleCategoryToggle("")}
         />
         {categories.map((cat) => (
           <CategoryCheckbox
@@ -107,8 +113,8 @@ function CategorySidebarInner({
             id={`cat-${cat.slug}`}
             label={cat.name}
             count={cat.children?.length}
-            checked={activeCategorySlug === cat.slug}
-            onCheckedChange={() => handleCategoryChange(cat.slug)}
+            checked={activeCategorySlugs.includes(cat.slug)}
+            onCheckedChange={() => handleCategoryToggle(cat.slug)}
           />
         ))}
       </SidebarSection>
@@ -139,7 +145,7 @@ function CategorySidebarInner({
 
   return (
     <>
-      <aside className="sticky top-24 hidden h-fit flex-col gap-4 lg:flex">
+      <aside className="sticky top-32 hidden h-fit flex-col gap-4 lg:flex">
         <Card className="gap-0 overflow-hidden py-0">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border px-5 py-4">
             <span className="text-sm font-bold text-foreground">Bộ lọc</span>

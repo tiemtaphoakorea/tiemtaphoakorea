@@ -3,8 +3,15 @@
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { FeaturedProduct } from "@/components/products/product-card";
 import { GENERATED_ICONS, GeneratedIcon } from "./generated-icon";
+
+type FlashProduct = {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+};
 
 type Tile = "a" | "b" | "c" | "d" | "e" | "f";
 
@@ -40,7 +47,7 @@ function useCountdown(initialSeconds: number) {
 }
 
 type Props = {
-  products: FeaturedProduct[];
+  products: FlashProduct[];
 };
 
 export function FlashSale({ products }: Props) {

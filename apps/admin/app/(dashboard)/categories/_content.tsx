@@ -89,7 +89,7 @@ export default function AdminCategories() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                {["Danh mục", "Slug URL", "Thứ tự", "Trạng thái", ""].map((h, i) => (
+                {["Danh mục", "Slug URL", "Thứ tự", "Sản phẩm", "Trạng thái", ""].map((h, i) => (
                   <TableHead
                     key={i}
                     className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -100,12 +100,12 @@ export default function AdminCategories() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categoriesQuery.isLoading && <TableLoadingRows cols={5} rows={6} />}
+              {categoriesQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
               {categoriesQuery.error && (
-                <TableErrorRow cols={5} message={String(categoriesQuery.error)} />
+                <TableErrorRow cols={6} message={String(categoriesQuery.error)} />
               )}
               {!categoriesQuery.isLoading && list.length === 0 && (
-                <TableEmptyRow cols={5} message="Chưa có danh mục" />
+                <TableEmptyRow cols={6} message="Chưa có danh mục" />
               )}
               {list.map((c) => (
                 <TableRow key={c.id}>
@@ -131,6 +131,9 @@ export default function AdminCategories() {
                   </TableCell>
                   <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
                     {c.displayOrder}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                    {c.productCount ?? 0}
                   </TableCell>
                   <TableCell className="px-4 py-2.5">
                     <StatusBadge type={c.isActive ? "active" : "inactive"} />
@@ -199,6 +202,11 @@ export default function AdminCategories() {
           if (!open) setDeleteTarget(null);
         }}
         title={`Xoá danh mục "${deleteTarget?.name}"?`}
+        description={
+          (deleteTarget?.productCount ?? 0) > 0
+            ? `${deleteTarget?.productCount} sản phẩm sẽ bị gỡ khỏi danh mục này.`
+            : undefined
+        }
         confirmLabel="Xoá"
         onConfirm={() => {
           if (deleteTarget) deleteMutation.mutate(deleteTarget.id);

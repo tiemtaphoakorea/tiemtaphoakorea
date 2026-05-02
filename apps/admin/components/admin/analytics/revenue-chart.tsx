@@ -24,7 +24,7 @@ interface RevenueChartProps {
 
 export function RevenueChart({ data }: RevenueChartProps) {
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200 lg:col-span-2">
+    <Card className="border border-border shadow-sm lg:col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

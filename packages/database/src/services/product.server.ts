@@ -411,6 +411,7 @@ export async function getProductBySlug(slug: string) {
 export async function getProductsForListing(params: {
   search?: string;
   categorySlug?: string;
+  categorySlugs?: string[];
   sort?: (typeof PRODUCT_SORT)[keyof typeof PRODUCT_SORT];
   page?: number;
   limit?: number;
@@ -422,6 +423,7 @@ export async function getProductsForListing(params: {
   const {
     search,
     categorySlug,
+    categorySlugs,
     sort = PRODUCT_SORT.LATEST,
     page = 1,
     limit = 12,
@@ -431,9 +433,12 @@ export async function getProductsForListing(params: {
     isNew,
   } = params;
 
-  // Resolve category filter: include the matched category AND all its descendants
+  // Normalize slugs: support both legacy single slug and new multi-slug array
+  const slugsToFilter = categorySlugs?.length ? categorySlugs : categorySlug ? [categorySlug] : [];
+
+  // Resolve category filter: include matched categories AND all their descendants
   let categoryIdFilter: ReturnType<typeof inArray> | undefined;
-  if (categorySlug) {
+  if (slugsToFilter.length > 0) {
     const allCats = await db
       .select({
         id: categories.id,
@@ -441,28 +446,22 @@ export async function getProductsForListing(params: {
         parentId: categories.parentId,
       })
       .from(categories);
-    const root = allCats.find((c) => c.slug === categorySlug);
-    console.log(
-      "[getProductsForListing] categorySlug:",
-      categorySlug,
-      "root:",
-      root?.id,
-      "allCats slugs:",
-      allCats.map((c) => c.slug),
-    );
-    if (!root) {
-      return { products: [], total: 0 };
-    }
+
     const ids: string[] = [];
-    const queue = [root.id];
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      ids.push(id);
-      for (const c of allCats) {
-        if (c.parentId === id) queue.push(c.id);
+    for (const slug of slugsToFilter) {
+      const root = allCats.find((c) => c.slug === slug);
+      if (!root) continue;
+      const queue = [root.id];
+      while (queue.length > 0) {
+        const id = queue.shift()!;
+        ids.push(id);
+        for (const c of allCats) {
+          if (c.parentId === id) queue.push(c.id);
+        }
       }
     }
-    console.log("[getProductsForListing] resolved category ids:", ids);
+
+    if (ids.length === 0) return { products: [], total: 0 };
     categoryIdFilter = inArray(products.categoryId, ids);
   }
 
@@ -540,19 +539,24 @@ export async function getProductsForListing(params: {
     .offset((page - 1) * limit);
 
   const countQuery = db
-    .select({ id: products.id })
-    .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
-    .leftJoin(productVariants, eq(products.id, productVariants.productId))
-    .where(filters)
-    .groupBy(products.id, categories.name)
-    .having(havingClauses);
+    .select({ count: sql<number>`count(*)` })
+    .from(
+      db
+        .select({ id: products.id })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(productVariants, eq(products.id, productVariants.productId))
+        .where(filters)
+        .groupBy(products.id, categories.name)
+        .having(havingClauses)
+        .as("filtered"),
+    );
 
   const [productsList, countResult] = await Promise.all([query, countQuery]);
 
   return {
     products: productsList,
-    total: countResult.length,
+    total: Number(countResult[0]?.count ?? 0),
   };
 }
 
@@ -592,6 +596,90 @@ export async function getFeaturedProducts(limit = FEATURED_PRODUCTS_LIMIT_DEFAUL
     .orderBy(desc(products.updatedAt))
     .limit(limit);
 }
+
+/**
+ * Get featured (or fallback newest) products for each given root category.
+ * Scopes products to category + descendants. Featured-first, then newest.
+ * Returns map keyed by root category id.
+ */
+export async function getFeaturedProductsByRootCategoryIds(
+  rootCategoryIds: string[],
+  limitPerRoot = 6,
+) {
+  if (rootCategoryIds.length === 0) return {} as Record<string, ProductCardItem[]>;
+
+  const allCats = await db
+    .select({ id: categories.id, parentId: categories.parentId })
+    .from(categories);
+
+  const childrenByParent = new Map<string, string[]>();
+  for (const c of allCats) {
+    if (!c.parentId) continue;
+    const list = childrenByParent.get(c.parentId) ?? [];
+    list.push(c.id);
+    childrenByParent.set(c.parentId, list);
+  }
+
+  const rootForCategory = new Map<string, string>();
+  const allDescendantIds: string[] = [];
+  for (const rootId of rootCategoryIds) {
+    rootForCategory.set(rootId, rootId);
+    allDescendantIds.push(rootId);
+    const queue = [rootId];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      for (const childId of childrenByParent.get(id) ?? []) {
+        rootForCategory.set(childId, rootId);
+        allDescendantIds.push(childId);
+        queue.push(childId);
+      }
+    }
+  }
+
+  if (allDescendantIds.length === 0) return {} as Record<string, ProductCardItem[]>;
+
+  const rows = await db
+    .select({
+      ...PRODUCT_CARD_SELECT(products),
+      categoryId: products.categoryId,
+    })
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(productVariants, eq(products.id, productVariants.productId))
+    .where(and(eq(products.isActive, true), inArray(products.categoryId, allDescendantIds)))
+    .groupBy(products.id, categories.name)
+    .orderBy(desc(products.isFeatured), desc(products.updatedAt));
+
+  const result: Record<string, ProductCardItem[]> = {};
+  for (const row of rows) {
+    if (!row.categoryId) continue;
+    const rootId = rootForCategory.get(row.categoryId);
+    if (!rootId) continue;
+    if (!result[rootId]) result[rootId] = [];
+    const bucket = result[rootId];
+    if (bucket.length < limitPerRoot) {
+      const { categoryId: _omit, ...card } = row;
+      bucket.push(card);
+    }
+  }
+
+  return result;
+}
+
+export type ProductCardItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  isActive: boolean | null;
+  isFeatured: boolean | null;
+  categoryName: string | null;
+  basePrice: string | null;
+  totalStock: number;
+  minPrice: number;
+  maxPrice: number;
+  thumbnail: string;
+};
 
 /**
  * Get "Hàng mới" — products created within the last N days (default 30)

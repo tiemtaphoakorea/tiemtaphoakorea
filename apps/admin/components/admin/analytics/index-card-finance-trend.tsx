@@ -82,9 +82,9 @@ export function IndexCardFinanceTrend() {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Tài chính & Doanh thu</div>
+          <div className="text-[15px] font-bold leading-tight">Lợi nhuận & Tài chính</div>
           <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
-            Lợi nhuận và doanh thu 30 ngày qua
+            Xu hướng margin và doanh thu 30 ngày
           </div>
         </div>
 

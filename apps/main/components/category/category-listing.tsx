@@ -8,7 +8,7 @@ import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { ProductPagination } from "@/components/products/listing/product-pagination";
-import { CategoryProductCard } from "./category-product-card";
+import { ProductCard } from "@/components/products/product-card";
 import { CategoryToolbar } from "./category-toolbar";
 
 const PRODUCT_SORT_SET = new Set<string>(Object.values(PRODUCT_SORT));
@@ -37,8 +37,8 @@ interface CategoryListingProps {
   pageSize: number;
   currentPage: number;
   activeSort: string;
-  activeCategorySlug: string;
-  activeCategoryName: string;
+  activeCategorySlugs: string[];
+  activeCategories: { slug: string; name: string }[];
   basePath: string;
   activeMinPrice?: number;
   activeMaxPrice?: number;
@@ -50,8 +50,8 @@ function CategoryListingInner({
   pageSize,
   currentPage,
   activeSort,
-  activeCategorySlug,
-  activeCategoryName,
+  activeCategorySlugs,
+  activeCategories,
   basePath,
   activeMinPrice,
   activeMaxPrice,
@@ -77,9 +77,12 @@ function CategoryListingInner({
     pushParams(params);
   };
 
-  const handleClearCategory = () => {
+  const handleRemoveCategory = (slug: string) => {
     const params = buildParams();
     params.delete("category");
+    for (const s of activeCategorySlugs.filter((c) => c !== slug)) {
+      params.append("category", s);
+    }
     params.delete("page");
     pushParams(params);
   };
@@ -95,9 +98,11 @@ function CategoryListingInner({
   const priceRangeLabel = getPriceRangeLabel(activeMinPrice, activeMaxPrice);
 
   const activeFilters = [
-    ...(activeCategoryName
-      ? [{ key: "category", label: activeCategoryName, onRemove: handleClearCategory }]
-      : []),
+    ...activeCategories.map((cat) => ({
+      key: `category-${cat.slug}`,
+      label: cat.name,
+      onRemove: () => handleRemoveCategory(cat.slug),
+    })),
     ...(priceRangeLabel
       ? [{ key: "price", label: priceRangeLabel, onRemove: handleClearPriceRange }]
       : []),
@@ -159,7 +164,13 @@ function CategoryListingInner({
         }
       >
         {products.map((product) => (
-          <CategoryProductCard key={product.id} product={product} variant={viewMode} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            layout={viewMode}
+            showStockBar
+            showWishlist
+          />
         ))}
       </div>
 

@@ -158,4 +158,7 @@ export const queryKeys = {
       [QK.debtsRoot, search, minAgeDays, page, limit] as const,
   },
   customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
+  settings: {
+    shopInfo: ["settings", "shop-info"] as const,
+  },
 } as const;

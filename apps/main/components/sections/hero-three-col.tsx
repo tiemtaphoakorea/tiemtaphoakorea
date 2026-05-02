@@ -122,7 +122,10 @@ export async function HeroThreeCol() {
           </aside>
 
           {/* Hero banner */}
-          <HeroBannerCarousel slides={slides} heightClass="aspect-[16/9]" />
+          <HeroBannerCarousel
+            slides={slides}
+            heightClass="h-full min-h-[430px] lg:min-h-[480px] 2xl:aspect-[16/9] 2xl:min-h-0"
+          />
         </div>
       </div>
     </section>

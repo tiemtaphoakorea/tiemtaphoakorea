@@ -23,7 +23,9 @@ const TABS = [
     label: "Tài khoản",
     icon: User,
     href: ACCOUNT_ROUTES.ROOT,
-    match: (p: string) => p === "/account" || p.startsWith("/account"),
+    // Exclude /account/wishlist — it's owned by the "Yêu thích" tab.
+    match: (p: string) =>
+      p === "/account" || (p.startsWith("/account/") && !p.startsWith("/account/wishlist")),
   },
 ] as const;
 

@@ -25,21 +25,16 @@ import { CollectionRow, type CollectionRowData } from "./collection-row";
 type Props = {
   collections: CollectionRowData[];
   isLoading: boolean;
+  editingId: string | null | undefined;
   onEdit: (id: string) => void;
+  onCloseEdit: () => void;
 };
 
-export function CollectionList({ collections, isLoading, onEdit }: Props) {
-  const queryClient = useQueryClient();
-  const [items, setItems] = useState<CollectionRowData[]>(collections);
-  const [deleteTarget, setDeleteTarget] = useState<CollectionRowData | null>(null);
+type ListCache = { collections: CollectionRowData[] };
 
-  // Keep local order in sync with server data when content changes outside of drag
-  if (
-    items.length !== collections.length ||
-    items.some((item, i) => item.id !== collections[i]?.id)
-  ) {
-    setItems(collections);
-  }
+export function CollectionList({ collections, isLoading, editingId, onEdit, onCloseEdit }: Props) {
+  const queryClient = useQueryClient();
+  const [deleteTarget, setDeleteTarget] = useState<CollectionRowData | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -48,7 +43,8 @@ export function CollectionList({ collections, isLoading, onEdit }: Props) {
 
   const reorderMutation = useMutation({
     mutationFn: (ids: string[]) => adminClient.reorderHomepageCollections(ids),
-    onSuccess: () => {
+    // Roll back to server truth on either outcome
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.homepageCollections.all });
     },
   });
@@ -56,14 +52,14 @@ export function CollectionList({ collections, isLoading, onEdit }: Props) {
   const toggleMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       adminClient.updateHomepageCollection(id, { isActive }),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.homepageCollections.all });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminClient.deleteHomepageCollection(id),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.homepageCollections.all });
       setDeleteTarget(null);
     },
@@ -72,41 +68,65 @@ export function CollectionList({ collections, isLoading, onEdit }: Props) {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIdx = items.findIndex((i) => i.id === active.id);
-    const newIdx = items.findIndex((i) => i.id === over.id);
-    const next = arrayMove(items, oldIdx, newIdx);
-    setItems(next);
+    const oldIdx = collections.findIndex((i) => i.id === active.id);
+    const newIdx = collections.findIndex((i) => i.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+
+    const next = arrayMove(collections, oldIdx, newIdx);
+    // Optimistic write to the React Query cache so UI reflects the new order immediately
+    queryClient.setQueryData<ListCache>(queryKeys.homepageCollections.list, (prev) =>
+      prev ? { ...prev, collections: next } : prev,
+    );
     reorderMutation.mutate(next.map((c) => c.id));
   }
 
-  if (isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Đang tải...</div>;
+  function handleToggle(id: string, isActive: boolean) {
+    queryClient.setQueryData<ListCache>(queryKeys.homepageCollections.list, (prev) =>
+      prev
+        ? {
+            ...prev,
+            collections: prev.collections.map((c) => (c.id === id ? { ...c, isActive } : c)),
+          }
+        : prev,
+    );
+    toggleMutation.mutate({ id, isActive });
   }
 
-  if (items.length === 0) {
-    return <div className="p-6 text-sm text-muted-foreground">Chưa có collection nào.</div>;
+  if (isLoading || collections.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+        {isLoading ? "Đang tải..." : "Chưa có collection nào."}
+      </div>
+    );
   }
 
   return (
     <>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          {items.map((c) => (
-            <CollectionRow
-              key={c.id}
-              collection={c}
-              onEdit={() => onEdit(c.id)}
-              onDelete={() => setDeleteTarget(c)}
-              onToggle={(isActive) => toggleMutation.mutate({ id: c.id, isActive })}
-            />
-          ))}
+        <SortableContext
+          items={collections.map((i) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-2">
+            {collections.map((c) => (
+              <CollectionRow
+                key={c.id}
+                collection={c}
+                isEditing={editingId === c.id}
+                onEdit={() => onEdit(c.id)}
+                onCloseEdit={onCloseEdit}
+                onDelete={() => setDeleteTarget(c)}
+                onToggle={(isActive) => handleToggle(c.id, isActive)}
+              />
+            ))}
+          </div>
         </SortableContext>
       </DndContext>
 
-      {/* ConfirmDialog has no description/onCancel — use onOpenChange to close */}
       <ConfirmDialog
         open={!!deleteTarget}
-        title={`Xoá "${deleteTarget?.title}"?`}
+        title={`Xoá collection "${deleteTarget?.title}"?`}
+        description="Hành động này không thể hoàn tác. Collection sẽ bị xoá khỏi trang chủ."
         confirmLabel="Xoá"
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}

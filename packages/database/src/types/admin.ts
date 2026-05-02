@@ -80,6 +80,7 @@ export interface Category {
 export interface CategoryWithChildren extends Category {
   children?: CategoryWithChildren[];
   depth?: number; // Added by flattened view in some cases
+  productCount?: number;
 }
 
 export interface NewCategory {
