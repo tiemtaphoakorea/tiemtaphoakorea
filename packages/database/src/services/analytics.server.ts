@@ -64,18 +64,19 @@ export async function getAnalyticsData() {
       monthlyRevenue = [];
     }
 
-    // 3. Category Distribution
+    // 3. Category Distribution (sales count + revenue)
     const categorySales = await db
       .select({
         category: sql<string>`coalesce(${categories.name}, 'Uncategorized')`,
         sales: sql<number>`count(${orderItems.id})`.mapWith(Number),
+        revenue: sql<number>`coalesce(sum(${orderItems.lineTotal}), 0)`.mapWith(Number),
       })
       .from(orderItems)
       .innerJoin(productVariants, eq(orderItems.variantId, productVariants.id))
       .innerJoin(products, eq(productVariants.productId, products.id))
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .groupBy(sql`coalesce(${categories.name}, 'Uncategorized')`)
-      .orderBy(desc(sql`count(${orderItems.id})`));
+      .orderBy(desc(sql`sum(${orderItems.lineTotal})`));
 
     // 4. Top Products
     const topProducts = await db

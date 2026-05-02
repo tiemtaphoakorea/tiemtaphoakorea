@@ -390,6 +390,7 @@ export interface AnalyticsMonthlyRevenue {
 export interface AnalyticsCategorySale {
   category: string;
   sales: number;
+  revenue: number;
   color?: string;
 }
 
