@@ -725,7 +725,7 @@ export const adminClient = {
         daysWindow: number | null;
         productCount: number;
       }>;
-    }>("/api/admin/homepage-collections") as unknown as Promise<{
+    }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS) as unknown as Promise<{
       collections: Array<{
         id: string;
         type: "manual" | "best_sellers" | "new_arrivals" | "by_category";
@@ -745,38 +745,38 @@ export const adminClient = {
 
   async getHomepageCollection(id: string) {
     return axios.get<{ collection: Record<string, unknown> }>(
-      `/api/admin/homepage-collections/${id}`,
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
     ) as unknown as Promise<{ collection: Record<string, unknown> }>;
   },
 
   async createHomepageCollection(payload: Record<string, unknown>) {
     return axios.post<{ success: boolean; collection: Record<string, unknown> }>(
-      "/api/admin/homepage-collections",
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS,
       payload,
     ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
   },
 
   async updateHomepageCollection(id: string, payload: Record<string, unknown>) {
     return axios.patch<{ success: boolean; collection: Record<string, unknown> }>(
-      `/api/admin/homepage-collections/${id}`,
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
       payload,
     ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
   },
 
   async deleteHomepageCollection(id: string) {
     return axios.delete<{ success: boolean }>(
-      `/api/admin/homepage-collections/${id}`,
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
     ) as unknown as Promise<{ success: boolean }>;
   },
 
   async reorderHomepageCollections(ids: string[]) {
-    return axios.post<{ success: boolean }>("/api/admin/homepage-collections/reorder", {
+    return axios.post<{ success: boolean }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS_REORDER, {
       ids,
     }) as unknown as Promise<{ success: boolean }>;
   },
 
   async setHomepageCollectionProducts(id: string, productIds: string[]) {
-    return axios.put<{ success: boolean }>(`/api/admin/homepage-collections/${id}/products`, {
+    return axios.put<{ success: boolean }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_PRODUCTS(id), {
       productIds,
     }) as unknown as Promise<{ success: boolean }>;
   },
