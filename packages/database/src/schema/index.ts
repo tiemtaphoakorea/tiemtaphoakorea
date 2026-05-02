@@ -6,6 +6,7 @@ export * from "./expenses";
 export * from "./homepage-collections";
 export * from "./idempotency";
 export * from "./inventory";
+export * from "./newsletter";
 export * from "./notifications";
 export * from "./orders";
 export * from "./products";
