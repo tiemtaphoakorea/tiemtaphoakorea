@@ -109,22 +109,44 @@ export function IndexCardFinanceTrend() {
                 {deltaPt.toFixed(1)}pt vs T{lastMonth.month}
               </span>
             </div>
+            <div className="flex items-center gap-3 text-[10px] font-semibold tracking-wide text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6366F1]" />
+                Doanh thu
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                Lợi nhuận gộp
+              </span>
+            </div>
             <div className="h-20 w-full">
               {daily.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={daily} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                     <defs>
-                      <linearGradient id="financeTrendFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <linearGradient id="financeRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366F1" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="financeProfitFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.45} />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="hsl(var(--primary))"
+                      stroke="#6366F1"
                       strokeWidth={2}
-                      fill="url(#financeTrendFill)"
+                      fill="url(#financeRevenueFill)"
+                      isAnimationActive={false}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="grossProfit"
+                      stroke="#10B981"
+                      strokeWidth={2}
+                      fill="url(#financeProfitFill)"
                       isAnimationActive={false}
                     />
                   </AreaChart>
