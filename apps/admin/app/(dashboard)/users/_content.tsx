@@ -6,6 +6,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { PaginationControls } from "@workspace/ui/components/pagination-controls";
 import {
   Table,
   TableBody,
@@ -27,7 +28,8 @@ import { UserDrawer } from "@/components/admin/shared/user-drawer";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-const PAGE_LIMIT = 25;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 25;
 
 const ROLE_LABELS: Record<string, { label: string; tone: "blue" | "indigo" | "amber" | "gray" }> = {
   owner: { label: "Owner", tone: "amber" },
@@ -41,14 +43,16 @@ export default function AdminStaff() {
   const [debouncedQuery] = useDebounce(query, 300);
   const [roleFilter, setRoleFilter] = useState("all");
   const [editing, setEditing] = useState<AdminProfile | null | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const usersQuery = useQuery({
-    queryKey: queryKeys.users.list(debouncedQuery, 1, PAGE_LIMIT),
+    queryKey: queryKeys.users.list(debouncedQuery, page, pageSize),
     queryFn: async () =>
       await adminClient.getUsers({
         search: debouncedQuery || undefined,
-        page: 1,
-        limit: PAGE_LIMIT,
+        page,
+        limit: pageSize,
       }),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
@@ -57,6 +61,7 @@ export default function AdminStaff() {
   const list: AdminProfile[] = usersQuery.data?.data ?? [];
   const filtered = roleFilter === "all" ? list : list.filter((u) => u.role === roleFilter);
   const total = usersQuery.data?.metadata.total ?? 0;
+  const totalPages = usersQuery.data?.metadata.totalPages ?? 1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,14 +70,20 @@ export default function AdminStaff() {
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder="Tìm nhân viên..."
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
           />
         </div>
         <Select
           value={roleFilter}
-          onValueChange={setRoleFilter}
+          onValueChange={(v) => {
+            setRoleFilter(v);
+            setPage(1);
+          }}
           className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]"
         >
           <SelectOption value="all">Tất cả vai trò</SelectOption>
@@ -80,9 +91,6 @@ export default function AdminStaff() {
           <SelectOption value="manager">Manager</SelectOption>
           <SelectOption value="staff">Staff</SelectOption>
         </Select>
-        <span className="text-xs text-muted-foreground">
-          {usersQuery.isLoading ? "Đang tải..." : `${total} người dùng`}
-        </span>
         <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setEditing(null)}>
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Thêm nhân viên
@@ -153,6 +161,30 @@ export default function AdminStaff() {
               })}
             </TableBody>
           </Table>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Hiển thị</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+              className="h-8 w-[72px] text-[13px]"
+            >
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <SelectOption key={s} value={String(s)}>
+                  {s}
+                </SelectOption>
+              ))}
+            </Select>
+            <span>
+              / trang ·{" "}
+              {usersQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} người dùng`}
+            </span>
+          </div>
+          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Card>
 

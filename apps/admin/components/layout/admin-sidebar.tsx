@@ -22,6 +22,7 @@ import {
   CreditCard,
   FolderOpen,
   LayoutDashboard,
+  LogOut,
   type LucideIcon,
   MessageCircle,
   Package,
@@ -32,7 +33,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -138,8 +139,16 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
+  const categoryCount = useQuery({
+    queryKey: queryKeys.categories.list("", 1, 1),
+    queryFn: () => adminClient.getCategoriesList({ page: 1, limit: 1 }),
+    enabled,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
 
   const totalProducts = productCount.data?.metadata?.total ?? 0;
+  const totalCategories = categoryCount.data?.metadata?.total ?? 0;
   const pendingCount = orderStats.data?.pending ?? 0;
   const overdueCount = overdueDebts.data?.metadata?.total ?? 0;
   const unreadCount =
@@ -148,6 +157,8 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
   return {
     [ADMIN_ROUTES.PRODUCTS]:
       totalProducts > 0 ? { text: `${totalProducts} SP`, tone: "indigo" } : undefined,
+    [ADMIN_ROUTES.CATEGORIES]:
+      totalCategories > 0 ? { text: `${totalCategories} DM`, tone: "indigo" } : undefined,
     [ADMIN_ROUTES.ORDERS]:
       pendingCount > 0 ? { text: `${pendingCount} mới`, tone: "amber" } : undefined,
     [ADMIN_ROUTES.DEBTS]:
@@ -162,12 +173,18 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
 export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
   "use no memo";
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const badges = useSidebarBadges(!!user);
+
+  async function handleLogout() {
+    await adminClient.logout();
+    router.push(ADMIN_ROUTES.LOGIN);
+  }
 
   return (
     <Sidebar
@@ -242,12 +259,22 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-sidebar-border border-t p-3">
-        <button className="flex w-full items-center gap-[9px] rounded-lg px-[14px] py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-[#F4F5F7] hover:text-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <User className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-          <span className="truncate group-data-[collapsible=icon]:hidden">
-            {user?.fullName ?? "Admin Shop"}
-          </span>
-        </button>
+        <div className="flex items-center gap-1">
+          <div className="flex flex-1 items-center gap-[9px] rounded-lg px-[14px] py-2 text-[13px] font-medium text-muted-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <User className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+            <span className="truncate group-data-[collapsible=icon]:hidden">
+              {user?.fullName ?? "Admin Shop"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Đăng xuất"
+            className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-[#F4F5F7] hover:text-destructive group-data-[collapsible=icon]:hidden"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.8} />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

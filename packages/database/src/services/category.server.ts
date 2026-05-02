@@ -1,5 +1,6 @@
 import { ERROR_MESSAGE } from "@workspace/shared/constants";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
+import { and, asc, count, eq, ilike, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
 import { products } from "../schema/products";
@@ -174,6 +175,40 @@ export async function getFlatCategories() {
 
   traverse(roots);
   return flat;
+}
+
+/**
+ * Paginated flat category list for admin list views.
+ * Does a direct DB query — no tree-building overhead.
+ */
+export async function getFlatCategoriesPaginated({
+  search,
+  page = PAGINATION_DEFAULT.PAGE,
+  limit = PAGINATION_DEFAULT.LIMIT,
+}: {
+  search?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
+  const offset = (page - 1) * limit;
+  const where = search ? ilike(categories.name, `%${search}%`) : undefined;
+
+  const [countRow, data] = await Promise.all([
+    db
+      .select({ c: count(categories.id) })
+      .from(categories)
+      .where(where)
+      .then((r) => Number(r[0]?.c ?? 0)),
+    db
+      .select()
+      .from(categories)
+      .where(where)
+      .orderBy(asc(categories.displayOrder), asc(categories.name))
+      .limit(limit)
+      .offset(offset),
+  ]);
+
+  return { data, metadata: calculateMetadata(countRow, page, limit) };
 }
 
 /**

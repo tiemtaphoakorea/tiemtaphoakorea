@@ -182,7 +182,7 @@ export const adminClient = {
   },
 
   /**
-   * Fetch admin categories.
+   * Fetch admin categories (tree + flat, for dropdowns).
    */
   async getCategories(params?: { search?: string }) {
     return axios.get<{
@@ -192,6 +192,15 @@ export const adminClient = {
       categories: CategoryWithChildren[];
       flatCategories: CategoryWithChildren[];
     }>;
+  },
+
+  /**
+   * Paginated flat category list for the admin list view.
+   */
+  async getCategoriesList(params?: { search?: string; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<CategoryWithChildren>>(API_ENDPOINTS.ADMIN.CATEGORIES, {
+      params,
+    }) as unknown as Promise<PaginatedResponse<CategoryWithChildren>>;
   },
 
   /**
@@ -512,10 +521,10 @@ export const adminClient = {
   },
 
   // Supplier Management
-  async getSuppliers(params?: { search?: string }) {
-    return axios.get<{ suppliers: Supplier[] }>(API_ENDPOINTS.ADMIN.SUPPLIERS, {
+  async getSuppliers(params?: { search?: string; page?: number; limit?: number }) {
+    return axios.get<PaginatedResponse<Supplier>>(API_ENDPOINTS.ADMIN.SUPPLIERS, {
       params,
-    }) as unknown as Promise<{ suppliers: Supplier[] }>;
+    }) as unknown as Promise<PaginatedResponse<Supplier>>;
   },
 
   async createSupplier(data: CreateSupplierData) {

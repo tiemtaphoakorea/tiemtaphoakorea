@@ -117,7 +117,8 @@ export const queryKeys = {
   },
   categories: {
     all: [QK.categoriesRoot] as const,
-    list: (searchTerm: string) => [QK.categoriesRoot, searchTerm] as const,
+    list: (searchTerm: string, page: number, limit: number) =>
+      [QK.categoriesRoot, searchTerm, page, limit] as const,
   },
   orders: {
     list: (
@@ -140,7 +141,8 @@ export const queryKeys = {
   },
   suppliers: {
     all: [QK.suppliersRoot] as const,
-    list: (searchTerm: string) => [QK.suppliersRoot, searchTerm] as const,
+    list: (searchTerm: string, page: number, limit: number) =>
+      [QK.suppliersRoot, searchTerm, page, limit] as const,
   },
   banners: {
     all: ["banners"] as const,

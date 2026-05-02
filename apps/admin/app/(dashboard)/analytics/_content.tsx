@@ -1,5 +1,6 @@
 "use client";
 
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Card } from "@workspace/ui/components/card";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -12,6 +13,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
 import { BarChartMini } from "@/components/admin/shared/bar-chart-mini";
 import { TonePill } from "@/components/admin/shared/status-badge";
 
@@ -26,6 +28,7 @@ const MONTHLY = [
 
 interface ReportCard {
   id: string;
+  href: string;
   label: string;
   icon: LucideIcon;
   iconClass: string;
@@ -39,6 +42,7 @@ interface ReportCard {
 const REPORT_CARDS: ReportCard[] = [
   {
     id: "daily",
+    href: ADMIN_ROUTES.ANALYTICS_FINANCE_DETAIL,
     label: "Doanh thu theo ngày",
     icon: CalendarDays,
     iconClass: "text-primary",
@@ -50,6 +54,7 @@ const REPORT_CARDS: ReportCard[] = [
   },
   {
     id: "monthly",
+    href: ADMIN_ROUTES.ANALYTICS_FINANCE,
     label: "Doanh thu theo tháng",
     icon: CalendarRange,
     iconClass: "text-emerald-600",
@@ -61,6 +66,7 @@ const REPORT_CARDS: ReportCard[] = [
   },
   {
     id: "orders_by_day",
+    href: ADMIN_ROUTES.ANALYTICS_FINANCE_DETAIL,
     label: "Đơn hàng theo ngày",
     icon: ShoppingBag,
     iconClass: "text-amber-600",
@@ -72,6 +78,7 @@ const REPORT_CARDS: ReportCard[] = [
   },
   {
     id: "summary",
+    href: ADMIN_ROUTES.ANALYTICS_OVERVIEW,
     label: "Tổng hợp doanh thu",
     icon: BarChart3,
     iconClass: "text-blue-600",
@@ -83,6 +90,7 @@ const REPORT_CARDS: ReportCard[] = [
   },
   {
     id: "products",
+    href: ADMIN_ROUTES.ANALYTICS_PRODUCTS,
     label: "Doanh thu theo SP",
     icon: Package,
     iconClass: "text-primary",
@@ -94,6 +102,7 @@ const REPORT_CARDS: ReportCard[] = [
   },
   {
     id: "kpi",
+    href: ADMIN_ROUTES.ANALYTICS_OVERVIEW,
     label: "KPI & Mục tiêu",
     icon: Target,
     iconClass: "text-emerald-600",
@@ -107,29 +116,37 @@ const REPORT_CARDS: ReportCard[] = [
 
 export default function AdminAnalytics() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* Report card grid */}
-      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {REPORT_CARDS.map((c) => (
-          <Card
-            key={c.id}
-            className="flex cursor-pointer flex-col gap-3 border border-border p-[18px_20px] transition-transform hover:-translate-y-0.5 hover:shadow-md shadow-none"
-          >
-            <div className="flex items-start justify-between">
-              <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-[10px] ${c.bg}`}>
-                <c.icon className={`h-5 w-5 ${c.iconClass}`} strokeWidth={2} />
+          <Link key={c.id} href={c.href} className="group">
+            <Card className="flex h-full cursor-pointer flex-col gap-4 border border-border p-5 shadow-none transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${c.bg}`}>
+                  <c.icon className={`h-5 w-5 ${c.iconClass}`} strokeWidth={2} />
+                </div>
+                <ChevronRight
+                  className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground/70"
+                  strokeWidth={2}
+                />
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/60" strokeWidth={2} />
-            </div>
-            <div>
-              <div className="mb-1 text-[15px] font-bold leading-tight">{c.label}</div>
-              <div className="text-xs leading-snug text-muted-foreground">{c.desc}</div>
-            </div>
-            <div className="flex items-baseline justify-between border-t border-border pt-2.5">
-              <span className={`text-lg font-bold tabular-nums ${c.valueClass}`}>{c.value}</span>
-              <span className="text-[11px] text-muted-foreground">{c.sub}</span>
-            </div>
-          </Card>
+              <div className="space-y-1.5">
+                <div className="text-[15px] font-bold leading-tight">{c.label}</div>
+                <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                  {c.desc}
+                </div>
+              </div>
+              <div className="flex items-baseline justify-between border-t border-border pt-3">
+                <span
+                  className={`text-[28px] font-semibold leading-none tabular-nums tracking-tight ${c.valueClass}`}
+                >
+                  {c.value}
+                </span>
+                <span className="text-xs text-muted-foreground">{c.sub}</span>
+              </div>
+            </Card>
+          </Link>
         ))}
       </div>
 

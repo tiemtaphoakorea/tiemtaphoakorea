@@ -10,6 +10,8 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { PaginationControls } from "@workspace/ui/components/pagination-controls";
 import {
   Table,
   TableBody,
@@ -63,7 +65,8 @@ const TABS: ReadonlyArray<{ id: FulfillmentFilter; label: string }> = [
   { id: FULFILLMENT_STATUS.CANCELLED, label: "Đã huỷ" },
 ];
 
-const PAGE_LIMIT = 25;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 25;
 
 const fmtDate = (d: string | Date | null): string => {
   if (!d) return "—";
@@ -80,15 +83,17 @@ export default function AdminOrders() {
   const [filter, setFilter] = useState<FulfillmentFilter>("all");
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.list(debouncedQuery, "all", filter, false, 1, PAGE_LIMIT),
+    queryKey: queryKeys.orders.list(debouncedQuery, "all", filter, false, page, pageSize),
     queryFn: async () => {
       const res = await adminClient.getOrders({
         search: debouncedQuery || undefined,
         fulfillmentStatus: filter === "all" ? undefined : filter,
-        page: 1,
-        limit: PAGE_LIMIT,
+        page,
+        limit: pageSize,
       });
       return res as unknown as { data: OrderListRow[]; metadata: { total: number } };
     },
@@ -98,16 +103,27 @@ export default function AdminOrders() {
 
   const list = ordersQuery.data?.data ?? [];
   const total = ordersQuery.data?.metadata.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <FilterTabs tabs={TABS} value={filter} onChange={setFilter} />
+        <FilterTabs
+          tabs={TABS}
+          value={filter}
+          onChange={(v) => {
+            setFilter(v);
+            setPage(1);
+          }}
+        />
         <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder="Tìm mã đơn, khách hàng..."
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
           />
@@ -196,6 +212,29 @@ export default function AdminOrders() {
               ))}
             </TableBody>
           </Table>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Hiển thị</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+              className="h-8 w-[72px] text-[13px]"
+            >
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <SelectOption key={s} value={String(s)}>
+                  {s}
+                </SelectOption>
+              ))}
+            </Select>
+            <span>
+              / trang · {ordersQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} đơn`}
+            </span>
+          </div>
+          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Card>
 

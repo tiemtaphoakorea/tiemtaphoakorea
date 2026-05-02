@@ -18,17 +18,19 @@ vi.mock("@/db/db.server", () => ({
         leftJoin: vi.fn(() => ({
           where: vi.fn(() => ({
             groupBy: vi.fn(() => ({
-              orderBy: vi.fn(() => Promise.resolve([])),
+              orderBy: vi.fn(() => ({
+                limit: vi.fn(() => ({
+                  offset: vi.fn(() => Promise.resolve([])),
+                })),
+              })),
             })),
           })),
         })),
-        where: vi.fn(() => ({
+        // for count queries: select().from().where() returns a Promise
+        where: vi.fn(() => Promise.resolve([{ c: 0 }])),
+        orderBy: vi.fn(() => ({
           limit: vi.fn(() => Promise.resolve([])),
-          orderBy: vi.fn(() => ({
-            limit: vi.fn(() => Promise.resolve([])),
-          })),
         })),
-        orderBy: vi.fn(() => Promise.resolve([])),
       })),
     })),
     insert: vi.fn(() => ({
@@ -68,55 +70,49 @@ describe("Supplier Management Service", () => {
   });
 
   describe("getSuppliers", () => {
-    it("should fetch all active suppliers by default", async () => {
-      const mockDb = db as any;
-      const mockSuppliers = [
-        {
-          id: "1",
-          code: "NCC001",
-          name: "Supplier A",
-          isActive: true,
-          totalOrders: 5,
-        },
-        {
-          id: "2",
-          code: "NCC002",
-          name: "Supplier B",
-          isActive: true,
-          totalOrders: 3,
-        },
-      ];
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              groupBy: vi.fn().mockReturnValue({
-                orderBy: vi.fn().mockResolvedValue(mockSuppliers),
+    /** Helper to create a mock chain for getSuppliers (count + main query). */
+    function mockGetSuppliers(mockDb: any, supplierList: any[]) {
+      const countRow = [{ c: supplierList.length }];
+      mockDb.select
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(countRow),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: vi.fn().mockReturnValue({
+            leftJoin: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                groupBy: vi.fn().mockReturnValue({
+                  orderBy: vi.fn().mockReturnValue({
+                    limit: vi.fn().mockReturnValue({
+                      offset: vi.fn().mockResolvedValue(supplierList),
+                    }),
+                  }),
+                }),
               }),
             }),
           }),
-        }),
-      });
+        });
+    }
+
+    it("should fetch all active suppliers by default", async () => {
+      const mockDb = db as any;
+      const mockSuppliers = [
+        { id: "1", code: "NCC001", name: "Supplier A", isActive: true, totalOrders: 5 },
+        { id: "2", code: "NCC002", name: "Supplier B", isActive: true, totalOrders: 3 },
+      ];
+      mockGetSuppliers(mockDb, mockSuppliers);
 
       const result = await getSuppliers();
 
-      expect(result).toEqual(mockSuppliers);
+      expect(result.data).toEqual(mockSuppliers);
       expect(mockDb.select).toHaveBeenCalled();
     });
 
     it("should include inactive suppliers when specified", async () => {
       const mockDb = db as any;
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              groupBy: vi.fn().mockReturnValue({
-                orderBy: vi.fn().mockResolvedValue([]),
-              }),
-            }),
-          }),
-        }),
-      });
+      mockGetSuppliers(mockDb, []);
 
       await getSuppliers({ includeInactive: true });
 
@@ -125,42 +121,22 @@ describe("Supplier Management Service", () => {
 
     it("should filter suppliers by search term", async () => {
       const mockDb = db as any;
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              groupBy: vi.fn().mockReturnValue({
-                orderBy: vi
-                  .fn()
-                  .mockResolvedValue([{ id: "1", name: "Test Supplier", code: "NCC001" }]),
-              }),
-            }),
-          }),
-        }),
-      });
+      const filtered = [{ id: "1", name: "Test Supplier", code: "NCC001" }];
+      mockGetSuppliers(mockDb, filtered);
 
-      const _result = await getSuppliers({ search: "Test" });
+      const result = await getSuppliers({ search: "Test" });
 
+      expect(result.data).toEqual(filtered);
       expect(mockDb.select).toHaveBeenCalled();
     });
 
     it("should return empty array when no suppliers match", async () => {
       const mockDb = db as any;
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              groupBy: vi.fn().mockReturnValue({
-                orderBy: vi.fn().mockResolvedValue([]),
-              }),
-            }),
-          }),
-        }),
-      });
+      mockGetSuppliers(mockDb, []);
 
       const result = await getSuppliers({ search: "NonExistent" });
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
     });
   });
 

@@ -1,10 +1,12 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Supplier } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { PaginationControls } from "@workspace/ui/components/pagination-controls";
 import {
   Table,
   TableBody,
@@ -27,16 +29,27 @@ import { SupplierDrawer } from "@/components/admin/shared/supplier-drawer";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 25;
+
 export default function AdminSuppliers() {
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
   const [editing, setEditing] = useState<Supplier | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const queryClient = useQueryClient();
 
   const suppliersQuery = useQuery({
-    queryKey: queryKeys.suppliers.list(debouncedQuery),
-    queryFn: async () => await adminClient.getSuppliers({ search: debouncedQuery || undefined }),
+    queryKey: queryKeys.suppliers.list(debouncedQuery, page, pageSize),
+    queryFn: async () =>
+      await adminClient.getSuppliers({
+        search: debouncedQuery || undefined,
+        page,
+        limit: pageSize,
+      }),
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 
@@ -47,7 +60,9 @@ export default function AdminSuppliers() {
     },
   });
 
-  const list: Supplier[] = suppliersQuery.data?.suppliers ?? [];
+  const list: Supplier[] = suppliersQuery.data?.data ?? [];
+  const total = suppliersQuery.data?.metadata.total ?? 0;
+  const totalPages = suppliersQuery.data?.metadata.totalPages ?? 1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,14 +71,14 @@ export default function AdminSuppliers() {
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder="Tìm nhà cung cấp..."
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
           />
         </div>
-        <span className="text-xs text-muted-foreground">
-          {suppliersQuery.isLoading ? "Đang tải..." : `${list.length} nhà cung cấp`}
-        </span>
         <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setEditing(null)}>
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Thêm nhà CC
@@ -144,6 +159,32 @@ export default function AdminSuppliers() {
               ))}
             </TableBody>
           </Table>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Hiển thị</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+              className="h-8 w-[72px] text-[13px]"
+            >
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <SelectOption key={s} value={String(s)}>
+                  {s}
+                </SelectOption>
+              ))}
+            </Select>
+            <span>
+              / trang ·{" "}
+              {suppliersQuery.isLoading && total === 0
+                ? "Đang tải..."
+                : `Tổng ${total} nhà cung cấp`}
+            </span>
+          </div>
+          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Card>
 

@@ -5,6 +5,7 @@ import {
   getSuppliers,
 } from "@workspace/database/services/supplier-management.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { getPaginationParams } from "@workspace/shared/pagination";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -17,6 +18,7 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || undefined;
   const status = searchParams.get("status");
   const includeInactiveParam = searchParams.get("includeInactive");
+  const { page, limit } = getPaginationParams(request);
 
   try {
     if (status === "active" || includeInactiveParam === "false") {
@@ -24,8 +26,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ suppliers });
     }
 
-    const suppliers = await getSuppliers({ search, includeInactive: true });
-    return NextResponse.json({ suppliers });
+    const result = await getSuppliers({ search, includeInactive: true, page, limit });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch suppliers:", error);
     return NextResponse.json(
