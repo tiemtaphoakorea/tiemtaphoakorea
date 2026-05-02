@@ -2,22 +2,16 @@ export const dynamic = "force-dynamic";
 
 import { getCategories } from "@workspace/database/services/category.server";
 import { getTopCategoryCards } from "@workspace/database/services/categoryCard.server";
-import {
-  getBestSellers,
-  getFeaturedProducts,
-  getNewArrivals,
-} from "@workspace/database/services/product.server";
+import { getActiveHomepageCollections } from "@workspace/database/services/homepage-collection.server";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { BestSellers } from "@/components/sections/best-sellers";
 import { CategoryCardsGrid } from "@/components/sections/category-cards-grid";
 import { CategoryStripEight } from "@/components/sections/category-strip-eight";
-import { FeaturedProducts } from "@/components/sections/featured-products";
 import { Hero } from "@/components/sections/hero";
 import { HeroThreeCol } from "@/components/sections/hero-three-col";
+import { HomepageCollection } from "@/components/sections/homepage-collection";
 import { MobileCategoryRail } from "@/components/sections/mobile-category-rail";
 import { MobileGreeting } from "@/components/sections/mobile-greeting";
-import { NewArrivals } from "@/components/sections/new-arrivals";
 import { TrustStrip } from "@/components/sections/trust-strip";
 
 export const metadata: Metadata = {
@@ -92,23 +86,25 @@ async function MobileCategoryCardsSection() {
   );
 }
 
-async function FeaturedProductsSection() {
-  const products = (await getFeaturedProducts(5)).map(mapProduct);
-  return <FeaturedProducts products={products} />;
-}
-
-async function NewArrivalsSection() {
-  const products = (await getNewArrivals(8)).map(mapProduct);
+async function HomepageCollectionsSection() {
+  const collections = await getActiveHomepageCollections();
   return (
-    <div className="md:hidden">
-      <NewArrivals products={products} />
-    </div>
+    <>
+      {collections.map((c) => (
+        <HomepageCollection
+          key={c.id}
+          collection={{
+            id: c.id,
+            title: c.title,
+            subtitle: c.subtitle,
+            iconKey: c.iconKey,
+            viewAllUrl: c.viewAllUrl,
+            products: c.products.map(mapProduct),
+          }}
+        />
+      ))}
+    </>
   );
-}
-
-async function BestSellersSection() {
-  const products = (await getBestSellers(4)).map(mapProduct);
-  return <BestSellers products={products} />;
 }
 
 export default function Home() {
@@ -137,18 +133,8 @@ export default function Home() {
       </Suspense>
 
       <Suspense fallback={<ProductGridSkeleton />}>
-        <FeaturedProductsSection />
+        <HomepageCollectionsSection />
       </Suspense>
-
-      <Suspense fallback={<ProductGridSkeleton />}>
-        <BestSellersSection />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <NewArrivalsSection />
-      </Suspense>
-
-      {/* <NewsletterCta /> */}
     </>
   );
 }
