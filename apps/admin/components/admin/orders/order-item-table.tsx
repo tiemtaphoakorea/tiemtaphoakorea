@@ -99,9 +99,9 @@ export function OrderItemTable({ items, onUpdateQuantity, onRemoveItem }: OrderI
                 </TableCell>
                 <TableCell>
                   <Button
-                    variant="ghost"
+                    variant="ghost-destructive"
                     size="icon"
-                    className="h-8 w-8 text-slate-400 hover:text-red-500"
+                    className="h-8 w-8"
                     onClick={() => onRemoveItem(item.variantId)}
                   >
                     <Trash2 className="h-4 w-4" />

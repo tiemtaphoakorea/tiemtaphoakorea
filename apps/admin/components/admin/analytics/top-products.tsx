@@ -47,12 +47,14 @@ export function TopProducts({ products }: TopProductsProps) {
                 <div className="text-primary flex h-12 w-12 items-center justify-center rounded-xl border border-slate-100 bg-white font-black shadow-sm">
                   {idx + 1}
                 </div>
-                <Badge
-                  className={`${product.growth > 0 ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-red-100 bg-red-50 text-red-600"} text-[10px] font-black tracking-tight uppercase`}
-                >
-                  {product.growth > 0 ? "+" : ""}
-                  {product.growth}%
-                </Badge>
+                {product.growth != null && (
+                  <Badge
+                    className={`${product.growth > 0 ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-red-100 bg-red-50 text-red-600"} text-[10px] font-black tracking-tight uppercase`}
+                  >
+                    {product.growth > 0 ? "+" : ""}
+                    {product.growth}%
+                  </Badge>
+                )}
               </div>
               <div>
                 <h3 className="line-clamp-1 font-black text-slate-900">{product.name}</h3>

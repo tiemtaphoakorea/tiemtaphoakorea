@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { cn } from "@workspace/ui/lib/utils";
-import { ChevronDownIcon } from "lucide-react";
-import * as React from "react";
+import { cn } from "@workspace/ui/lib/utils"
+import { ChevronDownIcon } from "lucide-react"
+import * as React from "react"
 
 interface SelectProps extends Omit<React.ComponentProps<"select">, "onChange"> {
-  onValueChange?: (value: string) => void;
-  placeholder?: string;
+  onValueChange?: (value: string) => void
+  placeholder?: string
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
@@ -27,13 +27,13 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       </select>
       <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground" />
     </div>
-  ),
-);
-Select.displayName = "Select";
+  )
+)
+Select.displayName = "Select"
 
 function SelectOption(props: React.ComponentProps<"option">) {
-  return <option {...props} />;
+  return <option {...props} />
 }
-SelectOption.displayName = "SelectOption";
+SelectOption.displayName = "SelectOption"
 
-export { Select, SelectOption };
+export { Select, SelectOption }

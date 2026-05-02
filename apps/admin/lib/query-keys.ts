@@ -146,6 +146,12 @@ export const queryKeys = {
   },
   banners: {
     all: ["banners"] as const,
+    list: ["banners", "list"] as const,
+  },
+  homepageCollections: {
+    all: ["homepage-collections"] as const,
+    list: ["homepage-collections", "list"] as const,
+    detail: (id: string) => ["homepage-collections", "detail", id] as const,
   },
   debts: {
     all: [QK.debtsRoot] as const,
@@ -153,4 +159,7 @@ export const queryKeys = {
       [QK.debtsRoot, search, minAgeDays, page, limit] as const,
   },
   customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
+  settings: {
+    shopInfo: ["settings", "shop-info"] as const,
+  },
 } as const;

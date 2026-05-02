@@ -1,44 +1,39 @@
 ---
 title: "Nhập hàng"
-description: "Tạo và xác nhận đơn nhập hàng từ nhà cung cấp."
+description: "Tạo đơn nhập hàng từ nhà cung cấp và xác nhận nhận hàng."
 ---
 
 ## Mô tả
 
-Trang Nhập hàng dùng để tạo đơn mua hàng và xác nhận nhận hàng — tồn kho được cập nhật tự động sau khi xác nhận.
+Trang **Nhập hàng** dùng để tạo đơn mua hàng từ nhà cung cấp khi sản phẩm sắp/hết hàng. Sau khi xác nhận nhận hàng, tồn kho được cập nhật tự động.
 
 ## Cách truy cập
 
-Menu bên trái → **Nhập hàng**.
+Truy cập qua **Quản lý kho** (Menu bên trái → **Kho vận** → **Quản lý kho**) → nhấn **Tạo đơn nhập**.
 
-## Vòng đời đơn nhập hàng
+## Vòng đời đơn nhập
 
 | Trạng thái | Ý nghĩa |
 |-----------|---------|
-| `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
-| `ordered` — Đã đặt hàng | Đã xác nhận đặt hàng với nhà cung cấp, đang chờ hàng về |
-| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho đã được cập nhật |
-| `cancelled` — Đã hủy | Đơn nhập bị hủy |
+| `pending` | Vừa tạo, chưa gửi NCC |
+| `ordered` | Đã đặt hàng với NCC, đang chờ về |
+| `received` | Đã về kho — tồn kho cập nhật |
+| `cancelled` | Đã huỷ |
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Tạo đơn nhập hàng">
-    Nhấn **Tạo đơn nhập** → chọn nhà cung cấp → thêm sản phẩm và số lượng → nhập giá vốn → **Lưu**.
-    Đơn được tạo ở trạng thái **Chờ xác nhận**.
+  <Step title="Tạo đơn nhập">
+    **Tạo đơn nhập** → chọn nhà cung cấp → chọn biến thể sản phẩm cần nhập → nhập số lượng và giá vốn thực tế → **Lưu**.
   </Step>
-  <Step title="Xác nhận đã đặt hàng với nhà cung cấp">
-    Sau khi liên hệ nhà cung cấp, mở đơn nhập → nhấn **Xác nhận đặt hàng**.
-    Trạng thái chuyển sang **Đã đặt hàng**.
+  <Step title="Xác nhận đặt hàng">
+    Sau khi liên hệ và đặt hàng với NCC, mở đơn → **Xác nhận đặt hàng**.
   </Step>
   <Step title="Xác nhận nhận hàng">
-    Khi hàng về, mở đơn nhập → nhấn **Xác nhận nhận hàng**. Tồn kho được cập nhật ngay.
-  </Step>
-  <Step title="Theo dõi đơn nhập">
-    Danh sách hiển thị trạng thái và tổng giá trị từng đơn.
+    Khi hàng về kho, mở đơn → **Xác nhận nhận hàng**. Tồn kho được cộng tự động.
   </Step>
 </Steps>
 
 <Note>
-Giá vốn nhập sẽ được ghi vào lịch sử giá vốn sản phẩm và ảnh hưởng đến tính toán lợi nhuận của các đơn hàng tiếp theo.
+Hỏi Quản lý nếu không chắc về giá vốn cần nhập — giá vốn ảnh hưởng đến tính lợi nhuận của shop.
 </Note>

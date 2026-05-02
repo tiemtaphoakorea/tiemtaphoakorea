@@ -8,7 +8,7 @@ import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { ProductPagination } from "@/components/products/listing/product-pagination";
-import { CategoryProductCard } from "./category-product-card";
+import { ProductCard } from "@/components/products/product-card";
 import { CategoryToolbar } from "./category-toolbar";
 
 const PRODUCT_SORT_SET = new Set<string>(Object.values(PRODUCT_SORT));
@@ -37,8 +37,8 @@ interface CategoryListingProps {
   pageSize: number;
   currentPage: number;
   activeSort: string;
-  activeCategorySlug: string;
-  activeCategoryName: string;
+  activeCategorySlugs: string[];
+  activeCategories: { slug: string; name: string }[];
   basePath: string;
   activeMinPrice?: number;
   activeMaxPrice?: number;
@@ -50,8 +50,8 @@ function CategoryListingInner({
   pageSize,
   currentPage,
   activeSort,
-  activeCategorySlug,
-  activeCategoryName,
+  activeCategorySlugs,
+  activeCategories,
   basePath,
   activeMinPrice,
   activeMaxPrice,
@@ -77,9 +77,12 @@ function CategoryListingInner({
     pushParams(params);
   };
 
-  const handleClearCategory = () => {
+  const handleRemoveCategory = (slug: string) => {
     const params = buildParams();
     params.delete("category");
+    for (const s of activeCategorySlugs.filter((c) => c !== slug)) {
+      params.append("category", s);
+    }
     params.delete("page");
     pushParams(params);
   };
@@ -95,9 +98,11 @@ function CategoryListingInner({
   const priceRangeLabel = getPriceRangeLabel(activeMinPrice, activeMaxPrice);
 
   const activeFilters = [
-    ...(activeCategoryName
-      ? [{ key: "category", label: activeCategoryName, onRemove: handleClearCategory }]
-      : []),
+    ...activeCategories.map((cat) => ({
+      key: `category-${cat.slug}`,
+      label: cat.name,
+      onRemove: () => handleRemoveCategory(cat.slug),
+    })),
     ...(priceRangeLabel
       ? [{ key: "price", label: priceRangeLabel, onRemove: handleClearPriceRange }]
       : []),
@@ -158,8 +163,15 @@ function CategoryListingInner({
             : "flex flex-col gap-3"
         }
       >
-        {products.map((product) => (
-          <CategoryProductCard key={product.id} product={product} variant={viewMode} />
+        {products.map((product, i) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            layout={viewMode}
+            showStockBar
+            showWishlist
+            priority={i < 4}
+          />
         ))}
       </div>
 
@@ -175,9 +187,27 @@ function CategoryListingInner({
   );
 }
 
+// Skeleton matches the toolbar's right-side controls + a thin grid hint so users don't see an
+// empty rectangle that suddenly fills with a sort dropdown after hydration.
+function CategoryListingFallback() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end gap-2">
+        <div className="h-9 w-44 animate-pulse rounded-lg bg-muted" />
+        <div className="h-9 w-[76px] animate-pulse rounded-[12px] bg-muted" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-5">
+        {[1, 2, 3, 4].map((n) => (
+          <div key={n} className="aspect-[3/4] w-full animate-pulse rounded-2xl bg-muted" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function CategoryListing(props: CategoryListingProps) {
   return (
-    <Suspense fallback={<div className="h-12" />}>
+    <Suspense fallback={<CategoryListingFallback />}>
       <CategoryListingInner {...props} />
     </Suspense>
   );

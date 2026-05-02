@@ -162,7 +162,9 @@ describe("Analytics Service", () => {
         .mockImplementationOnce(() =>
           createChainableMock([{ month: "Tháng 01", revenue: 500, orderCount: 2 }]),
         )
-        .mockImplementationOnce(() => createChainableMock([{ category: "Electronics", sales: 10 }]))
+        .mockImplementationOnce(() =>
+          createChainableMock([{ category: "Electronics", sales: 10, revenue: 500 }]),
+        )
         .mockImplementationOnce(() =>
           createChainableMock([{ name: "Product A", sales: 5, revenue: 200 }]),
         );
@@ -170,6 +172,7 @@ describe("Analytics Service", () => {
       const result = await getAnalyticsData();
 
       expect(result.categorySales[0].color).toBe("hsl(var(--chart-1))");
+      expect(result.categorySales[0].revenue).toBe(500);
       expect(result.topProducts[0].growth).toBe(ANALYTICS_GROWTH_RANDOM_OFFSET);
       expect(result.topProducts[0].growth).toBeLessThanOrEqual(
         ANALYTICS_GROWTH_RANDOM_OFFSET + ANALYTICS_GROWTH_RANDOM_RANGE,

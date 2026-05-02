@@ -80,6 +80,7 @@ export interface Category {
 export interface CategoryWithChildren extends Category {
   children?: CategoryWithChildren[];
   depth?: number; // Added by flattened view in some cases
+  productCount?: number;
 }
 
 export interface NewCategory {
@@ -390,6 +391,7 @@ export interface AnalyticsMonthlyRevenue {
 export interface AnalyticsCategorySale {
   category: string;
   sales: number;
+  revenue: number;
   color?: string;
 }
 
@@ -412,7 +414,7 @@ export interface AnalyticsData {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers: number;
-  conversionRate: number;
+  conversionRate: number | null;
   monthlyRevenue: AnalyticsMonthlyRevenue[];
   categorySales: AnalyticsCategorySale[];
   topProducts: AnalyticsTopProduct[];

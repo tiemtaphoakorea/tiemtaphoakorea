@@ -6,7 +6,35 @@ import { ArrowUp, CircleDollarSign, Facebook, Globe, Instagram, Youtube, Zap } f
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export function Footer() {
+type FooterConfig = {
+  tagline?: string;
+  hq?: string;
+  office?: string;
+  officeDetail?: string;
+  copyright?: string;
+};
+
+type SocialConfig = {
+  instagram?: string;
+  facebook?: string;
+  youtube?: string;
+};
+
+type FooterProps = {
+  footer?: FooterConfig;
+  social?: SocialConfig;
+};
+
+const DEFAULTS = {
+  tagline:
+    "Nền tảng thương mại điện tử chuyên cung cấp mỹ phẩm và đồ gia dụng chính hãng từ Hàn Quốc tại Việt Nam.",
+  hq: "Seoul, South Korea",
+  office: "Hồ Chí Minh, Việt Nam",
+  officeDetail: "Quận 1, TP. Hồ Chí Minh",
+  copyright: "© 2024 K-SMART VN",
+};
+
+export function Footer({ footer = {}, social = {} }: FooterProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -19,8 +47,14 @@ export function Footer() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  const tagline = footer.tagline || DEFAULTS.tagline;
+  const office = footer.office || DEFAULTS.office;
+  const officeDetail = footer.officeDetail || DEFAULTS.officeDetail;
+  const copyright = footer.copyright || DEFAULTS.copyright;
+
   return (
-    <footer className="bg-foreground text-background">
+    // pb-20 mirrors <main>'s padding so the fixed mobile bottom-nav doesn't cover the bottom-bar.
+    <footer className="bg-foreground pb-20 md:pb-0 text-background">
       {/* Newsletter Band — hidden on desktop where NewsletterCta runs above the footer */}
       <div className="border-b border-white/10 md:hidden">
         <div className="container mx-auto px-4 py-10">
@@ -62,14 +96,23 @@ export function Footer() {
               K<span className="text-primary">-</span>SMART
             </span>
           </Link>
-          <p className="text-sm leading-relaxed text-white/55">
-            Nền tảng thương mại điện tử chuyên cung cấp mỹ phẩm và đồ gia dụng chính hãng từ Hàn
-            Quốc tại Việt Nam.
-          </p>
+          <p className="text-sm leading-relaxed text-white/55">{tagline}</p>
           <div className="flex gap-2.5">
-            <SocialBtn icon={<Instagram className="h-4 w-4" />} label="Instagram" />
-            <SocialBtn icon={<Facebook className="h-4 w-4" />} label="Facebook" />
-            <SocialBtn icon={<Youtube className="h-4 w-4" />} label="Youtube" />
+            <SocialBtn
+              icon={<Instagram className="h-4 w-4" />}
+              label="Instagram"
+              href={social.instagram}
+            />
+            <SocialBtn
+              icon={<Facebook className="h-4 w-4" />}
+              label="Facebook"
+              href={social.facebook}
+            />
+            <SocialBtn
+              icon={<Youtube className="h-4 w-4" />}
+              label="Youtube"
+              href={social.youtube}
+            />
           </div>
         </div>
 
@@ -79,10 +122,7 @@ export function Footer() {
             Về chúng tôi
           </h4>
           <ul className="space-y-3">
-            <FooterLink label="Câu chuyện thương hiệu" />
-            <FooterLink label="Tuyển dụng" />
-            <FooterLink label="Thông cáo báo chí" />
-            <FooterLink label="Hệ thống cửa hàng" />
+            <FooterLink label="Giới thiệu" />
             <FooterLink label="Liên hệ" />
           </ul>
         </div>
@@ -90,33 +130,18 @@ export function Footer() {
         <div>
           <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">Hỗ trợ</h4>
           <ul className="space-y-3">
-            <FooterLink label="Trung tâm trợ giúp" />
             <FooterLink label="Vận chuyển & Giao hàng" />
-            <FooterLink label="Chính sách bảo hành" />
             <FooterLink label="Chính sách đổi trả" />
             <FooterLink label="Kiểm tra đơn hàng" />
           </ul>
         </div>
 
+        {/* Office */}
         <div>
           <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">
-            Văn phòng
+            Địa chỉ
           </h4>
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30">
-                Trụ sở chính
-              </p>
-              <p className="mt-1 text-sm font-semibold text-white/80">Seoul, South Korea</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/30">
-                Văn phòng đại diện
-              </p>
-              <p className="mt-1 text-sm font-semibold text-white/80">Hồ Chí Minh, Việt Nam</p>
-              <p className="mt-0.5 text-xs text-white/40">Quận 1, TP. Hồ Chí Minh</p>
-            </div>
-          </div>
+          <p className="text-sm font-semibold text-white/80">{officeDetail || office}</p>
         </div>
       </div>
 
@@ -136,12 +161,6 @@ export function Footer() {
             >
               Chính sách bảo mật
             </Link>
-            <Link
-              href={PUBLIC_ROUTES.HOME}
-              className="transition-colors hover:text-white cursor-pointer"
-            >
-              Câu hỏi thường gặp
-            </Link>
           </div>
           <div className="flex items-center gap-5 text-xs text-white/40">
             <button
@@ -158,7 +177,7 @@ export function Footer() {
             >
               <CircleDollarSign className="h-3 w-3" /> VND
             </button>
-            <span>© 2024 K-SMART VN</span>
+            <span>{copyright}</span>
           </div>
         </div>
       </div>
@@ -180,13 +199,18 @@ export function Footer() {
   );
 }
 
-function SocialBtn({ icon, label }: { icon: React.ReactNode; label: string }) {
+function SocialBtn({ icon, label, href }: { icon: React.ReactNode; label: string; href?: string }) {
+  const cls =
+    "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 text-white/60 transition-all hover:border-primary/50 hover:bg-primary/20 hover:text-white";
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={cls}>
+        {icon}
+      </a>
+    );
+  }
   return (
-    <button
-      type="button"
-      aria-label={label}
-      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 text-white/60 transition-all hover:border-primary/50 hover:bg-primary/20 hover:text-white"
-    >
+    <button type="button" aria-label={label} className={cls}>
       {icon}
     </button>
   );

@@ -1,15 +1,18 @@
-import { cn } from "@workspace/ui/lib/utils";
-import { CheckIcon } from "lucide-react";
-import { Checkbox as CheckboxPrimitive } from "radix-ui";
-import type * as React from "react";
+import { cn } from "@workspace/ui/lib/utils"
+import { CheckIcon } from "lucide-react"
+import { Checkbox as CheckboxPrimitive } from "radix-ui"
+import type * as React from "react"
 
-function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+function Checkbox({
+  className,
+  ...props
+}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
         "peer flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border-[2px] border-input bg-background transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/15 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground",
-        className,
+        className
       )}
       {...props}
     >
@@ -20,7 +23,7 @@ function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxP
         <CheckIcon className="size-2.5" strokeWidth={3} />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
-  );
+  )
 }
 
-export { Checkbox };
+export { Checkbox }

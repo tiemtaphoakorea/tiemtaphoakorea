@@ -9,7 +9,7 @@ const PRODUCT_SORT_SET = new Set<string>(Object.values(PRODUCT_SORT));
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const search = searchParams.get("q") || searchParams.get("search") || undefined;
-  const categorySlug = searchParams.get("category") || undefined;
+  const categorySlugs = searchParams.getAll("category").filter(Boolean);
 
   const sortParam = searchParams.get("sort") || PRODUCT_SORT.LATEST;
   const sort: ProductSort = PRODUCT_SORT_SET.has(sortParam)
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     const listing = await getProductsForListing({
       search,
-      categorySlug,
+      categorySlugs,
       sort,
       page,
       limit,

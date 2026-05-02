@@ -5,23 +5,40 @@ description: "Trang tổng quan với các chỉ số vận hành cần theo dõ
 
 ## Mô tả
 
-Dashboard hiển thị các chỉ số vận hành quan trọng: đơn hàng cần xử lý và sản phẩm sắp hết hàng.
+**Dashboard** hiển thị 4 thẻ KPI hôm nay, 2 biểu đồ 7 ngày, và 2 bảng nhanh — giúp nhân viên nắm tình hình ngày trước khi vào ca.
 
 ## Cách truy cập
 
 Menu bên trái → **Dashboard**.
 
+## 4 thẻ KPI hôm nay
+
+| Thẻ | Giá trị |
+|-----|---------|
+| **Doanh thu hôm nay** | Tổng tiền đơn tạo hôm nay |
+| **Đơn chờ xử lý** | Số đơn cần xác nhận |
+| **Sản phẩm sắp hết** | Số SKU cần ưu tiên |
+| **Khách hàng mới** | Số khách mới hôm nay |
+
+## Bảng nhanh
+
+- **Sản phẩm bán chạy** — top 5 hôm nay.
+- **Đơn hàng gần đây** — 6 đơn mới nhất kèm trạng thái.
+
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Kiểm tra đơn hàng mới">
-    Xem widget đơn hàng mới để biết có đơn nào cần xác nhận thanh toán hoặc cập nhật trạng thái.
+  <Step title="Kiểm tra đơn cần xử lý">
+    Xem thẻ **Đơn chờ xử lý** → nhấn vào bảng **Đơn hàng gần đây** để mở chi tiết và xác nhận thanh toán/xuất kho.
   </Step>
-  <Step title="Kiểm tra tồn kho thấp">
-    Widget sản phẩm sắp hết hàng cảnh báo các sản phẩm cần nhập thêm — báo lại cho Quản lý hoặc Chủ shop nếu cần tạo đơn nhập.
+  <Step title="Kiểm tra hàng sắp hết">
+    Thẻ **Sản phẩm sắp hết** cảnh báo SKU cần nhập — báo lại cho Quản lý hoặc Chủ shop nếu cần tạo đơn nhập.
+  </Step>
+  <Step title="Theo dõi xu hướng">
+    Hai biểu đồ 7 ngày cho biết ngày nào bán nhiều/ít — hữu ích để chuẩn bị ca làm.
   </Step>
 </Steps>
 
 <Note>
-Dữ liệu Dashboard cập nhật theo thời gian thực. Tải lại trang nếu cần xem số liệu mới nhất.
+Dữ liệu cập nhật theo thời gian thực với cache 60 giây. Tải lại trang nếu cần xem số liệu mới nhất.
 </Note>

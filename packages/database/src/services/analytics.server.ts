@@ -1,17 +1,12 @@
-import {
-  ANALYTICS_DEFAULT_CONVERSION_RATE,
-  ANALYTICS_GROWTH_RANDOM_OFFSET,
-  ANALYTICS_GROWTH_RANDOM_RANGE,
-  ANALYTICS_TOP_PRODUCTS_LIMIT,
-  ROLE,
-} from "@workspace/shared/constants";
+import { ANALYTICS_TOP_PRODUCTS_LIMIT, ROLE } from "@workspace/shared/constants";
 import { and, asc, desc, eq, gt, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories, products, productVariants } from "../schema";
 import { orderItems, orders } from "../schema/orders";
 import { profiles } from "../schema/profiles";
+import type { AnalyticsData } from "../types/admin";
 
-export async function getAnalyticsData() {
+export async function getAnalyticsData(): Promise<AnalyticsData> {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
@@ -64,18 +59,19 @@ export async function getAnalyticsData() {
       monthlyRevenue = [];
     }
 
-    // 3. Category Distribution
+    // 3. Category Distribution (sales count + revenue)
     const categorySales = await db
       .select({
         category: sql<string>`coalesce(${categories.name}, 'Uncategorized')`,
         sales: sql<number>`count(${orderItems.id})`.mapWith(Number),
+        revenue: sql<number>`coalesce(sum(${orderItems.lineTotal}), 0)`.mapWith(Number),
       })
       .from(orderItems)
       .innerJoin(productVariants, eq(orderItems.variantId, productVariants.id))
       .innerJoin(products, eq(productVariants.productId, products.id))
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .groupBy(sql`coalesce(${categories.name}, 'Uncategorized')`)
-      .orderBy(desc(sql`count(${orderItems.id})`));
+      .orderBy(desc(sql`sum(${orderItems.lineTotal})`));
 
     // 4. Top Products
     const topProducts = await db
@@ -116,18 +112,13 @@ export async function getAnalyticsData() {
       totalRevenue: kpis[0]?.totalRevenue || 0,
       totalOrders: kpis[0]?.totalOrders || 0,
       totalCustomers: customers[0]?.count || 0,
-      conversionRate: ANALYTICS_DEFAULT_CONVERSION_RATE, // Mocked for now as we don't track visits
+      conversionRate: null,
       monthlyRevenue,
       categorySales: categorySales.map((c, i) => ({
         ...c,
         color: `hsl(var(--chart-${(i % 5) + 1}))`,
       })),
-      topProducts: topProducts.map((p) => ({
-        ...p,
-        growth:
-          Math.floor(Math.random() * ANALYTICS_GROWTH_RANDOM_RANGE) +
-          ANALYTICS_GROWTH_RANDOM_OFFSET, // Mocked growth
-      })),
+      topProducts: topProducts.map((p) => ({ ...p })),
       inventory: {
         totalCostValue: inventoryStats[0]?.totalCostValue || 0,
         totalRetailValue: inventoryStats[0]?.totalRetailValue || 0,
@@ -143,10 +134,17 @@ export async function getAnalyticsData() {
       totalRevenue: 0,
       totalOrders: 0,
       totalCustomers: 0,
-      conversionRate: 0,
+      conversionRate: null,
       monthlyRevenue: [],
       categorySales: [],
       topProducts: [],
+      inventory: {
+        totalCostValue: 0,
+        totalRetailValue: 0,
+        totalUnits: 0,
+        lowStockCount: 0,
+        outOfStockCount: 0,
+      },
     };
   }
 }

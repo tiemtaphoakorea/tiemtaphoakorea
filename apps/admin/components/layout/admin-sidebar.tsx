@@ -21,6 +21,8 @@ import {
   CircleDollarSign,
   CreditCard,
   FolderOpen,
+  Globe,
+  Home,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
@@ -80,8 +82,13 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Hệ thống",
-    items: [{ icon: Settings2, label: "Cài đặt", href: ADMIN_ROUTES.SETTINGS }],
+    label: "Cài đặt",
+    items: [
+      { icon: Home, label: "Trang chủ", href: ADMIN_ROUTES.HOMEPAGE },
+      { icon: Building2, label: "Cửa hàng", href: ADMIN_ROUTES.SETTINGS },
+      { icon: Globe, label: "Nội dung website", href: ADMIN_ROUTES.SETTINGS_CONTENT },
+      { icon: Settings2, label: "Tiện ích", href: ADMIN_ROUTES.SETTINGS_WIDGETS },
+    ],
   },
 ];
 
@@ -95,6 +102,8 @@ function visibleForRole(href: string, role?: UserRole): boolean {
   if (href === ADMIN_ROUTES.USERS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.EXPENSES) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS) return role === ROLE.OWNER;
+  if (href === ADMIN_ROUTES.SETTINGS_CONTENT) return role === ROLE.OWNER;
+  if (href === ADMIN_ROUTES.SETTINGS_WIDGETS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.ANALYTICS) return role === ROLE.OWNER || role === ROLE.MANAGER;
   return true;
 }
@@ -179,6 +188,12 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
     setMounted(true);
   }, []);
 
+  const { data: shopInfo } = useQuery({
+    queryKey: queryKeys.settings.shopInfo,
+    queryFn: () => fetch("/api/admin/settings/shop-info").then((r) => r.json()),
+    staleTime: 5 * 60_000,
+  });
+
   const badges = useSidebarBadges(!!user);
 
   async function handleLogout() {
@@ -198,7 +213,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-bold text-foreground">Admin CMS</span>
-            <span className="text-[11px] text-muted-foreground">Tiệm Korea</span>
+            <span className="text-[11px] text-muted-foreground">{shopInfo?.name || "Admin"}</span>
           </div>
         </Link>
       </SidebarHeader>

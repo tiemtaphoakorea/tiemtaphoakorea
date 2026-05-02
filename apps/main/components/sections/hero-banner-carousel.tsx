@@ -6,6 +6,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { normalizeStorefrontHref } from "./normalize-storefront-href";
 
 const AUTOPLAY_INTERVAL = 5000;
 const HERO_FALLBACK_IMAGES = [
@@ -124,7 +125,7 @@ export function HeroBannerCarousel({
 
         {/* Content — always on top */}
         <div className="absolute inset-0 z-10 flex items-center">
-          <div className="max-w-xl space-y-5 px-8 md:px-14">
+          <div className="max-w-[18rem] space-y-3 px-8 sm:max-w-xl sm:space-y-5 md:px-14">
             {/* Badge */}
             {slide.badgeText && (
               <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 backdrop-blur-sm">
@@ -134,7 +135,7 @@ export function HeroBannerCarousel({
             )}
 
             {/* Headline */}
-            <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow md:text-6xl lg:text-7xl">
+            <h1 className="font-display text-[2rem] font-extrabold leading-[1.05] tracking-tight text-white drop-shadow sm:text-4xl md:text-6xl lg:text-7xl">
               {titleLines.map((line, i) => (
                 <span key={i}>
                   {i === 1 ? <span className="text-violet-300">{line}</span> : line}
@@ -151,10 +152,10 @@ export function HeroBannerCarousel({
               {slide.ctaLabel && slide.ctaUrl && (
                 <Button
                   size="lg"
-                  className="h-12 rounded-full bg-primary px-8 text-sm font-bold shadow-lg shadow-primary/40 transition-all hover:bg-primary/90 hover:shadow-primary/60"
+                  className="h-11 rounded-full bg-primary px-6 text-sm font-bold shadow-lg shadow-primary/40 transition-all hover:bg-primary/90 hover:shadow-primary/60 sm:h-12 sm:px-8"
                   asChild
                 >
-                  <Link href={slide.ctaUrl}>
+                  <Link href={normalizeStorefrontHref(slide.ctaUrl)}>
                     {slide.ctaLabel} <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
@@ -191,14 +192,14 @@ export function HeroBannerCarousel({
             <button
               onClick={prev}
               aria-label="Slide trước"
-              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="absolute left-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:block"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={next}
               aria-label="Slide tiếp theo"
-              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="absolute right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/30 p-2 text-white backdrop-blur-sm transition hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:block"
             >
               <ChevronRight className="h-5 w-5" />
             </button>

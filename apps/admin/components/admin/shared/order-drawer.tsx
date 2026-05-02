@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 import { thumbLabelFromName, thumbToneFromId } from "./data-state";
-import { formatVnd } from "./mock-data";
+import { formatVnd } from "./format-vnd";
 import { ProductThumb } from "./product-thumb";
 import { StatusBadge, type StatusType } from "./status-badge";
 

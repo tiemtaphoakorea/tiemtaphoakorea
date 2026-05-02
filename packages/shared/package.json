@@ -14,7 +14,8 @@
     "./pagination": "./src/pagination.ts",
     "./api-endpoints": "./src/api-endpoints.ts",
     "./analytics": "./src/analytics.ts",
-    "./api-client": "./src/api-client.ts"
+    "./api-client": "./src/api-client.ts",
+    "./generated-icons": "./src/generated-icons.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

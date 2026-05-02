@@ -31,7 +31,7 @@ import {
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
-import { formatVnd } from "@/components/admin/shared/mock-data";
+import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -132,7 +132,11 @@ export default function AdminOrders() {
           <span className="text-xs text-muted-foreground">
             {ordersQuery.isLoading ? "Đang tải..." : `${total} đơn`}
           </span>
-          <Button variant="outline" className="ml-auto h-[34px]">
+          <Button
+            variant="outline"
+            className="ml-auto h-[34px]"
+            onClick={() => window.open("/api/admin/orders/export")}
+          >
             Xuất Excel
           </Button>
           <Button asChild className="h-[34px] gap-1.5">

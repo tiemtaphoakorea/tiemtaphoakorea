@@ -1,7 +1,7 @@
 import type { ProductListItem } from "@workspace/database/services/product.server";
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import Link from "next/link";
-import { CategoryProductCard } from "@/components/category/category-product-card";
+import { ProductCard } from "@/components/products/product-card";
 
 interface ProductRelatedProductsProps {
   products: ProductListItem[];
@@ -30,7 +30,7 @@ export function ProductRelatedProducts({ products, categorySlug }: ProductRelate
       </div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {products.map((p) => (
-          <CategoryProductCard key={p.id} product={p} />
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
     </section>

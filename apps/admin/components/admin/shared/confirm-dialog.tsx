@@ -5,6 +5,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -14,6 +15,7 @@ type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  description?: string;
   confirmLabel?: string;
   onConfirm: () => void;
 };
@@ -22,6 +24,7 @@ export function ConfirmDialog({
   open,
   onOpenChange,
   title,
+  description,
   confirmLabel = "Xác nhận",
   onConfirm,
 }: ConfirmDialogProps) {
@@ -30,6 +33,7 @@ export function ConfirmDialog({
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Huỷ</AlertDialogCancel>

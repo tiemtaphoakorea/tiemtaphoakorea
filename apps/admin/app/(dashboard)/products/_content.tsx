@@ -26,7 +26,7 @@ import {
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
-import { formatVnd } from "@/components/admin/shared/mock-data";
+import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { ProductDrawer } from "@/components/admin/shared/product-drawer";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
 import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";

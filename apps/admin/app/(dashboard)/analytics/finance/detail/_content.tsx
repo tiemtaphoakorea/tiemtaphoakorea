@@ -13,14 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import Link from "next/link";
+import { DollarSign, Percent, PieChart, TrendingUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AnalyticsSubpageHeader } from "@/components/admin/analytics/analytics-subpage-header";
 import { FinanceDayDrawer } from "@/components/admin/analytics/finance-day-drawer";
 import {
   type DateRange,
   FinanceRangePicker,
 } from "@/components/admin/analytics/finance-range-picker";
+import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -106,57 +108,62 @@ export default function AnalyticsFinanceDetailPage() {
       ? ((summary.grossProfit / summary.revenue) * 100).toFixed(1)
       : "—";
 
+  const summaryItems: MetricStatItem[] | null = summary
+    ? [
+        {
+          label: "Doanh thu",
+          value: <span className="text-blue-600">{formatCurrency(summary.revenue)}</span>,
+          icon: <DollarSign className="h-3.5 w-3.5" />,
+          iconClassName: "bg-blue-500/10 text-blue-500",
+          trend: { text: "Tổng kỳ được chọn", className: "text-muted-foreground" },
+        },
+        {
+          label: "Giá vốn",
+          value: formatCurrency(summary.cogs),
+          icon: <PieChart className="h-3.5 w-3.5" />,
+          iconClassName: "bg-orange-500/10 text-orange-500",
+          trend: { text: "COGS kỳ được chọn", className: "text-muted-foreground" },
+        },
+        {
+          label: "LN gộp",
+          value: (
+            <span className={summary.grossProfit >= 0 ? "text-emerald-600" : "text-red-500"}>
+              {formatCurrency(summary.grossProfit)}
+            </span>
+          ),
+          icon: <TrendingUp className="h-3.5 w-3.5" />,
+          iconClassName: "bg-emerald-500/10 text-emerald-500",
+          trend: { text: "Doanh thu − COGS", className: "text-muted-foreground" },
+        },
+        {
+          label: "Biên LN",
+          value: (
+            <span
+              className={
+                avgMargin === "—" || Number(avgMargin) >= 0 ? "text-emerald-600" : "text-red-500"
+              }
+            >
+              {avgMargin === "—" ? "—" : `${avgMargin}%`}
+            </span>
+          ),
+          icon: <Percent className="h-3.5 w-3.5" />,
+          iconClassName: "bg-primary/10 text-primary",
+          trend: { text: "Gross margin trung bình", className: "text-muted-foreground" },
+        },
+      ]
+    : null;
+
   return (
     <div className="flex flex-col gap-6 pb-10">
-      <div className="flex items-center gap-3">
-        <Link
-          href={ADMIN_ROUTES.ANALYTICS_FINANCE}
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ← Tài chính
-        </Link>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900">Chi tiết theo ngày</h1>
-      </div>
+      <AnalyticsSubpageHeader
+        title="Chi tiết theo ngày"
+        backHref={ADMIN_ROUTES.ANALYTICS_FINANCE}
+        backLabel="Tài chính"
+      />
 
       <FinanceRangePicker value={range} onChange={handleRangeChange} />
 
-      {/* Summary strip */}
-      {summary && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[
-            { label: "Doanh thu", value: formatCurrency(summary.revenue), color: "text-blue-600" },
-            {
-              label: "Giá vốn",
-              value: formatCurrency(summary.cogs),
-              color: "text-muted-foreground",
-            },
-            {
-              label: "LN gộp",
-              value: formatCurrency(summary.grossProfit),
-              color: summary.grossProfit >= 0 ? "text-emerald-600" : "text-red-500",
-            },
-            {
-              label: "Biên LN",
-              value: `${avgMargin}%`,
-              color:
-                avgMargin === "—"
-                  ? "text-muted-foreground"
-                  : Number(avgMargin) >= 0
-                    ? "text-emerald-600"
-                    : "text-red-500",
-            },
-          ].map(({ label, value, color }) => (
-            <Card key={label} className="border-none shadow-sm">
-              <CardContent className="flex flex-col gap-1">
-                <p className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">
-                  {label}
-                </p>
-                <p className={`text-lg font-black tabular-nums ${color}`}>{value}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      {summaryItems && <MetricStatBar items={summaryItems} />}
 
       {isSingleDay ? (
         <p className="py-4 text-sm text-muted-foreground">

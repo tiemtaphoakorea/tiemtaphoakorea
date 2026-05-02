@@ -32,7 +32,8 @@ function SubCategoryChipsInner({
   const items: ProductFilterCategory[] = [{ name: "Tất cả", slug: "" }, ...categories];
 
   return (
-    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+    // Subtle right-edge fade hints scrollability without visibly chopping the rightmost chip.
+    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 pr-3 [mask-image:linear-gradient(to_right,black_calc(100%-12px),transparent)] [-webkit-mask-image:linear-gradient(to_right,black_calc(100%-12px),transparent)]">
       {items.map((cat) => {
         const active = activeCategorySlug === cat.slug;
         return (
@@ -51,9 +52,25 @@ function SubCategoryChipsInner({
   );
 }
 
+function SubCategoryChipsFallback({ categories }: Pick<SubCategoryChipsProps, "categories">) {
+  // Render the chip outlines as static buttons during hydration so the row doesn't pop in.
+  return (
+    <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 pr-3">
+      {[{ name: "Tất cả", slug: "" }, ...categories].map((cat) => (
+        <div
+          key={cat.slug || "_all"}
+          className="h-9 flex-shrink-0 rounded-full border border-border bg-background px-4 text-sm font-medium leading-9 text-muted-foreground"
+        >
+          {cat.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SubCategoryChips(props: SubCategoryChipsProps) {
   return (
-    <Suspense fallback={<div className="h-9" />}>
+    <Suspense fallback={<SubCategoryChipsFallback categories={props.categories} />}>
       <SubCategoryChipsInner {...props} />
     </Suspense>
   );

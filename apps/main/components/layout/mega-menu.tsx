@@ -2,6 +2,7 @@
 
 import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { ChevronRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { GENERATED_ICONS, GeneratedIcon } from "../sections/generated-icon";
@@ -13,27 +14,25 @@ type Category = {
   children?: Category[];
 };
 
-const ICON_PALETTE = [
-  { icon: GENERATED_ICONS.ramen, bg: "#FFD9DB" },
-  { icon: GENERATED_ICONS.snacks, bg: "#FFE4D2" },
-  { icon: GENERATED_ICONS.drinks, bg: "#DCE6F8" },
-  { icon: GENERATED_ICONS.beauty, bg: "#FEE2E2" },
-  { icon: GENERATED_ICONS.beauty, bg: "#FEF9C3" },
-  { icon: GENERATED_ICONS.homecare, bg: "#FEF3C7" },
-  { icon: GENERATED_ICONS.gift, bg: "#FCE7F3" },
-  { icon: GENERATED_ICONS.flash, bg: "#FEF9C3" },
-  { icon: GENERATED_ICONS.voucher, bg: "#EEF2FF" },
-];
+export type MegaMenuFeaturedProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  basePrice: string | null;
+  minPrice: number;
+  thumbnail: string;
+};
 
-const SUBCAT_PALETTE = [
-  "#FFD9DB",
-  "#FEF9C3",
-  "#FFE4D2",
-  "#FEF3C7",
-  "#FFF3BF",
-  "#DCFCE7",
-  "#DCE6F8",
-  "#EEF2FF",
+const ICON_PALETTE = [
+  GENERATED_ICONS.ramen,
+  GENERATED_ICONS.snacks,
+  GENERATED_ICONS.drinks,
+  GENERATED_ICONS.beauty,
+  GENERATED_ICONS.beauty,
+  GENERATED_ICONS.homecare,
+  GENERATED_ICONS.gift,
+  GENERATED_ICONS.flash,
+  GENERATED_ICONS.voucher,
 ];
 
 function categoryHref(slug: string) {
@@ -75,7 +74,13 @@ function TriggerHamburger({ open }: { open: boolean }) {
   );
 }
 
-export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
+export function MegaMenu({
+  categories = [],
+  featuredByCategory = {},
+}: {
+  categories?: Category[];
+  featuredByCategory?: Record<string, MegaMenuFeaturedProduct[]>;
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
@@ -88,7 +93,9 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
   }
 
   const activeCategory = categories[active] ?? categories[0]!;
-  const activeVisual = ICON_PALETTE[active % ICON_PALETTE.length]!;
+  const activeIcon = ICON_PALETTE[active % ICON_PALETTE.length]!;
+  const hasChildren = !!activeCategory.children && activeCategory.children.length > 0;
+  const featuredProducts = featuredByCategory[activeCategory.id] ?? [];
 
   return (
     <div
@@ -108,7 +115,7 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
             <ul className="m-0 flex list-none flex-col gap-0.5 p-3">
               {categories.map((item, i) => {
                 const isActive = i === active;
-                const visual = ICON_PALETTE[i % ICON_PALETTE.length]!;
+                const icon = ICON_PALETTE[i % ICON_PALETTE.length]!;
                 return (
                   <li key={item.id}>
                     <Link
@@ -119,15 +126,7 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                         isActive ? "bg-[#EEF2FF]" : "hover:bg-muted/60"
                       }`}
                     >
-                      <span
-                        className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl"
-                        style={{ background: visual.bg }}
-                      >
-                        <GeneratedIcon
-                          src={visual.icon}
-                          className="h-7 w-7 rounded-lg object-contain"
-                        />
-                      </span>
+                      <GeneratedIcon src={icon} className="h-10 w-10 shrink-0 object-contain" />
                       <span
                         className={`flex-1 text-[14px] font-medium leading-tight ${
                           isActive ? "text-primary" : "text-foreground"
@@ -147,8 +146,8 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
               <div className="flex items-center justify-between">
                 <h4 className="m-0 text-[12px] font-bold uppercase leading-none tracking-[0.08em] text-muted-foreground">
                   <GeneratedIcon
-                    src={activeVisual.icon}
-                    className="mr-1 inline-block h-5 w-5 rounded-md object-contain align-middle"
+                    src={activeIcon}
+                    className="mr-1 inline-block h-5 w-5 object-contain align-middle"
                   />
                   {activeCategory.name.toUpperCase()}
                 </h4>
@@ -160,23 +159,18 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                 </Link>
               </div>
 
-              {activeCategory.children && activeCategory.children.length > 0 ? (
+              {hasChildren ? (
                 <div className="grid grid-cols-3 gap-x-5 gap-y-2.5">
-                  {activeCategory.children.map((sc, scIdx) => (
+                  {activeCategory.children!.map((sc) => (
                     <Link
                       key={sc.id}
                       href={categoryHref(sc.slug)}
                       className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60"
                     >
-                      <span
-                        className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl"
-                        style={{ background: SUBCAT_PALETTE[scIdx % SUBCAT_PALETTE.length] }}
-                      >
-                        <GeneratedIcon
-                          src={activeVisual.icon}
-                          className="h-7 w-7 rounded-lg object-contain"
-                        />
-                      </span>
+                      <GeneratedIcon
+                        src={activeIcon}
+                        className="h-10 w-10 shrink-0 object-contain"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-[13px] font-semibold leading-tight text-foreground">
                           {sc.name}
@@ -185,9 +179,15 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
                     </Link>
                   ))}
                 </div>
+              ) : featuredProducts.length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {featuredProducts.map((p) => (
+                    <FeaturedProductMiniCard key={p.id} product={p} />
+                  ))}
+                </div>
               ) : (
                 <p className="text-[13px] text-muted-foreground">
-                  Chưa có danh mục con. Bấm vào để xem tất cả sản phẩm trong{" "}
+                  Chưa có sản phẩm nổi bật. Bấm vào để xem tất cả sản phẩm trong{" "}
                   <span className="font-semibold text-foreground">{activeCategory.name}</span>.
                 </p>
               )}
@@ -196,5 +196,45 @@ export function MegaMenu({ categories = [] }: { categories?: Category[] }) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function FeaturedProductMiniCard({ product }: { product: MegaMenuFeaturedProduct }) {
+  const price = product.minPrice || Number(product.basePrice) || 0;
+  const basePrice = Number(product.basePrice) || 0;
+  const hasDiscount = basePrice > 0 && price > 0 && basePrice > price;
+  const formatPrice = (n: number) =>
+    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
+
+  return (
+    <Link
+      href={PUBLIC_ROUTES.PRODUCT_DETAIL(product.slug)}
+      className="group flex flex-col gap-2 rounded-xl border border-transparent p-2 transition-colors hover:border-border hover:bg-muted/40"
+    >
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted/40">
+        <Image
+          src={product.thumbnail || "/placeholder.png"}
+          alt={product.name}
+          fill
+          className="object-contain transition-transform duration-300 group-hover:scale-105"
+          sizes="220px"
+        />
+      </div>
+      <div className="min-w-0">
+        <div className="line-clamp-2 min-h-[2.25rem] text-[12px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
+          {product.name}
+        </div>
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-[13px] font-extrabold tracking-tight text-destructive tabular-nums">
+            {formatPrice(price)}
+          </span>
+          {hasDiscount ? (
+            <span className="text-[10px] font-medium text-muted-foreground line-through tabular-nums">
+              {formatPrice(basePrice)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </Link>
   );
 }

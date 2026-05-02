@@ -5,33 +5,44 @@ description: "Tổng quan về vai trò Quản lý và các quyền hạn trong 
 
 ## Mô tả
 
-Quản lý có toàn quyền trên các module vận hành và có thể xem báo cáo phân tích kinh doanh. Quản lý không truy cập được các tính năng tài chính, nhân sự và chi phí vận hành.
+Quản lý có toàn quyền trên các module vận hành và xem báo cáo phân tích. Quản lý **không** truy cập được Chi phí, Nhân sự và Cài đặt cửa hàng.
 
 ## Cách truy cập
 
-Đăng nhập tại trang admin với tài khoản được cấp quyền **Quản lý**.
+Đăng nhập tại trang admin với tài khoản được cấp quyền **Manager**.
 
-## Các tính năng bạn có thể sử dụng
+## Bố cục menu
 
-| Nhóm | Tính năng |
-|------|-----------|
-| Vận hành | Dashboard, Sản phẩm, Danh mục, Đơn hàng, Nhập hàng, Nhà cung cấp, Khách hàng, Tin nhắn |
-| Báo cáo | Báo cáo & Phân tích |
+| Nhóm | Tính năng có quyền |
+|------|-------------------|
+| **Quản trị** | Dashboard, Sản phẩm, Danh mục, Trang chủ (collections), Đơn hàng |
+| **Tài chính** | Công nợ, Báo cáo |
+| **Kho vận** | Quản lý kho (tồn + nhập hàng), Nhà cung cấp |
+| **Người dùng** | Khách hàng, Tin nhắn |
+
+### Tính năng KHÔNG có quyền
+
+- Chi phí
+- Nhân sự
+- Cài đặt cửa hàng
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Đăng nhập vào hệ thống">
-    Mở trình duyệt và truy cập trang admin. Nhập email và mật khẩu tài khoản Quản lý để đăng nhập.
+  <Step title="Đăng nhập">
+    Truy cập trang admin → nhập email và mật khẩu Quản lý.
   </Step>
-  <Step title="Kiểm tra menu điều hướng">
-    Menu bên trái hiển thị tất cả các tính năng vận hành và mục Báo cáo. Các mục Chi phí, Tài chính và Nhân sự không hiển thị với vai trò Quản lý.
+  <Step title="Theo dõi vận hành hàng ngày">
+    Vào **Dashboard** để xem KPI tổng quan: doanh thu hôm nay, đơn chờ xử lý, sản phẩm sắp hết.
   </Step>
-  <Step title="Bắt đầu từ Dashboard">
-    Nhấn vào **Dashboard** để xem tổng quan vận hành: đơn hàng mới và sản phẩm sắp hết hàng.
+  <Step title="Xử lý đơn và thu công nợ">
+    Vào **Đơn hàng** xử lý các đơn `pending` và **Công nợ** để theo dõi/thu các khoản chưa đủ thanh toán.
+  </Step>
+  <Step title="Xem báo cáo">
+    Vào **Báo cáo** để xem 4 thẻ phân tích: cơ cấu doanh thu, xu hướng tài chính, top sản phẩm, cảnh báo tồn kho.
   </Step>
 </Steps>
 
 <Note>
-Các mục **Chi phí**, **Tài chính** và **Nhân sự** không hiển thị trong menu của tài khoản Quản lý.
+Quản lý có quyền tải ảnh sản phẩm, vô hiệu hóa khách hàng — nhưng không thấy Chi phí, Nhân sự và Cài đặt.
 </Note>

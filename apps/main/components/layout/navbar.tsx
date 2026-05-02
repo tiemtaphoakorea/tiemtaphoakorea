@@ -1,11 +1,11 @@
 "use client";
 
 import { ACCOUNT_ROUTES, PUBLIC_ROUTES } from "@workspace/shared/routes";
-import { Bell, Heart, UserCircle2, Zap } from "lucide-react";
+import { UserCircle2, Zap } from "lucide-react";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { GENERATED_ICONS, GeneratedIcon } from "../sections/generated-icon";
-import { MegaMenu } from "./mega-menu";
+import { MegaMenu, type MegaMenuFeaturedProduct } from "./mega-menu";
 import { SearchAutocomplete } from "./search-autocomplete";
 
 type Category = {
@@ -28,9 +28,11 @@ const NAV_STRIP_ICONS = [
 export function Navbar({
   categories = [],
   navCategories = [],
+  featuredByCategory = {},
 }: {
   categories?: Category[];
   navCategories?: Category[];
+  featuredByCategory?: Record<string, MegaMenuFeaturedProduct[]>;
 }) {
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
 
@@ -53,20 +55,13 @@ export function Navbar({
         >
           <SearchAutocomplete variant="mobile" />
         </Suspense>
-        <button
+        {/* <button
           type="button"
           aria-label="Thông báo"
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
         >
           <Bell className="h-[18px] w-[18px]" />
-        </button>
-        <Link
-          href={ACCOUNT_ROUTES.WISHLIST}
-          aria-label="Yêu thích"
-          className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-500"
-        >
-          <Heart className="h-[18px] w-[18px]" />
-        </Link>
+        </button> */}
       </div>
 
       {/* Desktop header row (hidden on mobile) */}
@@ -85,13 +80,6 @@ export function Navbar({
         </Suspense>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href={ACCOUNT_ROUTES.WISHLIST}
-            aria-label="Yêu thích"
-            className="grid h-9 w-9 place-items-center rounded-full bg-rose-50 text-rose-500 transition-colors hover:bg-rose-100"
-          >
-            <Heart className="h-[18px] w-[18px]" />
-          </Link>
           {isCustomerLoggedIn && (
             <Link
               href={ACCOUNT_ROUTES.ROOT}
@@ -107,7 +95,10 @@ export function Navbar({
       {/* Desktop category nav */}
       <div className="hidden border-t border-border/60 bg-background/80 md:block">
         <div className="container mx-auto flex items-center">
-          <MegaMenu categories={navCategories.length > 0 ? navCategories : categories} />
+          <MegaMenu
+            categories={navCategories.length > 0 ? navCategories : categories}
+            featuredByCategory={featuredByCategory}
+          />
 
           <div className="no-scrollbar flex-1 overflow-x-auto">
             <div className="flex items-center gap-1 px-4 py-1.5 whitespace-nowrap">
@@ -119,11 +110,6 @@ export function Navbar({
                   to={PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(cat.slug)}
                 />
               ))}
-              <NavStripLink
-                icon={GENERATED_ICONS.voucher}
-                label="Mới về"
-                to={PUBLIC_ROUTES.PRODUCTS_BY_SORT("latest")}
-              />
             </div>
           </div>
         </div>

@@ -11,9 +11,6 @@ interface ProductClientContainerProps {
   product: Product;
 }
 
-const formatPrice = (n: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
-
 export function ProductClientContainer({ product }: ProductClientContainerProps) {
   const [selectedVariantId, setSelectedVariantId] = useState(product.variants[0]?.id || "");
 
@@ -25,7 +22,6 @@ export function ProductClientContainer({ product }: ProductClientContainerProps)
   const productBasePrice = Number(product.basePrice ?? 0);
   const hasDiscount = productBasePrice > price && productBasePrice > 0;
   const discountPct = hasDiscount ? Math.round(100 - (price / productBasePrice) * 100) : undefined;
-  const stock = Number(selectedVariant?.onHand || 0);
 
   return (
     <>
@@ -49,14 +45,7 @@ export function ProductClientContainer({ product }: ProductClientContainerProps)
 
       <ProductDetailTabs product={product} />
 
-      <ProductStickyBuy
-        productName={product.name}
-        variantName={selectedVariant?.name}
-        image={images[0] || "/placeholder.png"}
-        price={price}
-        formatPrice={formatPrice}
-        canOrder={stock > 0}
-      />
+      <ProductStickyBuy />
     </>
   );
 }

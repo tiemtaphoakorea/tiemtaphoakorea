@@ -8,16 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface CategorySalesChartProps {
   data: any[];
@@ -27,7 +18,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
+    <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl font-black">Doanh số theo danh mục</CardTitle>
         <CardDescription className="font-medium">
@@ -78,11 +69,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
                 return null;
               }}
             />
-            <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={32}>
-              {data.map((entry: any) => (
-                <Cell key={`cell-${entry.category}`} fill={entry.color} />
-              ))}
-            </Bar>
+            <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={32} fill="var(--primary)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

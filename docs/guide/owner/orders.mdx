@@ -1,92 +1,115 @@
 ---
 title: "Đơn hàng"
-description: "Quản lý toàn bộ đơn hàng khách hàng từ khi đặt đến khi giao thành công."
+description: "Quản lý toàn bộ đơn hàng khách hàng — thanh toán, xuất kho, hoàn thành."
 ---
 
 ## Mô tả
 
-Trang Đơn hàng là trung tâm xử lý tất cả đơn hàng của khách hàng. Bạn có thể xem, ghi nhận thanh toán, cập nhật trạng thái và theo dõi lịch sử từng đơn.
+Trang Đơn hàng là trung tâm xử lý mọi đơn hàng. Mỗi đơn có **2 trạng thái song song**:
+
+- **Trạng thái thanh toán** (`paymentStatus`): theo dõi tiền đã thu.
+- **Trạng thái xử lý** (`fulfillmentStatus`): theo dõi giao hàng / hoàn thành.
 
 ## Cách truy cập
 
 Menu bên trái → **Đơn hàng**.
 
-## Vòng đời đơn hàng
+## Trạng thái đơn hàng
+
+### Trạng thái thanh toán
+
+| Mã | Hiển thị | Ý nghĩa |
+|----|---------|---------|
+| `unpaid` | Chưa thanh toán | Khách chưa trả đồng nào |
+| `partial` | Thanh toán một phần | Đã thu một phần, vẫn còn nợ |
+| `paid` | Đã thanh toán | Đã thu đủ |
+
+### Trạng thái xử lý (fulfillment)
+
+| Mã | Hiển thị | Ý nghĩa |
+|----|---------|---------|
+| `pending` | Chờ xử lý | Đơn vừa tạo, chưa xuất kho |
+| `stock_out` | Đã xuất kho | Hàng đã được lấy ra để giao cho khách |
+| `completed` | Hoàn thành | Khách đã nhận hàng |
+| `cancelled` | Đã huỷ | Đơn bị huỷ |
+
+### Vòng đời chuẩn
 
 ```mermaid
-flowchart TD
-    A["Chờ xác nhận<br/>pending"] -->|Thu tiền đủ| B["Đã thanh toán<br/>paid"]
-    B -->|Đánh dấu đã giao| D["Đã giao<br/>delivered"]
+flowchart LR
+    A["Chờ xử lý<br/>pending"] --> B["Đã xuất kho<br/>stock_out"]
+    B --> C["Hoàn thành<br/>completed"]
+    A & B -->|Huỷ| D["Đã huỷ<br/>cancelled"]
 
-    B -.->|Nếu đơn qua luồng khác| E["Đang đóng gói<br/>preparing"]
-    E -.-> C["Đang giao<br/>shipping"]
-    E & C -->|Đánh dấu đã giao| D
-
-    A & B & E -->|Hủy| F["Đã hủy<br/>cancelled"]
-
-    style F fill:#fee2e2,stroke:#ef4444,color:#991b1b
-    style D fill:#dcfce7,stroke:#22c55e,color:#166534
-    style E fill:#fef9c3,stroke:#eab308,color:#713f12
+    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
+    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
 ```
 
-### Luồng xử lý thông thường
-
-Trong admin, luồng chuẩn là: **Chờ xác nhận → Đã thanh toán → Đã giao**.
-
-Các trạng thái `preparing` (Đang đóng gói) và `shipping` (Đang giao) có thể xuất hiện trên những đơn hàng được xử lý qua các luồng khác. Khi gặp đơn ở những trạng thái này, bạn có thể đánh dấu đã giao hoặc hủy (chỉ `preparing` — xem bảng bên dưới).
-
-### Mô tả các trạng thái
-
-| Trạng thái | Màu badge | Ý nghĩa |
-|-----------|-----------|---------|
-| `pending` — Chờ xác nhận | Xám | Đơn vừa được tạo, chưa thu tiền |
-| `paid` — Đã thanh toán | Xanh lam | Khách đã thanh toán đủ |
-| `preparing` — Đang đóng gói | Vàng | Hàng đang được chuẩn bị để giao |
-| `shipping` — Đang giao | Xanh chàm | Hàng đã được bàn giao cho shipper |
-| `delivered` — Đã giao | Xanh lá | Khách đã nhận hàng thành công |
-| `cancelled` — Đã hủy | Đỏ | Đơn đã bị hủy |
-
 <Note>
-**Tồn kho**: Số lượng tồn kho bị trừ ngay khi đơn hàng được tạo thành công. Khi đơn bị hủy, tồn kho được hoàn trả tự động.
+**Tồn kho**: Số lượng tồn kho được giữ chỗ (`reserved`) ngay khi đơn được tạo, và chuyển thành xuất kho khi trạng thái sang `stock_out`. Khi đơn bị huỷ, số đã giữ chỗ được trả về kho.
 </Note>
 
 ## Trang danh sách
 
-### Thẻ thống kê
+### Tab lọc nhanh
 
-Đầu trang hiển thị 4 thẻ tổng quan:
+Thanh tab phía trên bảng:
 
-| Thẻ | Ý nghĩa |
-|-----|---------|
-| **Tổng đơn hàng** | Tổng số đơn trong hệ thống |
-| **Chờ xử lý** | Số đơn đang ở trạng thái `pending`, cần xác nhận |
-| **Hoàn thành** | Số đơn đã giao thành công |
-| **Tổng doanh thu** | Tổng tiền từ tất cả đơn hàng |
+- **Tất cả**
+- **Chờ xử lý** (`pending`)
+- **Đã xuất kho** (`stock_out`)
+- **Hoàn thành** (`completed`)
+- **Đã huỷ** (`cancelled`)
 
-### Tìm kiếm và lọc
+### Tìm kiếm
 
-<Steps>
-  <Step title="Tìm kiếm đơn hàng">
-    Nhập mã đơn hoặc tên/số điện thoại khách vào ô **Tìm mã đơn hàng, khách hàng...** ở góc trái thanh công cụ. Kết quả lọc ngay khi nhập.
-  </Step>
-  <Step title="Lọc theo trạng thái">
-    Nhấn nút **Tất cả trạng thái** → chọn trạng thái cần xem từ danh sách: Chờ xử lý, Đã thanh toán, Đang đóng gói, Đang giao, Đã giao, Đã hủy.
-  </Step>
-</Steps>
+Ô **Tìm mã đơn, khách hàng...** ở góc phải lọc theo mã đơn, tên hoặc số điện thoại khách. Debounce 300ms.
+
+### Hành động trên thanh công cụ
+
+- **Xuất Excel** — xuất danh sách đang lọc ra file Excel.
+- **Tạo đơn** — chuyển đến `/orders/new` để tạo đơn thủ công cho khách.
 
 ### Bảng đơn hàng
 
-Mỗi hàng hiển thị:
-
 | Cột | Nội dung |
 |-----|---------|
-| **Mã đơn** | Số thứ tự đơn hàng (ví dụ: #1042) |
-| **Khách hàng** | Tên và số điện thoại |
-| **Trạng thái** | Badge màu theo trạng thái hiện tại |
-| **Tổng tiền** | Giá trị đơn hàng |
-| **Ngày tạo** | Thời điểm đặt hàng |
+| **Mã đơn** | Mã đơn hàng (font monospace) |
+| **Khách hàng** | Tên đầy đủ |
+| **SĐT** | Số điện thoại |
+| **Số lượng** | Số món trong đơn |
+| **Tổng tiền** | Tổng tiền (in đỏ) |
+| **Thanh toán** | Badge: Chưa TT / Một phần / Đã TT |
+| **Trạng thái** | Badge fulfillment |
+| **Thời gian** | Ngày giờ tạo đơn |
+| **Chi tiết** | Mở trang chi tiết đơn |
 
-Nhấn **Xem chi tiết** ở cuối hàng để mở trang chi tiết.
+Nhấn vào hàng đơn hoặc nút **Chi tiết** để mở trang chi tiết.
+
+### Phân trang
+
+Cuối bảng có dropdown **10 / 25 / 50 / 100** mỗi trang. Mặc định 25.
+
+## Tạo đơn hàng thủ công
+
+<Steps>
+  <Step title="Mở form tạo đơn">
+    Nhấn **Tạo đơn** ở thanh công cụ → mở trang `/orders/new`.
+  </Step>
+  <Step title="Chọn khách hàng">
+    Tìm khách hàng theo tên/SĐT hoặc tạo khách mới ngay tại form.
+  </Step>
+  <Step title="Thêm sản phẩm">
+    Tìm sản phẩm và thêm biến thể vào giỏ. Số lượng có thể chỉnh trực tiếp.
+  </Step>
+  <Step title="Cấu hình giao hàng và giảm giá">
+    Nhập địa chỉ giao, ghi chú, giảm giá (nếu có).
+  </Step>
+  <Step title="Lưu đơn">
+    Nhấn **Lưu** — đơn được tạo ở trạng thái `pending` / `unpaid`.
+  </Step>
+</Steps>
 
 ## Trang chi tiết đơn hàng
 
@@ -94,83 +117,87 @@ Nhấn **Xem chi tiết** ở cuối hàng để mở trang chi tiết.
 
 <Steps>
   <Step title="Mở hộp thoại thanh toán">
-    Nhấn nút **Thanh toán** (màu xanh lá) ở góc phải tiêu đề trang.
+    Nhấn nút **Thanh toán** ở góc phải tiêu đề trang.
   </Step>
   <Step title="Nhập thông tin thanh toán">
-    Điền các trường trong hộp thoại:
-    - **Số tiền thanh toán** — nhập số tiền khách trả lần này (tối đa bằng số tiền còn nợ hiển thị bên dưới)
-    - **Phương thức** — chọn một trong ba: **Tiền mặt**, **Chuyển khoản**, **Thẻ**
-    - **Mã tham chiếu** — nhập mã giao dịch ngân hàng (chỉ xuất hiện khi chọn Chuyển khoản)
-    - **Ghi chú** — ghi chú nội bộ, tùy chọn
+    - **Số tiền thanh toán** — tối đa bằng số còn nợ.
+    - **Phương thức** — Tiền mặt / Chuyển khoản / Thẻ.
+    - **Mã tham chiếu** — chỉ hiển thị khi chọn Chuyển khoản.
+    - **Ghi chú** — nội bộ, tùy chọn.
   </Step>
   <Step title="Lưu thanh toán">
-    Nhấn **Lưu thanh toán**. Hệ thống cập nhật số tiền đã thu và thêm mục vào **Lịch sử thanh toán**. Khi khách thanh toán đủ, trạng thái đơn tự chuyển sang **Đã thanh toán**.
+    Nhấn **Lưu thanh toán**. Mỗi lần thu tiền là một dòng trong **Lịch sử thanh toán**.
+    Khi đủ tiền, `paymentStatus` chuyển thành `paid`.
   </Step>
 </Steps>
 
 <Note>
-Đơn hàng hỗ trợ thanh toán nhiều lần. Mỗi lần thu tiền được ghi nhận riêng — hệ thống cộng dồn và hiển thị phần còn lại để bạn dễ theo dõi.
+Đơn hỗ trợ thanh toán nhiều lần. Trạng thái `partial` xuất hiện khi đã thu nhưng chưa đủ.
 </Note>
 
-### Cập nhật trạng thái
+### Cập nhật trạng thái xử lý
 
-Các nút hành động xuất hiện ở góc phải tiêu đề, thay đổi theo trạng thái hiện tại:
+Nút hành động ở góc phải tiêu đề thay đổi theo trạng thái hiện tại:
 
-| Trạng thái hiện tại | Nút hành động |
+| Trạng thái hiện tại | Nút khả dụng |
 |---------------------|---------------|
-| Chờ xác nhận | **Hủy đơn** |
-| Đã thanh toán | **Đánh dấu đã giao** |
-| Đang đóng gói | **Đánh dấu đã giao** · **Hủy đơn** |
-| Đang giao | **Đánh dấu đã giao** |
-| Đã giao / Đã hủy | *(trạng thái cuối — không có hành động)* |
+| `pending` — Chờ xử lý | **Đánh dấu xuất kho** · **Huỷ đơn** |
+| `stock_out` — Đã xuất kho | **Đánh dấu hoàn thành** · **Huỷ đơn** |
+| `completed` — Hoàn thành | *(trạng thái cuối)* |
+| `cancelled` — Đã huỷ | *(trạng thái cuối)* |
 
 <Steps>
   <Step title="Thêm ghi chú cập nhật (tùy chọn)">
-    Cuộn xuống phần **Ghi chú cập nhật**, nhập lý do hoặc ghi chú cho lần chuyển trạng thái này (ví dụ: "Khách đổi địa chỉ"). Ghi chú này sẽ lưu vào dòng thời gian **Lịch sử trạng thái**.
+    Phần **Ghi chú cập nhật** — nhập lý do (ví dụ: "Khách đổi địa chỉ"). Lưu vào dòng thời gian **Lịch sử trạng thái**.
   </Step>
   <Step title="Nhấn nút hành động">
-    Nhấn nút tương ứng ở tiêu đề trang. Hộp thoại xác nhận xuất hiện → nhấn **OK** để xác nhận.
+    Hộp thoại xác nhận → **OK** để xác nhận chuyển trạng thái.
   </Step>
 </Steps>
 
 ### Lịch sử trạng thái
 
-Phần **Lịch sử trạng thái** hiển thị dòng thời gian toàn bộ các lần chuyển trạng thái, bao gồm:
-- Tên trạng thái và thời điểm
-- Người thực hiện cập nhật
-- Ghi chú kèm theo (nếu có)
+Phần **Lịch sử trạng thái** là dòng thời gian các lần chuyển trạng thái:
+
+- Tên trạng thái + thời điểm.
+- Người thực hiện cập nhật.
+- Ghi chú kèm theo (nếu có).
 
 ### Chỉnh sửa ghi chú và giảm giá
 
 <Steps>
   <Step title="Mở chế độ chỉnh sửa">
-    Trong cột thông tin bên phải, nhấn nút **Chỉnh sửa**.
+    Cột thông tin bên phải → nhấn **Chỉnh sửa**.
   </Step>
-  <Step title="Cập nhật nội dung">
-    - **Ghi chú admin** — ghi chú nội bộ, không hiển thị cho khách hàng
-    - **Giảm giá (VND)** — nhập số tiền chiết khấu áp dụng cho đơn hàng
+  <Step title="Cập nhật">
+    - **Ghi chú admin** — nội bộ, không hiển thị cho khách.
+    - **Giảm giá (VND)** — số tiền chiết khấu.
   </Step>
   <Step title="Lưu">
-    Nhấn **Lưu** để áp dụng thay đổi.
+    Nhấn **Lưu**.
   </Step>
 </Steps>
 
-### In hóa đơn
+### In hoá đơn
 
-Nhấn **In hóa đơn** ở góc phải tiêu đề để in hoặc xuất PDF hóa đơn đơn hàng.
+Nhấn **In hoá đơn** ở góc phải tiêu đề để in/xuất PDF. Thông tin cửa hàng (tên, địa chỉ, MST) lấy từ **Cài đặt → Cửa hàng**.
 
-### Xóa đơn hàng
+### Xoá đơn hàng
 
-Chỉ có thể xóa đơn hàng ở trạng thái **Đã hủy**. Nút **Xóa** xuất hiện ở cuối cột phải sau khi đơn đã bị hủy.
+Chỉ có thể xoá đơn ở trạng thái **Đã huỷ** (`cancelled`). Nút **Xoá** xuất hiện ở cuối cột phải sau khi huỷ.
 
 <Warning>
-Xóa đơn hàng là thao tác không thể hoàn tác. Toàn bộ lịch sử đơn sẽ bị xóa vĩnh viễn.
+Xoá đơn là thao tác **không thể hoàn tác**. Toàn bộ lịch sử đơn sẽ mất vĩnh viễn.
 </Warning>
 
 ## Đơn hàng tách (Split Orders)
 
-Khi khách chọn **Giao hàng khi có hàng** lúc đặt, hệ thống tự động tách đơn gốc thành các đơn con:
+Khi khách chọn **Giao hàng khi có hàng** lúc đặt và đơn có cả hàng có sẵn lẫn hàng đặt trước, hệ thống tự động tách đơn gốc thành các đơn con theo loại tồn:
 
-- **Đơn con** hiển thị banner _"Đơn hàng được tách từ đơn gốc"_ kèm link quay về đơn gốc.
-- **Đơn gốc** hiển thị danh sách các đơn con với loại hàng (Hàng có sẵn / Hàng đặt trước) và trạng thái riêng.
-- Mỗi đơn con được xử lý và theo dõi hoàn toàn độc lập.
+- **Đơn con A** (suffix `A`) — hàng có sẵn (`in_stock`).
+- **Đơn con B** (suffix `B`) — hàng đặt trước (`pre_order`).
+
+Mỗi đơn con có trạng thái riêng và được xử lý độc lập:
+
+- Đơn con hiển thị banner _"Đơn hàng được tách từ đơn gốc"_ kèm link về đơn gốc.
+- Đơn gốc hiển thị danh sách đơn con với loại hàng và trạng thái riêng.

@@ -60,6 +60,24 @@ export type InventoryMovement = {
   createdByName: string | null;
 };
 
+export type BannerAdminItem = {
+  id: string;
+  type: "custom" | "category";
+  categoryId: string | null;
+  categoryName: string | null;
+  imageUrl: string | null;
+  title: string | null;
+  subtitle: string | null;
+  badgeText: string | null;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  discountTag: string | null;
+  discountTagSub: string | null;
+  accentColor: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 export type DailySummaryRow = {
   date: string;
   totalIn: number;
@@ -92,15 +110,6 @@ export const adminClient = {
    */
   async logout() {
     return axios.post<void>(API_ENDPOINTS.ADMIN.LOGOUT) as unknown as Promise<void>;
-  },
-
-  /**
-   * Fetch admin dashboard statistics.
-   */
-  async getStats() {
-    return axios.get<{ stats: DashboardStats }>(API_ENDPOINTS.ADMIN.STATS) as unknown as Promise<{
-      stats: DashboardStats;
-    }>;
   },
 
   async getDashboardKPIs() {
@@ -152,15 +161,6 @@ export const adminClient = {
     return axios.get<{ messages: ChatMessage[] }>(
       API_ENDPOINTS.ADMIN.CHAT.DETAILS(roomId),
     ) as unknown as Promise<{ messages: ChatMessage[] }>;
-  },
-
-  /**
-   * Fetch chat room details.
-   */
-  async getChatRoomDetails(roomId: string) {
-    return axios.get<ChatRoomWithDetails>(
-      API_ENDPOINTS.ADMIN.CHAT.DETAILS(roomId),
-    ) as unknown as Promise<ChatRoomWithDetails>;
   },
 
   async sendChatMessage(data: { roomId: string; content: string }) {
@@ -706,5 +706,111 @@ export const adminClient = {
       API_ENDPOINTS.ADMIN.INVENTORY.ADJUST,
       body,
     ) as unknown as Promise<InventoryMovement>;
+  },
+
+  // Banners
+  async listBanners() {
+    return axios.get<{ banners: BannerAdminItem[] }>(
+      API_ENDPOINTS.ADMIN.BANNERS,
+    ) as unknown as Promise<{ banners: BannerAdminItem[] }>;
+  },
+
+  async createBanner(data: Record<string, unknown>) {
+    return axios.post<{ success: boolean; banner: BannerAdminItem }>(
+      API_ENDPOINTS.ADMIN.BANNERS,
+      data,
+    ) as unknown as Promise<{ success: boolean; banner: BannerAdminItem }>;
+  },
+
+  async updateBanner(id: string, data: Record<string, unknown>) {
+    return axios.patch<{ success: boolean; banner: BannerAdminItem }>(
+      API_ENDPOINTS.ADMIN.BANNER_DETAIL(id),
+      data,
+    ) as unknown as Promise<{ success: boolean; banner: BannerAdminItem }>;
+  },
+
+  async deleteBanner(id: string) {
+    return axios.delete<{ success: boolean }>(
+      API_ENDPOINTS.ADMIN.BANNER_DETAIL(id),
+    ) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async reorderBanners(ids: string[]) {
+    return axios.post<{ success: boolean }>(API_ENDPOINTS.ADMIN.BANNERS_REORDER, {
+      ids,
+    }) as unknown as Promise<{ success: boolean }>;
+  },
+
+  // Homepage Collections
+  async listHomepageCollections() {
+    return axios.get<{
+      collections: Array<{
+        id: string;
+        type: "manual" | "best_sellers" | "new_arrivals" | "by_category";
+        title: string;
+        subtitle: string | null;
+        iconKey: string | null;
+        viewAllUrl: string | null;
+        itemLimit: number;
+        isActive: boolean;
+        sortOrder: number;
+        categoryId: string | null;
+        daysWindow: number | null;
+        productCount: number;
+      }>;
+    }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS) as unknown as Promise<{
+      collections: Array<{
+        id: string;
+        type: "manual" | "best_sellers" | "new_arrivals" | "by_category";
+        title: string;
+        subtitle: string | null;
+        iconKey: string | null;
+        viewAllUrl: string | null;
+        itemLimit: number;
+        isActive: boolean;
+        sortOrder: number;
+        categoryId: string | null;
+        daysWindow: number | null;
+        productCount: number;
+      }>;
+    }>;
+  },
+
+  async getHomepageCollection(id: string) {
+    return axios.get<{ collection: Record<string, unknown> }>(
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
+    ) as unknown as Promise<{ collection: Record<string, unknown> }>;
+  },
+
+  async createHomepageCollection(payload: Record<string, unknown>) {
+    return axios.post<{ success: boolean; collection: Record<string, unknown> }>(
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS,
+      payload,
+    ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
+  },
+
+  async updateHomepageCollection(id: string, payload: Record<string, unknown>) {
+    return axios.patch<{ success: boolean; collection: Record<string, unknown> }>(
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
+      payload,
+    ) as unknown as Promise<{ success: boolean; collection: Record<string, unknown> }>;
+  },
+
+  async deleteHomepageCollection(id: string) {
+    return axios.delete<{ success: boolean }>(
+      API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_DETAIL(id),
+    ) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async reorderHomepageCollections(ids: string[]) {
+    return axios.post<{ success: boolean }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTIONS_REORDER, {
+      ids,
+    }) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async setHomepageCollectionProducts(id: string, productIds: string[]) {
+    return axios.put<{ success: boolean }>(API_ENDPOINTS.ADMIN.HOMEPAGE_COLLECTION_PRODUCTS(id), {
+      productIds,
+    }) as unknown as Promise<{ success: boolean }>;
   },
 };

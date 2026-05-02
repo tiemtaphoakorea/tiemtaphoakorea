@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
-import { formatVnd } from "./mock-data";
+import { formatVnd } from "./format-vnd";
 import { StatusBadge, type StatusType } from "./status-badge";
 
 type DebtPaymentDrawerProps = {

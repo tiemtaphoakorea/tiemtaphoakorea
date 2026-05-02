@@ -1,0 +1,47 @@
+---
+title: "Quản lý kho"
+description: "Theo dõi tồn kho từng SKU, phát hiện sản phẩm sắp hết và hết hàng."
+---
+
+## Mô tả
+
+Trang **Quản lý kho** hiển thị tồn kho của từng SKU/biến thể, kèm cảnh báo sản phẩm sắp hết hoặc đã hết hàng để lên kế hoạch nhập kịp thời.
+
+## Cách truy cập
+
+Menu bên trái → **Quản lý kho**.
+
+## Thẻ thống kê
+
+| Thẻ | Ý nghĩa |
+|-----|---------|
+| **Tổng SKU** | Số biến thể đang quản lý |
+| **Còn hàng** | SKU đủ tồn |
+| **Sắp hết** | SKU dưới ngưỡng cảnh báo |
+| **Hết hàng** | SKU đã hết tồn vật lý |
+
+## Tab dữ liệu
+
+- **Tồn kho** — toàn bộ sản phẩm: Tồn khả dụng / Tồn vật lý / Đã giữ chỗ.
+- **Sắp hết** — SKU dưới ngưỡng (mặc định 30).
+- **Hết hàng** — SKU có tồn vật lý = 0.
+
+## Các thao tác chính
+
+<Steps>
+  <Step title="Kiểm tra cảnh báo">
+    Banner đỏ ở đầu trang tóm tắt số SKU sắp/hết. Nhấn tab **Sắp hết** hoặc **Hết hàng** để xem chi tiết.
+  </Step>
+  <Step title="Xem tồn kho từng biến thể">
+    Tab **Tồn kho** hiển thị từng SKU với 3 cột tồn khác nhau (xem giải thích bên dưới).
+  </Step>
+  <Step title="Điều chỉnh kho">
+    Nhấn **Điều chỉnh kho** để nhập số liệu thủ công khi kiểm kê hoặc khi có hao hụt.
+  </Step>
+</Steps>
+
+### Ý nghĩa cột tồn
+
+- **Tồn vật lý** — số thực tế trong kho.
+- **Đã giữ chỗ** — số đang trong đơn chưa giao.
+- **Tồn khả dụng** = Vật lý − Đã giữ chỗ (số có thể bán).

@@ -4,6 +4,7 @@ import type { CategoryCardItem } from "@workspace/database/services/categoryCard
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { normalizeStorefrontHref } from "./normalize-storefront-href";
 
 type Props = {
   cards: CategoryCardItem[];
@@ -23,7 +24,7 @@ export function CategoryCardsGrid({ cards }: Props) {
 
 function CategoryCard({ card }: { card: CategoryCardItem }) {
   return (
-    <Link href={card.linkUrl} className="group block cursor-pointer">
+    <Link href={normalizeStorefrontHref(card.linkUrl)} className="group block cursor-pointer">
       <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
         {card.imageUrl ? (
           <Image

@@ -1,7 +1,7 @@
-import { cn } from "@workspace/ui/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Slot } from "radix-ui";
-import type * as React from "react";
+import { cn } from "@workspace/ui/lib/utils"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
+import type * as React from "react"
 
 // Variants & sizes follow design-system/preview/buttons.html (storefront tokens
 // applied project-wide). Indigo brand · 36/44/48 size scale · shadow-pop CTAs.
@@ -17,13 +17,20 @@ const buttonVariants = cva(
         accent:
           "bg-accent text-accent-foreground shadow-[0_4px_0_rgba(217,119,6,0.22)] hover:bg-[#D97706] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF] disabled:opacity-100 disabled:shadow-none",
         // Soft secondary — indigo tint
-        secondary: "bg-[#EEF2FF] text-primary hover:border-primary aria-expanded:border-primary",
+        secondary:
+          "bg-[#EEF2FF] text-primary hover:border-primary aria-expanded:border-primary",
         // Outline — indigo border on white
         outline:
           "border-[1.5px] border-primary bg-card text-primary hover:bg-[#EEF2FF] aria-expanded:bg-[#EEF2FF]",
-        // Neutral ghost — soft border on white
+        // Neutral ghost — utility/close/nav buttons (subtle border change only)
         ghost:
           "border-[1.5px] border-border bg-card text-foreground hover:border-muted-foreground aria-expanded:border-muted-foreground",
+        // Ghost that hovers primary — for edit/action icon buttons in lists
+        "ghost-primary":
+          "border-[1.5px] border-border bg-card text-foreground hover:border-primary hover:bg-primary/5 hover:text-primary aria-expanded:border-primary aria-expanded:bg-primary/5 aria-expanded:text-primary",
+        // Ghost that hovers destructive — for delete/danger icon buttons in lists
+        "ghost-destructive":
+          "border-[1.5px] border-border bg-card text-foreground hover:border-destructive hover:bg-destructive/5 hover:text-destructive",
         // Destructive (kept compatible with existing usages)
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
@@ -43,7 +50,8 @@ const buttonVariants = cva(
         icon: "size-11",
         "icon-xs":
           "size-7 rounded-[8px] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-9 rounded-[10px] in-data-[slot=button-group]:rounded-lg",
+        "icon-sm":
+          "size-9 rounded-[10px] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-12",
       },
       shape: {
@@ -56,8 +64,8 @@ const buttonVariants = cva(
       size: "default",
       shape: "square",
     },
-  },
-);
+  }
+)
 
 function Button({
   className,
@@ -68,9 +76,9 @@ function Button({
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
+    asChild?: boolean
   }) {
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild ? Slot.Root : "button"
 
   return (
     <Comp
@@ -82,7 +90,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, shape, className }))}
       {...props}
     />
-  );
+  )
 }
 
-export { Button, buttonVariants };
+export { Button, buttonVariants }

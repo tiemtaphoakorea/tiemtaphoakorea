@@ -50,14 +50,19 @@ async function ProductsPageContent({
 }) {
   const resolvedSearchParams = await searchParams;
 
-  const categorySlug = (resolvedSearchParams.category as string) || "";
+  const categoryParam = resolvedSearchParams.category;
+  const categorySlugs = Array.isArray(categoryParam)
+    ? categoryParam
+    : categoryParam
+      ? [categoryParam]
+      : [];
   const search = ((resolvedSearchParams.q as string) || "").trim();
   const sort =
     (resolvedSearchParams.sort as (typeof PRODUCT_SORT)[keyof typeof PRODUCT_SORT]) ||
     PRODUCT_SORT.LATEST;
   const page = Math.max(1, Number.parseInt((resolvedSearchParams.page as string) || "1", 10));
-  const parsedLimit = Number.parseInt((resolvedSearchParams.limit as string) || "12", 10);
-  const pageSize = [4, 12, 24, 48].includes(parsedLimit) ? parsedLimit : 12;
+  const parsedLimit = Number.parseInt((resolvedSearchParams.limit as string) || "15", 10);
+  const pageSize = [15, 30, 48].includes(parsedLimit) ? parsedLimit : 15;
 
   const rawMinPrice = Number.parseFloat((resolvedSearchParams.minPrice as string) || "");
   const rawMaxPrice = Number.parseFloat((resolvedSearchParams.maxPrice as string) || "");
@@ -67,7 +72,7 @@ async function ProductsPageContent({
     getCategories(),
     getProductsForListing({
       search: search || undefined,
-      categorySlug,
+      categorySlugs,
       sort,
       page,
       limit: pageSize,
@@ -76,16 +81,17 @@ async function ProductsPageContent({
     }),
   ]);
 
-  const activeCategory = categorySlug
-    ? (() => {
-        for (const cat of categories) {
-          if (cat.slug === categorySlug) return cat;
-          const child = cat.children?.find((c) => c.slug === categorySlug);
-          if (child) return child;
-        }
-        return null;
-      })()
-    : null;
+  const findCategory = (slug: string) => {
+    for (const cat of categories) {
+      if (cat.slug === slug) return cat;
+      const child = cat.children?.find((c) => c.slug === slug);
+      if (child) return child;
+    }
+    return null;
+  };
+
+  const activeCategories = categorySlugs.map(findCategory).filter(Boolean);
+  const activeCategory = activeCategories.length === 1 ? activeCategories[0] : null;
 
   return (
     <FilterProvider>
@@ -120,7 +126,7 @@ async function ProductsPageContent({
       <div className="grid items-start gap-6 lg:grid-cols-[260px_1fr]">
         <CategorySidebar
           categories={categories}
-          activeCategorySlug={categorySlug}
+          activeCategorySlugs={categorySlugs}
           basePath={PRODUCTS_BASE_PATH}
           activeMinPrice={minPrice}
           activeMaxPrice={maxPrice}
@@ -128,14 +134,20 @@ async function ProductsPageContent({
 
         <main className="flex min-w-0 flex-col gap-5">
           <CategoryHero
-            name={activeCategory?.name || "Tất cả sản phẩm"}
+            name={
+              activeCategories.length > 1
+                ? `${activeCategories.length} danh mục`
+                : activeCategory?.name || "Tất cả sản phẩm"
+            }
             total={listing.total}
-            isCategorized={Boolean(activeCategory)}
+            isCategorized={activeCategories.length > 0}
           />
 
           <SubCategoryChips
             categories={categories}
-            activeCategorySlug={categorySlug}
+            activeCategorySlug={
+              activeCategories.length === 1 ? (activeCategories[0]?.slug ?? "") : ""
+            }
             basePath={PRODUCTS_BASE_PATH}
           />
 
@@ -145,8 +157,10 @@ async function ProductsPageContent({
             pageSize={pageSize}
             currentPage={page}
             activeSort={sort}
-            activeCategorySlug={categorySlug}
-            activeCategoryName={activeCategory?.name ?? ""}
+            activeCategorySlugs={categorySlugs}
+            activeCategories={activeCategories.filter(
+              (c): c is NonNullable<typeof c> => c !== null,
+            )}
             basePath={PRODUCTS_BASE_PATH}
             activeMinPrice={minPrice}
             activeMaxPrice={maxPrice}

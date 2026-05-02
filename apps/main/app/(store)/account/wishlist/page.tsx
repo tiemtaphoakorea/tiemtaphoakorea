@@ -48,7 +48,7 @@ export default function WishlistPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {items.map((item) => (
+        {items.map((item, i) => (
           <div
             key={item.id}
             className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-md"
@@ -61,6 +61,7 @@ export default function WishlistPage() {
                 src={item.image || "/placeholder.png"}
                 alt={item.name}
                 fill
+                priority={i < 4}
                 className="object-contain transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />

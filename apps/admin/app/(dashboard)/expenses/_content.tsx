@@ -23,7 +23,7 @@ import {
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
 import { ExpenseDrawer } from "@/components/admin/shared/expense-drawer";
-import { formatVnd } from "@/components/admin/shared/mock-data";
+import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { StatCard } from "@/components/admin/shared/stat-card";
 import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";

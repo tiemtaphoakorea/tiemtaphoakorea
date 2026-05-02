@@ -1,31 +1,57 @@
 import { getCategories } from "@workspace/database/services/category.server";
+import { getFeaturedProductsByRootCategoryIds } from "@workspace/database/services/product.server";
 import { getSetting } from "@workspace/database/services/settings.server";
-import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatWidgetInitializer } from "@/components/store/chat-widget-initializer";
 
-type ContactWidgetConfig = { phoneNumber?: string; messengerUrl?: string };
+type ContactWidgetConfig = { messengerUrl?: string };
+type ShopInfoConfig = { phone?: string };
+type FooterConfig = {
+  tagline?: string;
+  hq?: string;
+  office?: string;
+  officeDetail?: string;
+  copyright?: string;
+};
+type SocialConfig = {
+  instagram?: string;
+  facebook?: string;
+  youtube?: string;
+};
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [allCategories, navCategories, contactConfig] = await Promise.all([
-    getCategories(),
-    getCategories({ navOnly: true }),
-    getSetting<ContactWidgetConfig>("contact_widget_config"),
-  ]);
+  const [allCategories, navCategories, contactConfig, footerConfig, socialConfig, shopInfo] =
+    await Promise.all([
+      getCategories(),
+      getCategories({ navOnly: true }),
+      getSetting<ContactWidgetConfig>("contact_widget_config"),
+      getSetting<FooterConfig>("footer_config"),
+      getSetting<SocialConfig>("social_config"),
+      getSetting<ShopInfoConfig>("shop_info"),
+    ]);
 
   const categories = allCategories.filter((c) => c.isActive);
 
+  const leafNavRootIds = navCategories
+    .filter((c) => !c.children || c.children.length === 0)
+    .map((c) => c.id);
+  const featuredByCategory =
+    leafNavRootIds.length > 0 ? await getFeaturedProductsByRootCategoryIds(leafNavRootIds, 6) : {};
+
   return (
     <div className="bg-background flex min-h-screen flex-col font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary">
-      <AnnouncementBar />
-      <Navbar categories={categories} navCategories={navCategories} />
-      <main className="w-full flex-1 pb-16 md:pb-0">{children}</main>
-      <Footer />
+      <Navbar
+        categories={categories}
+        navCategories={navCategories}
+        featuredByCategory={featuredByCategory}
+      />
+      <main className="w-full flex-1 pb-20 md:pb-0">{children}</main>
+      <Footer footer={footerConfig ?? {}} social={socialConfig ?? {}} />
       <MobileBottomNav />
       <ChatWidgetInitializer
-        phoneNumber={contactConfig?.phoneNumber}
+        phoneNumber={shopInfo?.phone}
         messengerUrl={contactConfig?.messengerUrl}
       />
     </div>

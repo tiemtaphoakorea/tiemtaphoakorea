@@ -1,6 +1,6 @@
 import { ERROR_MESSAGE } from "@workspace/shared/constants";
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { and, asc, count, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, getTableColumns, ilike, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
 import { products } from "../schema/products";
@@ -200,9 +200,14 @@ export async function getFlatCategoriesPaginated({
       .where(where)
       .then((r) => Number(r[0]?.c ?? 0)),
     db
-      .select()
+      .select({
+        ...getTableColumns(categories),
+        productCount: sql<number>`count(${products.id})::int`,
+      })
       .from(categories)
+      .leftJoin(products, eq(products.categoryId, categories.id))
       .where(where)
+      .groupBy(categories.id)
       .orderBy(asc(categories.displayOrder), asc(categories.name))
       .limit(limit)
       .offset(offset),

@@ -1,6 +1,6 @@
 import { formatCurrency } from "@workspace/shared/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { CheckCircle2, Clock, ShoppingBag, TrendingUp } from "lucide-react";
+import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
 
 interface OrderStatsProps {
   stats: {
@@ -12,67 +12,36 @@ interface OrderStatsProps {
 }
 
 export function OrderStats({ stats }: OrderStatsProps) {
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-            Tổng đơn hàng
-          </CardTitle>
-          <ShoppingBag className="text-primary h-4 w-4" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-black">{stats.total}</div>
-          <p className="text-primary mt-1 text-[10px] font-bold tracking-tight uppercase">
-            Lịch sử giao dịch
-          </p>
-        </CardContent>
-      </Card>
+  const items: MetricStatItem[] = [
+    {
+      label: "Tổng đơn hàng",
+      value: stats.total,
+      icon: <ShoppingBag className="h-3.5 w-3.5" />,
+      iconClassName: "bg-primary/10 text-primary",
+      trend: { text: "Lịch sử giao dịch", className: "text-primary" },
+    },
+    {
+      label: "Chờ xử lý",
+      value: stats.pending ?? "-",
+      icon: <Clock className="h-3.5 w-3.5" />,
+      iconClassName: "bg-amber-500/10 text-amber-500",
+      trend: { text: "Cần xác nhận", className: "text-amber-500" },
+    },
+    {
+      label: "Hoàn thành",
+      value: stats.completed ?? "-",
+      icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+      iconClassName: "bg-emerald-500/10 text-emerald-500",
+      trend: { text: "Đã giao thành công", className: "text-emerald-500" },
+    },
+    {
+      label: "Tổng doanh thu",
+      value: formatCurrency(stats.totalRevenue),
+      icon: <TrendingUp className="h-3.5 w-3.5" />,
+      iconClassName: "bg-primary/10 text-primary",
+      trend: { text: "Doanh thu thực tế", className: "text-primary" },
+    },
+  ];
 
-      <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-            Chờ xử lý
-          </CardTitle>
-          <Clock className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-black">{stats.pending ?? "-"}</div>
-          <p className="mt-1 text-xs font-bold tracking-tight text-amber-500/80 uppercase">
-            Cần xác nhận
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-            Hoàn thành
-          </CardTitle>
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-black">{stats.completed ?? "-"}</div>
-          <p className="mt-1 text-xs font-bold tracking-tight text-emerald-500/80 uppercase">
-            Đã giao thành công
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="border-none shadow-sm ring-1 ring-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-black tracking-wider text-slate-500 uppercase">
-            Tổng doanh thu
-          </CardTitle>
-          <TrendingUp className="text-primary h-4 w-4" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-black">{formatCurrency(stats.totalRevenue)}</div>
-          <p className="text-primary mt-1 text-[10px] font-bold tracking-tight uppercase">
-            Doanh thu thực tế
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <MetricStatBar items={items} />;
 }

@@ -4,12 +4,10 @@ import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { NextResponse } from "next/server";
 
 export type ContactWidgetConfig = {
-  phoneNumber: string;
   messengerUrl: string;
 };
 
 const DEFAULT_CONFIG: ContactWidgetConfig = {
-  phoneNumber: "",
   messengerUrl: "",
 };
 
@@ -33,7 +31,6 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
   const config: ContactWidgetConfig = {
-    phoneNumber: String(body.phoneNumber ?? "").trim(),
     messengerUrl: String(body.messengerUrl ?? "").trim(),
   };
 

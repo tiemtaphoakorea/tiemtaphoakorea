@@ -36,6 +36,10 @@ export const API_ENDPOINTS = {
     BANNERS: "/api/admin/banners",
     BANNER_DETAIL: (id: string) => `/api/admin/banners/${id}`,
     BANNERS_REORDER: "/api/admin/banners/reorder",
+    HOMEPAGE_COLLECTIONS: "/api/admin/homepage-collections",
+    HOMEPAGE_COLLECTION_DETAIL: (id: string) => `/api/admin/homepage-collections/${id}`,
+    HOMEPAGE_COLLECTIONS_REORDER: "/api/admin/homepage-collections/reorder",
+    HOMEPAGE_COLLECTION_PRODUCTS: (id: string) => `/api/admin/homepage-collections/${id}/products`,
     INVENTORY: {
       MOVEMENTS: "/api/admin/inventory/movements",
       ADJUST: "/api/admin/inventory/movements/adjust",

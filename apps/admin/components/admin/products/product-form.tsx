@@ -308,8 +308,8 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                   <Button
                     type="button"
                     size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-red-400 hover:bg-red-50 hover:text-red-500"
+                    variant="ghost-destructive"
+                    className="h-8 w-8"
                     onClick={() => {
                       dispatch({
                         type: "SET_VARIANTS",

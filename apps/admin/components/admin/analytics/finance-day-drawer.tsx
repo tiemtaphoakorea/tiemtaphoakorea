@@ -6,6 +6,7 @@ import { formatCurrency } from "@workspace/shared/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -15,6 +16,16 @@ interface FinanceDayDrawerProps {
 }
 
 export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.admin.finance.dayOrders(date ?? ""),
     queryFn: () => adminClient.getDayOrders(date!),
@@ -35,7 +46,14 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
 
   return (
     <Sheet open={!!date} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-2xl">
+      <SheetContent
+        side={isDesktop ? "right" : "bottom"}
+        className={
+          isDesktop
+            ? "flex w-[400px] flex-col overflow-y-auto sm:max-w-[400px]"
+            : "max-h-[80vh] overflow-y-auto rounded-t-2xl"
+        }
+      >
         <SheetHeader>
           <SheetTitle className="text-lg font-black capitalize">{formattedDate}</SheetTitle>
         </SheetHeader>

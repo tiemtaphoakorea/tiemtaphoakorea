@@ -57,8 +57,55 @@ export function ChatWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    // < sm breakpoint (640px) → bottom-sheet; ≥ sm → right-side drawer.
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Hide FAB while scrolling down past 120px; re-show on scroll up.
+  // Material Design FAB pattern — keeps the last row of content reachable while reading.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y > 120 && dy > 5) setHidden(true);
+        else if (dy < -5) setHidden(false);
+        lastY = y;
+        raf = 0;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Hide FAB while the footer is in viewport — newsletter input/Đăng ký button sits beneath
+  // the FAB at right-4 bottom-20 on mobile, otherwise gets visually obstructed.
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry?.isIntersecting ?? false),
+      { rootMargin: "0px" },
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [mounted]);
 
   const sanitizedPhone = phoneNumber?.replace(/[^\d+]/g, "");
   const state = isOpen ? "open" : "closed";
@@ -84,8 +131,10 @@ export function ChatWidget({
       {/* FAB stack */}
       <div
         className={cn(
-          "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 md:bottom-4",
+          "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 transition-all duration-200 ease-out md:bottom-4",
           isChatOpen && "hidden",
+          // Auto-hide while reading or when footer is in view — only when speed-dial is collapsed.
+          (hidden || footerVisible) && !isOpen && "pointer-events-none translate-y-[140%] opacity-0",
         )}
       >
         {/* AI Chat — secondary FAB (top of stack). */}
@@ -111,9 +160,16 @@ export function ChatWidget({
             </SheetTrigger>
           </div>
           <SheetContent
-            side="right"
+            side={isMobile ? "bottom" : "right"}
             showCloseButton={false}
-            className="flex h-svh w-screen flex-col gap-0 border-l-0 p-0 sm:!max-w-[420px] sm:border-l"
+            className={cn(
+              "flex flex-col gap-0 overflow-hidden p-0",
+              isMobile
+                ? // Mobile bottom-sheet — 90% viewport height with rounded top corners.
+                  "h-[90svh] rounded-t-2xl border-t data-[side=bottom]:!h-[90svh]"
+                : // Desktop right-side drawer.
+                  "h-svh border-l-0 data-[side=right]:!w-[420px] sm:!max-w-[420px] sm:border-l",
+            )}
           >
             <SheetHeader className="flex flex-row items-center gap-2 bg-primary p-4 text-primary-foreground">
               <MessageCircle className="size-5" />

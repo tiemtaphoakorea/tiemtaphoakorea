@@ -19,28 +19,42 @@
         "groups": [
           {
             "group": "Bắt đầu",
-            "pages": ["owner/introduction"]
+            "pages": ["owner/introduction", "owner/permissions"]
           },
           {
-            "group": "Vận hành",
+            "group": "Quản trị",
             "pages": [
               "owner/dashboard",
               "owner/products",
               "owner/categories",
-              "owner/orders",
+              "owner/homepage",
+              "owner/orders"
+            ]
+          },
+          {
+            "group": "Kho vận",
+            "pages": [
+              "owner/inventory",
               "owner/supplier-orders",
-              "owner/suppliers",
+              "owner/suppliers"
+            ]
+          },
+          {
+            "group": "Người dùng",
+            "pages": [
               "owner/customers",
               "owner/chat"
             ]
           },
           {
-            "group": "Quản lý cấp cao",
+            "group": "Tài chính & Quản trị cấp cao",
             "pages": [
-              "owner/analytics",
+              "owner/debts",
               "owner/expenses",
+              "owner/analytics",
               "owner/finance",
-              "owner/users"
+              "owner/users",
+              "owner/settings"
             ]
           }
         ]
@@ -53,21 +67,36 @@
             "pages": ["manager/introduction"]
           },
           {
-            "group": "Vận hành",
+            "group": "Quản trị",
             "pages": [
               "manager/dashboard",
               "manager/products",
               "manager/categories",
-              "manager/orders",
+              "manager/homepage",
+              "manager/orders"
+            ]
+          },
+          {
+            "group": "Kho vận",
+            "pages": [
+              "manager/inventory",
               "manager/supplier-orders",
-              "manager/suppliers",
+              "manager/suppliers"
+            ]
+          },
+          {
+            "group": "Người dùng",
+            "pages": [
               "manager/customers",
               "manager/chat"
             ]
           },
           {
-            "group": "Báo cáo",
-            "pages": ["manager/analytics"]
+            "group": "Tài chính & Báo cáo",
+            "pages": [
+              "manager/debts",
+              "manager/analytics"
+            ]
           }
         ]
       },
@@ -79,17 +108,33 @@
             "pages": ["staff/introduction"]
           },
           {
-            "group": "Vận hành",
+            "group": "Quản trị",
             "pages": [
               "staff/dashboard",
               "staff/products",
               "staff/categories",
-              "staff/orders",
+              "staff/homepage",
+              "staff/orders"
+            ]
+          },
+          {
+            "group": "Kho vận",
+            "pages": [
+              "staff/inventory",
               "staff/supplier-orders",
-              "staff/suppliers",
+              "staff/suppliers"
+            ]
+          },
+          {
+            "group": "Người dùng",
+            "pages": [
               "staff/customers",
               "staff/chat"
             ]
+          },
+          {
+            "group": "Công nợ",
+            "pages": ["staff/debts"]
           }
         ]
       }
