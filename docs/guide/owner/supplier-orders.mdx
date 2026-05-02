@@ -1,15 +1,17 @@
 ---
 title: "Nhập hàng"
-description: "Quản lý đơn đặt hàng từ nhà cung cấp để nhập tồn kho."
+description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp."
 ---
 
 ## Mô tả
 
-Trang Nhập hàng dùng để tạo và theo dõi các đơn mua hàng từ nhà cung cấp. Sau khi xác nhận nhận hàng, tồn kho sản phẩm tương ứng được cập nhật tự động.
+Trang **Nhập hàng** quản lý đơn mua hàng từ nhà cung cấp (supplier orders). Khi xác nhận nhận hàng, tồn kho và lịch sử giá vốn của sản phẩm được cập nhật tự động.
 
 ## Cách truy cập
 
-Menu bên trái → **Nhập hàng**.
+Trang **Nhập hàng** truy cập qua trang **Quản lý kho** (Menu bên trái → mục **Kho vận** → **Quản lý kho**).
+
+Trong trang Quản lý kho, mở tab quản lý đơn nhập hoặc nhấn nút **Tạo đơn nhập** để mở form tạo đơn từ nhà cung cấp.
 
 ## Vòng đời đơn nhập hàng
 
@@ -17,8 +19,7 @@ Menu bên trái → **Nhập hàng**.
 flowchart TD
     A["Chờ xác nhận<br/>pending"] --> B["Đã đặt hàng<br/>ordered"]
     B --> C["Đã nhận hàng<br/>received"]
-
-    A & B -->|Hủy| D["Đã hủy<br/>cancelled"]
+    A & B -->|Huỷ| D["Đã hủy<br/>cancelled"]
 
     style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
     style C fill:#dcfce7,stroke:#22c55e,color:#166534
@@ -30,36 +31,35 @@ flowchart TD
 | Trạng thái | Ý nghĩa |
 |-----------|---------|
 | `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
-| `ordered` — Đã đặt hàng | Đã liên hệ và xác nhận đặt hàng với nhà cung cấp, đang chờ hàng về |
-| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho và giá vốn đã được cập nhật |
+| `ordered` — Đã đặt hàng | Đã liên hệ và xác nhận đặt hàng với NCC, đang chờ về |
+| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho và giá vốn đã cập nhật |
 | `cancelled` — Đã hủy | Đơn nhập bị hủy |
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Tạo đơn nhập hàng mới">
-    Nhấn **Tạo đơn nhập** → chọn nhà cung cấp → thêm sản phẩm và số lượng cần nhập → nhập giá vốn thực tế → **Lưu**.
+    Nhấn **Tạo đơn nhập** → chọn **Nhà cung cấp** → chọn **biến thể sản phẩm** → nhập **số lượng** cần nhập, **giá vốn thực tế**, **ngày dự kiến nhận hàng**, ghi chú (tùy chọn) → **Lưu**.
     Đơn được tạo ở trạng thái **Chờ xác nhận** (`pending`).
   </Step>
-  <Step title="Xác nhận đã đặt hàng với nhà cung cấp">
-    Sau khi liên hệ nhà cung cấp và xác nhận đơn hàng, mở đơn nhập → nhấn **Xác nhận đặt hàng**.
-    Trạng thái chuyển sang **Đã đặt hàng** (`ordered`) — hệ thống ghi lại ngày đặt hàng.
+  <Step title="Xác nhận đã đặt hàng với NCC">
+    Sau khi liên hệ NCC và xác nhận đơn, mở đơn nhập → **Xác nhận đặt hàng**. Trạng thái chuyển sang `ordered`.
   </Step>
   <Step title="Xác nhận nhận hàng">
-    Khi hàng về kho, mở đơn nhập → nhấn **Xác nhận nhận hàng**.
-    Tồn kho và lịch sử giá vốn sản phẩm được cập nhật ngay lập tức.
-    Trạng thái chuyển sang **Đã nhận hàng** (`received`).
+    Khi hàng về, mở đơn → **Xác nhận nhận hàng**. Hệ thống cập nhật:
+    - **Tồn kho** vật lý của biến thể (cộng vào số đã có).
+    - **Lịch sử giá vốn** của sản phẩm (dùng để tính lợi nhuận).
+    Trạng thái chuyển sang `received`.
   </Step>
   <Step title="Theo dõi đơn nhập">
-    Danh sách đơn nhập hiển thị trạng thái, nhà cung cấp, ngày tạo và tổng giá trị từng đơn.
-    Lọc theo trạng thái để xem nhanh đơn đang chờ nhận hàng.
+    Danh sách hiển thị trạng thái, NCC, ngày tạo và tổng giá trị. Lọc theo trạng thái để xem nhanh đơn đang chờ về.
   </Step>
 </Steps>
 
 ### Hủy đơn nhập
 
-Đơn nhập ở trạng thái `pending` hoặc `ordered` có thể bị hủy. Mở đơn nhập → nhấn **Hủy đơn**. Đơn ở trạng thái `received` không thể hủy vì tồn kho đã được cập nhật.
+Đơn `pending` hoặc `ordered` có thể hủy. Mở đơn → **Hủy đơn**. Đơn `received` không thể hủy vì tồn kho đã được cập nhật.
 
 <Note>
-Giá vốn nhập trong đơn nhập hàng sẽ được ghi vào lịch sử giá vốn sản phẩm, ảnh hưởng đến tính toán lợi nhuận của các đơn hàng tiếp theo. Hãy nhập đúng giá vốn thực tế khi tạo đơn.
+Giá vốn nhập **ảnh hưởng trực tiếp đến lợi nhuận** trong báo cáo Tài chính. Hãy nhập đúng giá vốn thực tế khi tạo đơn.
 </Note>

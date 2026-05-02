@@ -1,30 +1,62 @@
 ---
 title: "Báo cáo & Phân tích"
-description: "Xem báo cáo doanh thu, số đơn hàng, khách hàng và tỷ lệ chuyển đổi theo thời gian."
+description: "Báo cáo doanh thu, lợi nhuận, top sản phẩm và cảnh báo tồn kho."
 ---
 
 ## Mô tả
 
-Trang Báo cáo cung cấp dữ liệu phân tích về hoạt động kinh doanh: doanh thu, số đơn hàng, khách hàng mới và hiệu suất bán hàng theo thời gian.
+Trang **Báo cáo** tổng hợp 4 thẻ phân tích chính phục vụ ra quyết định kinh doanh: cơ cấu doanh thu theo danh mục, xu hướng tài chính, top sản phẩm bán chạy và cảnh báo tồn kho.
 
 ## Cách truy cập
 
-Menu bên trái → **Báo cáo**.
+Menu bên trái → **Báo cáo** *(chỉ hiển thị với Chủ shop và Quản lý)*.
+
+## Các thẻ phân tích
+
+Trang hiển thị 4 thẻ trên grid 2 cột:
+
+### 1. Cơ cấu doanh thu (Revenue Mix)
+
+Biểu đồ donut chia doanh thu theo danh mục sản phẩm. Giúp nhận diện danh mục đóng góp nhiều nhất.
+
+### 2. Xu hướng tài chính (Finance Trend)
+
+Biểu đồ vùng (area) hiển thị **doanh thu** và **lợi nhuận gộp** theo thời gian (vd: 30 ngày gần nhất). Dùng để phát hiện xu hướng tăng/giảm.
+
+### 3. Top sản phẩm (Top Products)
+
+Top 3 sản phẩm bán chạy nhất theo số lượng/doanh thu. Mỗi mục hiển thị tên, hình thumbnail và chỉ số bán.
+
+### 4. Cảnh báo tồn kho (Stock Alert)
+
+Tóm tắt số SKU đang **sắp hết** và **đã hết hàng**, kèm danh sách top SKU cần ưu tiên nhập.
+
+## Trang con
+
+Một số phân tích có trang riêng (truy cập từ liên kết "Xem chi tiết" trên thẻ):
+
+| URL | Nội dung |
+|-----|---------|
+| `/analytics/overview` | Tổng quan KPI mở rộng |
+| `/analytics/products` | Bảng xếp hạng sản phẩm chi tiết |
+| `/analytics/inventory` | Phân tích tồn kho sâu |
+| `/analytics/finance` | P&L chi tiết theo kỳ |
+| `/analytics/finance/detail` | Phân tích theo từng đơn |
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Chọn khoảng thời gian">
-    Dùng bộ chọn ngày ở đầu trang để lọc dữ liệu theo ngày, tuần, tháng hoặc khoảng tùy chỉnh.
+  <Step title="Mở dashboard báo cáo">
+    Vào **Báo cáo** → 4 thẻ phân tích hiển thị mặc định.
   </Step>
-  <Step title="Xem các chỉ số tổng quan">
-    Trang hiển thị 4 chỉ số chính: **Doanh thu** (tổng doanh thu trong kỳ), **Đơn hàng** (số đơn đã hoàn thành), **Khách hàng** (số khách mới), và **Tỷ lệ chuyển đổi**.
+  <Step title="Xem chi tiết một thẻ">
+    Nhấn liên kết **Xem chi tiết** (hoặc tiêu đề) trên thẻ để mở trang phân tích sâu hơn.
   </Step>
-  <Step title="Xem top sản phẩm">
-    Bảng xếp hạng sản phẩm bán chạy nhất theo số lượng và theo doanh thu.
+  <Step title="Theo dõi tồn kho">
+    Thẻ **Cảnh báo tồn kho** cập nhật theo thời gian thực; nhấn vào sản phẩm để chuyển trực tiếp sang **Quản lý kho**.
   </Step>
 </Steps>
 
 <Note>
-Trang Báo cáo chỉ dành cho Chủ shop và Quản lý. Để xem lợi nhuận và P&L chi tiết, truy cập trang **Tài chính** (chỉ dành cho Chủ shop).
+Báo cáo chỉ dành cho Chủ shop và Quản lý. Để xem P&L chi tiết kèm chi phí vận hành, dùng trang **Tài chính** (chỉ Chủ shop).
 </Note>

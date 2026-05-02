@@ -1,0 +1,79 @@
+---
+title: "Công nợ"
+description: "Theo dõi và thu hồi công nợ từ khách hàng có đơn chưa thanh toán đủ."
+---
+
+## Mô tả
+
+Trang Công nợ tổng hợp tất cả khách hàng đang còn nợ tiền (đơn hàng chưa thanh toán đủ). Bạn có thể lọc theo độ tuổi nợ, ghi nhận thanh toán nhanh và xem chi tiết từng đơn nợ.
+
+## Cách truy cập
+
+Menu bên trái → **Công nợ** (mục **Tài chính**).
+
+Sidebar hiển thị badge đỏ với số khách quá hạn (nợ trên 30 ngày) — nhấn vào để mở trang.
+
+## Thẻ thống kê
+
+Đầu trang hiển thị 3 thẻ tổng quan:
+
+| Thẻ | Ý nghĩa |
+|-----|---------|
+| **Tổng công nợ** | Tổng số tiền đang còn phải thu (VND) |
+| **Khách có nợ** | Số khách hàng đang nợ |
+| **Số đơn nợ hiển thị** | Số khách đang hiển thị theo bộ lọc/trang hiện tại |
+
+## Lọc theo độ tuổi nợ
+
+Thanh tab phía trên bảng cho phép lọc nhanh:
+
+| Tab | Ý nghĩa |
+|-----|---------|
+| **Tất cả** | Hiển thị toàn bộ khách đang nợ |
+| **&lt; 7 ngày** | Khoản nợ mới phát sinh trong tuần |
+| **7-30 ngày** | Đang chờ xử lý |
+| **&gt; 30 ngày** | Đã quá hạn (badge đỏ) |
+
+## Tìm kiếm
+
+Ô **Tìm tên KH, SĐT...** ở góc phải lọc theo tên hoặc số điện thoại khách. Kết quả tự cập nhật sau khi gõ (debounce 300ms).
+
+## Bảng công nợ
+
+| Cột | Nội dung |
+|-----|---------|
+| **Khách hàng** | Tên đầy đủ |
+| **SĐT** | Số điện thoại |
+| **Số đơn nợ** | Số đơn còn phải thu |
+| **Số tiền nợ** | Tổng nợ (in đỏ) |
+| **Nợ lâu nhất** | Ngày phát sinh khoản nợ cũ nhất + số ngày tính đến hiện tại |
+| **Trạng thái** | Badge theo độ tuổi: *Mới* / *Chờ thu* / *Quá hạn* |
+| **Thu tiền** | Mở hộp thoại ghi nhận thanh toán |
+
+## Các thao tác chính
+
+<Steps>
+  <Step title="Mở danh sách công nợ">
+    Vào **Công nợ** → mặc định hiển thị tất cả khách đang nợ, sắp xếp theo nợ lâu nhất.
+  </Step>
+  <Step title="Lọc khách quá hạn">
+    Nhấn tab **&gt; 30 ngày** để chỉ xem khách quá hạn cần ưu tiên thu hồi.
+  </Step>
+  <Step title="Ghi nhận thanh toán">
+    Nhấn nút **Thu tiền** trên hàng khách → hộp thoại bên phải hiển thị danh sách đơn còn nợ → chọn đơn → nhập số tiền, phương thức (Tiền mặt / Chuyển khoản / Thẻ), mã tham chiếu, ghi chú → **Lưu thanh toán**.
+  </Step>
+  <Step title="Xem chi tiết đơn nợ">
+    Trong hộp thoại thu tiền, mỗi đơn có liên kết để mở trang chi tiết đơn hàng nếu cần kiểm tra thêm thông tin.
+  </Step>
+  <Step title="Đổi số dòng/trang">
+    Cuối bảng có dropdown **10 / 25 / 50 / 100** mỗi trang. Mặc định 25.
+  </Step>
+</Steps>
+
+<Note>
+Khoản thanh toán ghi nhận tại đây sẽ tự động cập nhật trạng thái đơn hàng tương ứng (chuyển sang **Đã thanh toán** khi thu đủ).
+</Note>
+
+<Warning>
+Khách hàng có nợ &gt; 30 ngày được đánh dấu đỏ và xuất hiện trong badge **N quá hạn** trên sidebar. Hãy ưu tiên liên hệ thu hồi.
+</Warning>

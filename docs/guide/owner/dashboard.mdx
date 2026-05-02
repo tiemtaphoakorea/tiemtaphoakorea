@@ -1,47 +1,61 @@
 ---
 title: "Dashboard & KPI"
-description: "Trang tổng quan hiển thị các chỉ số kinh doanh quan trọng theo thời gian thực."
+description: "Trang tổng quan hiển thị 4 KPI hôm nay, biểu đồ 7 ngày và 2 bảng nhanh."
 ---
 
 ## Mô tả
 
-Dashboard là trang đầu tiên hiển thị khi bạn đăng nhập. Trang tổng hợp các chỉ số vận hành và tài chính quan trọng nhất của cửa hàng.
+**Dashboard** là trang đầu tiên hiển thị khi đăng nhập. Trang gồm 3 khu vực: **4 thẻ KPI**, **2 biểu đồ 7 ngày**, và **2 bảng nhanh** (top sản phẩm, đơn hàng gần đây).
 
 ## Cách truy cập
 
-Menu bên trái → **Dashboard** (biểu tượng ngôi nhà, mục đầu tiên).
+Menu bên trái → **Dashboard** (mục đầu tiên trong nhóm **Quản trị**).
 
-## Các widget KPI
+## Khu vực 1 — KPI hôm nay
 
-<CardGroup cols={2}>
-  <Card title="Doanh thu hôm nay" icon="chart-line">
-    Tổng doanh thu từ các đơn hàng được thanh toán trong ngày.
-  </Card>
-  <Card title="Đơn hàng mới" icon="shopping-cart">
-    Số đơn hàng mới trong ngày, kèm trạng thái pending/paid.
-  </Card>
-  <Card title="Sản phẩm sắp hết hàng" icon="warning">
-    Danh sách sản phẩm có tồn kho thấp cần nhập thêm.
-  </Card>
-  <Card title="Lợi nhuận tháng" icon="dollar-sign">
-    Tổng lợi nhuận (doanh thu trừ giá vốn và chi phí) trong tháng hiện tại.
-  </Card>
-</CardGroup>
+Bốn thẻ trên grid 4 cột:
+
+| Thẻ | Giá trị | Phụ |
+|-----|---------|-----|
+| **Doanh thu hôm nay** | Tổng tiền đơn đã tạo hôm nay | Số đơn |
+| **Đơn chờ xử lý** | Số đơn `pending` | "Cần xác nhận" |
+| **Sản phẩm sắp hết** | Số SKU dưới ngưỡng | "M đã hết" |
+| **Khách hàng mới** | Số khách đăng ký hôm nay | "Hôm nay" |
+
+## Khu vực 2 — Biểu đồ 7 ngày
+
+| Biểu đồ | Nội dung |
+|---------|----------|
+| **Doanh thu 7 ngày** | Bar chart 7 ngày gần nhất, kèm pill "+x% tuần trước" |
+| **Đơn hàng 7 ngày** | Bar chart 7 ngày gần nhất, pill số đơn hôm nay |
+
+## Khu vực 3 — Bảng nhanh
+
+### Sản phẩm bán chạy
+
+Top 5 sản phẩm theo số lượng bán. Cột: Sản phẩm · Đã bán. Liên kết **Xem tất cả** mở trang Sản phẩm.
+
+### Đơn hàng gần đây
+
+6 đơn mới nhất. Mỗi mục hiển thị: mã đơn · giờ tạo · tên khách · tổng tiền · badge trạng thái xử lý. Liên kết **Xem tất cả** mở trang Đơn hàng.
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Xem tổng quan kinh doanh">
-    Mở Dashboard để xem ngay doanh thu, số đơn hàng và lợi nhuận hôm nay.
+  <Step title="Đọc nhanh tình hình hôm nay">
+    Mở Dashboard → 4 thẻ KPI cho biết: doanh thu, đơn cần xử lý, hàng sắp hết, khách mới — tất cả trong ngày hiện tại.
   </Step>
-  <Step title="Theo dõi sản phẩm sắp hết">
-    Nhấn vào widget **Sản phẩm sắp hết hàng** để xem danh sách chi tiết và chuyển đến trang Sản phẩm để xử lý.
+  <Step title="Theo dõi xu hướng tuần">
+    Hai biểu đồ 7 ngày giúp nhận diện ngày nào bán tốt/yếu và so sánh với tuần trước (pill phần trăm).
   </Step>
-  <Step title="Xem đơn hàng cần xử lý">
-    Widget đơn hàng mới hiển thị các đơn chưa xác nhận — nhấn để chuyển thẳng đến trang Đơn hàng.
+  <Step title="Xử lý đơn hàng mới">
+    Bảng **Đơn hàng gần đây** hiển thị 6 đơn mới nhất — nhấn để mở chi tiết và xử lý nhanh.
+  </Step>
+  <Step title="Lên kế hoạch nhập hàng">
+    Thẻ **Sản phẩm sắp hết** + **M đã hết** cho biết số SKU cần ưu tiên — chuyển sang **Quản lý kho** để xem chi tiết.
   </Step>
 </Steps>
 
 <Note>
-Dữ liệu trên Dashboard được cập nhật theo thời gian thực. Tải lại trang nếu số liệu chưa phản ánh các thao tác vừa thực hiện.
+Dữ liệu trên Dashboard cập nhật theo thời gian thực với cache 60 giây. Tải lại trang nếu cần xem ngay số liệu mới sau thao tác vừa thực hiện.
 </Note>

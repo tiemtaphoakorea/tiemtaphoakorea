@@ -1,60 +1,54 @@
 ---
 title: "Nhập hàng"
-description: "Tạo và xác nhận đơn nhập hàng từ nhà cung cấp."
+description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp."
 ---
 
 ## Mô tả
 
-Trang Nhập hàng quản lý các đơn mua hàng từ nhà cung cấp. Xác nhận nhận hàng sẽ cập nhật tồn kho tự động.
+Trang **Nhập hàng** quản lý đơn mua hàng từ nhà cung cấp. Khi xác nhận nhận hàng, tồn kho và giá vốn được cập nhật tự động.
 
 ## Cách truy cập
 
-Menu bên trái → **Nhập hàng**.
+Truy cập qua **Quản lý kho** (Menu bên trái → **Kho vận** → **Quản lý kho**) → nhấn **Tạo đơn nhập** hoặc mở tab quản lý đơn nhập.
 
 ## Vòng đời đơn nhập hàng
 
 ```mermaid
-flowchart TD
-    A["Chờ xác nhận<br/>pending"] --> B["Đã đặt hàng<br/>ordered"]
-    B --> C["Đã nhận hàng<br/>received"]
-
-    A & B -->|Hủy| D["Đã hủy<br/>cancelled"]
+flowchart LR
+    A[pending] --> B[ordered] --> C[received]
+    A & B -->|Huỷ| D[cancelled]
 
     style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
     style C fill:#dcfce7,stroke:#22c55e,color:#166534
     style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
 ```
 
+### Mô tả các trạng thái
+
 | Trạng thái | Ý nghĩa |
 |-----------|---------|
-| `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
-| `ordered` — Đã đặt hàng | Đã xác nhận đặt hàng với nhà cung cấp, đang chờ hàng về |
-| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho và giá vốn đã được cập nhật |
-| `cancelled` — Đã hủy | Đơn nhập bị hủy |
+| `pending` | Vừa tạo, chưa gửi NCC |
+| `ordered` | Đã đặt hàng, chờ về |
+| `received` | Đã về kho — tồn và giá vốn cập nhật |
+| `cancelled` | Đã huỷ |
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Tạo đơn nhập hàng">
-    Nhấn **Tạo đơn nhập** → chọn nhà cung cấp → thêm sản phẩm, số lượng, giá vốn → **Lưu**.
-    Đơn được tạo ở trạng thái **Chờ xác nhận**.
+  <Step title="Tạo đơn nhập">
+    **Tạo đơn nhập** → chọn NCC → chọn biến thể → nhập số lượng, giá vốn, ngày dự kiến → **Lưu**. Đơn ở trạng thái `pending`.
   </Step>
-  <Step title="Xác nhận đã đặt hàng với nhà cung cấp">
-    Sau khi liên hệ nhà cung cấp, mở đơn nhập → nhấn **Xác nhận đặt hàng**.
-    Trạng thái chuyển sang **Đã đặt hàng** — hệ thống ghi lại ngày đặt.
+  <Step title="Xác nhận đặt hàng với NCC">
+    Sau khi liên hệ NCC, mở đơn → **Xác nhận đặt hàng** → chuyển sang `ordered`.
   </Step>
   <Step title="Xác nhận nhận hàng">
-    Khi hàng về kho, mở đơn nhập → nhấn **Xác nhận nhận hàng** để cập nhật tồn kho tự động.
+    Khi hàng về, mở đơn → **Xác nhận nhận hàng**. Tồn kho cộng vào số đã có và giá vốn được lưu vào lịch sử.
   </Step>
-  <Step title="Theo dõi trạng thái đơn nhập">
-    Danh sách đơn nhập hiển thị trạng thái, nhà cung cấp và tổng giá trị từng đơn.
+  <Step title="Huỷ đơn">
+    Đơn `pending` hoặc `ordered` có thể huỷ. Đơn `received` thì không.
   </Step>
 </Steps>
 
-### Hủy đơn nhập
-
-Đơn ở trạng thái `pending` hoặc `ordered` có thể hủy. Đơn đã `received` không thể hủy vì tồn kho đã được cập nhật.
-
 <Note>
-Giá vốn nhập trong đơn nhập hàng sẽ được ghi vào lịch sử giá vốn sản phẩm, ảnh hưởng đến tính toán lợi nhuận của các đơn hàng tiếp theo.
+Giá vốn nhập ảnh hưởng trực tiếp đến lợi nhuận. Nhập đúng giá vốn thực tế khi tạo đơn.
 </Note>

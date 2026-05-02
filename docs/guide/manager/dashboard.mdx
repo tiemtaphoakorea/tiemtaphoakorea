@@ -1,44 +1,49 @@
 ---
 title: "Dashboard & KPI"
-description: "Trang tổng quan hiển thị các chỉ số vận hành quan trọng."
+description: "Trang tổng quan hiển thị 4 KPI hôm nay, biểu đồ 7 ngày và 2 bảng nhanh."
 ---
 
 ## Mô tả
 
-Dashboard hiển thị các chỉ số vận hành chính: doanh thu hôm nay, đơn hàng mới và sản phẩm sắp hết hàng.
+**Dashboard** là trang đầu tiên khi đăng nhập. Gồm 3 khu vực: **4 thẻ KPI**, **2 biểu đồ 7 ngày**, **2 bảng nhanh** (top sản phẩm + đơn hàng gần đây).
 
 ## Cách truy cập
 
 Menu bên trái → **Dashboard**.
 
-## Các widget KPI
+## 4 thẻ KPI hôm nay
 
-<CardGroup cols={3}>
-  <Card title="Doanh thu hôm nay" icon="chart-line">
-    Tổng doanh thu từ các đơn hàng được thanh toán trong ngày.
-  </Card>
-  <Card title="Đơn hàng mới" icon="shopping-cart">
-    Số đơn hàng mới trong ngày, kèm trạng thái pending/paid.
-  </Card>
-  <Card title="Sản phẩm sắp hết hàng" icon="warning">
-    Danh sách sản phẩm có tồn kho thấp cần nhập thêm.
-  </Card>
-</CardGroup>
+| Thẻ | Giá trị |
+|-----|---------|
+| **Doanh thu hôm nay** | Tổng tiền đơn tạo hôm nay (kèm số đơn) |
+| **Đơn chờ xử lý** | Số đơn `pending` cần xác nhận |
+| **Sản phẩm sắp hết** | Số SKU dưới ngưỡng (kèm số đã hết) |
+| **Khách hàng mới** | Số khách đăng ký hôm nay |
+
+## 2 biểu đồ 7 ngày
+
+- **Doanh thu 7 ngày** — bar chart, pill so sánh tuần trước.
+- **Đơn hàng 7 ngày** — bar chart, pill số đơn hôm nay.
+
+## 2 bảng nhanh
+
+- **Sản phẩm bán chạy** — top 5 theo số lượng bán.
+- **Đơn hàng gần đây** — 6 đơn mới nhất kèm trạng thái.
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Theo dõi đơn hàng cần xử lý">
-    Widget đơn hàng mới hiển thị số đơn chưa xác nhận — nhấn để chuyển đến trang Đơn hàng.
+  <Step title="Đọc nhanh tình hình ngày">
+    4 thẻ KPI cho biết doanh thu, đơn cần xử lý, hàng sắp hết, khách mới hôm nay.
   </Step>
-  <Step title="Theo dõi tồn kho thấp">
-    Widget sản phẩm sắp hết hàng cảnh báo các sản phẩm cần nhập thêm — nhấn để chuyển đến trang Sản phẩm.
+  <Step title="Xử lý đơn ưu tiên">
+    Bảng **Đơn hàng gần đây** → nhấn vào đơn để mở chi tiết, ghi nhận thanh toán hoặc cập nhật trạng thái.
   </Step>
-  <Step title="Xem doanh thu hôm nay">
-    Widget doanh thu hiển thị tổng doanh thu từ các đơn hàng đã thanh toán trong ngày.
+  <Step title="Lên kế hoạch nhập">
+    Thẻ **Sản phẩm sắp hết** → chuyển sang **Quản lý kho** để xem chi tiết SKU cần nhập.
   </Step>
 </Steps>
 
 <Note>
-Dữ liệu trên Dashboard được cập nhật theo thời gian thực. Tải lại trang nếu số liệu chưa phản ánh các thao tác vừa thực hiện.
+Dữ liệu cập nhật thời gian thực với cache 60 giây. Tải lại trang nếu cần số liệu mới ngay.
 </Note>

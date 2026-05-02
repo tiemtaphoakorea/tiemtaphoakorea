@@ -5,33 +5,59 @@ description: "Tổng quan về vai trò Chủ shop và các quyền hạn trong 
 
 ## Mô tả
 
-Chủ shop là vai trò có quyền cao nhất trong hệ thống K-SMART. Bạn có toàn quyền truy cập tất cả các tính năng, bao gồm quản lý tài chính, nhân sự và chi phí vận hành.
+Chủ shop là vai trò có quyền cao nhất trong hệ thống K-SMART. Bạn có toàn quyền truy cập tất cả tính năng, bao gồm tài chính, nhân sự, chi phí và cài đặt cửa hàng.
 
 ## Cách truy cập
 
 Đăng nhập tại trang admin với tài khoản được cấp quyền **Owner**.
 
-## Các tính năng bạn có thể sử dụng
+## Bố cục menu sidebar
+
+Menu được chia thành 5 nhóm:
 
 | Nhóm | Tính năng |
 |------|-----------|
-| Vận hành | Dashboard, Sản phẩm, Danh mục, Đơn hàng, Nhập hàng, Nhà cung cấp, Khách hàng, Tin nhắn |
-| Quản lý cấp cao | Báo cáo, Chi phí, Tài chính, Nhân sự |
+| **Quản trị** | Dashboard, Sản phẩm, Danh mục, Trang chủ (collections), Đơn hàng |
+| **Tài chính** | Công nợ, Chi phí, Báo cáo |
+| **Kho vận** | Quản lý kho (tồn + nhập hàng), Nhà cung cấp |
+| **Người dùng** | Khách hàng, Nhân sự, Tin nhắn |
+| **Hệ thống** | Cài đặt |
+
+### Tính năng chỉ Chủ shop thấy
+
+- **Chi phí** — chi phí vận hành.
+- **Nhân sự** — quản lý tài khoản nhân viên.
+- **Cài đặt** — thông tin cửa hàng, nhận diện, banner, footer, mạng xã hội, widget liên hệ, thông báo.
+
+### Badge thông báo trên sidebar
+
+Sidebar hiển thị badge đếm thời gian thực:
+
+| Mục | Badge | Khi nào |
+|-----|-------|---------|
+| **Sản phẩm** | "N SP" | Có sản phẩm |
+| **Danh mục** | "N DM" | Có danh mục |
+| **Đơn hàng** | "N mới" (vàng) | Có đơn `pending` |
+| **Công nợ** | "N quá hạn" (đỏ) | Có nợ &gt; 30 ngày |
+| **Tin nhắn** | "N" hoặc "99+" | Có tin nhắn chưa đọc |
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Đăng nhập vào hệ thống">
-    Mở trình duyệt và truy cập trang admin. Nhập email và mật khẩu tài khoản Chủ shop để đăng nhập.
+    Mở trình duyệt và truy cập trang admin. Nhập email và mật khẩu tài khoản Chủ shop.
   </Step>
   <Step title="Khám phá menu điều hướng">
-    Sau khi đăng nhập, menu bên trái hiển thị đầy đủ tất cả các tính năng bao gồm Chi phí, Tài chính và Nhân sự — các mục chỉ hiển thị với tài khoản Chủ shop.
+    Sau khi đăng nhập, menu bên trái hiển thị đầy đủ 5 nhóm. Chi phí, Nhân sự và Cài đặt chỉ hiển thị với Chủ shop.
   </Step>
   <Step title="Bắt đầu từ Dashboard">
-    Nhấn vào **Dashboard** để xem tổng quan kinh doanh ngay lập tức — doanh thu, đơn hàng mới và sản phẩm sắp hết hàng.
+    Nhấn **Dashboard** để xem KPI hôm nay: doanh thu, đơn chờ xử lý, sản phẩm sắp hết, khách hàng mới — kèm biểu đồ 7 ngày gần nhất.
+  </Step>
+  <Step title="Cấu hình ban đầu">
+    Vào **Cài đặt** để nhập thông tin cửa hàng (in trên hoá đơn), upload logo và đặt màu thương hiệu.
   </Step>
 </Steps>
 
 <Note>
-Các mục **Chi phí**, **Tài chính** và **Nhân sự** chỉ hiển thị trong menu khi bạn đăng nhập bằng tài khoản Chủ shop.
+Các mục **Chi phí**, **Nhân sự** và **Cài đặt** chỉ hiển thị khi đăng nhập bằng tài khoản Chủ shop. Quản lý không thấy các mục này.
 </Note>
