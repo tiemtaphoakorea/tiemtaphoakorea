@@ -10,8 +10,9 @@ import { db } from "../db";
 import { categories, products, productVariants } from "../schema";
 import { orderItems, orders } from "../schema/orders";
 import { profiles } from "../schema/profiles";
+import type { AnalyticsData } from "../types/admin";
 
-export async function getAnalyticsData() {
+export async function getAnalyticsData(): Promise<AnalyticsData> {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
@@ -148,6 +149,13 @@ export async function getAnalyticsData() {
       monthlyRevenue: [],
       categorySales: [],
       topProducts: [],
+      inventory: {
+        totalCostValue: 0,
+        totalRetailValue: 0,
+        totalUnits: 0,
+        lowStockCount: 0,
+        outOfStockCount: 0,
+      },
     };
   }
 }
