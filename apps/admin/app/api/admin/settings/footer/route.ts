@@ -21,9 +21,6 @@ export async function PUT(request: Request) {
   const body = await request.json();
   const config: FooterConfig = {
     tagline: String(body.tagline ?? "").trim(),
-    hq: String(body.hq ?? "").trim(),
-    office: String(body.office ?? "").trim(),
-    officeDetail: String(body.officeDetail ?? "").trim(),
     copyright: String(body.copyright ?? "").trim(),
   };
   await upsertSetting(FOOTER_SETTING_KEY, config);

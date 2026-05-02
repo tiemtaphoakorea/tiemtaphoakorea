@@ -105,32 +105,6 @@ export default function SettingsContent() {
               rows={2}
             />
           </Field>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            <Field>
-              <FieldLabel>Trụ sở chính</FieldLabel>
-              <Input
-                placeholder="VD: Seoul, South Korea"
-                value={footer.hq}
-                onChange={(e) => setFooter((f) => ({ ...f, hq: e.target.value }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Văn phòng đại diện</FieldLabel>
-              <Input
-                placeholder="VD: Hồ Chí Minh, Việt Nam"
-                value={footer.office}
-                onChange={(e) => setFooter((f) => ({ ...f, office: e.target.value }))}
-              />
-            </Field>
-          </div>
-          <Field>
-            <FieldLabel>Chi tiết văn phòng đại diện</FieldLabel>
-            <Input
-              placeholder="VD: Quận 1, TP. Hồ Chí Minh"
-              value={footer.officeDetail}
-              onChange={(e) => setFooter((f) => ({ ...f, officeDetail: e.target.value }))}
-            />
-          </Field>
           <Field>
             <FieldLabel>Copyright</FieldLabel>
             <Input
