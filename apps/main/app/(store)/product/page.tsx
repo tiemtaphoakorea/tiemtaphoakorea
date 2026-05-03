@@ -14,7 +14,9 @@ import {
 } from "@workspace/ui/components/breadcrumb";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { userAgent } from "next/server";
 import { Suspense } from "react";
 import { FilterProvider } from "@/components/category/category-filter-context";
 import { CategoryHero } from "@/components/category/category-hero";
@@ -23,6 +25,10 @@ import { CategorySidebar } from "@/components/category/category-sidebar";
 import { SubCategoryChips } from "@/components/products/listing/sub-category-chips";
 
 const PRODUCTS_BASE_PATH = PUBLIC_ROUTES.PRODUCTS;
+
+const MOBILE_PAGE_SIZES = [8, 16, 24, 48] as const;
+const TABLET_PAGE_SIZES = [12, 24, 48] as const;
+const DESKTOP_PAGE_SIZES = [15, 30, 48] as const;
 
 export const metadata: Metadata = {
   title: "Sản phẩm | K-SMART",
@@ -49,6 +55,14 @@ async function ProductsPageContent({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedSearchParams = await searchParams;
+  const ua = userAgent({ headers: await headers() });
+  const allowedPageSizes =
+    ua.device.type === "mobile"
+      ? MOBILE_PAGE_SIZES
+      : ua.device.type === "tablet"
+        ? TABLET_PAGE_SIZES
+        : DESKTOP_PAGE_SIZES;
+  const defaultPageSize = allowedPageSizes[0];
 
   const categoryParam = resolvedSearchParams.category;
   const categorySlugs = Array.isArray(categoryParam)
@@ -61,8 +75,13 @@ async function ProductsPageContent({
     (resolvedSearchParams.sort as (typeof PRODUCT_SORT)[keyof typeof PRODUCT_SORT]) ||
     PRODUCT_SORT.LATEST;
   const page = Math.max(1, Number.parseInt((resolvedSearchParams.page as string) || "1", 10));
-  const parsedLimit = Number.parseInt((resolvedSearchParams.limit as string) || "15", 10);
-  const pageSize = [15, 30, 48].includes(parsedLimit) ? parsedLimit : 15;
+  const parsedLimit = Number.parseInt(
+    (resolvedSearchParams.limit as string) || String(defaultPageSize),
+    10,
+  );
+  const pageSize = (allowedPageSizes as readonly number[]).includes(parsedLimit)
+    ? parsedLimit
+    : defaultPageSize;
 
   const rawMinPrice = Number.parseFloat((resolvedSearchParams.minPrice as string) || "");
   const rawMaxPrice = Number.parseFloat((resolvedSearchParams.maxPrice as string) || "");
