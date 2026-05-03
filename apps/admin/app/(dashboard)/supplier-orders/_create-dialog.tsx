@@ -101,7 +101,7 @@ export function CreateSupplierOrderDialog({
           </DialogHeader>
           <div className="my-4 flex flex-col gap-3.5">
             <Field>
-              <FieldLabel>Sản phẩm</FieldLabel>
+              <FieldLabel required>Sản phẩm</FieldLabel>
               <Select
                 value={variantId}
                 onValueChange={setVariantId}
@@ -122,7 +122,7 @@ export function CreateSupplierOrderDialog({
             </Field>
             <div className="grid grid-cols-2 gap-2.5">
               <Field>
-                <FieldLabel>Số lượng</FieldLabel>
+                <FieldLabel required>Số lượng</FieldLabel>
                 <Input
                   type="number"
                   min={1}

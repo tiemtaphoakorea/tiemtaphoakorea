@@ -155,7 +155,9 @@ export function BulkPaymentDialog({
           <div className="py-4">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="bulk-payment-amount">Số tiền (VND)</FieldLabel>
+                <FieldLabel htmlFor="bulk-payment-amount" required>
+                  Số tiền (VND)
+                </FieldLabel>
                 <Controller
                   control={control}
                   name="amount"

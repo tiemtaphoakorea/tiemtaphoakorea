@@ -100,7 +100,9 @@ export default function AdminLoginPage() {
                   name="username"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Tên đăng nhập</FormLabel>
+                      <FormLabel>
+                        Tên đăng nhập <span className="text-destructive ml-0.5">*</span>
+                      </FormLabel>
                       <div className="group relative">
                         <div className="text-muted-foreground group-focus-within:text-primary pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 transition-colors">
                           <User className="h-4 w-4" />
@@ -123,7 +125,9 @@ export default function AdminLoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="ml-1">Mật khẩu</FormLabel>
+                      <FormLabel className="ml-1">
+                        Mật khẩu <span className="text-destructive ml-0.5">*</span>
+                      </FormLabel>
                       <div className="group relative">
                         <div className="text-muted-foreground group-focus-within:text-primary pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 transition-colors">
                           <Lock className="h-4 w-4" />

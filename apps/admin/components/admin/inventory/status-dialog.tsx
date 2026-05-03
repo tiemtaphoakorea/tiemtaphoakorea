@@ -82,7 +82,7 @@ export function InventoryStatusDialog({
           <div className="py-4">
             <FieldGroup>
               <Field>
-                <FieldLabel>Trạng thái</FieldLabel>
+                <FieldLabel required>Trạng thái</FieldLabel>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(statusConfig).map(([key, config]) => (
                     <div key={key} className="flex items-center space-x-2">

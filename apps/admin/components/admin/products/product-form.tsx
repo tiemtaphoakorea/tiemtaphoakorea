@@ -646,7 +646,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 <CardContent className="p-6">
                   <FieldGroup>
                     <Field>
-                      <FieldLabel>Tên sản phẩm *</FieldLabel>
+                      <FieldLabel required>Tên sản phẩm</FieldLabel>
                       <Input
                         {...form.register("name")}
                         placeholder="Ví dụ: Áo Thun Premium Cotton"

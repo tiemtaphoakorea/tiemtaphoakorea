@@ -77,7 +77,9 @@ export function CustomerEditSheet({
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Họ và tên</FormLabel>
+                    <FormLabel>
+                      Họ và tên <span className="text-destructive ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Nguyễn Văn A" {...field} />
                     </FormControl>
