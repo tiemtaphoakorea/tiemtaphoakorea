@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
@@ -13,7 +14,9 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { queryKeys } from "@/lib/query-keys";
 import { uploadImage } from "@/lib/upload-image";
 import { adminClient } from "@/services/admin.client";
@@ -28,25 +31,27 @@ const ACCENT_COLORS = [
   { value: "indigo", label: "Chàm" },
 ] as const;
 
-type FormState = {
-  type: "custom" | "category";
-  categoryId: string;
-  imageFiles: string[];
-  title: string;
-  subtitle: string;
-  badgeText: string;
-  ctaLabel: string;
-  ctaUrl: string;
-  discountTag: string;
-  discountTagSub: string;
-  accentColor: string;
-  isActive: boolean;
-};
+const formSchema = z.object({
+  type: z.enum(["custom", "category"]),
+  categoryId: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  badgeText: z.string().optional(),
+  ctaLabel: z.string().optional(),
+  ctaUrl: z.string().optional(),
+  discountTag: z.string().optional(),
+  discountTagSub: z.string().optional(),
+  accentColor: z.string(),
+  isActive: z.boolean(),
+});
 
-const EMPTY: FormState = {
+type FormValues = z.infer<typeof formSchema>;
+
+const DEFAULT_VALUES: FormValues = {
   type: "custom",
-  categoryId: "",
-  imageFiles: [],
+  categoryId: null,
+  imageUrl: null,
   title: "",
   subtitle: "",
   badgeText: "",
@@ -66,7 +71,22 @@ type Props = {
 export function BannerFormPanel({ bannerId, onClose }: Props) {
   const queryClient = useQueryClient();
   const isEdit = bannerId !== null;
-  const [form, setForm] = useState<FormState>(EMPTY);
+
+  const {
+    control,
+    register,
+    watch,
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: DEFAULT_VALUES,
+  });
+
+  const watchType = watch("type");
+  const watchImageUrl = watch("imageUrl");
+  const watchCategoryId = watch("categoryId");
 
   const detailQuery = useQuery({
     queryKey: ["banner-detail", bannerId],
@@ -80,16 +100,16 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
     queryKey: queryKeys.categories.list("", 1, 100),
     queryFn: () => adminClient.getCategories({}),
     staleTime: 60_000,
-    enabled: form.type === "category",
+    enabled: watchType === "category",
   });
 
   useEffect(() => {
     if (!isEdit || !detailQuery.data) return;
     const b = detailQuery.data;
-    setForm({
+    reset({
       type: (b.type as "custom" | "category") ?? "custom",
-      categoryId: b.categoryId ?? "",
-      imageFiles: b.imageUrl ? [b.imageUrl] : [],
+      categoryId: b.categoryId ?? null,
+      imageUrl: b.imageUrl ?? null,
       title: b.title ?? "",
       subtitle: b.subtitle ?? "",
       badgeText: b.badgeText ?? "",
@@ -100,26 +120,23 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
       accentColor: b.accentColor ?? "violet",
       isActive: b.isActive,
     });
-  }, [isEdit, detailQuery.data]);
-
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  }, [isEdit, detailQuery.data, reset]);
 
   const saveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: (data: FormValues) => {
       const payload = {
-        type: form.type,
-        categoryId: form.type === "category" ? form.categoryId || null : null,
-        imageUrl: form.type === "custom" ? (form.imageFiles[0] ?? null) : null,
-        title: form.title.trim() || null,
-        subtitle: form.subtitle.trim() || null,
-        badgeText: form.badgeText.trim() || null,
-        ctaLabel: form.ctaLabel.trim() || null,
-        ctaUrl: form.ctaUrl.trim() || null,
-        discountTag: form.discountTag.trim() || null,
-        discountTagSub: form.discountTagSub.trim() || null,
-        accentColor: form.accentColor || null,
-        isActive: form.isActive,
+        type: data.type,
+        categoryId: data.type === "category" ? (data.categoryId ?? null) : null,
+        imageUrl: data.type === "custom" ? (data.imageUrl ?? null) : null,
+        title: data.title?.trim() || null,
+        subtitle: data.subtitle?.trim() || null,
+        badgeText: data.badgeText?.trim() || null,
+        ctaLabel: data.ctaLabel?.trim() || null,
+        ctaUrl: data.ctaUrl?.trim() || null,
+        discountTag: data.discountTag?.trim() || null,
+        discountTagSub: data.discountTagSub?.trim() || null,
+        accentColor: data.accentColor || null,
+        isActive: data.isActive,
       };
       return isEdit
         ? adminClient.updateBanner(bannerId!, payload)
@@ -131,157 +148,158 @@ export function BannerFormPanel({ bannerId, onClose }: Props) {
     },
   });
 
+  // In edit mode, allow saving a category banner with null category (orphaned state)
+  // so the user can update other fields or select a replacement category.
   const canSave =
-    (form.type === "custom" && form.imageFiles.length > 0) ||
-    (form.type === "category" && !!form.categoryId);
+    isDirty &&
+    ((watchType === "custom" && !!watchImageUrl) ||
+      (watchType === "category" && (!!watchCategoryId || isEdit)));
 
   return (
     <div className="border-t border-border bg-muted/20 p-4">
-      <FieldGroup className="gap-4">
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel>Loại</FieldLabel>
-            <Select
-              value={form.type}
-              onValueChange={(v) => set("type", v as "custom" | "category")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">Custom (ảnh tự upload)</SelectItem>
-                <SelectItem value="category">Theo danh mục</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field>
-            <FieldLabel>Màu accent</FieldLabel>
-            <Select value={form.accentColor} onValueChange={(v) => set("accentColor", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ACCENT_COLORS.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
+      <form onSubmit={handleSubmit((data) => saveMutation.mutate(data))}>
+        <FieldGroup className="gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field>
+              <FieldLabel>Loại</FieldLabel>
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom (ảnh tự upload)</SelectItem>
+                      <SelectItem value="category">Theo danh mục</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Màu accent</FieldLabel>
+              <Controller
+                name="accentColor"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCENT_COLORS.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+          </div>
 
-        {form.type === "custom" && (
-          <Field>
-            <FieldLabel>Ảnh banner *</FieldLabel>
-            <FileUploader
-              compact
-              value={form.imageFiles}
-              onChange={(v) => set("imageFiles", v)}
-              uploadFn={uploadImage}
-              maxFiles={1}
-              hint="JPG/PNG/WebP · tỉ lệ 16:9 hoặc 3:1 · ≤2MB"
-            />
-          </Field>
-        )}
+          {watchType === "custom" && (
+            <Field>
+              <FieldLabel required>Ảnh banner</FieldLabel>
+              <Controller
+                name="imageUrl"
+                control={control}
+                render={({ field }) => (
+                  <FileUploader
+                    compact
+                    value={field.value ? [field.value] : []}
+                    onChange={(files) => field.onChange(files[0] ?? null)}
+                    uploadFn={uploadImage}
+                    maxFiles={1}
+                    hint="JPG/PNG/WebP · tỉ lệ 16:9 hoặc 3:1 · ≤2MB"
+                  />
+                )}
+              />
+            </Field>
+          )}
 
-        {form.type === "category" && (
-          <Field>
-            <FieldLabel>Danh mục *</FieldLabel>
-            <Select value={form.categoryId} onValueChange={(v) => set("categoryId", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn danh mục" />
-              </SelectTrigger>
-              <SelectContent>
-                {(categoriesQuery.data?.flatCategories ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        )}
+          {watchType === "category" && (
+            <Field>
+              <FieldLabel required>Danh mục</FieldLabel>
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(categoriesQuery.data?.flatCategories ?? []).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {!watchCategoryId && (
+                <p className="text-xs text-amber-600">
+                  {isEdit
+                    ? "Danh mục đã bị xóa. Nên chọn danh mục mới trước khi lưu."
+                    : "Vui lòng chọn danh mục."}
+                </p>
+              )}
+            </Field>
+          )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel>Tiêu đề</FieldLabel>
-            <Input
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder="NÂNG TẦM VẺ ĐẸP HÀN"
-            />
-          </Field>
-          <Field>
-            <FieldLabel>Badge text</FieldLabel>
-            <Input
-              value={form.badgeText}
-              onChange={(e) => set("badgeText", e.target.value)}
-              placeholder="Hàng chính hãng từ Seoul"
-            />
-          </Field>
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field>
+              <FieldLabel>Tiêu đề</FieldLabel>
+              <Input {...register("title")} placeholder="NÂNG TẦM VẺ ĐẸP HÀN" />
+            </Field>
+            <Field>
+              <FieldLabel>Badge text</FieldLabel>
+              <Input {...register("badgeText")} placeholder="Hàng chính hãng từ Seoul" />
+            </Field>
+          </div>
 
-        <Field>
-          <FieldLabel>Phụ đề</FieldLabel>
-          <Textarea
-            value={form.subtitle}
-            onChange={(e) => set("subtitle", e.target.value)}
-            rows={2}
-          />
-        </Field>
+          <Field>
+            <FieldLabel>Phụ đề</FieldLabel>
+            <Textarea {...register("subtitle")} rows={2} />
+          </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel>CTA label</FieldLabel>
-            <Input
-              value={form.ctaLabel}
-              onChange={(e) => set("ctaLabel", e.target.value)}
-              placeholder="Mua ngay"
-            />
-          </Field>
-          <Field>
-            <FieldLabel>CTA URL</FieldLabel>
-            <Input
-              value={form.ctaUrl}
-              onChange={(e) => set("ctaUrl", e.target.value)}
-              placeholder="/products"
-            />
-          </Field>
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field>
+              <FieldLabel>CTA label</FieldLabel>
+              <Input {...register("ctaLabel")} placeholder="Mua ngay" />
+            </Field>
+            <Field>
+              <FieldLabel>CTA URL</FieldLabel>
+              <Input {...register("ctaUrl")} placeholder="/products" />
+            </Field>
+          </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel>Discount tag</FieldLabel>
-            <Input
-              value={form.discountTag}
-              onChange={(e) => set("discountTag", e.target.value)}
-              placeholder="50%"
-            />
-          </Field>
-          <Field>
-            <FieldLabel>Discount sub</FieldLabel>
-            <Input
-              value={form.discountTagSub}
-              onChange={(e) => set("discountTagSub", e.target.value)}
-              placeholder="cho đơn đầu tiên"
-            />
-          </Field>
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field>
+              <FieldLabel>Discount tag</FieldLabel>
+              <Input {...register("discountTag")} placeholder="50%" />
+            </Field>
+            <Field>
+              <FieldLabel>Discount sub</FieldLabel>
+              <Input {...register("discountTagSub")} placeholder="cho đơn đầu tiên" />
+            </Field>
+          </div>
 
-        <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Huỷ
-          </Button>
-          <Button
-            size="sm"
-            disabled={!canSave || saveMutation.isPending}
-            onClick={() => saveMutation.mutate()}
-          >
-            {saveMutation.isPending ? "Đang lưu..." : "Lưu"}
-          </Button>
-        </div>
-      </FieldGroup>
+          <div className="flex justify-end gap-2 border-t border-border pt-3">
+            <Button variant="outline" size="sm" type="button" onClick={onClose}>
+              Huỷ
+            </Button>
+            <Button type="submit" size="sm" disabled={!canSave || saveMutation.isPending}>
+              {saveMutation.isPending ? "Đang lưu..." : "Lưu"}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
     </div>
   );
 }
