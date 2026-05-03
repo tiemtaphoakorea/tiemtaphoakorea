@@ -16,6 +16,7 @@ import { clearShopInfoCache } from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
 import { uploadImage } from "@/lib/upload-image";
 import { adminClient } from "@/services/admin.client";
+import { ColorPairPicker } from "./_color-pair-picker";
 
 const SECTIONS = [
   { value: "store", label: "Cửa hàng", icon: Building2 },
@@ -240,35 +241,13 @@ function BrandingPanel() {
         <FieldLabel>Logo accent (chữ phụ trên logo)</FieldLabel>
         <Input value={logoAccent} onChange={(e) => setLogoAccent(e.target.value)} />
       </Field>
-      <div className="grid grid-cols-2 gap-2.5">
-        <Field>
-          <FieldLabel>Màu thương hiệu</FieldLabel>
-          <div className="flex h-9 items-center gap-2 rounded-lg border border-border px-3">
-            <span
-              className="inline-block h-5 w-5 rounded-md"
-              style={{ backgroundColor: brandColor }}
-            />
-            <Input
-              className="h-7 border-0 px-1 font-mono text-xs shadow-none focus-visible:ring-0"
-              value={brandColor}
-              onChange={(e) => setBrandColor(e.target.value)}
-            />
-          </div>
-        </Field>
-        <Field>
-          <FieldLabel>Màu nhấn (accent)</FieldLabel>
-          <div className="flex h-9 items-center gap-2 rounded-lg border border-border px-3">
-            <span
-              className="inline-block h-5 w-5 rounded-md"
-              style={{ backgroundColor: accentColor }}
-            />
-            <Input
-              className="h-7 border-0 px-1 font-mono text-xs shadow-none focus-visible:ring-0"
-              value={accentColor}
-              onChange={(e) => setAccentColor(e.target.value)}
-            />
-          </div>
-        </Field>
+      <div className="rounded-lg border border-border p-3">
+        <ColorPairPicker
+          brandColor={brandColor}
+          accentColor={accentColor}
+          onBrandChange={setBrandColor}
+          onAccentChange={setAccentColor}
+        />
       </div>
       <Button
         className="self-start"
