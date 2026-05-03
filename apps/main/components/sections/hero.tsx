@@ -5,7 +5,8 @@ import { HeroBannerCarousel } from "./hero-banner-carousel";
 import { HeroEmpty } from "./hero-empty";
 
 export async function Hero() {
-  const slides = await getBanners().catch(() => []);
+  const allSlides = await getBanners().catch(() => []);
+  const slides = allSlides.filter((s) => s.imageUrl);
 
   return (
     <section className="bg-background pb-3 pt-3 md:pb-6 md:pt-6">

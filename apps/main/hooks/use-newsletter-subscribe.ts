@@ -22,6 +22,11 @@ export function useNewsletterSubscribe(source: string) {
         setMessage("Vui lòng nhập email");
         return false;
       }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        setStatus("error");
+        setMessage("Email không hợp lệ");
+        return false;
+      }
 
       setStatus("submitting");
       setMessage("");
