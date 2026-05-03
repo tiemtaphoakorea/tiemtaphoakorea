@@ -129,142 +129,141 @@ export function BrandingPanel() {
   });
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-      {/* Left: primary logo uploads + OG + accent */}
-      <div className="flex flex-col gap-3.5 lg:flex-1">
-        <div className="grid grid-cols-2 gap-2.5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        {/* Left: primary logo uploads + OG + accent */}
+        <div className="flex flex-col gap-3.5 lg:flex-1">
+          <div className="grid grid-cols-3 gap-2.5">
+            <Field className="col-span-2">
+              <FieldLabel>Logo chính (ngang)</FieldLabel>
+              <FileUploader
+                compact
+                value={logoMain}
+                onChange={setLogoMain}
+                uploadFn={uploadImage}
+                maxFiles={1}
+                hint="PNG/SVG · 1:3 · ≤500KB"
+              />
+              <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.main}</p>
+            </Field>
+            <Field>
+              <FieldLabel>Logo vuông</FieldLabel>
+              <FileUploader
+                compact
+                value={logoSquare}
+                onChange={setLogoSquare}
+                uploadFn={uploadImage}
+                maxFiles={1}
+                hint="PNG/SVG · 1:1 · ≤200KB"
+              />
+              <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.square}</p>
+            </Field>
+          </div>
+
           <Field>
-            <FieldLabel>Logo chính (ngang)</FieldLabel>
-            <FileUploader
-              compact
-              value={logoMain}
-              onChange={setLogoMain}
-              uploadFn={uploadImage}
-              maxFiles={1}
-              hint="PNG/SVG · 1:3 · ≤500KB"
-            />
-            <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.main}</p>
+            <FieldLabel>Logo accent (chữ phụ trên logo)</FieldLabel>
+            <Input value={logoAccent} onChange={(e) => setLogoAccent(e.target.value)} />
           </Field>
+
           <Field>
-            <FieldLabel>Logo vuông</FieldLabel>
+            <FieldLabel>Ảnh Open Graph (OG Image)</FieldLabel>
             <FileUploader
               compact
-              value={logoSquare}
-              onChange={setLogoSquare}
+              value={ogImageUrl}
+              onChange={setOgImageUrl}
               uploadFn={uploadImage}
               maxFiles={1}
-              hint="PNG/SVG · 1:1 · ≤200KB"
+              hint="PNG/JPG · 1200×630px · ≤1MB"
             />
-            <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.square}</p>
+            <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.og}</p>
           </Field>
         </div>
 
-        <Field>
-          <FieldLabel>Logo accent (chữ phụ trên logo)</FieldLabel>
-          <Input value={logoAccent} onChange={(e) => setLogoAccent(e.target.value)} />
-        </Field>
-
-        <Field>
-          <FieldLabel>Ảnh Open Graph (OG Image)</FieldLabel>
-          <FileUploader
-            compact
-            value={ogImageUrl}
-            onChange={setOgImageUrl}
-            uploadFn={uploadImage}
-            maxFiles={1}
-            hint="PNG/JPG · 1200×630px · ≤1MB"
-          />
-          <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.og}</p>
-        </Field>
-      </div>
-
-      {/* Right: brand colors + icon variants */}
-      <div className="flex flex-col gap-3 lg:w-64 lg:shrink-0">
-        <div className="rounded-lg border border-border p-3">
+        {/* Right: brand colors + icon variants */}
+        <div className="flex flex-col gap-3 lg:flex-1">
           <ColorPairPicker
             brandColor={brandColor}
             accentColor={accentColor}
             onBrandChange={setBrandColor}
             onAccentChange={setAccentColor}
           />
-        </div>
 
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3">
-          <div className="mb-2.5 flex items-center justify-between">
-            <div>
-              <p className="text-[12px] font-medium">Biến thể icon</p>
-              <p className="text-[11px] text-muted-foreground">Resize từ logo vuông</p>
+          <Field>
+            <div className="flex items-center justify-between">
+              <FieldLabel>Biến thể icon</FieldLabel>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGenerateVariants}
+                disabled={!logoSquare[0] || generating}
+                className="gap-1 text-[11px] h-7 px-2"
+              >
+                {generating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Wand2 className="h-3 w-3" />
+                )}
+                {generating ? "Đang tạo..." : "Tạo"}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGenerateVariants}
-              disabled={!logoSquare[0] || generating}
-              className="gap-1 text-[11px] h-7 px-2"
-            >
-              {generating ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Wand2 className="h-3 w-3" />
-              )}
-              {generating ? "Đang tạo..." : "Tạo"}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Field>
-              <FieldLabel className="flex items-center gap-1 text-[11px]">
-                <ImageIcon className="h-3 w-3" /> Favicon 32px
-              </FieldLabel>
-              <FileUploader
-                compact
-                value={faviconUrl}
-                onChange={setFaviconUrl}
-                uploadFn={uploadImage}
-                maxFiles={1}
-                hint="PNG · 32px"
-              />
-              {faviconUrl[0] && (
-                <div className="mt-1 flex items-center gap-1">
-                  <Image
-                    src={faviconUrl[0]}
-                    alt="Favicon preview"
-                    width={20}
-                    height={20}
-                    className="h-5 w-5 rounded object-contain border border-border"
-                  />
-                  <span className="text-[10px] text-muted-foreground">32px</span>
-                </div>
-              )}
-            </Field>
-            <Field>
-              <FieldLabel className="flex items-center gap-1 text-[11px]">
-                <ImageIcon className="h-3 w-3" /> Apple 180px
-              </FieldLabel>
-              <FileUploader
-                compact
-                value={appleIconUrl}
-                onChange={setAppleIconUrl}
-                uploadFn={uploadImage}
-                maxFiles={1}
-                hint="PNG · 180px"
-              />
-              {appleIconUrl[0] && (
-                <div className="mt-1 flex items-center gap-1">
-                  <Image
-                    src={appleIconUrl[0]}
-                    alt="Apple icon preview"
-                    width={20}
-                    height={20}
-                    className="h-5 w-5 rounded object-contain border border-border"
-                  />
-                  <span className="text-[10px] text-muted-foreground">180px</span>
-                </div>
-              )}
-            </Field>
-          </div>
+            <p className="text-[11px] text-muted-foreground">Resize từ logo vuông</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Field>
+                <FieldLabel className="flex items-center gap-1">
+                  <ImageIcon className="h-3 w-3" /> Favicon 32px
+                </FieldLabel>
+                <FileUploader
+                  compact
+                  value={faviconUrl}
+                  onChange={setFaviconUrl}
+                  uploadFn={uploadImage}
+                  maxFiles={1}
+                  hint="PNG · 32px"
+                />
+                {faviconUrl[0] && (
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src={faviconUrl[0]}
+                      alt="Favicon preview"
+                      width={20}
+                      height={20}
+                      className="h-5 w-5 rounded object-contain border border-border"
+                    />
+                    <span className="text-[10px] text-muted-foreground">32px</span>
+                  </div>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel className="flex items-center gap-1">
+                  <ImageIcon className="h-3 w-3" /> Apple 180px
+                </FieldLabel>
+                <FileUploader
+                  compact
+                  value={appleIconUrl}
+                  onChange={setAppleIconUrl}
+                  uploadFn={uploadImage}
+                  maxFiles={1}
+                  hint="PNG · 180px"
+                />
+                {appleIconUrl[0] && (
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src={appleIconUrl[0]}
+                      alt="Apple icon preview"
+                      width={20}
+                      height={20}
+                      className="h-5 w-5 rounded object-contain border border-border"
+                    />
+                    <span className="text-[10px] text-muted-foreground">180px</span>
+                  </div>
+                )}
+              </Field>
+            </div>
+          </Field>
         </div>
+      </div>
 
+      <div className="border-t border-border pt-4">
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending || brandingQuery.isLoading}

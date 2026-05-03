@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldLabel } from "@workspace/ui/components/field";
 import { cn } from "@workspace/ui/lib/utils";
 import { Check } from "lucide-react";
 
@@ -39,10 +40,8 @@ export function ColorPairPicker({
   onAccentChange,
 }: ColorPairPickerProps) {
   return (
-    <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Màu sắc thương hiệu
-      </p>
+    <>
+      <FieldLabel>Màu sắc thương hiệu</FieldLabel>
       <div className="grid grid-cols-5 gap-1.5">
         {COLOR_PAIRS.map((pair) => {
           const active = isPairActive(brandColor, accentColor, pair);
@@ -71,6 +70,6 @@ export function ColorPairPicker({
           );
         })}
       </div>
-    </div>
+    </>
   );
 }
