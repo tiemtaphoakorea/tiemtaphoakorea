@@ -3,22 +3,21 @@ import { PUBLIC_ROUTES } from "@workspace/shared/routes";
 import Link from "next/link";
 import { GENERATED_ICONS, GeneratedIcon } from "./generated-icon";
 
-const ICON_PALETTE = [
-  { icon: GENERATED_ICONS.ramen, bg: "#EEF2FF" },
-  { icon: GENERATED_ICONS.snacks, bg: "#FEF3C7" },
-  { icon: GENERATED_ICONS.beauty, bg: "#FEE2E2" },
-  { icon: GENERATED_ICONS.drinks, bg: "#DBEAFE" },
-  { icon: GENERATED_ICONS.homecare, bg: "#F8FAFC" },
-  { icon: GENERATED_ICONS.gift, bg: "#FCE7F3" },
-  { icon: GENERATED_ICONS.wellness, bg: "#DCFCE7" },
-  { icon: GENERATED_ICONS.voucher, bg: "#FEF9C3" },
+const ICONS = [
+  GENERATED_ICONS.ramen,
+  GENERATED_ICONS.snacks,
+  GENERATED_ICONS.beauty,
+  GENERATED_ICONS.drinks,
+  GENERATED_ICONS.homecare,
+  GENERATED_ICONS.gift,
+  GENERATED_ICONS.wellness,
+  GENERATED_ICONS.voucher,
 ];
 
 function pickIcon(slug: string, idx: number) {
-  const fromIdx = ICON_PALETTE[idx % ICON_PALETTE.length];
-  // Stable per-slug fallback in case the index isn't meaningful.
+  const fromIdx = ICONS[idx % ICONS.length];
   const hash = Array.from(slug).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return fromIdx ?? ICON_PALETTE[hash % ICON_PALETTE.length]!;
+  return fromIdx ?? ICONS[hash % ICONS.length]!;
 }
 
 export async function CategoryStripEight() {
@@ -31,32 +30,26 @@ export async function CategoryStripEight() {
       <div className="container mx-auto px-4 py-6 md:py-9">
         <SectionTitle title="Mua theo danh mục" sub="Chọn đúng danh mục bạn cần" />
         <div className="grid grid-cols-4 gap-2 md:gap-2.5 lg:grid-cols-8">
-          {items.map((item, idx) => {
-            const visual = pickIcon(item.slug, idx);
-            return (
-              <Link
-                key={item.id}
-                href={PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(item.slug)}
-                className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-white px-2 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[#EEF2FF] hover:shadow-md md:gap-2 md:px-3.5 md:py-[18px]"
-              >
-                <span
-                  className="grid h-12 w-12 place-items-center rounded-2xl md:h-[60px] md:w-[60px] md:rounded-[18px]"
-                  style={{ background: visual.bg }}
-                >
-                  <GeneratedIcon
-                    src={visual.icon}
-                    className="h-9 w-9 rounded-lg object-contain md:h-11 md:w-11 md:rounded-xl"
-                  />
-                </span>
-                <b className="text-[11px] font-semibold leading-tight text-foreground md:text-[13px]">
-                  {item.name}
-                </b>
-                <small className="hidden text-[11px] font-normal leading-none text-muted-foreground md:block">
-                  {item.productCount} sản phẩm
-                </small>
-              </Link>
-            );
-          })}
+          {items.map((item, idx) => (
+            <Link
+              key={item.id}
+              href={PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(item.slug)}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-white px-2 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[#EEF2FF] hover:shadow-md md:gap-2 md:px-3.5 md:py-[18px]"
+            >
+              <span className="grid h-12 w-12 place-items-center rounded-md md:h-[60px] md:w-[60px]">
+                <GeneratedIcon
+                  src={pickIcon(item.slug, idx)}
+                  className="h-9 w-9 rounded-md object-contain md:h-11 md:w-11"
+                />
+              </span>
+              <b className="text-[11px] font-semibold leading-tight text-foreground md:text-[13px]">
+                {item.name}
+              </b>
+              <small className="hidden text-[11px] font-normal leading-none text-muted-foreground md:block">
+                {item.productCount} sản phẩm
+              </small>
+            </Link>
+          ))}
         </div>
       </div>
     </section>
