@@ -49,7 +49,16 @@ Bên dưới: **Sắp hết hàng** + **Hết hàng** danh sách SKU.
 
 ### 4. `/analytics/finance` — Tài chính & Lợi nhuận
 
-4 KPI tổng kỳ: Tổng doanh thu · Giá vốn · Chi phí vận hành · Lợi nhuận ròng (kèm Margin %).
+Sub-line: *"Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm"* — trang luôn hiển thị **lifetime/toàn shop**, không có bộ chọn kỳ. Để xem một kỳ cụ thể, nhấn **Chi tiết theo ngày**.
+
+4 KPI tổng kỳ (lifetime, lọc `paymentStatus = paid`):
+
+| Chỉ số | Cách tính |
+|--------|-----------|
+| **Tổng doanh thu** | `Σ orders.total` lọc paid (toàn thời gian) |
+| **Giá vốn hàng bán** | `Σ orders.totalCost` lọc paid (toàn thời gian) |
+| **Chi phí vận hành** | `Σ expenses.amount` (toàn thời gian) |
+| **Lợi nhuận ròng** | `revenue − cogs − expenses`; **Margin %** = `netProfit / revenue × 100` |
 
 Bảng waterfall P&L:
 
@@ -57,7 +66,7 @@ Bảng waterfall P&L:
 Doanh thu gộp  − COGS  = Lợi nhuận gộp  − Chi phí vận hành  = Lợi nhuận ròng
 ```
 
-Scorecard sức khoẻ tài chính bên phải: badge **GOOD** (xanh) hoặc **LOSS** (đỏ) + tỷ suất lợi nhuận %.
+Scorecard sức khoẻ tài chính bên phải: badge **GOOD** (xanh) khi `netProfit > 0`, **LOSS** (đỏ) khi `≤ 0` + tỷ suất lợi nhuận %.
 
 > **Quản lý lưu ý**: Cột **Chi phí vận hành** vẫn hiển thị tổng tiền, nhưng để xem các khoản chi chi tiết bên trong cần là Chủ shop.
 
@@ -87,7 +96,7 @@ Bảng theo ngày (desktop) hoặc card (mobile): Ngày · Doanh thu · COGS · 
     Nhấn nút **Xem chi tiết** trên thẻ để mở trang con chuyên sâu.
   </Step>
   <Step title="Phân tích tài chính theo kỳ">
-    Mở **Tài chính & Lợi nhuận** → tháng hiện tại. Nhấn **Chi tiết theo ngày** để chọn kỳ tuỳ ý.
+    Mở **Tài chính & Lợi nhuận** → trang lifetime toàn shop. Nhấn **Chi tiết theo ngày** để chọn kỳ tuỳ ý (hôm nay, 7 ngày, tháng cụ thể, hoặc khoảng tuỳ chỉnh).
   </Step>
   <Step title="Drill-down một ngày">
     Trong trang detail, nhấn vào dòng → drawer liệt kê tất cả đơn của ngày đó. Nhấn vào đơn để mở chi tiết.

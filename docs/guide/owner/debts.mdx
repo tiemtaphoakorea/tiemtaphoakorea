@@ -22,11 +22,13 @@ Sidebar hiển thị badge đỏ với số khách quá hạn (nợ > 30 ngày) 
 
 ### Thẻ thống kê
 
-| Thẻ | Ý nghĩa |
-|-----|---------|
-| **Tổng công nợ** | Tổng số tiền đang còn phải thu (VND) |
-| **Khách có nợ** | Số khách hàng đang nợ |
-| **Số đơn nợ hiển thị** | Tổng kết quả theo bộ lọc/trang hiện tại |
+Các đơn được tính là "đang nợ" khi `fulfillmentStatus = stock_out` AND `paymentStatus ≠ paid`.
+
+| Thẻ | Cách tính |
+|-----|-----------|
+| **Tổng công nợ** | `Σ (orders.total − COALESCE(orders.paidAmount, 0))` của tất cả đơn nợ (toàn shop, không lọc theo ô tìm kiếm) |
+| **Khách có nợ** | `COUNT(DISTINCT orders.customerId)` của tất cả đơn nợ |
+| **Số đơn nợ hiển thị** | Tổng số kết quả khớp bộ lọc tìm kiếm + tab độ tuổi (= số dòng tổng cộng, không phải số dòng trên trang hiện tại) |
 
 ### Lọc theo độ tuổi nợ
 
@@ -45,14 +47,16 @@ Thanh tab phía trên bảng:
 
 ### Cột bảng
 
-| Cột | Nội dung |
-|-----|---------|
-| **Khách hàng** | Tên đầy đủ |
-| **SĐT** | Số điện thoại |
-| **Số đơn nợ** | Số đơn chưa thanh toán đủ |
-| **Số tiền nợ** | Tổng nợ (in đỏ) |
-| **Nợ lâu nhất** | Ngày phát sinh nợ cũ nhất + số ngày |
-| **Trạng thái** | Pill theo độ tuổi: **Chưa thanh toán** (< 7) / **Đang xử lý** (7–30) / **Quá hạn** (≥ 30) |
+Mỗi dòng = một khách hàng (gom các đơn nợ theo `customerId`).
+
+| Cột | Cách tính |
+|-----|-----------|
+| **Khách hàng** | `customer.fullName` |
+| **SĐT** | `customer.phone` |
+| **Số đơn nợ** | `COUNT(orders)` của khách thoả điều kiện đang nợ |
+| **Số tiền nợ** | `Σ (orders.total − COALESCE(orders.paidAmount, 0))` của khách (in đỏ) |
+| **Nợ lâu nhất** | Số ngày từ `MIN(orders.stockOutAt)` của khách đến hiện tại |
+| **Trạng thái** | Pill theo `nợ lâu nhất`: **Chưa thanh toán** (&lt; 7 ngày) / **Đang xử lý** (7–30 ngày) / **Quá hạn** (≥ 30 ngày) |
 | **Thu tiền** | Mở drawer ghi nhận thanh toán nhanh |
 
 ### Phân trang

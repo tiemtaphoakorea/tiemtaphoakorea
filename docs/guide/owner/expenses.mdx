@@ -15,14 +15,16 @@ Sidebar → **Tài chính → Chi phí** *(chỉ Chủ shop)*.
 
 ## 3 thẻ KPI tổng hợp
 
-| Thẻ | Giá trị | Phụ | Tone |
-|-----|---------|-----|------|
-| **Tổng chi T{m}/{y}** | Σ tất cả khoản chi trong trang hiện tại | `N khoản` | Đỏ (danger) |
-| **Cố định** | Σ khoản chi `type = fixed` | "Định kỳ hàng tháng" | Vàng (amber) |
-| **Biến đổi** | Σ khoản chi `type = variable` | "Phát sinh" | Tím (primary) |
+Cụm `MetricStatBar` 3 ô. Tất cả con số tính trên **danh sách trang hiện tại** sau khi đã áp filter (tháng/năm/loại).
+
+| Thẻ | Cách tính | Phụ |
+|-----|-----------|-----|
+| **Tổng chi T{m}/{y}** | `Σ list[i].amount` trên các bản ghi hiển thị (icon Wallet, đỏ) | `N khoản` — số bản ghi trên trang |
+| **Cố định** | `Σ amount` lọc `type = 'fixed'` (icon Wallet, vàng) | "Định kỳ hàng tháng" |
+| **Biến đổi** | `Σ amount` lọc `type = 'variable'` (icon Wallet, tím) | "Phát sinh" |
 
 <Note>
-Tổng tính trên các bản ghi của **trang hiện tại** trong phân trang, không phải toàn bộ tháng. Để xem tổng cả tháng chính xác, đối chiếu tại trang **Tài chính**.
+Tổng tính trên các bản ghi của **trang hiện tại** trong phân trang, không phải toàn bộ tháng. Để xem tổng cả tháng chính xác (toàn bộ bản ghi), đối chiếu tại trang **Tài chính** — chỉ số "Chi phí vận hành" đã cộng tất cả expenses của kỳ.
 </Note>
 
 ---

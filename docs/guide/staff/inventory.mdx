@@ -29,12 +29,12 @@ Banner đỏ ở đầu trang khi có SP sắp/hết hàng:
 
 ## Thẻ thống kê
 
-| Thẻ | Ý nghĩa |
-|-----|---------|
+| Thẻ | Cách tính |
+|-----|-----------|
 | **Tổng SKU** | Tổng biến thể đang quản lý |
-| **Còn hàng** | SKU đủ tồn |
-| **Sắp hết** | `onHand` < ngưỡng |
-| **Hết hàng** | `onHand` = 0 |
+| **Còn hàng** | `MAX(0, Tổng SKU − Sắp hết − Hết hàng)` |
+| **Sắp hết** | SKU có `0 < onHand ≤ ngưỡng cảnh báo` (mặc định 30) |
+| **Hết hàng** | SKU có `onHand ≤ 0` |
 
 ## 3 tab dữ liệu
 

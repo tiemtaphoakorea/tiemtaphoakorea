@@ -35,12 +35,14 @@ Banner đỏ ở đầu trang khi có SP sắp hết hoặc hết hàng:
 
 ## Thẻ thống kê
 
-| Thẻ | Nguồn |
-|-----|-------|
-| **Tổng SKU** | Tổng biến thể đang quản lý |
-| **Còn hàng** | Tổng − Sắp hết − Hết hàng |
-| **Sắp hết** | `onHand` < ngưỡng cảnh báo |
-| **Hết hàng** | `onHand` = 0 |
+Cụm `MetricStatBar` 4 ô.
+
+| Thẻ | Cách tính |
+|-----|-----------|
+| **Tổng SKU** | Tổng biến thể đang quản lý (paginated count) |
+| **Còn hàng** | `MAX(0, totalSkus − lowStock − outOfStock)` (xanh emerald) |
+| **Sắp hết** | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` (vàng) |
+| **Hết hàng** | `COUNT(productVariants)` có `onHand ≤ 0` (đỏ) |
 
 ## 3 tab dữ liệu
 

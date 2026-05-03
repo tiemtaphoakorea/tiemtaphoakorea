@@ -54,12 +54,14 @@ Banner đỏ ở đầu trang xuất hiện khi có SP sắp hết hoặc hết 
 
 ## Thẻ thống kê
 
-| Thẻ | Nguồn dữ liệu |
-|-----|---------------|
-| **Tổng SKU** | Tổng biến thể đang quản lý |
-| **Còn hàng** | Tổng SKU − Sắp hết − Hết hàng |
-| **Sắp hết** | SKU có `onHand` < `minLowStockThreshold` |
-| **Hết hàng** | SKU có `onHand` = 0 |
+Cụm `MetricStatBar` 4 ô.
+
+| Thẻ | Cách tính |
+|-----|-----------|
+| **Tổng SKU** | Tổng số biến thể đang quản lý (paginated count, `Đang quản lý`) |
+| **Còn hàng** | `MAX(0, totalSkus − lowStock − outOfStock)` (xanh emerald) |
+| **Sắp hết** | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` (vàng) |
+| **Hết hàng** | `COUNT(productVariants)` có `onHand ≤ 0` (đỏ) |
 
 ## Tab dữ liệu
 
@@ -79,7 +81,7 @@ Hiển thị toàn bộ sản phẩm (50 SP đầu, theo phân trang sản phẩ
 
 ### Tab "Sắp hết"
 
-Chỉ liệt kê biến thể có `onHand` dưới ngưỡng cảnh báo nhưng > 0.
+Chỉ liệt kê biến thể có `0 < onHand ≤ lowStockThreshold` (mặc định ngưỡng 30). Sắp xếp theo `onHand` tăng dần, lấy top 10 theo từng danh mục.
 
 | Cột | Nội dung |
 |-----|---------|
@@ -89,7 +91,7 @@ Chỉ liệt kê biến thể có `onHand` dưới ngưỡng cảnh báo nhưng 
 
 ### Tab "Hết hàng"
 
-Liệt kê biến thể có `onHand` = 0.
+Liệt kê biến thể có `onHand ≤ 0`. Sắp xếp theo tên sản phẩm, lấy top 10 theo từng danh mục.
 
 | Cột | Nội dung |
 |-----|---------|

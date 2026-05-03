@@ -34,16 +34,18 @@ Header: tiêu đề **"Báo cáo & Thống kê"** + nút action ở góc phải.
 
 **3 thẻ KPI** (MetricStatBar):
 
-| Thẻ | Giá trị | Phụ |
-|-----|---------|-----|
-| **Doanh thu** | `formatCurrency(totalRevenue)` | "5% dưới mục tiêu" |
-| **Đơn hàng** | `totalOrders.toLocaleString()` | "+12.5% tháng này" |
-| **Khách hàng** | `totalCustomers.toLocaleString()` | "Tài khoản đã đăng ký" |
+| Thẻ | Cách tính | Phụ (tĩnh) |
+|-----|-----------|-----|
+| **Doanh thu** | `Σ orders.total` lọc `paidAt IS NOT NULL` (lifetime) | "5% dưới mục tiêu" |
+| **Đơn hàng** | `COUNT(orders)` lọc `paidAt IS NOT NULL` (lifetime) | "+12.5% tháng này" |
+| **Khách hàng** | `COUNT(profiles)` lọc `role = customer` | "Tài khoản đã đăng ký" |
+
+> Phụ đề ("5% dưới mục tiêu", "+12.5%") là **placeholder UI**, không phải số thực — chưa được kết nối với dữ liệu kỳ trước.
 
 **2 biểu đồ** dưới các KPI:
 
-- **Revenue Chart** — biểu đồ doanh thu theo tháng (`monthlyRevenue`).
-- **Category Sales Chart** — biểu đồ bán theo danh mục (`categorySales`).
+- **Revenue Chart** — `Σ orders.total` GROUP BY tháng, từ ngày 1/1 năm hiện tại, lọc `paidAt IS NOT NULL`. Nhãn cột: "Tháng MM".
+- **Category Sales Chart** — `COUNT(orderItems)` và `Σ orderItems.lineTotal` GROUP BY category (toàn thời gian). Mỗi danh mục được gán màu khác nhau.
 
 ### 2. `/analytics/products` — Sản phẩm bán chạy
 
@@ -64,16 +66,16 @@ Tiêu đề: **"Tồn kho"**. Hiển thị 2 hàng MetricStatBar + 2 danh sách.
 
 | Chỉ số | Cách tính | Hậu tố |
 |--------|-----------|--------|
-| **Giá trị tồn (vốn)** | Tổng `costPrice × stock` | "Tính theo giá nhập" |
-| **Giá trị tồn (bán)** | Tổng `salePrice × stock` | "Tính theo giá bán" |
+| **Giá trị tồn (vốn)** | `Σ (productVariants.onHand × productVariants.costPrice)` | "Tính theo giá nhập" |
+| **Giá trị tồn (bán)** | `Σ (productVariants.onHand × productVariants.price)` | "Tính theo giá bán" |
 
 **Hàng 2 — Cảnh báo:**
 
-| Chỉ số | Giá trị | Hậu tố |
-|--------|---------|--------|
-| **Lợi nhuận tiềm năng** | `totalRetailValue − totalCostValue` (xanh emerald) | `N đơn vị tồn kho` |
-| **Sắp hết hàng** | `lowStockCount` (vàng) | "Variant dưới ngưỡng tồn" |
-| **Hết hàng** | `outOfStockCount` (đỏ) | "Variant hết hàng" |
+| Chỉ số | Cách tính | Hậu tố |
+|--------|-----------|--------|
+| **Lợi nhuận tiềm năng** | `totalRetailValue − totalCostValue` (xanh emerald) | `N` = `Σ productVariants.onHand` (tổng đơn vị) |
+| **Sắp hết hàng** | `COUNT(productVariants)` có `0 < onHand ≤ lowStockThreshold` (vàng) | "Variant dưới ngưỡng tồn" |
+| **Hết hàng** | `COUNT(productVariants)` có `onHand ≤ 0` (đỏ) | "Variant hết hàng" |
 
 **2 danh sách bên dưới:**
 
@@ -82,9 +84,9 @@ Tiêu đề: **"Tồn kho"**. Hiển thị 2 hàng MetricStatBar + 2 danh sách.
 
 ### 4. `/analytics/finance` — Tài chính & Lợi nhuận
 
-Header: tiêu đề **"Tài chính & Lợi nhuận"** + nút **Chi tiết theo ngày** (icon CalendarDays) → `/analytics/finance/detail`.
+Header: tiêu đề **"Tài chính & Lợi nhuận"** + nút **Chi tiết theo ngày** (icon CalendarDays) → `/analytics/finance/detail`. Sub-line: *"Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm"*.
 
-Mặc định lấy dữ liệu **tháng hiện tại**. Xem chi tiết các chỉ số tại trang [Tài chính](./finance).
+Hiển thị 4 KPI **lifetime/toàn bộ shop** (không lọc theo kỳ). Xem chi tiết công thức tại trang [Tài chính](./finance).
 
 ### 5. `/analytics/finance/detail` — Chi tiết theo ngày
 
@@ -108,11 +110,13 @@ URL được sync `?from=YYYY-MM-DD&to=YYYY-MM-DD&day=YYYY-MM-DD`.
 
 #### 4 KPI tổng kỳ (MetricStatBar)
 
+Lấy theo `[startDate, endDate]` đã chọn — chạy trên đơn `paymentStatus = paid` có `createdAt` trong kỳ.
+
 | Chỉ số | Cách tính | Màu |
 |--------|-----------|-----|
-| **Doanh thu** | `summary.revenue` | Xanh dương |
-| **Giá vốn** | `summary.cogs` | Cam |
-| **LN gộp** | `summary.grossProfit` (= Doanh thu − COGS) | Emerald nếu &ge;0 / đỏ nếu &lt;0 |
+| **Doanh thu** | `Σ orders.total` lọc paid + trong kỳ | Xanh dương |
+| **Giá vốn** | `Σ orders.totalCost` lọc paid + trong kỳ | Cam |
+| **LN gộp** | `revenue − cogs` | Emerald nếu &ge;0 / đỏ nếu &lt;0 |
 | **Biên LN** | `grossProfit / revenue × 100` | Emerald / đỏ |
 
 #### Bảng theo ngày (desktop) hoặc danh sách card (mobile)

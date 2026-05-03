@@ -15,12 +15,14 @@ Sidebar → **Quản trị → Dashboard**.
 
 ## Khu vực 1 — 4 thẻ KPI hôm nay
 
-| Thẻ | Nguồn dữ liệu | Phụ |
-|-----|---------------|-----|
-| **Doanh thu hôm nay** | `kpiStats.todayRevenue` | `N đơn` |
-| **Đơn chờ xử lý** | `kpiStats.pendingOrdersCount` | "Cần xác nhận" |
-| **Sản phẩm sắp hết** | `kpiStats.lowStockCount` | `M đã hết` |
-| **Khách hàng mới** | `kpiStats.todayCustomersCount` | "Hôm nay" |
+Cụm `MetricStatBar` 4 ô.
+
+| Thẻ | Cách tính | Phụ |
+|-----|-----------|-----|
+| **Doanh thu hôm nay** | `Σ orders.total` của đơn `completedAt ≥ 00:00 hôm nay` | `N đơn` — số đơn `createdAt ≥ 00:00 hôm nay` |
+| **Đơn chờ xử lý** | `COUNT(orders)` có `fulfillmentStatus = pending` (toàn bộ, không lọc ngày) | "Cần xác nhận" |
+| **Sản phẩm sắp hết** | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` | `M đã hết` — SKU có `onHand = 0` |
+| **Khách hàng mới** | `COUNT(profiles)` có `role = customer AND createdAt ≥ 00:00 hôm nay` | "Hôm nay" |
 
 ---
 

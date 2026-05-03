@@ -21,14 +21,14 @@ Sidebar → **Quản trị → Dashboard** (mục đầu tiên).
 
 ## Khu vực 1 — 4 thẻ KPI hôm nay
 
-Grid 4 cột (2 cột trên mobile).
+Cụm `MetricStatBar` 4 ô (2 cột trên mobile, 4 cột trên desktop).
 
-| Thẻ | Nguồn dữ liệu | Phụ đề |
-|-----|---------------|--------|
-| **Doanh thu hôm nay** (icon TrendingUp, tone primary) | `kpiStats.todayRevenue` | `N đơn` (số đơn trong ngày) |
-| **Đơn chờ xử lý** (icon ShoppingCart, tone amber) | `kpiStats.pendingOrdersCount` | "Cần xác nhận" |
-| **Sản phẩm sắp hết** (icon AlertTriangle, tone danger) | `kpiStats.lowStockCount` | `M đã hết` (số SKU hết hàng) |
-| **Khách hàng mới** (icon Users, tone mint) | `kpiStats.todayCustomersCount` | "Hôm nay" |
+| Thẻ | Cách tính | Phụ đề |
+|-----|-----------|--------|
+| **Doanh thu hôm nay** (icon TrendingUp, tone primary) | `Σ orders.total` của các đơn có `completedAt ≥ 00:00 hôm nay` | `N đơn` — số đơn `createdAt ≥ 00:00 hôm nay` (mọi trạng thái) |
+| **Đơn chờ xử lý** (icon ShoppingCart, tone amber) | `COUNT(orders)` có `fulfillmentStatus = pending` (toàn bộ, không lọc ngày) | "Cần xác nhận" |
+| **Sản phẩm sắp hết** (icon AlertTriangle, tone danger) | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` | `M đã hết` — số SKU có `onHand = 0` |
+| **Khách hàng mới** (icon Users, tone mint) | `COUNT(profiles)` có `role = customer AND createdAt ≥ 00:00 hôm nay` | "Hôm nay" |
 
 <Note>
 Khi đang load, mỗi thẻ hiển thị skeleton dòng nhãn + dòng số. Khi không có dữ liệu, ô số hiển thị `—`.
@@ -42,16 +42,16 @@ Grid 2 cột (chiếm 2/3 + 1/3 trên màn hình lớn).
 
 ### Doanh thu 7 ngày
 
-- Bar chart 7 ngày gần nhất (CN/T2/T3/.../T7 theo thứ trong tuần).
-- Pill ở header so sánh với tuần trước:
+- Bar chart 7 ngày gần nhất (CN/T2/.../T7). Mỗi cột = `Σ orders.total` GROUP BY `DATE(createdAt)`, lọc `paymentStatus = paid`.
+- Pill so sánh tuần này (7 ngày qua) với tuần trước (7-14 ngày trước) — `delta = (curr − prev) / prev × 100`:
   - **Xanh** `+x% tuần trước` khi tăng.
   - **Đỏ** `−x% tuần trước` khi giảm.
-  - **Xám** `—` khi không đủ dữ liệu để so sánh.
+  - **Xám** `—` khi không đủ dữ liệu (tuần trước = 0).
 
 ### Đơn hàng 7 ngày
 
-- Bar chart 7 ngày gần nhất, màu vàng (amber).
-- Pill xanh dương: `N hôm nay` (số đơn hôm nay).
+- Bar chart 7 ngày gần nhất, màu vàng (amber). Mỗi cột = `COUNT(orders)` GROUP BY `DATE(createdAt)`, lọc `paymentStatus = paid`.
+- Pill xanh dương: `N hôm nay` — số đơn `paid` trong ngày.
 
 ---
 
@@ -59,10 +59,10 @@ Grid 2 cột (chiếm 2/3 + 1/3 trên màn hình lớn).
 
 ### Sản phẩm bán chạy
 
-| Cột | Nội dung |
-|-----|----------|
+| Cột | Cách tính |
+|-----|-----------|
 | **Sản phẩm** | Thumbnail + tên (cắt &gt; 38 ký tự) |
-| **Đã bán** | Tổng số lượng đã bán |
+| **Đã bán** | `Σ orderItems.quantity` GROUP BY product, sắp xếp DESC (toàn thời gian, mọi đơn) |
 
 - Hiển thị **top 5** sản phẩm.
 - Header có nút **Xem tất cả** dẫn về `/products`.

@@ -17,12 +17,12 @@ Sidebar → **Quản trị → Dashboard**.
 
 ## Khu vực 1 — 4 thẻ KPI hôm nay
 
-| Thẻ | Giá trị | Phụ |
-|-----|---------|-----|
-| **Doanh thu hôm nay** | Tổng tiền đơn tạo hôm nay | `N đơn` |
-| **Đơn chờ xử lý** | Số đơn `pending` | "Cần xác nhận" |
-| **Sản phẩm sắp hết** | Số SKU dưới ngưỡng | `M đã hết` |
-| **Khách hàng mới** | Số khách đăng ký hôm nay | "Hôm nay" |
+| Thẻ | Cách tính | Phụ |
+|-----|-----------|-----|
+| **Doanh thu hôm nay** | `Σ orders.total` của đơn **đã hoàn thành** trong ngày (`completedAt ≥ 00:00`) | `N đơn` — số đơn tạo hôm nay (mọi trạng thái) |
+| **Đơn chờ xử lý** | `COUNT(orders)` ở trạng thái `pending` (cộng dồn — bao gồm đơn cũ chưa xác nhận) | "Cần xác nhận" |
+| **Sản phẩm sắp hết** | SKU có `0 < onHand ≤ ngưỡng cảnh báo` (mặc định 30) | `M đã hết` — SKU có `onHand = 0` |
+| **Khách hàng mới** | Số khách `role = customer` đăng ký từ 00:00 hôm nay | "Hôm nay" |
 
 ---
 

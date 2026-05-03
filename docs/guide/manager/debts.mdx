@@ -22,11 +22,13 @@ Sidebar có badge đỏ với số khách quá hạn (> 30 ngày).
 
 ### Thẻ thống kê
 
-| Thẻ | Ý nghĩa |
-|-----|---------|
-| **Tổng công nợ** | Tổng tiền còn phải thu (VND) |
-| **Khách có nợ** | Số khách đang nợ |
-| **Số đơn nợ hiển thị** | Tổng kết quả theo bộ lọc/trang |
+Đơn được tính là "đang nợ" khi `fulfillmentStatus = stock_out` AND `paymentStatus ≠ paid`.
+
+| Thẻ | Cách tính |
+|-----|-----------|
+| **Tổng công nợ** | `Σ (orders.total − COALESCE(orders.paidAmount, 0))` của tất cả đơn nợ (toàn shop) |
+| **Khách có nợ** | `COUNT(DISTINCT orders.customerId)` của tất cả đơn nợ |
+| **Số đơn nợ hiển thị** | Tổng số kết quả khớp filter (tất cả các trang cộng lại) |
 
 ### Lọc và tìm kiếm
 
