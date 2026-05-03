@@ -120,6 +120,15 @@ export default function AdminInventory() {
           </Button>
         </div>
 
+        {tab !== "stock" && (
+          <p className="border-b border-border bg-muted/30 px-[18px] py-2 text-[11px] text-muted-foreground">
+            Hiển thị 10 SKU cần xử lý nhất · Số liệu đầy đủ theo variant tại{" "}
+            <a href="/analytics/inventory" className="font-medium underline underline-offset-2">
+              Báo cáo Tồn kho
+            </a>
+          </p>
+        )}
+
         {tab === "stock" ? (
           <div className="overflow-x-auto">
             <Table>

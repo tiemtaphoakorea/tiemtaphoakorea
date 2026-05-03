@@ -92,7 +92,7 @@ export function CreateSupplierOrderDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="sm:max-w-[480px]">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <DialogHeader>
             <DialogTitle>Tạo đơn nhập hàng</DialogTitle>
             <DialogDescription>
