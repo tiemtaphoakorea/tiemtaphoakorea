@@ -7,6 +7,12 @@ import { Navbar } from "@/components/layout/navbar";
 import { NewsletterCta } from "@/components/sections/newsletter-cta";
 import { ChatWidgetInitializer } from "@/components/store/chat-widget-initializer";
 
+// Layout fetches DB-backed nav/footer/branding on every render. Prerendering
+// children in parallel exhausts the Postgres pool (max=10) and trips Next.js
+// 60s static timeout. Match the existing per-page force-dynamic pattern
+// (homepage, products, OG images) at the layout level.
+export const dynamic = "force-dynamic";
+
 type ContactWidgetConfig = { messengerUrl?: string };
 type ShopInfoConfig = { phone?: string };
 type FooterConfig = {

@@ -31,10 +31,18 @@ type ShopInfoConfig = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [branding, shopInfo] = await Promise.all([
-    getSetting<BrandingConfig>("branding"),
-    getSetting<ShopInfoConfig>("shop_info"),
-  ]);
+  // DB calls in metadata can fail at build time (statement timeout, cold pool).
+  // Fall back to defaults so prerendering doesn't crash the whole build.
+  let branding: BrandingConfig | null = null;
+  let shopInfo: ShopInfoConfig | null = null;
+  try {
+    [branding, shopInfo] = await Promise.all([
+      getSetting<BrandingConfig>("branding"),
+      getSetting<ShopInfoConfig>("shop_info"),
+    ]);
+  } catch {
+    // DB unavailable (build time / timeout) — fall back to defaults
+  }
 
   const siteName = shopInfo?.name || "K-SMART";
   const description = shopInfo?.seoDescription || "K-SMART Pure Beauty";
