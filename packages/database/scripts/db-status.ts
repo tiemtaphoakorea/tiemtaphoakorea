@@ -24,15 +24,6 @@ const JOURNAL_PATH = path.join(MIGRATIONS_FOLDER, "meta", "_journal.json");
 
 type JournalEntry = { idx: number; when: number; tag: string };
 
-function maskDsn(url: string): string {
-  try {
-    const u = new URL(url);
-    return `${u.protocol}//${u.hostname}${u.pathname}`;
-  } catch {
-    return "<invalid DATABASE_URL>";
-  }
-}
-
 async function run(): Promise<number> {
   const DATABASE_URL = process.env.DATABASE_URL;
   if (!DATABASE_URL) {
@@ -49,7 +40,7 @@ async function run(): Promise<number> {
 
   const client = postgres(DATABASE_URL, { max: 1, onnotice: () => {} });
   try {
-    console.log(`Database: ${maskDsn(DATABASE_URL)}`);
+    console.log(`Checking database status...`);
 
     const tableCheck = await client<{ exists: boolean }[]>`
       SELECT EXISTS (

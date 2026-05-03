@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { AlertTriangle, Package, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   TableEmptyRow,
@@ -35,6 +36,7 @@ const TABS: ReadonlyArray<{ id: WarehouseTab; label: string }> = [
 ];
 
 export default function AdminInventory() {
+  const router = useRouter();
   const [tab, setTab] = useState<WarehouseTab>("stock");
 
   const stockQuery = useQuery({
@@ -108,9 +110,13 @@ export default function AdminInventory() {
       <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">
           <FilterTabs tabs={TABS} value={tab} onChange={setTab} />
-          <Button size="sm" className="h-7 gap-1.5 rounded-md text-xs">
+          <Button
+            size="sm"
+            className="h-7 gap-1.5 rounded-md text-xs"
+            onClick={() => router.push("/supplier-orders")}
+          >
             <Plus className="h-3 w-3" strokeWidth={2.5} />
-            Điều chỉnh kho
+            Nhập hàng
           </Button>
         </div>
 
