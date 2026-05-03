@@ -126,7 +126,10 @@ export function MegaMenu({
                         isActive ? "bg-[#EEF2FF]" : "hover:bg-muted/60"
                       }`}
                     >
-                      <GeneratedIcon src={icon} className="h-10 w-10 shrink-0 object-contain" />
+                      <GeneratedIcon
+                        src={icon}
+                        className="h-10 w-10 shrink-0 rounded-md object-contain"
+                      />
                       <span
                         className={`flex-1 text-[14px] font-medium leading-tight ${
                           isActive ? "text-primary" : "text-foreground"
@@ -147,7 +150,7 @@ export function MegaMenu({
                 <h4 className="m-0 text-[12px] font-bold uppercase leading-none tracking-[0.08em] text-muted-foreground">
                   <GeneratedIcon
                     src={activeIcon}
-                    className="mr-1 inline-block h-5 w-5 object-contain align-middle"
+                    className="mr-1 inline-block h-5 w-5 rounded-md object-contain align-middle"
                   />
                   {activeCategory.name.toUpperCase()}
                 </h4>
@@ -169,7 +172,7 @@ export function MegaMenu({
                     >
                       <GeneratedIcon
                         src={activeIcon}
-                        className="h-10 w-10 shrink-0 object-contain"
+                        className="h-10 w-10 shrink-0 rounded-md object-contain"
                       />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-[13px] font-semibold leading-tight text-foreground">

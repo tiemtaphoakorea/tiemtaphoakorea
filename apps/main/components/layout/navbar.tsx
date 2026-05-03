@@ -76,7 +76,8 @@ export function Navbar({
               alt="Logo"
               width={140}
               height={36}
-              className="h-9 w-auto object-contain transition-opacity duration-300 group-hover:opacity-80"
+              className="max-h-9 w-auto object-contain transition-opacity duration-300 group-hover:opacity-80"
+              style={{ height: "auto" }}
               priority
             />
           ) : (
