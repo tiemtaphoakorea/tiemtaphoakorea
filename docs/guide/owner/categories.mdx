@@ -1,33 +1,91 @@
 ---
 title: "Danh mục"
-description: "Quản lý phân loại sản phẩm để khách hàng dễ tìm kiếm trên cửa hàng."
+description: "Quản lý danh mục sản phẩm — thêm, sửa, xoá, ẩn/hiện."
 ---
 
 ## Mô tả
 
-Danh mục giúp tổ chức sản phẩm thành các nhóm có ý nghĩa (ví dụ: Áo, Quần, Phụ kiện). Khách hàng có thể lọc sản phẩm theo danh mục trên storefront.
+Trang **Danh mục** quản lý cấu trúc phân loại sản phẩm. Mỗi sản phẩm thuộc 1 danh mục, dùng để lọc và điều hướng trên storefront.
 
 ## Cách truy cập
 
 Menu bên trái → **Danh mục**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Tìm kiếm
+
+Ô **Tìm danh mục...** lọc theo tên danh mục. Debounce 300ms.
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Danh mục** | Ảnh đại diện (hoặc chữ cái đầu) + tên |
+| **Slug URL** | Slug dùng cho URL storefront, font monospace |
+| **Thứ tự** | Số thứ tự hiển thị (số nhỏ hơn xếp trước) |
+| **Sản phẩm** | Số sản phẩm thuộc danh mục |
+| **Trạng thái** | Badge: Đang hiển thị / Đã ẩn |
+| **Sửa / Xoá** | Hai nút thao tác |
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 25 / 50 / 100** mỗi trang. Mặc định **25**.
+
+## Thêm danh mục
 
 <Steps>
-  <Step title="Xem danh sách danh mục">
-    Trang hiển thị tất cả danh mục hiện có cùng số lượng sản phẩm trong mỗi danh mục.
+  <Step title="Mở drawer">
+    Nhấn nút **Thêm danh mục** ở góc trên phải → drawer mở từ phải.
   </Step>
-  <Step title="Thêm danh mục mới">
-    Nhấn **Thêm danh mục**, nhập tên danh mục và nhấn **Lưu**.
+  <Step title="Điền thông tin">
+    Xem bảng trường bên dưới.
   </Step>
-  <Step title="Chỉnh sửa danh mục">
-    Nhấn vào tên danh mục hoặc biểu tượng chỉnh sửa để đổi tên.
+  <Step title="Lưu">
+    Nhấn **Thêm**. Danh mục xuất hiện trong bảng và sẵn sàng gán cho sản phẩm.
   </Step>
-  <Step title="Xóa danh mục">
-    Nhấn biểu tượng xóa. Chỉ xóa được danh mục không còn sản phẩm nào.
+</Steps>
+
+### Trường trong form
+
+| Trường | Bắt buộc | Mô tả |
+|--------|---------|------|
+| **Tên danh mục** | Có | Ví dụ: `K-Food`, `Mỹ phẩm` |
+| **Slug URL** | Có | Tự sinh từ tên (bỏ dấu, chuyển kebab-case). Có thể chỉnh tay |
+| **Ảnh danh mục** | Không | Tải lên 1 ảnh (icon hoặc thumbnail), tối đa 1 file |
+| **Mô tả** | Không | Textarea — mô tả ngắn về danh mục |
+| **Đang hiển thị** | — | Switch — Mặc định `ON`. Nếu `OFF`, danh mục bị ẩn khỏi storefront |
+
+<Note>
+Slug được auto-generate khi gõ tên (chỉ với danh mục mới). Sau khi sửa slug bằng tay, hệ thống không tự ghi đè nữa.
+</Note>
+
+## Chỉnh sửa danh mục
+
+Nhấn nút **Sửa** ở cuối hàng → drawer mở với dữ liệu hiện tại.
+
+## Xoá danh mục
+
+<Steps>
+  <Step title="Nhấn nút Xoá">
+    Nút màu đỏ ở cuối hàng danh mục.
+  </Step>
+  <Step title="Xác nhận">
+    Hộp thoại xác nhận hiện ra. Nếu danh mục đang chứa sản phẩm, dòng mô tả sẽ cảnh báo: _"X sản phẩm sẽ bị gỡ khỏi danh mục này"_.
+  </Step>
+  <Step title="OK">
+    Nhấn **Xoá** để xác nhận.
   </Step>
 </Steps>
 
 <Warning>
-Không thể xóa danh mục đang có sản phẩm. Hãy chuyển sản phẩm sang danh mục khác trước khi xóa.
+Xoá danh mục **không xoá sản phẩm**, chỉ gỡ liên kết. Sau đó các sản phẩm cũ sẽ không thuộc danh mục nào — phải gán lại bằng tay trong từng sản phẩm.
 </Warning>
+
+## Thứ tự hiển thị
+
+Cột **Thứ tự** quyết định vị trí danh mục trên thanh menu storefront và trong dropdown chọn danh mục khi tạo sản phẩm. Số nhỏ hơn xếp trước (ví dụ `0` xếp đầu, `99` xếp cuối).
+
+<Note>
+Hiện form thêm/sửa danh mục chưa có ô **Thứ tự** — số mặc định là `0`. Để đổi thứ tự, đề nghị dev cập nhật trực tiếp qua database hoặc API quản trị.
+</Note>

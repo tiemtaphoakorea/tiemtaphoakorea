@@ -1,30 +1,90 @@
 ---
 title: "Tin nhắn"
-description: "Quản lý hộp thư hỗ trợ khách hàng theo thời gian thực."
+description: "Hộp thư hỗ trợ khách theo thời gian thực — text, ảnh, badge chưa đọc."
 ---
 
 ## Mô tả
 
-Trang Tin nhắn là hộp thư nội bộ để nhân viên phản hồi câu hỏi và yêu cầu hỗ trợ từ khách hàng. Tin nhắn được cập nhật theo thời gian thực.
+Trang **Tin nhắn** là hộp thư hai chiều giữa nhân viên và khách hàng đã đăng nhập storefront. Tin nhắn cập nhật gần realtime (polling 5–15 giây).
 
 ## Cách truy cập
 
 Menu bên trái → **Tin nhắn**.
 
-## Các thao tác chính
+## Bố cục
+
+Trang chia 2 cột (mobile chỉ hiện 1 cột tại 1 thời điểm):
+
+| Cột | Nội dung |
+|-----|---------|
+| **Trái (280px)** | Danh sách cuộc hội thoại |
+| **Phải** | Cuộc hội thoại đang chọn — header khách + dòng tin nhắn + ô soạn |
+
+## Cột trái — Danh sách hội thoại
+
+### Header
+
+- Tiêu đề: **"Hộp thư (X chưa đọc)"** — X là tổng số tin nhắn chưa đọc của shop.
+- Ô tìm kiếm **Tìm khách hàng...** — debounce 300ms.
+
+### Mỗi hàng hội thoại
+
+| Thành phần | Nội dung |
+|-----------|----------|
+| **Avatar** | Chữ cái đầu tên khách (nền xanh, đổi sang nền primary nếu đang chọn) |
+| **Tên khách** | Họ tên khách |
+| **Thời gian** | Giờ:phút tin nhắn cuối |
+| **Preview** | Nội dung tin nhắn cuối (truncate 180px) |
+| **Badge unread** | Vòng tròn đỏ với số tin chưa đọc (chỉ khi > 0) |
+
+Nhấn vào hàng để mở cuộc hội thoại.
+
+## Cột phải — Cuộc hội thoại
+
+### Header
+
+- Mobile: nút **Quay lại** (←) trở về danh sách.
+- Avatar khách + tên + SĐT/loại.
+
+### Dòng tin nhắn
+
+| Vị trí | Người gửi |
+|--------|-----------|
+| **Bên phải, nền primary trắng** | Nhân viên / shop (admin) |
+| **Bên trái, nền trắng viền** | Khách hàng |
+
+- Mỗi tin có timestamp giờ:phút bên dưới.
+- Nếu là **ảnh** — hiển thị ảnh max-width 200px (nhấn để xem to).
+
+### Soạn tin
+
+| Nút | Chức năng |
+|-----|-----------|
+| **Icon ảnh** (🖼️) | Mở chọn file → upload và gửi ảnh ngay (không có preview trước) |
+| **Ô nhập** | Soạn nội dung text |
+| **Send** (➤) | Gửi tin (Enter cũng gửi) |
+
+## Tính năng chi tiết
 
 <Steps>
-  <Step title="Xem danh sách hội thoại">
-    Cột bên trái liệt kê tất cả các phòng chat với khách hàng, sắp xếp theo tin nhắn mới nhất.
+  <Step title="Tìm cuộc hội thoại">
+    Gõ tên khách vào ô tìm — danh sách lọc trực tiếp.
   </Step>
-  <Step title="Đọc và trả lời tin nhắn">
-    Nhấn vào một hội thoại để đọc lịch sử tin nhắn. Gõ phản hồi vào ô nhập liệu bên dưới và nhấn **Gửi** hoặc Enter.
+  <Step title="Trả lời text">
+    Chọn hội thoại → gõ tin → nhấn **Send** (hoặc Enter).
   </Step>
-  <Step title="Gửi hình ảnh">
-    Nhấn biểu tượng đính kèm để tải lên và gửi hình ảnh cho khách.
+  <Step title="Gửi ảnh">
+    Nhấn nút icon ảnh → chọn file (chỉ chấp nhận `image/*`) → upload tự động, gửi ngay.
+  </Step>
+  <Step title="Đánh dấu đã đọc">
+    Mở hội thoại → tin được đánh dấu đã đọc tự động (badge unread biến mất).
   </Step>
 </Steps>
 
 <Note>
-Hệ thống có thể được cấu hình để AI tự động trả lời tin nhắn khách hàng. Tính năng này được bật/tắt qua cài đặt môi trường của người triển khai hệ thống.
+Hệ thống có thể được cấu hình để **AI tự động trả lời** tin nhắn khách. Tính năng bật/tắt qua biến môi trường của người triển khai hệ thống.
 </Note>
+
+<Warning>
+Ảnh upload không có giới hạn kích thước trong UI nhưng nên giữ dưới ~5MB để tránh chậm.
+</Warning>

@@ -1,14 +1,15 @@
 ---
-title: "Trang chủ — Collections & Banners"
-description: "Quản lý collections sản phẩm và banner hero hiển thị trên trang chủ storefront."
+title: "Trang chủ — Collections, Banners & Cài đặt"
+description: "Quản lý collections sản phẩm, banner hero và cài đặt SEO trang chủ storefront."
 ---
 
 ## Mô tả
 
-Trang **Trang chủ** gồm hai tab chính:
+Trang **Trang chủ** điều khiển toàn bộ nội dung hiển thị trên trang chủ storefront, gồm 3 tab:
 
-- **Collections** — các khối sản phẩm xuất hiện bên dưới hero (ví dụ: "Hàng mới về", "Bán chạy nhất").
-- **Banners** — carousel ảnh hero ở đầu trang chủ, hỗ trợ ảnh tự upload hoặc lấy hình từ danh mục.
+- **Collections** — các khối sản phẩm dưới hero (VD: "Bán chạy nhất", "Hàng mới về").
+- **Banners** — carousel ảnh hero ở đầu trang chủ.
+- **Cài đặt** — SEO tiêu đề và mô tả meta.
 
 ## Cách truy cập
 
@@ -16,128 +17,172 @@ Menu bên trái → **Trang chủ** (mục **Quản trị**).
 
 ---
 
-## Tab Collections
+## Tab "Collections"
 
-### Các thao tác chính
+Hiển thị tất cả collection hiện có. Số lượng collection hiển thị ở góc trái.
+
+### Tạo collection mới
 
 <Steps>
-  <Step title="Xem danh sách collection">
-    Trang hiển thị tất cả collection hiện có. Số collection xuất hiện ở góc trái thanh công cụ.
+  <Step title="Mở form tạo">
+    Nhấn **Tạo collection** ở góc phải → form mở **inline** ở đầu danh sách (không phải drawer).
   </Step>
-  <Step title="Tạo collection mới">
-    Nhấn **Tạo collection** ở góc phải → drawer bên phải mở ra với form chi tiết.
+  <Step title="Chọn loại collection">
+    Dropdown **Loại** — 4 lựa chọn:
+
+    | Loại | Cách lấy sản phẩm |
+    |------|-------------------|
+    | **Thủ công (chọn sản phẩm)** | Tự chọn từng sản phẩm bằng Manual Product Picker |
+    | **Bán chạy (auto)** | Tự lấy theo lượt bán |
+    | **Mới về (auto theo ngày tạo)** | Lấy SP mới trong **N** ngày gần nhất |
+    | **Theo danh mục** | Lấy theo danh mục cụ thể |
   </Step>
-  <Step title="Chọn icon và tiêu đề">
-    Trong drawer, chọn **Icon** từ thư viện icon có sẵn → nhập **Tiêu đề** (ví dụ: "Hàng mới về") và **Mô tả ngắn** (tùy chọn).
+  <Step title="Tiêu đề (bắt buộc)">
+    Trường **Tiêu đề** — VD: "Bán chạy nhất". Bắt buộc, nút **Lưu** bị khoá nếu trống.
   </Step>
-  <Step title="Chọn loại sản phẩm">
-    Có 2 cách thêm sản phẩm vào collection:
-    - **Tự động**: chọn theo bộ lọc (danh mục, sắp xếp, giới hạn số lượng) — danh sách tự cập nhật khi thêm sản phẩm mới.
-    - **Thủ công**: chọn từng sản phẩm cụ thể bằng **Manual product picker**.
+  <Step title="Phụ đề & Icon (tuỳ chọn)">
+    Textarea **Phụ đề** + **Icon** chọn từ thư viện icon có sẵn (IconSelect).
   </Step>
-  <Step title="Lưu collection">
-    Nhấn **Lưu** trong drawer. Collection xuất hiện ngay trên trang chủ storefront.
+  <Step title="Số sản phẩm + View all URL">
+    | Trường | Mặc định / phạm vi |
+    |--------|-------------------|
+    | **Số sản phẩm (limit)** | 8 (1-50) — số SP hiển thị trên storefront |
+    | **View all URL** | VD: `/products` — link đích khi nhấn "Xem tất cả" |
   </Step>
-  <Step title="Chỉnh sửa hoặc xóa collection">
-    Trên hàng collection trong danh sách, nhấn nút **Sửa** để mở lại drawer, hoặc nhấn **Xóa** (sau xác nhận) để xóa vĩnh viễn.
+  <Step title="Cấu hình theo loại (nếu cần)">
+    - **Theo danh mục**: dropdown **Danh mục** (bắt buộc).
+    - **Mới về**: trường **Cửa sổ ngày (days)** — mặc định 30, tối đa 365.
+    - **Thủ công**: Manual Product Picker để chọn từng sản phẩm.
   </Step>
-  <Step title="Bật/tắt và sắp xếp">
-    Mỗi collection có công tắc **Hiển thị** (ON/OFF). Sắp xếp thứ tự bằng cách kéo thả hoặc cập nhật trường thứ tự trong form.
+  <Step title="Lưu">
+    Nhấn **Lưu**. Collection xuất hiện trong danh sách, mặc định **Hiển thị** = bật.
   </Step>
 </Steps>
 
-### Manual product picker
-
-Khi chọn loại sản phẩm thủ công:
-
-- Tìm sản phẩm bằng tên hoặc danh mục.
-- Tick chọn nhiều sản phẩm cùng lúc.
-- Sắp xếp lại bằng kéo thả (drag handle).
-
-### Loại collection thường dùng
-
-| Tiêu đề gợi ý | Cách cấu hình |
-|---------------|---------------|
-| Hàng mới về | Tự động · sắp xếp **Mới nhất** · giới hạn 8 SP |
-| Bán chạy | Tự động · sắp xếp **Phổ biến** · giới hạn 8 SP |
-| Khuyến mãi | Thủ công · chọn các SP đang giảm giá |
-| Theo danh mục | Tự động · lọc theo danh mục cụ thể |
-
 <Note>
-Collection chỉ hiển thị trên storefront khi có ít nhất 1 sản phẩm hợp lệ và công tắc **Hiển thị** đang bật.
+Khi đổi loại từ **Thủ công** sang loại auto khác và đã chọn sẵn sản phẩm thủ công, hệ thống hỏi xác nhận trước khi xoá danh sách thủ công.
 </Note>
+
+### Manual Product Picker (loại Thủ công)
+
+- Tìm sản phẩm bằng tên hoặc danh mục
+- Tick chọn nhiều sản phẩm cùng lúc
+- Sắp xếp lại bằng kéo thả
+
+### Quản lý collection trong danh sách
+
+| Thao tác | Mô tả |
+|---------|-------|
+| **Sửa** (icon bút) | Mở form chỉnh sửa inline ngay dưới hàng collection |
+| **Xoá** (icon thùng) | ConfirmDialog "Xoá collection ...?" — không thể hoàn tác |
+| **Switch hiển thị** | Bật/tắt collection trên storefront mà không xoá |
+| **Kéo thả ⠿** | Đổi thứ tự — phản ánh ngay trên storefront |
+
+<Warning>
+Xoá collection là hành động không thể hoàn tác. Collection bị xoá khỏi trang chủ ngay lập tức.
+</Warning>
 
 ---
 
-## Tab Banners
+## Tab "Banners"
 
-Banner là **carousel ảnh lớn ở đầu trang chủ**. Mỗi banner hiển thị như một slide với ảnh nền, tiêu đề, badge, CTA và nhãn ưu đãi.
+Banner = carousel ảnh hero ở đầu trang chủ. Mỗi banner là một slide với ảnh nền, tiêu đề, badge, CTA và nhãn ưu đãi.
 
-### Cài đặt ảnh banner (Custom)
+Có 2 loại:
+
+| Loại | Mô tả |
+|------|-------|
+| **Custom (ảnh tự upload)** | Bạn upload ảnh trực tiếp |
+| **Theo danh mục** | Hệ thống tự lấy ảnh sản phẩm nổi bật từ danh mục đó |
+
+### Tạo banner Custom
 
 <Steps>
-  <Step title="Mở tab Banners">
-    Vào **Trang chủ** → click tab **Banners** ở thanh điều hướng.
-  </Step>
-  <Step title="Mở form chỉnh sửa">
-    Nhấn nút **Sửa** (biểu tượng bút) trên banner cần cập nhật. Form mở rộng ngay dưới hàng banner.
+  <Step title="Mở form tạo">
+    Nhấn **+ Tạo banner** ở góc phải → form mở inline ở đầu danh sách.
   </Step>
   <Step title="Chọn loại Custom">
-    Ở dropdown **Loại**, chọn **Custom (ảnh tự upload)**. Trường **Ảnh banner** xuất hiện bên dưới.
+    Dropdown **Loại** → **Custom (ảnh tự upload)**. Trường **Ảnh banner** xuất hiện.
+  </Step>
+  <Step title="Chọn màu accent">
+    Dropdown **Màu accent** — 7 lựa chọn:
+
+    Tím · Hồng · Xanh lá · Xanh dương · Cam · Vàng · Chàm
+
+    (Màu gradient phủ lên ảnh khi hiển thị trên storefront.)
   </Step>
   <Step title="Upload ảnh">
-    Nhấn vào vùng upload hoặc kéo thả file vào ô **Ảnh banner**. Sau khi chọn file, hệ thống tự upload lên Supabase Storage và hiển thị preview.
+    Vùng **Ảnh banner** — kéo thả file hoặc nhấn để chọn. Hệ thống upload lên Supabase Storage và hiển thị preview.
 
     **Yêu cầu ảnh:**
-    - Định dạng: JPG · PNG · WebP
+    - Định dạng: **JPG / PNG / WebP**
     - Tỉ lệ khuyến nghị: **16:9** hoặc **3:1**
-    - Kích thước tối đa: **2 MB**
+    - Dung lượng tối đa: **2 MB**
+    - Tối đa 1 file
   </Step>
-  <Step title="Điền thông tin banner (tùy chọn)">
-    | Trường | Mô tả |
+  <Step title="Điền nội dung (tuỳ chọn)">
+    | Trường | Ví dụ |
     |--------|-------|
-    | **Tiêu đề** | Dòng chữ lớn hiển thị trên ảnh |
-    | **Badge text** | Nhãn nhỏ phía trên tiêu đề (ví dụ: "Hàng chính hãng từ Seoul") |
-    | **Phụ đề** | Mô tả ngắn bên dưới tiêu đề |
-    | **CTA label / URL** | Nút kêu gọi hành động (ví dụ: "Mua ngay" → `/products`) |
-    | **Discount tag** | Nhãn ưu đãi ở góc phải (ví dụ: "50%") |
-    | **Discount sub** | Phụ chú ưu đãi (ví dụ: "cho đơn đầu tiên") |
-    | **Màu accent** | Màu gradient phủ lên ảnh (Tím · Hồng · Xanh lá · ...) |
+    | **Tiêu đề** | NÂNG TẦM VẺ ĐẸP HÀN |
+    | **Badge text** | Hàng chính hãng từ Seoul |
+    | **Phụ đề** | Mô tả ngắn |
+    | **CTA label** | Mua ngay |
+    | **CTA URL** | `/products` |
+    | **Discount tag** | 50% |
+    | **Discount sub** | cho đơn đầu tiên |
   </Step>
   <Step title="Lưu">
-    Nhấn **Lưu**. Banner cập nhật ngay trên trang chủ storefront khi khách hàng reload trang.
+    Nhấn **Lưu**. Banner xuất hiện trong danh sách, mặc định **Hiển thị** = bật.
   </Step>
 </Steps>
-
-### Cài đặt banner theo danh mục
-
-Nếu chọn **Loại → Theo danh mục**, hệ thống tự lấy ảnh sản phẩm nổi bật từ danh mục đó làm ảnh nền — không cần upload thủ công.
-
-<Steps>
-  <Step title="Chọn loại Theo danh mục">
-    Dropdown **Loại** → chọn **Theo danh mục**.
-  </Step>
-  <Step title="Chọn danh mục">
-    Dropdown **Danh mục** → chọn danh mục muốn đại diện (ví dụ: Kính mắt, Mỹ phẩm).
-  </Step>
-  <Step title="Lưu">
-    Nhấn **Lưu**. Ảnh nền tự động lấy từ sản phẩm đang active trong danh mục.
-  </Step>
-</Steps>
-
-### Tạo banner mới
-
-Nhấn **+ Tạo banner** ở góc phải → form trống mở ra → điền thông tin và upload ảnh như hướng dẫn trên → **Lưu**.
-
-### Bật/tắt và sắp xếp
-
-- **Công tắc** trên mỗi hàng banner để bật/tắt hiển thị trên storefront mà không cần xóa.
-- **Kéo thả** (biểu tượng ⠿ bên trái) để thay đổi thứ tự slide trên trang chủ.
 
 <Warning>
-Banner custom **bắt buộc** phải có ảnh — nút **Lưu** bị khóa cho đến khi ảnh upload thành công.
+Banner loại **Custom bắt buộc có ảnh** — nút **Lưu** bị khoá cho đến khi upload ảnh thành công.
 </Warning>
 
+### Tạo banner Theo danh mục
+
+<Steps>
+  <Step title="Mở form tạo">
+    Nhấn **+ Tạo banner** ở góc phải.
+  </Step>
+  <Step title="Chọn loại">
+    Dropdown **Loại** → **Theo danh mục**. Trường **Danh mục** xuất hiện thay cho upload ảnh.
+  </Step>
+  <Step title="Chọn danh mục (bắt buộc)">
+    Dropdown **Danh mục** liệt kê tất cả danh mục đang có. Chọn danh mục muốn đại diện.
+  </Step>
+  <Step title="Điền nội dung & lưu">
+    Tiêu đề, badge, CTA... như banner Custom (đều tuỳ chọn) → **Lưu**.
+  </Step>
+</Steps>
+
+### Quản lý banner trong danh sách
+
+| Thao tác | Mô tả |
+|---------|-------|
+| **Sửa** (icon bút) | Mở form chỉnh sửa inline ngay dưới hàng banner |
+| **Xoá** (icon thùng) | ConfirmDialog "Xoá banner ...?" — không thể hoàn tác |
+| **Switch hiển thị** | Ẩn/hiện banner trên storefront mà không xoá |
+| **Kéo thả ⠿** | Đổi thứ tự slide trong carousel |
+
 <Tip>
-Dùng ảnh tỉ lệ **3:1** (ví dụ: 1920×640 px) để banner hiển thị đẹp nhất trên cả desktop và mobile.
+Dùng ảnh tỉ lệ **3:1** (VD: 1920×640 px) để banner hiển thị đẹp nhất trên cả desktop và mobile.
 </Tip>
+
+---
+
+## Tab "Cài đặt"
+
+SEO cơ bản cho trang chủ.
+
+| Trường | Mô tả |
+|--------|-------|
+| **SEO — Tiêu đề trang chủ** | Tiêu đề `<title>` của trang chủ storefront |
+| **SEO — Mô tả meta** | Textarea — `<meta name="description">` |
+
+Nhấn **Lưu cài đặt trang chủ** để áp dụng.
+
+<Note>
+Tiêu đề + mô tả meta ảnh hưởng đến SEO và hiển thị khi chia sẻ link trang chủ trên mạng xã hội.
+</Note>

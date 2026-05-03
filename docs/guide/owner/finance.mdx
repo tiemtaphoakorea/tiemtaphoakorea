@@ -1,40 +1,109 @@
 ---
 title: "Tài chính"
-description: "Tổng quan P&L (lãi lỗ), doanh thu, giá vốn và chi phí vận hành theo tháng."
+description: "Báo cáo P&L (lãi/lỗ) tháng — doanh thu, COGS, chi phí vận hành và lợi nhuận ròng."
 ---
 
 ## Mô tả
 
-Trang Tài chính cung cấp báo cáo lãi/lỗ tổng hợp — bao gồm doanh thu, giá vốn hàng bán, chi phí vận hành và lợi nhuận ròng. Đây là nguồn dữ liệu chính để ra quyết định kinh doanh.
+Trang **Tài chính** (`/analytics/finance`) là báo cáo lãi/lỗ tổng hợp cho một tháng. Đây là nguồn dữ liệu chính để Chủ shop ra quyết định kinh doanh và đối soát hoạt động cuối kỳ.
 
 ## Cách truy cập
 
-Menu bên trái → **Tài chính** *(chỉ hiển thị với tài khoản Chủ shop)*.
+Sidebar → **Tài chính → Báo cáo → Tài chính & Lợi nhuận**, hoặc URL trực tiếp `/analytics/finance`.
 
-## Các chỉ số chính
+> Trang này nằm trong cụm Báo cáo, mặc định lấy **tháng hiện tại**. Để chọn kỳ khác hoặc xem theo từng ngày, nhấn nút **Chi tiết theo ngày** ở góc phải header.
 
-| Chỉ số | Ý nghĩa |
-|--------|---------|
-| Doanh thu | Tổng giá bán của các đơn hàng đã thanh toán |
-| Giá vốn | Tổng chi phí nhập hàng của sản phẩm đã bán |
-| Lợi nhuận gộp | Doanh thu − Giá vốn |
-| Chi phí vận hành | Tổng chi phí từ trang Chi phí |
-| Lợi nhuận ròng | Lợi nhuận gộp − Chi phí vận hành |
+---
+
+## Công thức P&L
+
+```
+Doanh thu          = Σ giá bán × số lượng (đơn đã thanh toán/hoàn thành)
+Giá vốn (COGS)     = Σ giá nhập × số lượng (theo lô tồn kho)
+Lợi nhuận gộp      = Doanh thu − COGS
+Chi phí vận hành   = Σ khoản chi từ trang Chi phí (cố định + biến đổi)
+Lợi nhuận ròng     = Lợi nhuận gộp − Chi phí vận hành
+Margin (%)         = Lợi nhuận ròng / Doanh thu × 100
+```
+
+---
+
+## Khu vực 1 — 4 KPI tổng kỳ (MetricStatBar)
+
+| Chỉ số | Cách tính | Icon · Màu | Phụ |
+|--------|-----------|-----------|-----|
+| **Tổng doanh thu** | `stats.revenue` | DollarSign · xanh dương | "Ghi nhận theo đơn hoàn thành" |
+| **Giá vốn hàng bán** | `stats.cogs` | PieChart · cam | `N đơn hàng đã bán` |
+| **Chi phí vận hành** | `stats.expenses` | Wallet · đỏ | "Chi phí cố định & biến phí" |
+| **Lợi nhuận ròng** | `stats.netProfit` (xanh primary nếu &ge;0, đỏ nếu &lt;0) | TrendingUp · primary | `Margin x.x%` |
+
+---
+
+## Khu vực 2 — Chi tiết các khoản lợi nhuận
+
+Layout 3 cột: **bảng chi tiết** (chiếm 2/3 bên trái) + **scorecard sức khoẻ** (1/3 bên phải).
+
+### Bảng chi tiết (waterfall P&L)
+
+| Dòng | Hiển thị | Số tiền |
+|------|----------|---------|
+| **Doanh thu gộp** (icon DollarSign xanh) | "Tổng giá trị đơn hàng" | `formatCurrency(revenue)` (xanh dương) |
+| **Giá vốn hàng bán (COGS)** (icon PieChart cam) | "Tổng giá nhập kho sản phẩm" | `−formatCurrency(cogs)` (đỏ) |
+| **Lợi nhuận gộp** *(subtotal nét đứt, nền xám)* | — | `formatCurrency(grossProfit)` (đậm) |
+| **Chi phí vận hành** (icon Wallet đỏ) | "Mặt bằng, nhân sự, marketing..." | `−formatCurrency(expenses)` (đỏ) |
+| **Lợi nhuận ròng cuối cùng** *(highlight, icon TrendingUp)* | "LỢI NHUẬN RÒNG CUỐI CÙNG" | `formatCurrency(netProfit)` 2xl/3xl (primary hoặc đỏ) |
+
+### Scorecard "Sức khỏe tài chính" (cột phải)
+
+- Vòng tròn icon TrendingUp ở giữa.
+- Badge nhỏ ở góc:
+  - **GOOD** (xanh lá) khi `netProfit > 0`.
+  - **LOSS** (đỏ) khi `netProfit ≤ 0`.
+- Số lớn: tỷ suất lợi nhuận `(netProfit / revenue × 100).toFixed(1)`%.
+- Câu khuyến nghị bên dưới:
+  - **Nếu lãi**: *"Tỷ suất lợi nhuận ở mức tích cực. Tiếp tục duy trì và tối ưu chi phí."*.
+  - **Nếu lỗ**: *"Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."*.
+
+---
+
+## Cách chọn kỳ báo cáo
+
+Trang `/analytics/finance` dùng **tháng hiện tại** ngay khi mở. Để xem kỳ khác, nhấn **Chi tiết theo ngày** ở góc phải header — sẽ chuyển sang `/analytics/finance/detail` với bộ chọn 7 preset:
+
+| Preset | Mô tả |
+|--------|-------|
+| **Hôm nay** · **Hôm qua** · **7 ngày** · **Tháng này** · **Tháng trước** | Chọn nhanh |
+| **Tháng cụ thể** | Popover Select tháng + năm (năm trước/hiện tại/sau) |
+| **Tùy chỉnh** | Popover chọn ngày bắt đầu + ngày kết thúc |
+
+URL được sync: `?from=YYYY-MM-DD&to=YYYY-MM-DD&day=YYYY-MM-DD` để có thể chia sẻ link.
+
+---
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Chọn kỳ báo cáo">
-    Dùng bộ chọn tháng/năm để xem báo cáo theo kỳ mong muốn.
+  <Step title="Mở báo cáo tháng hiện tại">
+    Sidebar → **Báo cáo → Tài chính & Lợi nhuận**. Trang hiển thị 4 KPI và waterfall P&L cho tháng hiện tại.
   </Step>
-  <Step title="Xem P&L tổng quan">
-    Màn hình hiển thị tất cả chỉ số tài chính trong kỳ, phân tách rõ doanh thu, giá vốn, chi phí và lợi nhuận.
+  <Step title="Đối soát từng dòng P&L">
+    Đọc bảng chi tiết theo thứ tự: Doanh thu gộp → trừ COGS → Lợi nhuận gộp → trừ Chi phí vận hành → **Lợi nhuận ròng**. Mỗi dòng có icon và mô tả ngắn để hiểu khoản đó là gì.
   </Step>
-  <Step title="Xem chi tiết lợi nhuận theo sản phẩm">
-    Cuộn xuống để xem bảng top sản phẩm lãi cao nhất và lãi thấp nhất.
+  <Step title="Chuyển sang xem theo ngày">
+    Nhấn **Chi tiết theo ngày** ở header. Tại trang detail, chọn preset (7 ngày, tháng này, hoặc tuỳ chỉnh) — bảng theo ngày sẽ hiển thị cùng KPI cập nhật theo kỳ mới.
+  </Step>
+  <Step title="Drill-down một ngày cụ thể">
+    Trong bảng theo ngày, nhấn vào hàng → drawer liệt kê tất cả đơn trong ngày đó kèm tổng tiền. Nhấn vào đơn để mở chi tiết.
+  </Step>
+  <Step title="Đánh giá sức khỏe tài chính">
+    Nhìn scorecard bên phải: badge **GOOD** (xanh) hay **LOSS** (đỏ), kèm tỷ suất lợi nhuận %. Nếu có gợi ý "cần xem xét lại chi phí" → chuyển sang **Chi phí** rà soát các khoản chi cố định/biến đổi.
   </Step>
 </Steps>
 
 <Warning>
-Tính năng này chỉ dành riêng cho Chủ shop.
+Trang này lấy `expenses` từ trang **Chi phí** — chỉ Chủ shop xem được. **Quản lý** truy cập trực tiếp `/analytics/finance` vẫn thấy con số `expenses` đã cộng vào netProfit, nhưng không xem được danh sách chi tiết khoản chi tại trang Chi phí.
 </Warning>
+
+<Note>
+COGS được tính theo phương pháp lô tồn kho gần nhất tại thời điểm bán; xem thêm tại `docs/030-Specs/Spec-Finance-Accounting.md`.
+</Note>

@@ -5,27 +5,86 @@ description: "Tra cứu khách còn nợ và ghi nhận thanh toán."
 
 ## Mô tả
 
-Trang Công nợ liệt kê khách hàng đang còn nợ tiền (đơn chưa thanh toán đủ). Nhân viên có thể tra cứu nhanh và ghi nhận thanh toán khi khách trả nợ.
+Trang **Công nợ** liệt kê khách hàng đang còn nợ tiền (đơn chưa thanh toán đủ). Nhân viên có quyền tra cứu và ghi nhận thanh toán khi khách trả nợ.
 
 ## Cách truy cập
 
-Menu bên trái → **Công nợ**.
+Menu bên trái → **Công nợ** (mục **Tài chính**).
 
-## Lọc và tìm kiếm
+Sidebar có badge đỏ với số khách quá hạn (> 30 ngày).
 
-- **Tab:** Tất cả · &lt; 7 ngày · 7-30 ngày · &gt; 30 ngày (quá hạn — màu đỏ).
-- **Ô tìm kiếm:** nhập tên khách hoặc số điện thoại.
+---
 
-## Các thao tác chính
+## Trang danh sách
+
+### Thẻ thống kê
+
+| Thẻ | Ý nghĩa |
+|-----|---------|
+| **Tổng công nợ** | Tổng tiền còn phải thu (VND) |
+| **Khách có nợ** | Số khách đang nợ |
+| **Số đơn nợ hiển thị** | Tổng kết quả theo bộ lọc |
+
+### Lọc và tìm kiếm
+
+- **Tab độ tuổi:** Tất cả · &lt; 7 ngày · 7-30 ngày · &gt; 30 ngày (quá hạn — đỏ).
+- **Ô tìm kiếm:** tên khách hoặc SĐT (debounce 300ms).
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Khách hàng** | Tên đầy đủ |
+| **SĐT** | Số điện thoại |
+| **Số đơn nợ** | Số đơn chưa thanh toán đủ |
+| **Số tiền nợ** | Tổng nợ (đỏ) |
+| **Nợ lâu nhất** | Ngày + số ngày |
+| **Trạng thái** | Chưa thanh toán / Đang xử lý / Quá hạn |
+| **Thu tiền** | Mở drawer ghi nhận |
+
+---
+
+## Thu tiền — 2 cách
+
+### Cách 1 — Drawer (thu cho 1 đơn)
 
 <Steps>
-  <Step title="Tra cứu nợ của một khách">
-    Nhập tên hoặc SĐT vào ô tìm kiếm → bảng hiển thị số đơn nợ và tổng tiền nợ.
+  <Step title="Mở drawer">
+    Nhấn **Thu tiền** trên hàng khách → drawer **Thu tiền nợ — &lt;tên KH&gt;** mở từ phải.
   </Step>
-  <Step title="Thu tiền">
-    Nhấn **Thu tiền** trên hàng khách → chọn đơn cần thanh toán → nhập số tiền, phương thức, mã tham chiếu (nếu chuyển khoản), ghi chú → **Lưu thanh toán**.
+  <Step title="Chọn đơn cần thanh toán">
+    Danh sách đơn nợ hiển thị mã đơn, ngày tạo, số còn lại. Nhấn vào đơn để chọn — số tiền tự điền bằng số còn lại.
+  </Step>
+  <Step title="Điền form">
+    | Trường | Giá trị |
+    |--------|---------|
+    | **Số tiền (đ)** | Mặc định = số còn nợ |
+    | **Phương thức** | Tiền mặt · Chuyển khoản · Thẻ · Khác |
+    | **Mã tham chiếu** | Tuỳ chọn — VD: TXN12345 |
+    | **Ghi chú** | Tuỳ chọn |
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Ghi nhận TT**. Đơn chuyển sang **Đã thanh toán** nếu thu đủ.
   </Step>
 </Steps>
+
+### Cách 2 — Dialog Bulk Payment (FIFO)
+
+Nhấn vào hàng khách để vào trang chi tiết → nhấn **Thu tiền** ở header → nhập tổng số tiền → hệ thống phân bổ tự động cho các đơn theo `stockOutAt` cũ nhất trước.
+
+---
+
+## Trang chi tiết khách
+
+Mở từ hàng khách. Header gồm tên + SĐT, nút **Thu tiền** lớn, và 4 thẻ: **Tổng nợ**, **Số đơn nợ**, **Tổng giá trị đơn**, **Tổng đã thu**.
+
+### 3 tab
+
+| Tab | Cột bảng |
+|-----|---------|
+| **Đơn đang nợ** | Mã đơn · Ngày báo hết · Tổng tiền · Đã trả · Còn nợ |
+| **Lịch sử thanh toán** | Ngày · Mã đơn · Số tiền · Phương thức · Mã tham chiếu |
+| **Tất cả đơn** | Mã đơn · Trạng thái · Tổng tiền · Đã trả · Ngày tạo |
 
 <Note>
 Khoản thanh toán ghi nhận tại đây sẽ cập nhật trạng thái đơn hàng tương ứng tự động.

@@ -1,62 +1,161 @@
 ---
 title: "Báo cáo & Phân tích"
-description: "Báo cáo doanh thu, lợi nhuận, top sản phẩm và cảnh báo tồn kho."
+description: "Bốn thẻ phân tích tổng hợp + 5 trang con chuyên sâu (overview, products, inventory, finance, finance/detail)."
 ---
 
 ## Mô tả
 
-Trang **Báo cáo** tổng hợp 4 thẻ phân tích chính phục vụ ra quyết định kinh doanh: cơ cấu doanh thu theo danh mục, xu hướng tài chính, top sản phẩm bán chạy và cảnh báo tồn kho.
+Trang **Báo cáo** (`/analytics`) là trung tâm phân tích kinh doanh của K-SMART. Trang chính hiển thị 4 thẻ tổng hợp; mỗi thẻ có nút **Xem chi tiết** dẫn tới trang con chuyên sâu.
 
 ## Cách truy cập
 
-Menu bên trái → **Báo cáo** *(chỉ hiển thị với Chủ shop và Quản lý)*.
+Sidebar → **Tài chính → Báo cáo** *(chỉ Chủ shop và Quản lý thấy)*.
 
-## Các thẻ phân tích
+---
 
-Trang hiển thị 4 thẻ trên grid 2 cột:
+## Trang chính `/analytics` — 4 thẻ tổng hợp
 
-### 1. Cơ cấu doanh thu (Revenue Mix)
+Grid 2 cột:
 
-Biểu đồ donut chia doanh thu theo danh mục sản phẩm. Giúp nhận diện danh mục đóng góp nhiều nhất.
+| Thẻ | Loại biểu đồ | Liên kết chi tiết |
+|-----|--------------|-------------------|
+| **Cơ cấu doanh thu** | Donut chart theo danh mục | (xem trên trang Tổng quan) |
+| **Xu hướng tài chính** | Area chart doanh thu + lợi nhuận gộp | `/analytics/finance` |
+| **Top sản phẩm** | Top 3 sản phẩm bán chạy | `/analytics/products` |
+| **Cảnh báo tồn kho** | Số SKU sắp hết / đã hết | `/analytics/inventory` |
 
-### 2. Xu hướng tài chính (Finance Trend)
+---
 
-Biểu đồ vùng (area) hiển thị **doanh thu** và **lợi nhuận gộp** theo thời gian (vd: 30 ngày gần nhất). Dùng để phát hiện xu hướng tăng/giảm.
+## Trang con chuyên sâu
 
-### 3. Top sản phẩm (Top Products)
+### 1. `/analytics/overview` — Tổng quan
 
-Top 3 sản phẩm bán chạy nhất theo số lượng/doanh thu. Mỗi mục hiển thị tên, hình thumbnail và chỉ số bán.
+Header: tiêu đề **"Báo cáo & Thống kê"** + nút action ở góc phải.
 
-### 4. Cảnh báo tồn kho (Stock Alert)
+**3 thẻ KPI** (MetricStatBar):
 
-Tóm tắt số SKU đang **sắp hết** và **đã hết hàng**, kèm danh sách top SKU cần ưu tiên nhập.
+| Thẻ | Giá trị | Phụ |
+|-----|---------|-----|
+| **Doanh thu** | `formatCurrency(totalRevenue)` | "5% dưới mục tiêu" |
+| **Đơn hàng** | `totalOrders.toLocaleString()` | "+12.5% tháng này" |
+| **Khách hàng** | `totalCustomers.toLocaleString()` | "Tài khoản đã đăng ký" |
 
-## Trang con
+**2 biểu đồ** dưới các KPI:
 
-Một số phân tích có trang riêng (truy cập từ liên kết "Xem chi tiết" trên thẻ):
+- **Revenue Chart** — biểu đồ doanh thu theo tháng (`monthlyRevenue`).
+- **Category Sales Chart** — biểu đồ bán theo danh mục (`categorySales`).
 
-| URL | Nội dung |
-|-----|---------|
-| `/analytics/overview` | Tổng quan KPI mở rộng |
-| `/analytics/products` | Bảng xếp hạng sản phẩm chi tiết |
-| `/analytics/inventory` | Phân tích tồn kho sâu |
-| `/analytics/finance` | P&L chi tiết theo kỳ |
-| `/analytics/finance/detail` | Phân tích theo từng đơn |
+### 2. `/analytics/products` — Sản phẩm bán chạy
+
+- Tiêu đề: **"Sản phẩm bán chạy"**.
+- Grid 4 cột (xếp lại theo màn hình): mỗi card có:
+  - Số thứ tự (#1, #2, ...).
+  - Badge tăng trưởng (`+x%` xanh emerald hoặc `−x%` đỏ).
+  - Tên sản phẩm.
+  - Số đơn hàng + doanh thu (`formatCurrency`).
+- Header có nút **Xem tất cả** → `/products`.
+- Mô tả: *"Những sản phẩm mang lại doanh thu cao nhất trong năm."*.
+
+### 3. `/analytics/inventory` — Tồn kho
+
+Tiêu đề: **"Tồn kho"**. Hiển thị 2 hàng MetricStatBar + 2 danh sách.
+
+**Hàng 1 — Giá trị tồn:**
+
+| Chỉ số | Cách tính | Hậu tố |
+|--------|-----------|--------|
+| **Giá trị tồn (vốn)** | Tổng `costPrice × stock` | "Tính theo giá nhập" |
+| **Giá trị tồn (bán)** | Tổng `salePrice × stock` | "Tính theo giá bán" |
+
+**Hàng 2 — Cảnh báo:**
+
+| Chỉ số | Giá trị | Hậu tố |
+|--------|---------|--------|
+| **Lợi nhuận tiềm năng** | `totalRetailValue − totalCostValue` (xanh emerald) | `N đơn vị tồn kho` |
+| **Sắp hết hàng** | `lowStockCount` (vàng) | "Variant dưới ngưỡng tồn" |
+| **Hết hàng** | `outOfStockCount` (đỏ) | "Variant hết hàng" |
+
+**2 danh sách bên dưới:**
+
+- **Sắp hết hàng** (LowStockList) — danh sách SKU đang dưới ngưỡng tồn.
+- **Hết hàng** (OutOfStockList) — danh sách SKU đã hết.
+
+### 4. `/analytics/finance` — Tài chính & Lợi nhuận
+
+Header: tiêu đề **"Tài chính & Lợi nhuận"** + nút **Chi tiết theo ngày** (icon CalendarDays) → `/analytics/finance/detail`.
+
+Mặc định lấy dữ liệu **tháng hiện tại**. Xem chi tiết các chỉ số tại trang [Tài chính](./finance).
+
+### 5. `/analytics/finance/detail` — Chi tiết theo ngày
+
+Tiêu đề: **"Chi tiết theo ngày"**, có nút back về `/analytics/finance`.
+
+#### Bộ chọn kỳ (FinanceRangePicker)
+
+Nút pill chọn nhanh:
+
+| Preset | Mô tả |
+|--------|-------|
+| **Hôm nay** | Hôm nay |
+| **Hôm qua** | Một ngày trước |
+| **7 ngày** | 7 ngày gần nhất |
+| **Tháng này** | Từ ngày 1 đến hôm nay |
+| **Tháng trước** | Trọn tháng trước |
+| **Tháng cụ thể** | Popover chọn tháng + năm (năm trước, năm hiện tại, năm sau) |
+| **Tùy chỉnh** | Popover chọn ngày bắt đầu + ngày kết thúc |
+
+URL được sync `?from=YYYY-MM-DD&to=YYYY-MM-DD&day=YYYY-MM-DD`.
+
+#### 4 KPI tổng kỳ (MetricStatBar)
+
+| Chỉ số | Cách tính | Màu |
+|--------|-----------|-----|
+| **Doanh thu** | `summary.revenue` | Xanh dương |
+| **Giá vốn** | `summary.cogs` | Cam |
+| **LN gộp** | `summary.grossProfit` (= Doanh thu − COGS) | Emerald nếu &ge;0 / đỏ nếu &lt;0 |
+| **Biên LN** | `grossProfit / revenue × 100` | Emerald / đỏ |
+
+#### Bảng theo ngày (desktop) hoặc danh sách card (mobile)
+
+| Cột | Nội dung |
+|-----|----------|
+| **Ngày** | Badge thứ (CN/T2/...) + ngày/tháng |
+| **Doanh thu** | Đậm xanh dương |
+| **COGS** | Xám |
+| **LN gộp** | Đậm xanh emerald hoặc đỏ |
+| **Biên LN** | Thanh ngang `MarginBar` + % |
+| **Đơn** | Badge số đơn |
+| **→** | Mũi tên gợi ý click |
+
+Nhấn dòng → mở **FinanceDayDrawer** liệt kê tất cả đơn trong ngày + tổng tiền + link tới chi tiết đơn.
+
+<Note>
+Khi `startDate === endDate` (chọn 1 ngày), bảng không hiển thị; chỉ thấy 4 KPI và thông báo *"Chọn khoảng thời gian nhiều hơn 1 ngày để xem bảng chi tiết."*.
+</Note>
+
+---
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Mở dashboard báo cáo">
-    Vào **Báo cáo** → 4 thẻ phân tích hiển thị mặc định.
+    Sidebar → **Báo cáo**. Trang `/analytics` hiển thị 4 thẻ tổng hợp.
   </Step>
   <Step title="Xem chi tiết một thẻ">
-    Nhấn liên kết **Xem chi tiết** (hoặc tiêu đề) trên thẻ để mở trang phân tích sâu hơn.
+    Nhấn nút **Xem chi tiết** (hoặc tiêu đề thẻ) để chuyển sang trang con: top sản phẩm, tồn kho, hoặc tài chính.
   </Step>
-  <Step title="Theo dõi tồn kho">
-    Thẻ **Cảnh báo tồn kho** cập nhật theo thời gian thực; nhấn vào sản phẩm để chuyển trực tiếp sang **Quản lý kho**.
+  <Step title="Phân tích tài chính theo kỳ">
+    Mở **Tài chính & Lợi nhuận** → mặc định xem tháng hiện tại. Nhấn **Chi tiết theo ngày** để vào trang detail và chọn kỳ tuỳ ý.
+  </Step>
+  <Step title="Drill-down một ngày">
+    Trong trang **Chi tiết theo ngày**, nhấn vào một dòng để mở drawer liệt kê tất cả đơn của ngày đó. Nhấn vào đơn để mở chi tiết đơn hàng.
   </Step>
 </Steps>
 
+<Warning>
+**Quản lý** thấy đầy đủ tất cả thẻ và trang con phân tích — nhưng dữ liệu chi phí vận hành (expenses) vẫn được tính vào lợi nhuận ròng. Số liệu chi phí gốc chỉ Chủ shop xem được tại trang **Chi phí**.
+</Warning>
+
 <Note>
-Báo cáo chỉ dành cho Chủ shop và Quản lý. Để xem P&L chi tiết kèm chi phí vận hành, dùng trang **Tài chính** (chỉ Chủ shop).
+**Nhân viên** không thấy menu **Báo cáo** trong sidebar và sẽ bị chặn nếu truy cập URL `/analytics` trực tiếp.
 </Note>

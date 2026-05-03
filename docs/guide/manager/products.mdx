@@ -1,54 +1,137 @@
 ---
 title: "Sản phẩm"
-description: "Quản lý sản phẩm, biến thể và tồn kho."
+description: "Quản lý sản phẩm, biến thể, tồn kho và hình ảnh."
 ---
 
 ## Mô tả
 
-Trang Sản phẩm cho phép thêm, chỉnh sửa sản phẩm và quản lý tồn kho từng biến thể.
+Trang **Sản phẩm** là trung tâm quản lý mọi mặt hàng. Một sản phẩm có thể có nhiều **biến thể** (size, màu...), mỗi biến thể có giá bán, giá vốn, tồn kho và hình ảnh riêng.
+
+<Note>
+Quản lý có đầy đủ quyền tương tự Chủ shop trên tính năng này — thêm/sửa sản phẩm, biến thể, upload ảnh, đánh dấu nổi bật. Chỉ riêng quyền **xoá biến thể đã có lịch sử bán** dành riêng cho Chủ shop.
+</Note>
 
 ## Cách truy cập
 
 Menu bên trái → **Sản phẩm**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Bộ lọc nhanh (tab)
+
+| Tab | Lọc theo |
+|-----|----------|
+| **Tất cả** | Mọi sản phẩm |
+| **Còn hàng** | `totalAvailable > ngưỡng cảnh báo` |
+| **Sắp hết** | `0 < totalAvailable ≤ ngưỡng cảnh báo` |
+| **Hết hàng** | `totalAvailable = 0` |
+
+### Tìm kiếm
+
+Ô **Tìm tên, mã SP...** lọc theo tên sản phẩm hoặc SKU. Debounce 300ms.
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Sản phẩm** | Thumbnail + tên + SKU/slug |
+| **Danh mục** | Danh mục cha (badge) |
+| **Giá bán** | Giá hoặc khoảng giá `min – max` |
+| **Tồn kho** | Tổng tồn (đỏ nếu = 0, vàng nếu < ngưỡng) |
+| **Trạng thái** | Đang bán / Hết hàng / Ẩn |
+| **Sửa** | Mở drawer chỉnh sửa |
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 20 / 50 / 100**. Mặc định **20**.
+
+## Thêm sản phẩm
 
 <Steps>
-  <Step title="Thêm sản phẩm mới">
-    Nhấn **Thêm sản phẩm** → điền tên, danh mục, giá bán, ảnh → **Lưu**.
+  <Step title="Mở form">
+    Nhấn **Thêm sản phẩm** ở góc trên phải → mở `/products/new`.
   </Step>
-  <Step title="Tải lên ảnh sản phẩm">
-    Trong form thêm/sửa sản phẩm → tab **Hình ảnh** → nhấn vùng ảnh hoặc kéo thả file để upload.
-    Hỗ trợ JPG, PNG, WebP. Ảnh đầu tiên được dùng làm ảnh đại diện.
+  <Step title="Tab Thông tin chung">
+    Điền tên, danh mục, giá niêm yết, mô tả, switch hiển thị / nổi bật.
   </Step>
-  <Step title="Quản lý biến thể và tồn kho">
-    Mở sản phẩm → tab **Biến thể** → cập nhật số lượng tồn kho từng biến thể.
+  <Step title="Tab Biến thể & Giá">
+    Tạo biến thể tự động hoặc thêm thủ công.
   </Step>
-  <Step title="Chỉnh sửa thông tin sản phẩm">
-    Nhấn **Chỉnh sửa** trên trang chi tiết sản phẩm để cập nhật tên, mô tả hoặc giá bán.
+  <Step title="Tab Hình ảnh">
+    Upload ảnh cho từng biến thể (max 10 ảnh / biến thể).
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Tạo sản phẩm**.
   </Step>
 </Steps>
 
-## Ẩn và hiện sản phẩm
+### Tab Thông tin chung — các trường
 
-Công tắc **Hiển thị sản phẩm** trong form chỉnh sửa kiểm soát sản phẩm có xuất hiện trên storefront hay không.
+| Trường | Bắt buộc | Mô tả |
+|--------|---------|------|
+| **Tên sản phẩm** | Có | Tên hiển thị trên storefront |
+| **Danh mục** | Không | Cây danh mục đa cấp |
+| **Giá niêm yết (Base Price)** | Không | Giá mặc định cho biến thể tạo mới (VND) |
+| **Mô tả sản phẩm** | Không | Textarea mô tả chi tiết |
+| **Hiển thị sản phẩm** | — | Switch ON/OFF — ẩn/hiện trên storefront |
+| **Bán chạy / Nổi bật** | — | Switch — đưa vào "Sản phẩm được yêu thích" trang chủ |
+
+### Tab Biến thể & Giá
+
+#### Bộ tạo biến thể tự động
+
+<Steps>
+  <Step title="Nhập Color">
+    Ví dụ: `Đỏ, Xanh, Đen` (phân tách bằng dấu phẩy).
+  </Step>
+  <Step title="Nhập Size">
+    Ví dụ: `S, M, L`.
+  </Step>
+  <Step title="Tạo danh sách">
+    Nhấn **Tạo danh sách biến thể** — sinh tích Descartes, SKU tự sinh.
+  </Step>
+</Steps>
+
+#### Bảng biến thể
+
+| Cột | Mô tả |
+|-----|------|
+| **Tên biến thể** | Ví dụ `Đỏ - M` |
+| **Mã SKU** | Định danh duy nhất (font monospace, nền xanh) |
+| **Giá bán** | VND |
+| **Giá vốn** | Dùng tính lợi nhuận |
+| **Tồn kho** | Số lượng |
+| **Ngưỡng cảnh báo** | Mặc định `30` |
+| **Xoá** | Nút thùng rác |
+
+### Tab Hình ảnh
+
+<Steps>
+  <Step title="Chọn biến thể">
+    Dropdown ở đầu tab.
+  </Step>
+  <Step title="Upload ảnh">
+    Tối đa **10 ảnh / biến thể**, hỗ trợ JPG/PNG/WebP.
+  </Step>
+  <Step title="Sắp xếp">
+    Ảnh đầu tiên là ảnh đại diện. Kéo-thả để đổi thứ tự.
+  </Step>
+</Steps>
 
 ## Đánh dấu sản phẩm nổi bật
 
-Công tắc **Bán chạy / Nổi bật** quyết định sản phẩm có xuất hiện trong mục **"Sản phẩm được yêu thích"** trên trang chủ hay không.
-
 <Steps>
-  <Step title="Mở trang chỉnh sửa sản phẩm">
-    Nhấn biểu tượng bút chì ✏️ ở cuối hàng sản phẩm.
+  <Step title="Mở sản phẩm">
+    Nhấn vào hàng → drawer mở.
   </Step>
   <Step title="Bật công tắc Bán chạy / Nổi bật">
-    Cuộn xuống phần **Bán chạy / Nổi bật** → gạt công tắc sang `ON`.
+    Tab **Thông tin chung** → switch sang `ON`.
   </Step>
-  <Step title="Lưu thay đổi">
-    Nhấn **Lưu thay đổi**. Sản phẩm xuất hiện ngay trên trang chủ storefront.
+  <Step title="Lưu">
+    Nhấn **Lưu thay đổi**. Sản phẩm xuất hiện ngay trên trang chủ.
   </Step>
 </Steps>
 
-<Note>
-Giá vốn ảnh hưởng trực tiếp đến báo cáo lợi nhuận. Hãy đảm bảo giá vốn được cập nhật chính xác khi nhập hàng mới.
-</Note>
+<Warning>
+Giá vốn ảnh hưởng trực tiếp đến báo cáo lợi nhuận. Cập nhật chính xác mỗi khi nhập hàng (qua đơn nhập hàng để tự động bình quân gia quyền).
+</Warning>

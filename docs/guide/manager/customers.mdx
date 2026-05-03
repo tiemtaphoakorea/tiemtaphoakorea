@@ -1,34 +1,117 @@
 ---
 title: "Khách hàng"
-description: "Xem thông tin và lịch sử mua hàng của khách hàng."
+description: "CRM nội bộ — quản lý hồ sơ khách, đơn hàng, công nợ, hạng khách."
 ---
 
 ## Mô tả
 
-Trang Khách hàng lưu hồ sơ và lịch sử mua hàng của từng khách, giúp tra cứu khi cần hỗ trợ.
+Trang **Khách hàng** là CRM nội bộ. Mỗi khách có hồ sơ với thông tin cá nhân, lịch sử đơn hàng, công nợ và **hạng** (tier) tự tính theo doanh thu / số đơn.
+
+<Note>
+Quản lý có đầy đủ quyền tương tự Chủ shop trên tính năng này — thêm/sửa khách, chặn / mở chặn, xoá khách.
+</Note>
 
 ## Cách truy cập
 
 Menu bên trái → **Khách hàng**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Bộ lọc & tìm kiếm
+
+| Điều khiển | Lọc theo |
+|-----------|----------|
+| **Tìm tên, SĐT, mã KH...** | Debounce 300ms |
+| **Tất cả / Đang hoạt động / Ngừng hoạt động** | `isActive` |
+| **Xuất danh sách** | Tải Excel |
+| **Thêm KH** | Mở drawer tạo khách thủ công |
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Khách hàng** | Avatar + họ tên |
+| **Mã KH** | Mã định danh (font monospace) |
+| **SĐT** | Số điện thoại |
+| **Đơn hàng** | Số đơn đã đặt |
+| **Tổng chi tiêu** | Tổng tiền (đỏ) |
+| **Tham gia** | Ngày tạo |
+| **Hạng** | Badge phân hạng tự tính |
+
+Nhấn vào hàng → mở drawer chỉnh sửa nhanh. Trang chi tiết đầy đủ ở `/customers/{id}`.
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 25 / 50 / 100**. Mặc định **25**.
+
+## Thêm / Chỉnh sửa khách
 
 <Steps>
-  <Step title="Xem danh sách khách hàng">
-    Bảng hiển thị tên, email, tổng số đơn và tổng chi tiêu của từng khách.
+  <Step title="Mở drawer">
+    Nhấn **Thêm KH** (mới) hoặc nhấn vào hàng (sửa).
   </Step>
-  <Step title="Xem hồ sơ chi tiết">
-    Nhấn vào tên khách để xem lịch sử đơn hàng và lịch sử chat hỗ trợ.
+  <Step title="Điền form">
+    Xem bảng trường bên dưới.
   </Step>
-  <Step title="Tìm kiếm khách hàng">
-    Dùng ô tìm kiếm để tìm theo tên hoặc email.
-  </Step>
-  <Step title="Vô hiệu hóa / kích hoạt lại khách hàng">
-    Trong hồ sơ chi tiết, nhấn nút **Vô hiệu hóa** hoặc **Kích hoạt lại** để thay đổi trạng thái tài khoản khách.
-    Tài khoản bị vô hiệu hóa không thể đặt hàng hoặc đăng nhập storefront.
+  <Step title="Lưu">
+    Nhấn **Thêm** hoặc **Lưu thay đổi**.
   </Step>
 </Steps>
 
-<Note>
-Hồ sơ khách hàng được tạo tự động khi khách đặt hàng lần đầu trên storefront.
-</Note>
+### Trường form
+
+| Trường | Bắt buộc | Mô tả |
+|--------|---------|------|
+| **Họ và tên** | Có | Tên đầy đủ |
+| **Số điện thoại** | Không | SĐT liên hệ |
+| **Địa chỉ** | Không | Địa chỉ giao hàng mặc định |
+| **Loại khách hàng** | Có | Dropdown: Bán lẻ / Bán sỉ / VIP. Mặc định Bán lẻ |
+| **Đang hoạt động** | — | Switch (chỉ khi sửa). Tắt = chặn khách |
+
+## Trang chi tiết khách (`/customers/{id}`)
+
+- **Header** — nút **Quay lại** + **Chặn / Mở chặn**, **Chỉnh sửa**, **Xoá KH**.
+- **CustomerProfileHeader** — avatar lớn, tên, mã KH, SĐT, hạng.
+- **Cột trái (1/3)**:
+    - **CustomerFinancialStats** — tổng chi tiêu, số đơn.
+    - **CustomerLocationCard** — địa chỉ.
+    - **CustomerSecurityCard** — ngày tạo, lần hoạt động cuối.
+- **Cột phải (2/3)**:
+    - **CustomerOrderHistoryTable** — bảng đơn hàng đã đặt.
+
+## Hạng khách hàng (Tier)
+
+Tự phân hạng theo `tổng chi tiêu` hoặc `số đơn` (cấu hình ở **Cài đặt → Hạng khách**). Tính lại sau mỗi đơn hoàn tất.
+
+## Vô hiệu hoá / Mở chặn khách
+
+<Steps>
+  <Step title="Mở trang chi tiết">
+    `/customers/{id}`.
+  </Step>
+  <Step title="Nhấn Chặn">
+    Header → nút **Chặn** (đỏ) → confirm.
+  </Step>
+  <Step title="Mở chặn">
+    Nếu đã bị chặn, nút đổi thành **Mở chặn**.
+  </Step>
+</Steps>
+
+## Xoá khách
+
+<Steps>
+  <Step title="Mở trang chi tiết">
+    `/customers/{id}`.
+  </Step>
+  <Step title="Nhấn Xoá KH">
+    Nút đỏ ở header → confirm: _"Hành động không thể hoàn tác."_
+  </Step>
+</Steps>
+
+<Warning>
+Xoá khách là **không thể hoàn tác**. Đơn hàng cũ vẫn được giữ nhưng không liên kết được với khách.
+</Warning>
+
+## Liên kết với công nợ
+
+Khách có đơn `partial` / `unpaid` sẽ xuất hiện ở trang **Công nợ** — tổng hợp toàn bộ khách đang nợ và lịch sử thu hồi.

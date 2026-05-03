@@ -1,54 +1,87 @@
 ---
-title: "Nhập hàng"
-description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp."
+title: "Đơn nhập hàng"
+description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp. Tồn kho cập nhật khi đơn chuyển sang Đã nhận."
 ---
 
 ## Mô tả
 
-Trang **Nhập hàng** quản lý đơn mua hàng từ nhà cung cấp. Khi xác nhận nhận hàng, tồn kho và giá vốn được cập nhật tự động.
+Trang **Đơn nhập hàng** quản lý các đơn mua hàng (purchase orders) từ nhà cung cấp về kho. Quản lý có **toàn quyền** với chức năng này như Chủ shop. Khi đơn nhập chuyển sang **Đã nhận**, **Tồn vật lý** của biến thể tương ứng được cộng tự động.
 
 ## Cách truy cập
 
-Truy cập qua **Quản lý kho** (Menu bên trái → **Kho vận** → **Quản lý kho**) → nhấn **Tạo đơn nhập** hoặc mở tab quản lý đơn nhập.
+Menu bên trái → **Đơn nhập hàng** (mục **Kho vận**).
 
-## Vòng đời đơn nhập hàng
+## Vòng đời đơn nhập
 
 ```mermaid
 flowchart LR
-    A[pending] --> B[ordered] --> C[received]
-    A & B -->|Huỷ| D[cancelled]
+    A["Chờ đặt<br/>pending"] --> B["Đã đặt<br/>ordered"]
+    B --> C["Đã nhận<br/>received"]
+    A & B -->|Huỷ| D["Đã huỷ<br/>cancelled"]
 
-    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
-    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style A fill:#fef3c7,stroke:#f59e0b,color:#92400e
     style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
 ```
 
-### Mô tả các trạng thái
+| Trạng thái | Nhãn | Ý nghĩa |
+|-----------|------|---------|
+| `pending` | **Chờ đặt** | Đơn vừa tạo, chưa liên hệ NCC |
+| `ordered` | **Đã đặt** | Đã đặt với NCC, chờ về |
+| `received` | **Đã nhận** | Hàng đã về — tồn vật lý cộng tự động |
+| `cancelled` | **Đã huỷ** | Đơn đã huỷ |
 
-| Trạng thái | Ý nghĩa |
-|-----------|---------|
-| `pending` | Vừa tạo, chưa gửi NCC |
-| `ordered` | Đã đặt hàng, chờ về |
-| `received` | Đã về kho — tồn và giá vốn cập nhật |
-| `cancelled` | Đã huỷ |
+<Note>
+Việc chuyển trạng thái hiện qua API quản trị. Trang admin chỉ hiển thị trạng thái dạng đọc và cho phép lọc — chưa có nút chuyển trạng thái trong giao diện.
+</Note>
 
-## Các thao tác chính
+## Bộ lọc và thao tác
+
+| Thành phần | Mô tả |
+|-----------|-------|
+| **Tìm theo SKU, sản phẩm, ghi chú...** | Ô tìm kiếm, debounce 300ms |
+| **Trạng thái** | Tất cả · Chờ đặt · Đã đặt · Đã nhận · Đã huỷ |
+| **Tạo đơn nhập** | Mở dialog tạo đơn |
+
+## Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Sản phẩm** | Tên SP + tên biến thể |
+| **SKU** | Mã SKU |
+| **SL** | Số lượng đặt nhập |
+| **Trạng thái** | Pill màu |
+| **Ngày dự kiến** | Ngày dự kiến nhận |
+| **Ngày tạo** | Ngày tạo đơn |
+
+## Tạo đơn nhập
 
 <Steps>
-  <Step title="Tạo đơn nhập">
-    **Tạo đơn nhập** → chọn NCC → chọn biến thể → nhập số lượng, giá vốn, ngày dự kiến → **Lưu**. Đơn ở trạng thái `pending`.
+  <Step title="Mở dialog">
+    Nhấn **Tạo đơn nhập** → dialog **Tạo đơn nhập hàng** mở ra.
   </Step>
-  <Step title="Xác nhận đặt hàng với NCC">
-    Sau khi liên hệ NCC, mở đơn → **Xác nhận đặt hàng** → chuyển sang `ordered`.
+  <Step title="Chọn biến thể">
+    Dropdown **Sản phẩm** liệt kê tất cả biến thể: **Tên SP — Tên biến thể (SKU)**.
   </Step>
-  <Step title="Xác nhận nhận hàng">
-    Khi hàng về, mở đơn → **Xác nhận nhận hàng**. Tồn kho cộng vào số đã có và giá vốn được lưu vào lịch sử.
+  <Step title="Số lượng + ngày dự kiến + ghi chú">
+    | Trường | Bắt buộc | Mặc định |
+    |--------|---------|---------|
+    | **Số lượng** | Có (≥ 1) | 1 |
+    | **Ngày dự kiến** | Không | (trống) |
+    | **Ghi chú** | Không | (trống) |
   </Step>
-  <Step title="Huỷ đơn">
-    Đơn `pending` hoặc `ordered` có thể huỷ. Đơn `received` thì không.
+  <Step title="Lưu">
+    Nhấn **Tạo đơn**. Đơn xuất hiện ở trạng thái **Chờ đặt**.
   </Step>
 </Steps>
 
-<Note>
-Giá vốn nhập ảnh hưởng trực tiếp đến lợi nhuận. Nhập đúng giá vốn thực tế khi tạo đơn.
-</Note>
+<Warning>
+Form **không có ô Nhà cung cấp** và **không có ô Giá vốn**. Việc gắn NCC mặc định và cập nhật giá vốn xử lý ở trang **Sản phẩm**.
+</Warning>
+
+## Ảnh hưởng đến tồn kho
+
+- `pending` / `ordered`: **không** ảnh hưởng tồn kho.
+- `received`: **Tồn vật lý** (`onHand`) cộng đúng bằng số lượng đã đặt.
+- `cancelled`: không thay đổi tồn kho.

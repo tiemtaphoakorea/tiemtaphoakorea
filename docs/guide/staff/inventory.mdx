@@ -5,32 +5,66 @@ description: "Theo dõi tồn kho từng SKU và phát hiện sản phẩm sắp
 
 ## Mô tả
 
-Trang **Quản lý kho** hiển thị tồn kho của từng SKU/biến thể và cảnh báo sản phẩm cần nhập thêm.
+Trang **Quản lý kho** hiển thị tồn kho từng biến thể (SKU) với 3 chỉ số: **Tồn vật lý**, **Đã giữ chỗ**, **Tồn khả dụng**. Cảnh báo SKU sắp/hết hàng để báo Quản lý lên kế hoạch nhập.
+
+Nhân viên có quyền xem đầy đủ dữ liệu kho.
 
 ## Cách truy cập
 
-Menu bên trái → **Quản lý kho**.
+Menu bên trái → **Quản lý kho** (mục **Kho vận**).
 
-## Tab dữ liệu
+## 3 cột tồn kho
 
-- **Tồn kho** — danh sách toàn bộ SKU.
-- **Sắp hết** — SKU dưới ngưỡng cảnh báo (mặc định 30).
-- **Hết hàng** — SKU có tồn = 0.
+| Cột | Công thức / nguồn | Ý nghĩa |
+|-----|-------------------|---------|
+| **Tồn vật lý** (`onHand`) | Số liệu kho thực tế | Số đơn vị thực tế trong kho |
+| **Đã giữ chỗ** (`reserved`) | Tổng SL trong các đơn chưa giao | Hàng đã đặt nhưng chưa xuất kho |
+| **Tồn khả dụng** (`available`) | `onHand − reserved` | Số có thể bán |
 
-## Các thao tác chính
+## Cảnh báo nhanh
+
+Banner đỏ ở đầu trang khi có SP sắp/hết hàng:
+
+> **N SP sắp hết** · **M SP đã hết hàng**
+
+## Thẻ thống kê
+
+| Thẻ | Ý nghĩa |
+|-----|---------|
+| **Tổng SKU** | Tổng biến thể đang quản lý |
+| **Còn hàng** | SKU đủ tồn |
+| **Sắp hết** | `onHand` < ngưỡng |
+| **Hết hàng** | `onHand` = 0 |
+
+## 3 tab dữ liệu
+
+| Tab | Cột bảng |
+|-----|---------|
+| **Tồn kho** | Sản phẩm · Danh mục · Tồn khả dụng · Tồn vật lý · Đã giữ chỗ |
+| **Sắp hết** | Sản phẩm/SKU · Tồn (vàng) · Pill **Sắp hết** |
+| **Hết hàng** | Sản phẩm/SKU · Tồn 0 (đỏ) · Pill **Hết hàng** |
+
+## Các thao tác
 
 <Steps>
-  <Step title="Đọc cảnh báo đầu trang">
-    Banner đỏ tóm tắt số SP sắp hết và số SP hết hàng — nhấn tab tương ứng để xem chi tiết.
+  <Step title="Đọc cảnh báo">
+    Banner đỏ tóm tắt số SP sắp/hết. Nhấn tab tương ứng để xem chi tiết.
   </Step>
   <Step title="Xem tồn từng SKU">
     Tab **Tồn kho** hiển thị 3 cột: **Tồn khả dụng** (số bán được), **Tồn vật lý** (số thực tế), **Đã giữ chỗ** (số đang trong đơn chưa giao).
   </Step>
-  <Step title="Báo cáo cho quản lý">
-    Nếu có SKU sắp/hết hàng, báo cho Quản lý hoặc Chủ shop để tạo đơn nhập từ nhà cung cấp.
+  <Step title="Báo cáo cho Quản lý">
+    Nếu có SKU sắp/hết hàng, báo Quản lý hoặc Chủ shop để tạo đơn nhập từ NCC.
+  </Step>
+  <Step title="Hoặc tạo đơn nhập trực tiếp">
+    Nhân viên cũng có quyền tạo đơn nhập — sang trang **Đơn nhập hàng** → **Tạo đơn nhập** → chọn biến thể.
   </Step>
 </Steps>
 
+<Warning>
+Nút **Điều chỉnh kho** ở góc tab hiện chưa có chức năng — đang phát triển. Chưa thể điều chỉnh kho thủ công từ giao diện.
+</Warning>
+
 <Note>
-Tồn kho tự động giảm khi đơn hàng được tạo và quay về kho khi đơn bị hủy. Bạn không cần điều chỉnh thủ công trừ khi kiểm kê.
+Tồn kho tự động giảm khi đơn được tạo (chuyển sang **Đã giữ chỗ**) và quay về kho khi đơn bị huỷ. Bạn không cần điều chỉnh thủ công trừ khi kiểm kê (cần Quản lý xử lý qua API).
 </Note>

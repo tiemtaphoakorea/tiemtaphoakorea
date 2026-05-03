@@ -1,30 +1,83 @@
 ---
 title: "Danh mục"
-description: "Quản lý phân loại sản phẩm."
+description: "Quản lý danh mục sản phẩm — thêm, sửa, xoá, ẩn/hiện."
 ---
 
 ## Mô tả
 
-Danh mục tổ chức sản phẩm thành các nhóm để khách hàng dễ tìm kiếm trên storefront.
+Trang **Danh mục** quản lý cấu trúc phân loại sản phẩm. Mỗi sản phẩm thuộc 1 danh mục.
+
+<Note>
+Quản lý có đầy đủ quyền tương tự Chủ shop trên tính năng này.
+</Note>
 
 ## Cách truy cập
 
 Menu bên trái → **Danh mục**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Tìm kiếm
+
+Ô **Tìm danh mục...** lọc theo tên. Debounce 300ms.
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Danh mục** | Ảnh đại diện + tên |
+| **Slug URL** | Slug dùng cho URL storefront |
+| **Thứ tự** | Số thứ tự hiển thị (số nhỏ xếp trước) |
+| **Sản phẩm** | Số sản phẩm trong danh mục |
+| **Trạng thái** | Đang hiển thị / Đã ẩn |
+| **Sửa / Xoá** | Hai nút thao tác |
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 25 / 50 / 100**. Mặc định **25**.
+
+## Thêm danh mục
 
 <Steps>
-  <Step title="Xem danh sách danh mục">
-    Trang hiển thị tất cả danh mục cùng số lượng sản phẩm trong mỗi danh mục.
+  <Step title="Mở drawer">
+    Nhấn **Thêm danh mục** → drawer mở từ phải.
   </Step>
-  <Step title="Thêm danh mục mới">
-    Nhấn **Thêm danh mục**, nhập tên và nhấn **Lưu**.
+  <Step title="Điền form">
+    Xem bảng trường bên dưới.
   </Step>
-  <Step title="Chỉnh sửa hoặc xóa">
-    Nhấn biểu tượng chỉnh sửa hoặc xóa trên dòng danh mục cần thay đổi.
+  <Step title="Lưu">
+    Nhấn **Thêm**.
+  </Step>
+</Steps>
+
+### Trường form
+
+| Trường | Bắt buộc | Mô tả |
+|--------|---------|------|
+| **Tên danh mục** | Có | Ví dụ `K-Food` |
+| **Slug URL** | Có | Tự sinh từ tên (kebab-case, bỏ dấu) — có thể chỉnh tay |
+| **Ảnh danh mục** | Không | Tải lên 1 ảnh (icon/thumbnail) |
+| **Mô tả** | Không | Mô tả ngắn |
+| **Đang hiển thị** | — | Switch — Mặc định `ON` |
+
+## Chỉnh sửa danh mục
+
+Nhấn nút **Sửa** ở cuối hàng → drawer mở với dữ liệu hiện tại.
+
+## Xoá danh mục
+
+<Steps>
+  <Step title="Nhấn nút Xoá">
+    Nút màu đỏ ở cuối hàng.
+  </Step>
+  <Step title="Xác nhận">
+    Nếu đang chứa sản phẩm, dialog hiển thị: _"X sản phẩm sẽ bị gỡ khỏi danh mục này"_.
+  </Step>
+  <Step title="OK">
+    Nhấn **Xoá**.
   </Step>
 </Steps>
 
 <Warning>
-Không thể xóa danh mục đang có sản phẩm. Hãy chuyển sản phẩm sang danh mục khác trước khi xóa.
+Xoá danh mục **không xoá sản phẩm**, chỉ gỡ liên kết. Sau đó các sản phẩm cũ phải được gán lại danh mục bằng tay.
 </Warning>

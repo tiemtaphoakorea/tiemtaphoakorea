@@ -1,30 +1,56 @@
 ---
 title: "Danh mục"
-description: "Xem và quản lý phân loại sản phẩm."
+description: "Xem và chỉnh phân loại sản phẩm — thêm, sửa, xoá danh mục."
 ---
 
 ## Mô tả
 
-Danh mục giúp tổ chức sản phẩm theo nhóm để khách hàng dễ tìm kiếm.
+Trang **Danh mục** quản lý phân loại sản phẩm. Mỗi sản phẩm thuộc 1 danh mục để hiển thị trên storefront.
 
 ## Cách truy cập
 
 Menu bên trái → **Danh mục**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Tìm kiếm
+
+Ô **Tìm danh mục...** lọc theo tên (debounce 300ms).
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Danh mục** | Ảnh đại diện + tên |
+| **Slug URL** | Slug dùng cho URL storefront |
+| **Thứ tự** | Số thứ tự (số nhỏ xếp trước) |
+| **Sản phẩm** | Số sản phẩm thuộc danh mục |
+| **Trạng thái** | Đang hiển thị / Đã ẩn |
+| **Sửa / Xoá** | Hai nút thao tác |
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 25 / 50 / 100**. Mặc định **25**.
+
+## Thêm danh mục
 
 <Steps>
-  <Step title="Xem danh sách danh mục">
-    Trang hiển thị tất cả danh mục cùng số lượng sản phẩm trong mỗi danh mục.
+  <Step title="Mở drawer">
+    Nhấn **Thêm danh mục** → drawer mở từ phải.
   </Step>
-  <Step title="Thêm danh mục mới">
-    Nhấn **Thêm danh mục**, nhập tên và nhấn **Lưu**.
+  <Step title="Điền form">
+    Tên (bắt buộc), Slug URL (tự sinh), Ảnh (tuỳ chọn), Mô tả, switch **Đang hiển thị**.
   </Step>
-  <Step title="Chỉnh sửa hoặc xóa">
-    Nhấn biểu tượng chỉnh sửa hoặc xóa trên dòng danh mục cần thay đổi.
+  <Step title="Lưu">
+    Nhấn **Thêm**.
   </Step>
 </Steps>
 
+## Chỉnh sửa / Xoá
+
+- **Sửa**: Nhấn nút **Sửa** ở cuối hàng → drawer mở.
+- **Xoá**: Nhấn nút **Xoá** đỏ → confirm. Nếu danh mục có sản phẩm, dialog cảnh báo: _"X sản phẩm sẽ bị gỡ khỏi danh mục này"_.
+
 <Warning>
-Không thể xóa danh mục đang có sản phẩm. Hãy chuyển sản phẩm sang danh mục khác trước khi xóa.
+Xoá danh mục **không xoá sản phẩm**, chỉ gỡ liên kết. Sản phẩm cũ phải gán lại danh mục bằng tay.
 </Warning>

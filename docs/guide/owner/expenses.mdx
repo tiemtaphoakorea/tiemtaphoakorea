@@ -1,35 +1,126 @@
 ---
 title: "Chi phí"
-description: "Theo dõi và quản lý chi phí vận hành cố định và biến đổi của cửa hàng."
+description: "Theo dõi chi phí vận hành cố định và biến đổi của cửa hàng theo tháng."
 ---
 
 ## Mô tả
 
-Trang Chi phí ghi nhận tất cả các khoản chi của cửa hàng ngoài giá vốn hàng hóa — ví dụ: tiền thuê mặt bằng, điện nước, lương nhân viên, vận chuyển. Dữ liệu này được dùng để tính lợi nhuận thực trong trang Tài chính.
+Trang **Chi phí** (`/expenses`) ghi nhận tất cả các khoản chi vận hành ngoài giá vốn — tiền thuê mặt bằng, điện nước, lương cứng, vận chuyển, marketing... Dữ liệu này được trừ khỏi lợi nhuận gộp tại trang **Tài chính** để ra **lợi nhuận ròng**.
 
 ## Cách truy cập
 
-Menu bên trái → **Chi phí** *(chỉ hiển thị với tài khoản Chủ shop)*.
+Sidebar → **Tài chính → Chi phí** *(chỉ Chủ shop)*.
 
-## Loại chi phí
+---
 
-- **Chi phí cố định:** Phát sinh đều đặn hàng tháng (tiền thuê, lương cứng...).
-- **Chi phí biến đổi:** Phát sinh không đều (vận chuyển, sửa chữa...).
+## 3 thẻ KPI tổng hợp
 
-## Các thao tác chính
+| Thẻ | Giá trị | Phụ | Tone |
+|-----|---------|-----|------|
+| **Tổng chi T{m}/{y}** | Σ tất cả khoản chi trong trang hiện tại | `N khoản` | Đỏ (danger) |
+| **Cố định** | Σ khoản chi `type = fixed` | "Định kỳ hàng tháng" | Vàng (amber) |
+| **Biến đổi** | Σ khoản chi `type = variable` | "Phát sinh" | Tím (primary) |
+
+<Note>
+Tổng tính trên các bản ghi của **trang hiện tại** trong phân trang, không phải toàn bộ tháng. Để xem tổng cả tháng chính xác, đối chiếu tại trang **Tài chính**.
+</Note>
+
+---
+
+## Bộ lọc
+
+| Bộ lọc | Tuỳ chọn | Mặc định |
+|--------|----------|----------|
+| **Tháng** | Tháng 1 – Tháng 12 | Tháng hiện tại |
+| **Năm** | Năm trước, năm hiện tại | Năm hiện tại |
+| **Loại** | Tất cả loại · Cố định · Biến đổi | Tất cả loại |
+
+Khi đổi bất kỳ filter nào, phân trang reset về trang 1.
+
+---
+
+## Bảng chi phí
+
+6 cột:
+
+| Cột | Nội dung | Định dạng |
+|-----|----------|-----------|
+| **Khoản chi** | Mô tả `description` | Đậm 13px |
+| **Loại** | TonePill | "Cố định" (indigo) hoặc "Biến đổi" (amber) |
+| **Số tiền** | `formatVnd(amount)` | Đậm, tabular-nums, đỏ |
+| **Ngày** | `date.toLocaleDateString('vi-VN')` | 12px, xám |
+| **Người ghi** | `creator.fullName` | 12px, xám |
+| **(action)** | Nút **Xoá** đỏ | Mở ConfirmDialog |
+
+### Trạng thái rỗng / lỗi
+
+- Đang load: 6 dòng skeleton.
+- Rỗng: "Chưa có chi phí".
+- Lỗi: hiển thị thông báo lỗi.
+
+### Phân trang
+
+- Page size: **10 / 25 / 50 / 100** (mặc định 25).
+- Footer hiển thị `Tổng N khoản` và pagination control.
+
+---
+
+## Form Ghi chi phí mới (drawer bên phải)
+
+Mở bằng nút **+ Ghi chi phí** ở góc phải toolbar. Drawer có 4 trường:
+
+| Trường | Kiểu | Validation | Mặc định | Placeholder |
+|--------|------|-----------|----------|-------------|
+| **Mô tả khoản chi** | Input text | Bắt buộc, không rỗng | "" | "VD: Thuê kho bãi tháng 5" |
+| **Số tiền (đ)** | NumberInput (decimalScale=0, có dấu chấm phân tách) | &gt; 0 | "" | "15000000" |
+| **Loại** | Select | "fixed" hoặc "variable" | "variable" | — |
+| **Ngày phát sinh** | Input type=date | Bắt buộc | Hôm nay (`YYYY-MM-DD`) | — |
+
+### Validation phía client
+
+- Mô tả rỗng → toast đỏ: *"Mô tả bắt buộc"*.
+- Số tiền &le; 0 hoặc rỗng → toast đỏ: *"Số tiền phải > 0"*.
+
+### Nút thao tác
+
+- **Huỷ** — đóng drawer, không lưu.
+- **Ghi chi phí** — gọi API; trong khi loading nút hiển thị "Đang lưu...".
+
+Khi lưu thành công: toast xanh *"Đã ghi nhận chi phí"*, drawer tự đóng, danh sách refresh.
+
+---
+
+## Loại chi phí — phân biệt
+
+| Loại | Khi nào dùng | Ví dụ |
+|------|-------------|-------|
+| **Cố định** (`fixed`) | Phát sinh đều đặn hàng tháng, ít thay đổi | Tiền thuê mặt bằng, lương cứng nhân viên, gói phần mềm |
+| **Biến đổi** (`variable`) | Phát sinh không đều, theo nhu cầu | Vận chuyển đơn hàng, sửa chữa thiết bị, marketing campaign, văn phòng phẩm |
+
+<Tip>
+Phân loại đúng giúp đánh giá cấu trúc chi phí: tỷ lệ chi phí cố định cao = rủi ro tài chính khi doanh thu giảm.
+</Tip>
+
+---
+
+## Xoá chi phí
 
 <Steps>
-  <Step title="Xem danh sách chi phí">
-    Bảng hiển thị tên khoản chi, phân loại, số tiền và ngày phát sinh.
+  <Step title="Nhấn nút Xoá đỏ ở dòng chi phí">
+    Cột cuối của mỗi dòng có nút **Xoá** màu đỏ.
   </Step>
-  <Step title="Thêm chi phí mới">
-    Nhấn **Thêm chi phí** → chọn loại (cố định/biến đổi), nhập tên, số tiền, ngày → **Lưu**.
+  <Step title="Xác nhận trên ConfirmDialog">
+    Dialog hiển thị: *"Xoá chi phí "{description}"?"*. Nhấn **Xoá** để xác nhận hoặc đóng dialog để huỷ.
   </Step>
-  <Step title="Chỉnh sửa hoặc xóa chi phí">
-    Nhấn biểu tượng chỉnh sửa hoặc xóa trên dòng chi phí cần thay đổi.
+  <Step title="Kiểm tra ảnh hưởng tới Tài chính">
+    Sau khi xoá, mở **Báo cáo → Tài chính** xem lại lợi nhuận ròng tháng đó (sẽ tăng tương ứng số tiền vừa xoá).
   </Step>
 </Steps>
 
 <Warning>
-Tính năng này chỉ dành riêng cho Chủ shop. Quản lý và Nhân viên không có quyền truy cập.
+Xoá chi phí là **không thể hoàn tác**. Trang hiện tại không có chức năng chỉnh sửa khoản chi đã ghi — nếu sai thông tin, bạn cần xoá rồi ghi lại.
+</Warning>
+
+<Warning>
+Tính năng này chỉ dành cho **Chủ shop**. Quản lý và Nhân viên không thấy menu **Chi phí** và sẽ bị chặn nếu truy cập URL trực tiếp.
 </Warning>

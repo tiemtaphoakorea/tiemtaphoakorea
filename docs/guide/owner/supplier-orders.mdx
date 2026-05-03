@@ -1,65 +1,105 @@
 ---
-title: "Nhập hàng"
-description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp."
+title: "Đơn nhập hàng"
+description: "Tạo và theo dõi đơn nhập hàng từ nhà cung cấp. Tồn kho cập nhật khi đơn chuyển sang Đã nhận."
 ---
 
 ## Mô tả
 
-Trang **Nhập hàng** quản lý đơn mua hàng từ nhà cung cấp (supplier orders). Khi xác nhận nhận hàng, tồn kho và lịch sử giá vốn của sản phẩm được cập nhật tự động.
+Trang **Đơn nhập hàng** quản lý các đơn mua hàng (purchase orders) từ nhà cung cấp về kho. Khi một đơn nhập chuyển sang trạng thái **Đã nhận**, **Tồn kho vật lý** của biến thể tương ứng sẽ được cộng tự động.
 
 ## Cách truy cập
 
-Trang **Nhập hàng** truy cập qua trang **Quản lý kho** (Menu bên trái → mục **Kho vận** → **Quản lý kho**).
+Menu bên trái → **Đơn nhập hàng** (mục **Kho vận**).
 
-Trong trang Quản lý kho, mở tab quản lý đơn nhập hoặc nhấn nút **Tạo đơn nhập** để mở form tạo đơn từ nhà cung cấp.
-
-## Vòng đời đơn nhập hàng
+## Vòng đời đơn nhập
 
 ```mermaid
-flowchart TD
-    A["Chờ xác nhận<br/>pending"] --> B["Đã đặt hàng<br/>ordered"]
-    B --> C["Đã nhận hàng<br/>received"]
-    A & B -->|Huỷ| D["Đã hủy<br/>cancelled"]
+flowchart LR
+    A["Chờ đặt<br/>pending"] --> B["Đã đặt<br/>ordered"]
+    B --> C["Đã nhận<br/>received"]
+    A & B -->|Huỷ| D["Đã huỷ<br/>cancelled"]
 
-    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
-    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style A fill:#fef3c7,stroke:#f59e0b,color:#92400e
     style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
+    style C fill:#dcfce7,stroke:#22c55e,color:#166534
+    style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
 ```
 
-### Mô tả các trạng thái
+### Ý nghĩa từng trạng thái
 
-| Trạng thái | Ý nghĩa |
-|-----------|---------|
-| `pending` — Chờ xác nhận | Đơn vừa tạo, chưa gửi cho nhà cung cấp |
-| `ordered` — Đã đặt hàng | Đã liên hệ và xác nhận đặt hàng với NCC, đang chờ về |
-| `received` — Đã nhận hàng | Hàng đã về kho, tồn kho và giá vốn đã cập nhật |
-| `cancelled` — Đã hủy | Đơn nhập bị hủy |
+| Trạng thái | Nhãn hiển thị | Ý nghĩa |
+|-----------|---------------|---------|
+| `pending` | **Chờ đặt** | Đơn vừa tạo, chưa liên hệ nhà cung cấp |
+| `ordered` | **Đã đặt** | Đã đặt hàng với NCC, đang chờ về kho |
+| `received` | **Đã nhận** | Hàng đã về — tồn kho vật lý đã cộng tự động |
+| `cancelled` | **Đã huỷ** | Đơn đã huỷ |
 
-## Các thao tác chính
+<Note>
+Việc chuyển trạng thái (xác nhận đặt hàng, xác nhận nhận hàng, huỷ) hiện được thực hiện qua API quản trị. Trang admin hiển thị trạng thái dạng đọc và cho phép lọc — chưa có nút chuyển trạng thái trong giao diện.
+</Note>
+
+## Bộ lọc và tìm kiếm
+
+| Thành phần | Mô tả |
+|-----------|-------|
+| **Tìm theo SKU, sản phẩm, ghi chú...** | Ô tìm kiếm với debounce 300ms |
+| **Trạng thái** | Dropdown: Tất cả · Chờ đặt · Đã đặt · Đã nhận · Đã huỷ |
+| **Tạo đơn nhập** | Nút mở dialog tạo đơn mới |
+
+## Cột bảng danh sách
+
+| Cột | Nội dung |
+|-----|---------|
+| **Sản phẩm** | Tên sản phẩm + tên biến thể (nếu có) |
+| **SKU** | Mã SKU của biến thể |
+| **SL** | Số lượng đặt nhập |
+| **Trạng thái** | Pill màu theo trạng thái |
+| **Ngày dự kiến** | Ngày dự kiến nhận hàng (định dạng vi-VN) |
+| **Ngày tạo** | Ngày tạo đơn nhập |
+
+## Tạo đơn nhập mới
 
 <Steps>
-  <Step title="Tạo đơn nhập hàng mới">
-    Nhấn **Tạo đơn nhập** → chọn **Nhà cung cấp** → chọn **biến thể sản phẩm** → nhập **số lượng** cần nhập, **giá vốn thực tế**, **ngày dự kiến nhận hàng**, ghi chú (tùy chọn) → **Lưu**.
-    Đơn được tạo ở trạng thái **Chờ xác nhận** (`pending`).
+  <Step title="Mở dialog tạo đơn">
+    Nhấn **Tạo đơn nhập** ở góc phải thanh công cụ → dialog **Tạo đơn nhập hàng** mở ra.
   </Step>
-  <Step title="Xác nhận đã đặt hàng với NCC">
-    Sau khi liên hệ NCC và xác nhận đơn, mở đơn nhập → **Xác nhận đặt hàng**. Trạng thái chuyển sang `ordered`.
+  <Step title="Chọn biến thể sản phẩm">
+    Dropdown **Sản phẩm** liệt kê tất cả biến thể của tất cả sản phẩm theo định dạng **Tên SP — Tên biến thể (SKU)**. Chọn đúng biến thể cần nhập.
   </Step>
-  <Step title="Xác nhận nhận hàng">
-    Khi hàng về, mở đơn → **Xác nhận nhận hàng**. Hệ thống cập nhật:
-    - **Tồn kho** vật lý của biến thể (cộng vào số đã có).
-    - **Lịch sử giá vốn** của sản phẩm (dùng để tính lợi nhuận).
-    Trạng thái chuyển sang `received`.
+  <Step title="Nhập số lượng">
+    Trường **Số lượng** — số nguyên ≥ 1.
   </Step>
-  <Step title="Theo dõi đơn nhập">
-    Danh sách hiển thị trạng thái, NCC, ngày tạo và tổng giá trị. Lọc theo trạng thái để xem nhanh đơn đang chờ về.
+  <Step title="Nhập ngày dự kiến (tuỳ chọn)">
+    Trường **Ngày dự kiến** dùng input dạng date — chọn ngày NCC giao hàng.
+  </Step>
+  <Step title="Ghi chú (tuỳ chọn)">
+    Textarea **Ghi chú** — ví dụ: "Đặt gấp cho đơn #123".
+  </Step>
+  <Step title="Lưu đơn">
+    Nhấn **Tạo đơn**. Đơn xuất hiện trong danh sách ở trạng thái **Chờ đặt** (`pending`).
   </Step>
 </Steps>
 
-### Hủy đơn nhập
+<Warning>
+Form tạo đơn hiện **không có ô Nhà cung cấp** và **không có ô Giá vốn**. Việc gắn NCC và ghi nhận giá vốn cho biến thể được xử lý bằng cách khác (gắn NCC mặc định cho sản phẩm hoặc cập nhật giá vốn ở trang Sản phẩm).
+</Warning>
 
-Đơn `pending` hoặc `ordered` có thể hủy. Mở đơn → **Hủy đơn**. Đơn `received` không thể hủy vì tồn kho đã được cập nhật.
+## Ảnh hưởng đến tồn kho
+
+```mermaid
+flowchart LR
+    O["Tạo đơn nhập<br/>pending"] --> P["Đã đặt<br/>ordered"]
+    P --> R["Đã nhận<br/>received"]
+    R -->|cộng số lượng| S["Tồn vật lý của biến thể"]
+
+    style R fill:#dcfce7,stroke:#22c55e
+    style S fill:#dbeafe,stroke:#3b82f6
+```
+
+- Đơn ở trạng thái `pending` hoặc `ordered` **không** ảnh hưởng tồn kho.
+- Khi đơn chuyển sang `received`, **Tồn vật lý** (`onHand`) của biến thể được cộng đúng bằng **Số lượng** đã đặt.
+- Đơn `cancelled` không thay đổi tồn kho.
 
 <Note>
-Giá vốn nhập **ảnh hưởng trực tiếp đến lợi nhuận** trong báo cáo Tài chính. Hãy nhập đúng giá vốn thực tế khi tạo đơn.
+Để xem các đợt nhập đã ảnh hưởng đến tồn kho, vào trang **Quản lý kho** → tab **Tồn kho** kiểm tra cột **Tồn vật lý**.
 </Note>

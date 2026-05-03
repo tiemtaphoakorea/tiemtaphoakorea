@@ -55,6 +55,7 @@ export const queryKeys = {
       all: [QK.adminRoot, QK.supplierOrders] as const,
       list: (search: string, status: string) =>
         [QK.adminRoot, QK.supplierOrders, { search, status }] as const,
+      detail: (id: string) => [QK.adminRoot, QK.supplierOrders, id] as const,
     },
     expenses: {
       all: [QK.adminRoot, QK.expenses] as const,
