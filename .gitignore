@@ -45,10 +45,11 @@ next-env.d.ts
 .husky/_/
 .__pycache__
 .obsidian
-# .claude
+.claude
 .turbo
 .worktrees
 .superpowers
+plans/
 
 design-system/
 .playwright-mcp/
