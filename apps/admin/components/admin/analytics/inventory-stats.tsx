@@ -27,15 +27,23 @@ export function InventoryStats({ data }: InventoryStatsProps) {
     },
   ];
 
+  const profitColor = potentialProfit >= 0 ? "text-emerald-600" : "text-red-600";
+  const profitIconBg =
+    potentialProfit >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500";
+  const profitNote =
+    potentialProfit < 0
+      ? "SP chưa có giá bán làm giảm giá trị bán"
+      : `${data.totalUnits.toLocaleString("vi-VN")} đơn vị tồn kho`;
+
   const alertItems: MetricStatItem[] = [
     {
       label: "Lợi nhuận tiềm năng",
-      value: <span className="text-emerald-600">{formatCurrency(potentialProfit)}</span>,
+      value: <span className={profitColor}>{formatCurrency(potentialProfit)}</span>,
       icon: <TrendingUp className="h-3.5 w-3.5" />,
-      iconClassName: "bg-emerald-500/10 text-emerald-500",
+      iconClassName: profitIconBg,
       trend: {
-        text: `${data.totalUnits.toLocaleString("vi-VN")} đơn vị tồn kho`,
-        className: "text-muted-foreground",
+        text: profitNote,
+        className: potentialProfit < 0 ? "text-red-500" : "text-muted-foreground",
       },
     },
     {
@@ -43,14 +51,14 @@ export function InventoryStats({ data }: InventoryStatsProps) {
       value: <span className="text-amber-600">{data.lowStockCount}</span>,
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
       iconClassName: "bg-amber-500/10 text-amber-500",
-      trend: { text: "Variant dưới ngưỡng tồn", className: "text-muted-foreground" },
+      trend: { text: "Variant dưới ngưỡng tồn kho", className: "text-muted-foreground" },
     },
     {
       label: "Hết hàng",
       value: <span className="text-red-600">{data.outOfStockCount}</span>,
       icon: <PackageX className="h-3.5 w-3.5" />,
       iconClassName: "bg-red-500/10 text-red-500",
-      trend: { text: "Variant hết hàng", className: "text-muted-foreground" },
+      trend: { text: "Variant không còn tồn kho", className: "text-muted-foreground" },
     },
   ];
 

@@ -1,61 +1,110 @@
 ---
 title: "Dashboard & KPI"
-description: "Trang tổng quan hiển thị 4 KPI hôm nay, biểu đồ 7 ngày và 2 bảng nhanh."
+description: "Trang tổng quan với 4 KPI hôm nay, 2 biểu đồ 7 ngày, top sản phẩm và đơn hàng gần đây."
 ---
 
 ## Mô tả
 
-**Dashboard** là trang đầu tiên hiển thị khi đăng nhập. Trang gồm 3 khu vực: **4 thẻ KPI**, **2 biểu đồ 7 ngày**, và **2 bảng nhanh** (top sản phẩm, đơn hàng gần đây).
+**Dashboard** (`/`) là trang đầu tiên hiển thị sau đăng nhập. Toàn bộ dữ liệu lấy theo thời gian thực với cache 60 giây và auto-refresh.
+
+Trang gồm 3 khu vực, sắp xếp theo chiều dọc:
+
+1. **4 thẻ KPI** trong ngày.
+2. **2 biểu đồ** so sánh 7 ngày gần nhất.
+3. **2 bảng nhanh** (Sản phẩm bán chạy + Đơn hàng gần đây).
 
 ## Cách truy cập
 
-Menu bên trái → **Dashboard** (mục đầu tiên trong nhóm **Quản trị**).
+Sidebar → **Quản trị → Dashboard** (mục đầu tiên).
 
-## Khu vực 1 — KPI hôm nay
+---
 
-Bốn thẻ trên grid 4 cột:
+## Khu vực 1 — 4 thẻ KPI hôm nay
 
-| Thẻ | Giá trị | Phụ |
-|-----|---------|-----|
-| **Doanh thu hôm nay** | Tổng tiền đơn đã tạo hôm nay | Số đơn |
-| **Đơn chờ xử lý** | Số đơn `pending` | "Cần xác nhận" |
-| **Sản phẩm sắp hết** | Số SKU dưới ngưỡng | "M đã hết" |
-| **Khách hàng mới** | Số khách đăng ký hôm nay | "Hôm nay" |
+Cụm `MetricStatBar` 4 ô (2 cột trên mobile, 4 cột trên desktop).
 
-## Khu vực 2 — Biểu đồ 7 ngày
+| Thẻ | Cách tính | Phụ đề |
+|-----|-----------|--------|
+| **Doanh thu hôm nay** (icon TrendingUp, tone primary) | `Σ orders.total` của các đơn có `completedAt ≥ 00:00 hôm nay` | `N đơn` — số đơn `createdAt ≥ 00:00 hôm nay` (mọi trạng thái) |
+| **Đơn chờ xử lý** (icon ShoppingCart, tone amber) | `COUNT(orders)` có `fulfillmentStatus = pending` (toàn bộ, không lọc ngày) | "Cần xác nhận" |
+| **Sản phẩm sắp hết** (icon AlertTriangle, tone danger) | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` | `M đã hết` — số SKU có `onHand = 0` |
+| **Khách hàng mới** (icon Users, tone mint) | `COUNT(profiles)` có `role = customer AND createdAt ≥ 00:00 hôm nay` | "Hôm nay" |
 
-| Biểu đồ | Nội dung |
-|---------|----------|
-| **Doanh thu 7 ngày** | Bar chart 7 ngày gần nhất, kèm pill "+x% tuần trước" |
-| **Đơn hàng 7 ngày** | Bar chart 7 ngày gần nhất, pill số đơn hôm nay |
+<Note>
+Khi đang load, mỗi thẻ hiển thị skeleton dòng nhãn + dòng số. Khi không có dữ liệu, ô số hiển thị `—`.
+</Note>
 
-## Khu vực 3 — Bảng nhanh
+---
+
+## Khu vực 2 — 2 biểu đồ 7 ngày
+
+Grid 2 cột (chiếm 2/3 + 1/3 trên màn hình lớn).
+
+### Doanh thu 7 ngày
+
+- Bar chart 7 ngày gần nhất (CN/T2/.../T7). Mỗi cột = `Σ orders.total` GROUP BY `DATE(createdAt)`, lọc `paymentStatus = paid`.
+- Pill so sánh tuần này (7 ngày qua) với tuần trước (7-14 ngày trước) — `delta = (curr − prev) / prev × 100`:
+  - **Xanh** `+x% tuần trước` khi tăng.
+  - **Đỏ** `−x% tuần trước` khi giảm.
+  - **Xám** `—` khi không đủ dữ liệu (tuần trước = 0).
+
+### Đơn hàng 7 ngày
+
+- Bar chart 7 ngày gần nhất, màu vàng (amber). Mỗi cột = `COUNT(orders)` GROUP BY `DATE(createdAt)`, lọc `paymentStatus = paid`.
+- Pill xanh dương: `N hôm nay` — số đơn `paid` trong ngày.
+
+---
+
+## Khu vực 3 — 2 bảng nhanh
 
 ### Sản phẩm bán chạy
 
-Top 5 sản phẩm theo số lượng bán. Cột: Sản phẩm · Đã bán. Liên kết **Xem tất cả** mở trang Sản phẩm.
+| Cột | Cách tính |
+|-----|-----------|
+| **Sản phẩm** | Thumbnail + tên (cắt &gt; 38 ký tự) |
+| **Đã bán** | `Σ orderItems.quantity` GROUP BY product, sắp xếp DESC (toàn thời gian, mọi đơn) |
+
+- Hiển thị **top 5** sản phẩm.
+- Header có nút **Xem tất cả** dẫn về `/products`.
+- Khi rỗng: "Chưa có dữ liệu sản phẩm bán chạy".
 
 ### Đơn hàng gần đây
 
-6 đơn mới nhất. Mỗi mục hiển thị: mã đơn · giờ tạo · tên khách · tổng tiền · badge trạng thái xử lý. Liên kết **Xem tất cả** mở trang Đơn hàng.
+Danh sách 6 đơn mới nhất. Mỗi mục hiển thị:
+
+| Vị trí | Thông tin |
+|--------|-----------|
+| Trên-trái | Mã đơn (font mono, đậm) |
+| Trên-phải | Giờ:phút · ngày/tháng (định dạng vi-VN) |
+| Dưới-trái | Tên khách hàng |
+| Dưới-phải | **Tổng tiền** (đỏ, in đậm) + badge trạng thái |
+
+- Header có nút **Xem tất cả** dẫn về `/orders`.
+- Trạng thái có thể là: `pending` · `stock_out` · `completed` · `cancelled`.
+
+---
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Đọc nhanh tình hình hôm nay">
-    Mở Dashboard → 4 thẻ KPI cho biết: doanh thu, đơn cần xử lý, hàng sắp hết, khách mới — tất cả trong ngày hiện tại.
+    Quan sát 4 KPI: doanh thu (xu hướng tích cực hay không), số đơn `pending` (cần ưu tiên xử lý), số SKU sắp hết, khách mới đăng ký.
   </Step>
-  <Step title="Theo dõi xu hướng tuần">
-    Hai biểu đồ 7 ngày giúp nhận diện ngày nào bán tốt/yếu và so sánh với tuần trước (pill phần trăm).
+  <Step title="Đối chiếu xu hướng tuần">
+    Xem pill phần trăm trên biểu đồ **Doanh thu 7 ngày** để biết tuần này tăng/giảm so với tuần trước. Pill đỏ là tín hiệu cần xem xét.
   </Step>
-  <Step title="Xử lý đơn hàng mới">
-    Bảng **Đơn hàng gần đây** hiển thị 6 đơn mới nhất — nhấn để mở chi tiết và xử lý nhanh.
+  <Step title="Xử lý đơn mới">
+    Nhấn vào một dòng trong **Đơn hàng gần đây** (hoặc **Xem tất cả**) → mở chi tiết → ghi nhận thanh toán hoặc cập nhật trạng thái.
   </Step>
   <Step title="Lên kế hoạch nhập hàng">
-    Thẻ **Sản phẩm sắp hết** + **M đã hết** cho biết số SKU cần ưu tiên — chuyển sang **Quản lý kho** để xem chi tiết.
+    Khi thẻ **Sản phẩm sắp hết** &gt; 0, mở **Báo cáo → Tồn kho** xem chi tiết SKU cần nhập trước khi tạo đơn nhập NCC.
   </Step>
 </Steps>
 
 <Note>
-Dữ liệu trên Dashboard cập nhật theo thời gian thực với cache 60 giây. Tải lại trang nếu cần xem ngay số liệu mới sau thao tác vừa thực hiện.
+Dữ liệu cache 60 giây. Tải lại trang nếu vừa thực hiện thao tác (tạo đơn, nhập kho) và muốn thấy số liệu cập nhật ngay.
 </Note>
+
+<Tip>
+Cả Quản lý và Nhân viên đều có Dashboard giống Chủ shop. Tuy nhiên Nhân viên không truy cập được trang **Báo cáo** chi tiết khi nhấn vào liên kết của thẻ Sản phẩm sắp hết.
+</Tip>

@@ -1,29 +1,131 @@
 ---
-title: "Trang chủ — Collections"
-description: "Quản lý các khối sản phẩm hiển thị trên trang chủ storefront."
+title: "Trang chủ — Collections, Banners & Cài đặt"
+description: "Quản lý collections, banner hero và SEO trang chủ storefront."
 ---
 
 ## Mô tả
 
-Trang **Trang chủ** quản lý các *collection* — khối sản phẩm xuất hiện trên trang chủ của cửa hàng (ví dụ: "Hàng mới về", "Bán chạy").
+Trang **Trang chủ** điều khiển nội dung hiển thị trên trang chủ storefront, gồm 3 tab:
+
+- **Collections** — khối sản phẩm dưới hero.
+- **Banners** — carousel ảnh hero ở đầu trang chủ.
+- **Cài đặt** — SEO tiêu đề và mô tả meta.
+
+Nhân viên có quyền truy cập đầy đủ cả 3 tab.
 
 ## Cách truy cập
 
-Menu bên trái → **Trang chủ**.
+Menu bên trái → **Trang chủ** (mục **Quản trị**).
 
-## Các thao tác chính
+---
+
+## Tab "Collections"
+
+### Tạo collection
 
 <Steps>
-  <Step title="Xem danh sách collection">
-    Trang hiển thị tất cả collection hiện có cùng số sản phẩm trong từng cái.
+  <Step title="Mở form">
+    Nhấn **Tạo collection** → form mở **inline** ở đầu danh sách.
   </Step>
-  <Step title="Tạo collection mới">
-    Nhấn **Tạo collection** → chọn icon, nhập tiêu đề → chọn sản phẩm tự động (theo bộ lọc) hoặc thủ công → **Lưu**.
+  <Step title="Chọn loại">
+    | Loại | Cách lấy SP |
+    |------|-------------|
+    | **Thủ công** | Tự chọn từng SP |
+    | **Bán chạy (auto)** | Tự lấy theo lượt bán |
+    | **Mới về (auto)** | SP mới trong N ngày |
+    | **Theo danh mục** | Lấy theo danh mục |
   </Step>
-  <Step title="Cập nhật danh sách sản phẩm">
-    Nhấn **Sửa** trên collection → cập nhật bộ lọc tự động hoặc tick lại danh sách thủ công → **Lưu**.
+  <Step title="Tiêu đề + icon + limit">
+    **Tiêu đề** bắt buộc. **Số sản phẩm (limit)** mặc định 8 (1-50). **Icon** từ thư viện tuỳ chọn.
   </Step>
-  <Step title="Bật/tắt hiển thị">
-    Gạt công tắc **Hiển thị** để ẩn collection trên storefront mà không cần xóa.
+  <Step title="Cấu hình theo loại (nếu cần)">
+    - **Theo danh mục**: chọn **Danh mục**.
+    - **Mới về**: **Cửa sổ ngày** mặc định 30, max 365.
+    - **Thủ công**: Manual Product Picker chọn từng SP.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Mặc định **Hiển thị** = bật.
   </Step>
 </Steps>
+
+### Quản lý collection
+
+| Thao tác | Mô tả |
+|---------|-------|
+| **Sửa** | Mở form chỉnh sửa inline |
+| **Xoá** | ConfirmDialog — không thể hoàn tác |
+| **Switch hiển thị** | Bật/tắt trên storefront |
+| **Kéo thả ⠿** | Đổi thứ tự |
+
+---
+
+## Tab "Banners"
+
+Carousel ảnh hero. 2 loại: **Custom** (upload ảnh) và **Theo danh mục**.
+
+### Tạo banner Custom
+
+<Steps>
+  <Step title="Mở form">
+    Nhấn **+ Tạo banner** → form inline.
+  </Step>
+  <Step title="Chọn loại + màu accent">
+    **Loại** → Custom. **Màu accent**: Tím · Hồng · Xanh lá · Xanh dương · Cam · Vàng · Chàm.
+  </Step>
+  <Step title="Upload ảnh">
+    Vùng **Ảnh banner** — kéo thả hoặc chọn file.
+
+    **Yêu cầu:** JPG / PNG / WebP · tỉ lệ 16:9 hoặc 3:1 · ≤ **2 MB**.
+  </Step>
+  <Step title="Điền nội dung tuỳ chọn">
+    Tiêu đề, badge text, phụ đề, CTA label/URL, discount tag/sub.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu** — banner xuất hiện trên trang chủ.
+  </Step>
+</Steps>
+
+<Warning>
+Banner Custom **bắt buộc có ảnh** — nút **Lưu** bị khoá cho đến khi upload thành công.
+</Warning>
+
+### Tạo banner Theo danh mục
+
+Dropdown **Loại** → **Theo danh mục** → chọn **Danh mục** → **Lưu**. Ảnh tự lấy từ sản phẩm trong danh mục.
+
+### Cập nhật banner hiện có
+
+<Steps>
+  <Step title="Mở form sửa">
+    Trong danh sách banner, nhấn **Sửa** ở hàng cần cập nhật.
+  </Step>
+  <Step title="Đổi ảnh hoặc nội dung">
+    Banner **Custom** có thể thay ảnh trong vùng **Ảnh banner**. Sau đó chỉnh tiêu đề, badge, phụ đề, CTA label/URL, discount tag/sub và màu accent nếu cần.
+  </Step>
+  <Step title="Lưu và kiểm tra">
+    Nhấn **Lưu**, rồi mở trang chủ storefront trên mobile để kiểm tra ảnh, chữ và CTA hiển thị đúng.
+  </Step>
+</Steps>
+
+### Quản lý banner
+
+| Thao tác | Mô tả |
+|---------|-------|
+| **Sửa** / **Xoá** | Form inline / ConfirmDialog |
+| **Switch hiển thị** | Ẩn/hiện trên storefront |
+| **Kéo thả ⠿** | Đổi thứ tự slide |
+
+---
+
+## Tab "Cài đặt"
+
+| Trường | Mô tả |
+|--------|-------|
+| **SEO — Tiêu đề trang chủ** | `<title>` của trang chủ |
+| **SEO — Mô tả meta** | `<meta name="description">` |
+
+Nhấn **Lưu cài đặt trang chủ** để áp dụng.
+
+<Note>
+Hỏi Quản lý hoặc Chủ shop nếu không chắc về nội dung SEO — tiêu đề và mô tả meta ảnh hưởng đến cách trang chủ xuất hiện trên Google và mạng xã hội.
+</Note>

@@ -2,6 +2,7 @@
 
 import { ACCOUNT_ROUTES, PUBLIC_ROUTES } from "@workspace/shared/routes";
 import { UserCircle2, Zap } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { GENERATED_ICONS, GeneratedIcon } from "../sections/generated-icon";
@@ -29,10 +30,12 @@ export function Navbar({
   categories = [],
   navCategories = [],
   featuredByCategory = {},
+  logoUrl,
 }: {
   categories?: Category[];
   navCategories?: Category[];
   featuredByCategory?: Record<string, MegaMenuFeaturedProduct[]>;
+  logoUrl?: string;
 }) {
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
 
@@ -67,12 +70,25 @@ export function Navbar({
       {/* Desktop header row (hidden on mobile) */}
       <div className="container mx-auto hidden h-16 items-center gap-4 px-4 md:flex lg:gap-8">
         <Link href={PUBLIC_ROUTES.HOME} className="group flex shrink-0 items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
-            <Zap className="h-5 w-5 fill-white text-white" />
-          </div>
-          <span className="font-display text-xl font-bold tracking-tight text-foreground">
-            K<span className="text-primary">-</span>SMART
-          </span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt="Logo"
+              width={140}
+              height={36}
+              className="h-9 w-auto object-contain transition-opacity duration-300 group-hover:opacity-80"
+              priority
+            />
+          ) : (
+            <>
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
+                <Zap className="h-5 w-5 fill-white text-white" />
+              </div>
+              <span className="font-display text-xl font-bold tracking-tight text-foreground">
+                K<span className="text-primary">-</span>SMART
+              </span>
+            </>
+          )}
         </Link>
 
         <Suspense fallback={<div className="h-10 max-w-md flex-1 rounded-full bg-muted/60" />}>

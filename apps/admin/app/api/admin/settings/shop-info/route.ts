@@ -8,6 +8,8 @@ export type ShopInfoConfig = {
   address: string;
   phone: string;
   taxId: string;
+  seoDescription: string;
+  seoKeywords: string;
 };
 
 const DEFAULT_CONFIG: ShopInfoConfig = {
@@ -15,6 +17,8 @@ const DEFAULT_CONFIG: ShopInfoConfig = {
   address: "",
   phone: "",
   taxId: "",
+  seoDescription: "",
+  seoKeywords: "",
 };
 
 const SETTING_KEY = "shop_info";
@@ -41,6 +45,10 @@ export async function PUT(request: Request) {
     address: String(body.address ?? "").trim(),
     phone: String(body.phone ?? "").trim(),
     taxId: String(body.taxId ?? "").trim(),
+    seoDescription: String(body.seoDescription ?? "")
+      .slice(0, 160)
+      .trim(),
+    seoKeywords: String(body.seoKeywords ?? "").trim(),
   };
 
   await upsertSetting(SETTING_KEY, config);

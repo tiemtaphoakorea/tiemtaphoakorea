@@ -15,7 +15,7 @@ export function OutOfStockList({ items }: OutOfStockListProps) {
           <h3 className="text-sm font-black tracking-wider text-slate-700 uppercase">Hết hàng</h3>
         </div>
         <Link
-          href="/products"
+          href="/products?filter=out_of_stock"
           className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900"
         >
           Xem tất cả <ArrowUpRight className="h-3 w-3" />

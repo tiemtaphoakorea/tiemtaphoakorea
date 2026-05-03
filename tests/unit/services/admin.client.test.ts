@@ -40,26 +40,6 @@ describe("admin.client", () => {
   });
 
   describe("Dashboard Stats", () => {
-    it("should fetch full stats", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      axiosMock.get.mockResolvedValue({ stats: {} });
-
-      await adminClient.getStats();
-
-      expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.STATS);
-    });
-
-    it("should return stats with totalRevenue from getStats response", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      const mockStats = { totalRevenue: 5000, totalOrders: 12 };
-      axiosMock.get.mockResolvedValue({ stats: mockStats });
-
-      const result = await adminClient.getStats();
-
-      expect((result as any).stats.totalRevenue).toBe(5000);
-      expect((result as any).stats.totalOrders).toBe(12);
-    });
-
     it("should call stats endpoint for KPIs", async () => {
       const { adminClient } = await import("@/services/admin.client");
       axiosMock.get.mockResolvedValue({ kpiStats: {} });
@@ -112,15 +92,6 @@ describe("admin.client", () => {
       axiosMock.get.mockResolvedValue({ messages: [] });
 
       await adminClient.getChatMessages("room-1");
-
-      expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.CHAT.DETAILS("room-1"));
-    });
-
-    it("should fetch chat room details", async () => {
-      const { adminClient } = await import("@/services/admin.client");
-      axiosMock.get.mockResolvedValue({ id: "room-1", messages: [] });
-
-      await adminClient.getChatRoomDetails("room-1");
 
       expect(axiosMock.get).toHaveBeenCalledWith(API_ENDPOINTS.ADMIN.CHAT.DETAILS("room-1"));
     });

@@ -1,38 +1,68 @@
 ---
 title: "Phân quyền vai trò"
-description: "Ma trận quyền hạn chi tiết cho từng vai trò trong hệ thống K-SMART."
+description: "Ma trận quyền hạn chi tiết cho từng vai trò nội bộ trong K-SMART."
 ---
 
 ## Tổng quan
 
-K-SMART có 3 vai trò nội bộ. Vai trò xác định menu hiển thị và thao tác được phép.
+K-SMART có 3 vai trò nội bộ. Vai trò xác định menu hiển thị trên sidebar và những thao tác được phép thực hiện.
 
-| Vai trò | Tiếng Anh | Mô tả ngắn |
-|---------|-----------|-----------|
-| **Chủ shop** | `owner` | Toàn quyền — tài chính, nhân sự, cài đặt |
-| **Quản lý** | `manager` | Toàn bộ vận hành + báo cáo — không có chi phí/nhân sự/cài đặt |
-| **Nhân viên** | `staff` | Vận hành hàng ngày — không báo cáo/chi phí/nhân sự/cài đặt |
+| Vai trò | Mã | Mô tả ngắn |
+|---------|-----|-----------|
+| **Chủ shop** | `owner` | Toàn quyền — tài chính, nhân sự, cài đặt, storefront |
+| **Quản lý** | `manager` | Toàn bộ vận hành + báo cáo — không có chi phí, nhân sự, cài đặt |
+| **Nhân viên** | `staff` | Vận hành hàng ngày — không có báo cáo, chi phí, nhân sự, cài đặt |
+
+> Vai trò `customer` dành cho khách hàng đăng ký từ storefront — không phải vai trò nội bộ và không có quyền truy cập trang admin.
 
 ---
 
 ## Hiển thị menu sidebar
 
-| Mục menu | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+Sidebar có **5 nhóm**. Một mục bị ẩn nếu vai trò không có quyền (logic `visibleForRole` trong `admin-sidebar.tsx`).
+
+### Nhóm Quản trị
+
+| Mục | Owner | Manager | Staff |
+|-----|:-----:|:-------:|:-----:|
 | Dashboard | ✅ | ✅ | ✅ |
 | Sản phẩm | ✅ | ✅ | ✅ |
 | Danh mục | ✅ | ✅ | ✅ |
-| Trang chủ (collections) | ✅ | ✅ | ✅ |
 | Đơn hàng | ✅ | ✅ | ✅ |
+
+### Nhóm Tài chính
+
+| Mục | Owner | Manager | Staff |
+|-----|:-----:|:-------:|:-----:|
 | Công nợ | ✅ | ✅ | ✅ |
 | Chi phí | ✅ | ❌ | ❌ |
 | Báo cáo | ✅ | ✅ | ❌ |
+
+### Nhóm Kho vận
+
+| Mục | Owner | Manager | Staff |
+|-----|:-----:|:-------:|:-----:|
 | Quản lý kho | ✅ | ✅ | ✅ |
 | Nhà cung cấp | ✅ | ✅ | ✅ |
+
+### Nhóm Người dùng
+
+| Mục | Owner | Manager | Staff |
+|-----|:-----:|:-------:|:-----:|
 | Khách hàng | ✅ | ✅ | ✅ |
 | Nhân sự | ✅ | ❌ | ❌ |
 | Tin nhắn | ✅ | ✅ | ✅ |
-| Cài đặt | ✅ | ❌ | ❌ |
+
+### Nhóm Cài đặt
+
+| Mục | Owner | Manager | Staff |
+|-----|:-----:|:-------:|:-----:|
+| Trang chủ | ✅ | ❌ | ❌ |
+| Cửa hàng | ✅ | ❌ | ❌ |
+| Nội dung website | ✅ | ❌ | ❌ |
+| Tiện ích | ✅ | ❌ | ❌ |
+
+> Khi cả nhóm bị ẩn (vd: Nhóm Cài đặt với Manager/Staff), header nhóm cũng không hiển thị.
 
 ---
 
@@ -40,122 +70,148 @@ K-SMART có 3 vai trò nội bộ. Vai trò xác định menu hiển thị và t
 
 ### Sản phẩm
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem danh sách sản phẩm | ✅ | ✅ | ✅ |
-| Thêm / chỉnh sửa sản phẩm | ✅ | ✅ | ✅ |
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Xem danh sách / chi tiết sản phẩm | ✅ | ✅ | ✅ |
+| Thêm / chỉnh sửa thông tin sản phẩm | ✅ | ✅ | ✅ |
 | **Tải lên ảnh sản phẩm** | ✅ | ✅ | ❌ |
 | Cập nhật tồn kho biến thể | ✅ | ✅ | ✅ |
 | Đánh dấu sản phẩm nổi bật | ✅ | ✅ | ✅ |
 | Ẩn / hiện sản phẩm | ✅ | ✅ | ✅ |
-| Xóa sản phẩm | ✅ | ✅ | ✅ |
+| Xoá sản phẩm | ✅ | ✅ | ✅ |
 
 ### Danh mục
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem / thêm / sửa / xóa danh mục | ✅ | ✅ | ✅ |
-
-### Trang chủ — Collections
-
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem / tạo / sửa / xoá collection | ✅ | ✅ | ✅ |
-| Bật / tắt collection | ✅ | ✅ | ✅ |
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Xem / thêm / sửa / xoá danh mục | ✅ | ✅ | ✅ |
 
 ### Đơn hàng
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem danh sách / chi tiết đơn | ✅ | ✅ | ✅ |
 | Tạo đơn hàng thủ công | ✅ | ✅ | ✅ |
 | Ghi nhận thanh toán | ✅ | ✅ | ✅ |
 | Cập nhật trạng thái xử lý | ✅ | ✅ | ✅ |
 | Chỉnh sửa ghi chú / giảm giá | ✅ | ✅ | ✅ |
-| Xuất Excel / In hóa đơn | ✅ | ✅ | ✅ |
-| Xóa đơn (sau khi hủy) | ✅ | ✅ | ✅ |
+| Xuất Excel / In hoá đơn | ✅ | ✅ | ✅ |
+| Xoá đơn (sau khi huỷ) | ✅ | ✅ | ✅ |
 
 ### Công nợ
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem danh sách công nợ | ✅ | ✅ | ✅ |
 | Thu tiền (ghi nhận thanh toán) | ✅ | ✅ | ✅ |
 
 ### Quản lý kho + Nhập hàng
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem tồn kho từng SKU | ✅ | ✅ | ✅ |
 | Điều chỉnh kho thủ công | ✅ | ✅ | ✅ |
 | Tạo đơn nhập NCC | ✅ | ✅ | ✅ |
 | Xác nhận đặt hàng / nhận hàng | ✅ | ✅ | ✅ |
-| Hủy đơn nhập | ✅ | ✅ | ✅ |
+| Huỷ đơn nhập | ✅ | ✅ | ✅ |
 
 ### Nhà cung cấp
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem / thêm / sửa / xoá NCC | ✅ | ✅ | ✅ |
 
 ### Khách hàng
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem danh sách và hồ sơ khách | ✅ | ✅ | ✅ |
 | Tìm kiếm khách hàng | ✅ | ✅ | ✅ |
-| **Vô hiệu hóa / kích hoạt khách** | ✅ | ✅ | ❌ |
+| **Vô hiệu hoá / kích hoạt khách** | ✅ | ✅ | ❌ |
 
 ### Tin nhắn (Chat)
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem / trả lời / gửi ảnh | ✅ | ✅ | ✅ |
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Xem danh sách phòng chat | ✅ | ✅ | ✅ |
+| Trả lời tin nhắn / gửi ảnh | ✅ | ✅ | ✅ |
 
 ### Báo cáo & Phân tích
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem 4 thẻ phân tích | ✅ | ✅ | ❌ |
-| Xem báo cáo chi tiết (overview, products, inventory, finance) | ✅ | ✅ | ❌ |
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Xem 4 thẻ phân tích tổng | ✅ | ✅ | ❌ |
+| Xem `/analytics/overview` | ✅ | ✅ | ❌ |
+| Xem `/analytics/products` | ✅ | ✅ | ❌ |
+| Xem `/analytics/inventory` | ✅ | ✅ | ❌ |
+| Xem `/analytics/finance` | ✅ | ✅ | ❌ |
+| Xem `/analytics/finance/detail` (drill-down theo ngày) | ✅ | ✅ | ❌ |
 
 ### Chi phí & Tài chính
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
-| Xem / quản lý chi phí vận hành | ✅ | ❌ | ❌ |
-| Xem báo cáo P&L kèm chi phí | ✅ | ❌ | ❌ |
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Xem trang **Chi phí** (`/expenses`) | ✅ | ❌ | ❌ |
+| Ghi chi phí mới | ✅ | ❌ | ❌ |
+| Xoá chi phí | ✅ | ❌ | ❌ |
+| Xem báo cáo P&L có cộng/trừ chi phí | ✅ | ✅ | ❌ |
+
+> Manager truy cập được trang **Báo cáo → Tài chính** nên thấy tổng số `expenses` đã trừ vào lợi nhuận ròng, nhưng không xem được danh sách chi tiết tại trang **Chi phí**.
 
 ### Nhân sự
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Xem danh sách nhân viên | ✅ | ❌ | ❌ |
-| Tạo / sửa / vô hiệu hóa tài khoản | ✅ | ❌ | ❌ |
-| Đổi vai trò nhân viên | ✅ | ❌ | ❌ |
+| Tạo tài khoản nhân viên mới | ✅ | ❌ | ❌ |
+| Sửa thông tin / vai trò nhân viên | ✅ | ❌ | ❌ |
+| Khoá / mở khoá tài khoản | ✅ | ❌ | ❌ |
+| Đặt lại mật khẩu | ✅ | ❌ | ❌ |
+| Xoá nhân viên | ✅ | ❌ | ❌ |
 
-### Cài đặt cửa hàng
+### Cài đặt — Trang chủ (`/homepage`)
 
-| Thao tác | Chủ shop | Quản lý | Nhân viên |
-|----------|:--------:|:-------:|:---------:|
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Quản lý collections / hero / khối trang chủ | ✅ | ❌ | ❌ |
+
+### Cài đặt — Cửa hàng (`/settings`)
+
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
 | Cấu hình thông tin cửa hàng (in hoá đơn) | ✅ | ❌ | ❌ |
 | Logo / màu thương hiệu | ✅ | ❌ | ❌ |
-| Banner Hero & khối trang chủ | ✅ | ❌ | ❌ |
-| Footer / mạng xã hội / widget liên hệ | ✅ | ❌ | ❌ |
-| Cài đặt thông báo | ✅ | ❌ | ❌ |
+| Ngưỡng phân hạng khách hàng | ✅ | ❌ | ❌ |
+
+### Cài đặt — Nội dung website (`/content`)
+
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Cấu hình footer | ✅ | ❌ | ❌ |
+| Liên kết mạng xã hội | ✅ | ❌ | ❌ |
+
+### Cài đặt — Tiện ích (`/widgets`)
+
+| Thao tác | Owner | Manager | Staff |
+|----------|:-----:|:-------:|:-----:|
+| Cấu hình widget Messenger | ✅ | ❌ | ❌ |
 
 ---
 
 ## Lưu ý quan trọng
 
 <Note>
-**Ảnh sản phẩm**: Nhân viên xem và chỉnh sửa được thông tin sản phẩm nhưng **không thể tải lên ảnh**. Liên hệ Quản lý hoặc Chủ shop.
+**Ảnh sản phẩm**: Nhân viên xem và chỉnh sửa được thông tin sản phẩm nhưng **không thể tải lên ảnh**. Khi cần thay ảnh, liên hệ Quản lý hoặc Chủ shop.
 </Note>
 
 <Note>
-**Khách hàng**: Vô hiệu hóa/kích hoạt tài khoản khách chỉ dành cho Chủ shop và Quản lý.
+**Khách hàng**: Vô hiệu hoá / kích hoạt tài khoản khách chỉ dành cho Chủ shop và Quản lý. Nhân viên xem và tìm kiếm được nhưng không thay đổi trạng thái.
 </Note>
 
 <Warning>
-**Chi phí, Nhân sự, Cài đặt** chỉ dành riêng cho Chủ shop. Menu của Quản lý và Nhân viên không hiển thị các mục này.
+**Nhóm Cài đặt** (4 mục: Trang chủ · Cửa hàng · Nội dung website · Tiện ích), **Chi phí**, và **Nhân sự** chỉ dành cho **Chủ shop**. Sidebar của Quản lý và Nhân viên ẩn hoàn toàn các mục này; truy cập URL trực tiếp cũng bị chặn ở backend.
 </Warning>
+
+<Tip>
+Để kiểm tra nhanh quyền của một vai trò, đăng nhập bằng tài khoản tương ứng và quan sát sidebar — số nhóm và số mục bên trong mỗi nhóm sẽ giảm so với Owner.
+</Tip>

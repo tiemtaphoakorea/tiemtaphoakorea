@@ -12,6 +12,13 @@ export const PUBLIC_ROUTES = {
   PRODUCTS_BY_CATEGORY: (category: string) => `/product?category=${encodeURIComponent(category)}`,
   PRODUCTS_BY_SORT: (sort: string) => `/product?sort=${sort}`,
   PRODUCT_DETAIL: (id: string | number) => `/product/${id}`,
+  ABOUT: "/about",
+  CONTACT: "/contact",
+  SHIPPING: "/shipping",
+  RETURNS: "/returns",
+  ORDER_LOOKUP: "/order-lookup",
+  TERMS: "/terms",
+  PRIVACY: "/privacy",
 } as const;
 
 // ============================================================================

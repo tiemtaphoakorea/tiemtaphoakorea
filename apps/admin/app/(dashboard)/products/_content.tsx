@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { Plus, Search } from "lucide-react";
+import { AlertTriangle, Plus, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
@@ -52,8 +53,13 @@ function deriveProductStatus(p: ProductListItem): StatusType {
   return "active";
 }
 
+const VALID_FILTERS = new Set<ProductFilter>(["all", "in_stock", "low_stock", "out_of_stock"]);
+
 export default function AdminProducts() {
-  const [filter, setFilter] = useState<ProductFilter>("all");
+  const searchParams = useSearchParams();
+  const urlFilter = searchParams.get("filter") as ProductFilter | null;
+  const initialFilter = urlFilter && VALID_FILTERS.has(urlFilter) ? urlFilter : "all";
+  const [filter, setFilter] = useState<ProductFilter>(initialFilter);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
   const [editing, setEditing] = useState<ProductListItem | null | undefined>(undefined);
@@ -177,10 +183,22 @@ export default function AdminProducts() {
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
-                      {p.minPrice === p.maxPrice
-                        ? formatVnd(p.minPrice)
-                        : `${formatVnd(p.minPrice)} – ${formatVnd(p.maxPrice)}`}
+                    <TableCell className="px-4 py-2.5 font-bold tabular-nums">
+                      {p.maxPrice === 0 ? (
+                        <span
+                          className="flex items-center gap-1 text-amber-600"
+                          title="Sản phẩm chưa có giá bán — ảnh hưởng đến báo cáo lợi nhuận"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                          0đ
+                        </span>
+                      ) : (
+                        <span className="text-red-600">
+                          {p.minPrice === p.maxPrice
+                            ? formatVnd(p.minPrice)
+                            : `${formatVnd(p.minPrice)} – ${formatVnd(p.maxPrice)}`}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
                       {p.totalAvailable}

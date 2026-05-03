@@ -1,7 +1,3 @@
-import {
-  ANALYTICS_GROWTH_RANDOM_OFFSET,
-  ANALYTICS_GROWTH_RANDOM_RANGE,
-} from "@workspace/shared/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/db.server";
 import { getAnalyticsData } from "@/services/analytics.server";
@@ -66,10 +62,10 @@ describe("Analytics Service", () => {
       expect(result.totalCustomers).toBe(0);
     });
 
-    it("should return mocked conversion rate", async () => {
+    it("should return null conversion rate", async () => {
       const result = await getAnalyticsData();
 
-      expect(result.conversionRate).toBe(3.45);
+      expect(result.conversionRate).toBeNull();
     });
 
     it("should return arrays for monthly revenue", async () => {
@@ -173,10 +169,7 @@ describe("Analytics Service", () => {
 
       expect(result.categorySales[0].color).toBe("hsl(var(--chart-1))");
       expect(result.categorySales[0].revenue).toBe(500);
-      expect(result.topProducts[0].growth).toBe(ANALYTICS_GROWTH_RANDOM_OFFSET);
-      expect(result.topProducts[0].growth).toBeLessThanOrEqual(
-        ANALYTICS_GROWTH_RANDOM_OFFSET + ANALYTICS_GROWTH_RANDOM_RANGE,
-      );
+      expect(result.topProducts[0].growth).toBeUndefined();
 
       randomSpy.mockRestore();
     });

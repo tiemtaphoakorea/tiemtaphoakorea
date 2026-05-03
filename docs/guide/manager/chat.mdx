@@ -1,30 +1,87 @@
 ---
 title: "Tin nhắn"
-description: "Phản hồi tin nhắn hỗ trợ từ khách hàng theo thời gian thực."
+description: "Hộp thư hỗ trợ khách hàng — text, ảnh, badge chưa đọc."
 ---
 
 ## Mô tả
 
-Trang Tin nhắn là hộp thư hỗ trợ khách hàng, cập nhật theo thời gian thực.
+Trang **Tin nhắn** là hộp thư hai chiều giữa nhân viên và khách hàng đã đăng nhập storefront. Cập nhật gần realtime (polling 5–15 giây).
+
+<Note>
+Quản lý có đầy đủ quyền tương tự Chủ shop trên tính năng này.
+</Note>
 
 ## Cách truy cập
 
 Menu bên trái → **Tin nhắn**.
 
-## Các thao tác chính
+## Bố cục
+
+| Cột | Nội dung |
+|-----|---------|
+| **Trái (280px)** | Danh sách cuộc hội thoại |
+| **Phải** | Cuộc hội thoại đang chọn |
+
+Mobile: chỉ 1 cột tại 1 thời điểm.
+
+## Cột trái — Danh sách hội thoại
+
+### Header
+
+- Tiêu đề **"Hộp thư (X chưa đọc)"** — X là tổng tin chưa đọc của shop.
+- Ô tìm kiếm **Tìm khách hàng...** — debounce 300ms.
+
+### Mỗi hàng hội thoại
+
+| Thành phần | Nội dung |
+|-----------|----------|
+| **Avatar** | Chữ cái đầu tên khách (nền xanh, đổi sang nền primary nếu đang chọn) |
+| **Tên khách** | Họ tên |
+| **Thời gian** | Giờ:phút tin cuối |
+| **Preview** | Nội dung tin cuối (truncate) |
+| **Badge unread** | Vòng tròn đỏ với số tin chưa đọc (chỉ khi > 0) |
+
+## Cột phải — Cuộc hội thoại
+
+### Header
+
+- Mobile: nút **Quay lại** (←).
+- Avatar khách + tên + SĐT.
+
+### Dòng tin nhắn
+
+| Vị trí | Người gửi |
+|--------|-----------|
+| **Bên phải, nền primary trắng** | Nhân viên / shop |
+| **Bên trái, nền trắng viền** | Khách |
+
+Mỗi tin có timestamp giờ:phút bên dưới. Ảnh hiển thị max-width 200px.
+
+### Soạn tin
+
+| Nút | Chức năng |
+|-----|-----------|
+| **Icon ảnh** (🖼️) | Mở chọn file → upload và gửi ảnh ngay |
+| **Ô nhập** | Soạn text |
+| **Send** (➤) | Gửi tin (Enter cũng gửi) |
+
+## Tính năng chi tiết
 
 <Steps>
-  <Step title="Xem danh sách hội thoại">
-    Cột bên trái liệt kê tất cả phòng chat, sắp xếp theo tin nhắn mới nhất.
+  <Step title="Tìm hội thoại">
+    Gõ tên khách vào ô tìm.
   </Step>
-  <Step title="Trả lời khách hàng">
-    Nhấn vào hội thoại → gõ tin nhắn vào ô bên dưới → nhấn **Gửi** hoặc Enter.
+  <Step title="Trả lời text">
+    Chọn hội thoại → gõ tin → **Send** (hoặc Enter).
   </Step>
-  <Step title="Gửi hình ảnh">
-    Nhấn biểu tượng đính kèm để upload và gửi hình ảnh cho khách.
+  <Step title="Gửi ảnh">
+    Nhấn icon ảnh → chọn file (chỉ `image/*`) → upload tự động.
+  </Step>
+  <Step title="Đánh dấu đã đọc">
+    Mở hội thoại → tin tự đánh dấu đã đọc.
   </Step>
 </Steps>
 
 <Note>
-Hệ thống có thể được cấu hình để AI tự động trả lời tin nhắn khách hàng. Tính năng này được bật/tắt qua cài đặt môi trường của người triển khai hệ thống.
+Hệ thống có thể được cấu hình để **AI tự động trả lời** tin nhắn khách hàng. Tính năng này bật/tắt qua biến môi trường của người triển khai hệ thống.
 </Note>

@@ -14,7 +14,6 @@ import type {
   CustomerStatsItem,
   DashboardKPIs,
   DashboardRecentOrder,
-  DashboardStats,
   DashboardTopProduct,
   DebtListItem,
   Expense,
@@ -548,7 +547,7 @@ export const adminClient = {
   },
 
   // Finance & Expenses
-  async getFinancialStats(params: { month: number; year: number }) {
+  async getFinancialStats(params?: { month: number; year: number }) {
     return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
       params,
     }) as unknown as Promise<{ stats: FinancialStats }>;
@@ -663,6 +662,12 @@ export const adminClient = {
     }) as unknown as Promise<any[]>;
   },
 
+  async getSupplierOrderDetail(id: string) {
+    return axios.get<{ supplierOrder: any }>(
+      API_ENDPOINTS.ADMIN.SUPPLIER_ORDER_DETAIL(id),
+    ) as unknown as Promise<{ supplierOrder: any }>;
+  },
+
   async createSupplierOrder(data: any) {
     return axios.post<any>(API_ENDPOINTS.ADMIN.SUPPLIER_ORDERS, data) as unknown as Promise<any>;
   },
@@ -672,6 +677,12 @@ export const adminClient = {
       API_ENDPOINTS.ADMIN.SUPPLIER_ORDER_DETAIL(id),
       data,
     ) as unknown as Promise<any>;
+  },
+
+  async deleteSupplierOrder(id: string) {
+    return axios.delete<{ success: boolean }>(
+      API_ENDPOINTS.ADMIN.SUPPLIER_ORDER_DETAIL(id),
+    ) as unknown as Promise<{ success: boolean }>;
   },
 
   async getInventoryMovements(params?: {

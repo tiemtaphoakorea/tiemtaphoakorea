@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ApiError, axios } from "@workspace/shared/api-client";
+import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
 import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
@@ -515,7 +516,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     let res;
     try {
       if (mode === "create") {
-        res = await axios.post("/api/admin/products", createPayload);
+        res = await axios.post(API_ENDPOINTS.ADMIN.PRODUCTS, createPayload);
         toast.success("Đã tạo sản phẩm");
       } else {
         if (!productId) {
@@ -523,7 +524,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
           dispatch({ type: "SET_API_PENDING", payload: false });
           return;
         }
-        res = await axios.put(`/api/admin/products/${productId}`, updatePayload);
+        res = await axios.put(`${API_ENDPOINTS.ADMIN.PRODUCTS}/${productId}`, updatePayload);
         toast.success("Đã cập nhật sản phẩm");
       }
     } catch (err: unknown) {
@@ -645,7 +646,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
                 <CardContent className="p-6">
                   <FieldGroup>
                     <Field>
-                      <FieldLabel>Tên sản phẩm *</FieldLabel>
+                      <FieldLabel required>Tên sản phẩm</FieldLabel>
                       <Input
                         {...form.register("name")}
                         placeholder="Ví dụ: Áo Thun Premium Cotton"

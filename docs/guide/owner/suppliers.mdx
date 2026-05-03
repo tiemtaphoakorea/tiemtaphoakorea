@@ -1,30 +1,87 @@
 ---
 title: "Nhà cung cấp"
-description: "Quản lý danh sách nhà cung cấp và thông tin liên hệ."
+description: "Quản lý danh sách nhà cung cấp (vendor) — thông tin liên hệ, điều khoản thanh toán và lịch sử đơn nhập."
 ---
 
 ## Mô tả
 
-Trang Nhà cung cấp lưu trữ thông tin tất cả nhà cung cấp (vendor) của cửa hàng. Thông tin này được dùng khi tạo đơn nhập hàng.
+Trang **Nhà cung cấp** lưu thông tin các đối tác cung cấp hàng cho cửa hàng. Mỗi nhà cung cấp có **mã (code)** duy nhất, thông tin liên hệ, điều khoản thanh toán và **bộ đếm số đơn nhập** đã thực hiện.
 
 ## Cách truy cập
 
-Menu bên trái → **Nhà cung cấp**.
+Menu bên trái → **Nhà cung cấp** (mục **Kho vận**).
 
-## Các thao tác chính
+## Bộ lọc và thao tác
+
+| Thành phần | Mô tả |
+|-----------|-------|
+| **Tìm nhà cung cấp...** | Ô tìm kiếm theo tên, debounce 300ms |
+| **Thêm nhà CC** | Nút mở drawer thêm mới |
+| **Số dòng / trang** | 10 / 25 / 50 / 100 — mặc định 25 |
+
+## Cột bảng danh sách
+
+| Cột | Nội dung |
+|-----|---------|
+| **Nhà cung cấp** | Tên + địa chỉ (nếu có) |
+| **Mã** | Mã code tự sinh của NCC |
+| **SĐT** | Số điện thoại |
+| **Email** | Email liên hệ |
+| **Số đơn** | Tổng số đơn nhập đã tạo từ NCC này |
+| **Trạng thái** | Badge **Đang hoạt động** / **Ngừng hoạt động** |
+| (actions) | Nút **Sửa** và **Xoá** |
+
+## Thêm nhà cung cấp mới
 
 <Steps>
-  <Step title="Xem danh sách nhà cung cấp">
-    Bảng hiển thị tên, số điện thoại, địa chỉ và số đơn nhập hàng của từng nhà cung cấp.
+  <Step title="Mở drawer thêm mới">
+    Nhấn **Thêm nhà CC** ở góc phải → drawer **Thêm nhà cung cấp** mở từ phải.
   </Step>
-  <Step title="Thêm nhà cung cấp mới">
-    Nhấn **Thêm nhà cung cấp** → điền tên, thông tin liên hệ → **Lưu**.
+  <Step title="Nhập tên (bắt buộc)">
+    Trường **Tên nhà cung cấp** — ví dụ: "Lotte Trading Korea". Bắt buộc, không được để trống.
   </Step>
-  <Step title="Chỉnh sửa thông tin">
-    Nhấn vào tên nhà cung cấp để mở trang chi tiết và chỉnh sửa thông tin.
+  <Step title="Thông tin liên hệ (tuỳ chọn)">
+    Điền **Số điện thoại**, **Email**, **Địa chỉ** — đều không bắt buộc.
+  </Step>
+  <Step title="Điều khoản thanh toán (tuỳ chọn)">
+    Trường **Điều khoản thanh toán** — ví dụ: "NET 30", "COD", "Trả trước 50%". Dùng khi cần ghi nhớ thoả thuận thanh toán đặc thù với từng NCC.
+  </Step>
+  <Step title="Ghi chú (tuỳ chọn)">
+    Textarea **Ghi chú** — bất cứ thông tin nội bộ về NCC.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Thêm**. NCC xuất hiện trong danh sách, mặc định **Đang hoạt động**.
+  </Step>
+</Steps>
+
+## Chỉnh sửa nhà cung cấp
+
+<Steps>
+  <Step title="Mở drawer chỉnh sửa">
+    Nhấn **Sửa** trên hàng NCC cần cập nhật → drawer **Chỉnh sửa nhà cung cấp** mở ra với dữ liệu hiện tại.
+  </Step>
+  <Step title="Cập nhật thông tin">
+    Sửa các trường cần thay đổi. Riêng khi chỉnh sửa, có thêm công tắc **Đang hoạt động** ở cuối form để bật/tắt NCC.
+  </Step>
+  <Step title="Lưu thay đổi">
+    Nhấn **Lưu thay đổi**.
   </Step>
 </Steps>
 
 <Note>
-Thông tin nhà cung cấp được liên kết với đơn nhập hàng. Kiểm tra lịch sử đơn nhập của từng nhà cung cấp bằng cách nhấn vào tên của họ.
+Tắt NCC (**Đang hoạt động** = OFF) thay cho việc xoá khi muốn ngừng làm việc với NCC nhưng vẫn giữ lịch sử đơn nhập đã có.
 </Note>
+
+## Xoá nhà cung cấp
+
+Nhấn **Xoá** (nút đỏ) → dialog xác nhận **Xoá nhà CC "..."?** → **Xoá** để xác nhận.
+
+<Warning>
+- Xoá NCC là hành động **không thể hoàn tác**.
+- Theo spec, **không thể xoá** NCC đã có đơn nhập trong quá khứ — hệ thống chặn xoá ở backend.
+- Nếu cần ngừng làm việc với NCC nhưng vẫn giữ lịch sử, hãy **tắt "Đang hoạt động"** thay vì xoá.
+</Warning>
+
+## Liên kết với đơn nhập hàng
+
+Cột **Số đơn** trong bảng hiển thị tổng số đơn nhập đã tạo từ NCC. Để xem chi tiết các đơn nhập, mở trang **Đơn nhập hàng** (Menu **Kho vận** → **Đơn nhập hàng**).

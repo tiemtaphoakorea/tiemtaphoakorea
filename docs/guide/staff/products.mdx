@@ -1,34 +1,86 @@
 ---
 title: "Sản phẩm"
-description: "Xem và cập nhật thông tin sản phẩm, tồn kho."
+description: "Xem, chỉnh thông tin sản phẩm, cập nhật tồn kho biến thể."
 ---
 
 ## Mô tả
 
-Nhân viên có thể xem và chỉnh sửa thông tin sản phẩm, cập nhật tồn kho biến thể.
+Nhân viên xem danh sách sản phẩm, chỉnh sửa thông tin cơ bản và cập nhật tồn kho từng biến thể.
+
+<Warning>
+Hạn chế quyền nhân viên:
+- **Không** được tải lên / xoá ảnh sản phẩm.
+- **Không** được xoá biến thể đã có lịch sử bán hàng.
+
+Liên hệ Quản lý / Chủ shop khi cần các thao tác trên.
+</Warning>
 
 ## Cách truy cập
 
 Menu bên trái → **Sản phẩm**.
 
+## Trang danh sách
+
+### Bộ lọc nhanh (tab)
+
+| Tab | Lọc theo |
+|-----|----------|
+| **Tất cả** | Mọi sản phẩm |
+| **Còn hàng** | Tồn > ngưỡng |
+| **Sắp hết** | 0 < Tồn ≤ ngưỡng |
+| **Hết hàng** | Tồn = 0 |
+
+### Tìm kiếm
+
+Ô **Tìm tên, mã SP...** — debounce 300ms.
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Sản phẩm** | Thumbnail + tên + SKU |
+| **Danh mục** | Danh mục cha |
+| **Giá bán** | Giá hoặc khoảng giá |
+| **Tồn kho** | Tổng tồn (đỏ nếu = 0, vàng nếu thấp) |
+| **Trạng thái** | Đang bán / Hết hàng / Ẩn |
+| **Sửa** | Mở drawer chỉnh sửa |
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 20 / 50 / 100**. Mặc định **20**.
+
 ## Các thao tác chính
 
 <Steps>
   <Step title="Tìm sản phẩm">
-    Dùng ô tìm kiếm hoặc lọc theo danh mục để tìm sản phẩm cần cập nhật.
+    Dùng ô tìm hoặc tab lọc để tìm sản phẩm cần cập nhật.
+  </Step>
+  <Step title="Mở chi tiết">
+    Nhấn vào hàng → drawer chỉnh sửa mở.
   </Step>
   <Step title="Cập nhật tồn kho">
-    Mở sản phẩm → tab **Biến thể** → chỉnh sửa số lượng tồn kho từng biến thể.
+    Tab **Biến thể & Giá** → chỉnh số lượng tồn kho từng biến thể trong bảng.
   </Step>
-  <Step title="Chỉnh sửa thông tin sản phẩm">
-    Nhấn **Chỉnh sửa** để cập nhật tên, mô tả hoặc giá bán.
+  <Step title="Cập nhật thông tin cơ bản">
+    Tab **Thông tin chung** → đổi tên, mô tả, danh mục, giá niêm yết.
   </Step>
-  <Step title="Đánh dấu sản phẩm nổi bật">
-    Trong form chỉnh sửa, cuộn xuống công tắc **Bán chạy / Nổi bật** → gạt `ON` → nhấn **Lưu thay đổi**.
-    Sản phẩm sẽ xuất hiện trong mục "Sản phẩm được yêu thích" trên trang chủ.
+  <Step title="Đánh dấu nổi bật">
+    Tab **Thông tin chung** → switch **Bán chạy / Nổi bật** sang `ON` → **Lưu**.
   </Step>
 </Steps>
 
-<Warning>
-Nhân viên không có quyền tải lên ảnh sản phẩm. Liên hệ Quản lý hoặc Chủ shop để cập nhật hình ảnh.
-</Warning>
+## Trường có thể chỉnh
+
+| Trường | Mô tả |
+|--------|------|
+| **Tên sản phẩm** | Tên hiển thị trên storefront |
+| **Danh mục** | Cây danh mục |
+| **Giá niêm yết** | Giá mặc định cho biến thể tạo mới |
+| **Mô tả** | Mô tả chi tiết |
+| **Hiển thị** | Switch ẩn/hiện trên storefront |
+| **Bán chạy / Nổi bật** | Switch — đưa lên trang chủ |
+| **Biến thể: Giá bán / Giá vốn / Tồn kho / Ngưỡng cảnh báo** | Trong bảng tab Biến thể |
+
+<Note>
+Khi nhập sai tồn kho, có thể dùng **Đơn nhập hàng** hoặc **Kiểm kê tồn kho** để điều chỉnh chính xác.
+</Note>

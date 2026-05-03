@@ -60,7 +60,13 @@ export function BannerRow({ banner, isEditing, onEdit, onCloseEdit, onDelete, on
         {/* Thumbnail */}
         <div className="relative h-10 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
           {thumb ? (
-            <Image src={thumb} alt={banner.title ?? ""} fill className="object-cover" sizes="64px" />
+            <Image
+              src={thumb}
+              alt={banner.title ?? ""}
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
           ) : (
             <div className="flex h-full items-center justify-center">
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -89,7 +95,13 @@ export function BannerRow({ banner, isEditing, onEdit, onCloseEdit, onDelete, on
             <Pencil className="h-3.5 w-3.5" />
           )}
         </Button>
-        <Button variant="ghost-destructive" size="sm" onClick={onDelete} aria-label="Xoá" disabled={isEditing}>
+        <Button
+          variant="ghost-destructive"
+          size="sm"
+          onClick={onDelete}
+          aria-label="Xoá"
+          disabled={isEditing}
+        >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>

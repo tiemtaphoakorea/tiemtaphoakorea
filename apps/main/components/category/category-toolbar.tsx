@@ -85,7 +85,7 @@ export function CategoryToolbar({
       <div className="flex items-center gap-2">
         <Select value={activeSort} onValueChange={onSortChange}>
           <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-background text-sm">
-            <SelectValue />
+            <SelectValue placeholder="Sắp xếp" />
           </SelectTrigger>
           <SelectContent position="popper" align="end">
             {SORT_OPTIONS.map((opt) => (

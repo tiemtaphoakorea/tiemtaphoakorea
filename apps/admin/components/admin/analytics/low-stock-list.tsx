@@ -17,7 +17,7 @@ export function LowStockList({ items }: LowStockListProps) {
           </h3>
         </div>
         <Link
-          href="/products"
+          href="/products?filter=low_stock"
           className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900"
         >
           Xem tất cả <ArrowUpRight className="h-3 w-3" />

@@ -14,9 +14,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb";
-import { Input } from "@workspace/ui/components/input";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@workspace/ui/components/sidebar";
-import { Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,6 +26,7 @@ const AdminSidebar = dynamic(
 );
 
 import { ChatNotificationBell } from "@/components/layout/chat-notification-bell";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { QUERY_CACHE_PERSIST_KEY, queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -111,18 +110,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
             </BreadcrumbList>
           </Breadcrumb>
 
-          {/* Quick search — visual only for now (no global search wired). */}
-          <div className="relative hidden h-[34px] w-[300px] items-center md:flex">
-            <Search
-              className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground/60"
-              strokeWidth={1.8}
-            />
-            <Input
-              type="search"
-              placeholder="Tìm kiếm nhanh..."
-              className="h-full w-full border-border bg-[#F4F5F7] pl-9 pr-3 transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:bg-white focus-visible:ring-0"
-            />
-          </div>
+          <GlobalSearch />
 
           <ChatNotificationBell />
           <Avatar className="h-8 w-8 cursor-pointer">

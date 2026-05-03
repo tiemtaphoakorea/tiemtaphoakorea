@@ -1,46 +1,123 @@
 ---
 title: "Khách hàng"
-description: "Xem và quản lý thông tin khách hàng, lịch sử mua hàng."
+description: "CRM nội bộ — quản lý hồ sơ khách, lịch sử đơn hàng, công nợ và phân hạng khách."
 ---
 
 ## Mô tả
 
-Trang Khách hàng là cơ sở dữ liệu CRM nội bộ — lưu thông tin và lịch sử mua hàng của từng khách.
+Trang **Khách hàng** là CRM nội bộ. Mỗi khách có hồ sơ với thông tin cá nhân, lịch sử đơn hàng, công nợ và **hạng** (tier) tự tính theo doanh thu / số đơn.
 
 ## Cách truy cập
 
 Menu bên trái → **Khách hàng**.
 
-## Các thao tác chính
+## Trang danh sách
+
+### Bộ lọc & tìm kiếm
+
+| Điều khiển | Lọc theo |
+|-----------|----------|
+| **Tìm tên, SĐT, mã KH...** | Debounce 300ms |
+| **Tất cả trạng thái / Đang hoạt động / Ngừng hoạt động** | `isActive` |
+| **Xuất danh sách** | Tải Excel danh sách hiện tại |
+| **Thêm KH** | Mở drawer tạo khách thủ công |
+
+### Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Khách hàng** | Avatar (hoặc chữ cái đầu) + họ tên |
+| **Mã KH** | Mã định danh (font monospace) |
+| **SĐT** | Số điện thoại |
+| **Đơn hàng** | Số đơn đã đặt |
+| **Tổng chi tiêu** | Tổng tiền đã thu (in đỏ) |
+| **Tham gia** | Ngày tạo tài khoản (định dạng `dd/mm/yyyy`) |
+| **Hạng** | Badge phân hạng tự tính (xem mục Hạng khách) |
+
+Nhấn vào hàng → mở **drawer chỉnh sửa nhanh**. Để xem trang chi tiết đầy đủ, dùng đường dẫn `/customers/{id}`.
+
+### Phân trang
+
+Cuối bảng — dropdown **10 / 25 / 50 / 100**. Mặc định **25**.
+
+## Thêm / Chỉnh sửa khách (drawer)
 
 <Steps>
-  <Step title="Xem danh sách khách hàng">
-    Bảng hiển thị tên, email, số điện thoại, tổng số đơn và tổng chi tiêu của từng khách.
+  <Step title="Mở drawer">
+    Nhấn **Thêm KH** (mới) hoặc nhấn vào hàng trong danh sách (sửa).
   </Step>
-  <Step title="Xem hồ sơ khách hàng">
-    Nhấn vào tên khách để xem chi tiết: thông tin cá nhân, lịch sử đơn hàng, và lịch sử chat hỗ trợ.
+  <Step title="Điền form">
+    Xem bảng trường bên dưới.
   </Step>
-  <Step title="Tìm kiếm khách hàng">
-    Dùng ô tìm kiếm để tìm theo tên hoặc email.
+  <Step title="Lưu">
+    Nhấn **Thêm** hoặc **Lưu thay đổi**.
   </Step>
 </Steps>
 
-## Vô hiệu hóa và kích hoạt lại khách hàng
+### Trường trong form
 
-Chủ shop và Quản lý có thể vô hiệu hóa tài khoản khách hàng nếu cần (ví dụ: khách hàng vi phạm chính sách, tài khoản gian lận).
+| Trường | Bắt buộc | Mô tả |
+|--------|---------|------|
+| **Họ và tên** | Có | Tên đầy đủ của khách |
+| **Số điện thoại** | Không | SĐT liên hệ |
+| **Địa chỉ** | Không | Địa chỉ mặc định cho giao hàng |
+| **Loại khách hàng** | Có | Dropdown: `Bán lẻ` / `Bán sỉ` / `VIP`. Mặc định `Bán lẻ` |
+| **Đang hoạt động** | — | Switch (chỉ khi sửa). Tắt = chặn khách đăng nhập storefront |
+
+## Trang chi tiết khách hàng (`/customers/{id}`)
+
+Bố cục:
+
+- **Header** — nút **Quay lại** (trái) + nhóm nút **Chặn / Mở chặn**, **Chỉnh sửa**, **Xoá KH** (phải).
+- **CustomerProfileHeader** — avatar lớn, tên, mã KH, SĐT, hạng.
+- **Cột trái (1/3)**:
+    - **CustomerFinancialStats** — tổng chi tiêu, số đơn.
+    - **CustomerLocationCard** — địa chỉ.
+    - **CustomerSecurityCard** — ngày tạo tài khoản, lần hoạt động cuối.
+- **Cột phải (2/3)**:
+    - **CustomerOrderHistoryTable** — bảng đơn hàng đã đặt (mã đơn, ngày, tổng tiền, trạng thái).
+
+## Hạng khách hàng (Tier)
+
+Hệ thống tự phân hạng dựa trên `tổng chi tiêu` hoặc `số đơn` theo cấu hình **Cài đặt → Hạng khách**:
+
+- Hạng được tính lại sau mỗi đơn hoàn tất.
+- Badge hiển thị ở cột **Hạng** trong danh sách.
+- Có thể dùng để áp dụng giá sỉ, ưu đãi riêng.
+
+## Vô hiệu hoá / Mở chặn khách hàng
 
 <Steps>
-  <Step title="Mở hồ sơ khách hàng">
-    Nhấn vào tên khách hàng trong danh sách.
+  <Step title="Mở trang chi tiết">
+    Đường dẫn `/customers/{id}` (nhấn **Xem chi tiết** từ drawer).
   </Step>
-  <Step title="Vô hiệu hóa hoặc kích hoạt lại">
-    Trong hồ sơ chi tiết, nhấn nút **Vô hiệu hóa** (hoặc **Kích hoạt lại** nếu tài khoản đang bị khóa).
-    Hộp thoại xác nhận xuất hiện → nhấn **Xác nhận** để thực hiện.
+  <Step title="Nhấn nút Chặn">
+    Header → nút **Chặn** (đỏ). Hộp thoại confirm: _"Chặn khách hàng này?"_.
+  </Step>
+  <Step title="Mở chặn">
+    Nếu đã bị chặn, nút đổi thành **Mở chặn** — nhấn để kích hoạt lại.
   </Step>
 </Steps>
 
-Tài khoản bị vô hiệu hóa sẽ không thể đặt hàng hoặc đăng nhập vào storefront. Lịch sử đơn hàng và dữ liệu được giữ nguyên.
+<Warning>
+Chỉ **Chủ shop** và **Quản lý** có quyền chặn / mở chặn / xoá khách. Nhân viên chỉ xem và sửa thông tin cơ bản.
+</Warning>
 
-<Note>
-Hồ sơ khách hàng được tạo tự động khi khách đặt hàng lần đầu trên storefront. Bạn không thể tạo khách hàng thủ công từ trang này.
-</Note>
+## Xoá khách hàng
+
+<Steps>
+  <Step title="Mở trang chi tiết">
+    `/customers/{id}`.
+  </Step>
+  <Step title="Nhấn Xoá KH">
+    Nút đỏ ở header. Hộp thoại confirm: _"Xoá khách hàng này? Hành động không thể hoàn tác."_.
+  </Step>
+</Steps>
+
+<Warning>
+Xoá khách là **không thể hoàn tác**. Đơn hàng cũ vẫn được giữ lại nhưng không liên kết được với khách.
+</Warning>
+
+## Liên kết với công nợ
+
+Mỗi khách có thể có **công nợ** (đơn `partial` hoặc `unpaid`). Xem chi tiết tại trang **Công nợ** — tổng hợp toàn bộ khách đang nợ và lịch sử thu hồi.

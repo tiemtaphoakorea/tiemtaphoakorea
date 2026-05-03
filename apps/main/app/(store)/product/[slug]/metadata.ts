@@ -15,8 +15,26 @@ export async function generateMetadata({
     };
   }
 
+  const title = `${product.name} | K-SMART`;
+  const description = product.description || `Mua ${product.name} chính hãng tại K-SMART`;
+  const productImage = product.variants?.[0]?.images?.[0]?.url;
+
   return {
-    title: `${product.name} | K-SMART`,
-    description: product.description || `Mua ${product.name} chính hãng tại K-SMART`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      ...(productImage && {
+        images: [{ url: productImage, width: 1200, height: 630 }],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(productImage && { images: [productImage] }),
+    },
   };
 }

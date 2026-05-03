@@ -60,7 +60,7 @@ export interface AdminProfile {
   fullName: string | null;
   role: UserRole;
   avatarUrl?: string | null;
-  // Add other fields as necessary
+  isActive?: boolean | null;
 }
 
 // --- Category ---

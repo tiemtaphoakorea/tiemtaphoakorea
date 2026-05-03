@@ -5,59 +5,83 @@ description: "Tổng quan về vai trò Chủ shop và các quyền hạn trong 
 
 ## Mô tả
 
-Chủ shop là vai trò có quyền cao nhất trong hệ thống K-SMART. Bạn có toàn quyền truy cập tất cả tính năng, bao gồm tài chính, nhân sự, chi phí và cài đặt cửa hàng.
+Chủ shop (`owner`) là vai trò có quyền cao nhất trong hệ thống K-SMART. Bạn có toàn quyền truy cập tất cả tính năng — bao gồm tài chính, chi phí vận hành, nhân sự, cài đặt cửa hàng và cấu hình storefront.
 
 ## Cách truy cập
 
-Đăng nhập tại trang admin với tài khoản được cấp quyền **Owner**.
+Đăng nhập tại trang admin với tài khoản được cấp vai trò **Owner**.
 
 ## Bố cục menu sidebar
 
-Menu được chia thành 5 nhóm:
+Sidebar được chia thành 5 nhóm. Số mục bên trong mỗi nhóm phụ thuộc vai trò.
 
-| Nhóm | Tính năng |
-|------|-----------|
-| **Quản trị** | Dashboard, Sản phẩm, Danh mục, Trang chủ (collections), Đơn hàng |
-| **Tài chính** | Công nợ, Chi phí, Báo cáo |
-| **Kho vận** | Quản lý kho (tồn + nhập hàng), Nhà cung cấp |
-| **Người dùng** | Khách hàng, Nhân sự, Tin nhắn |
-| **Hệ thống** | Cài đặt |
+| Nhóm | Mục (Chủ shop thấy đầy đủ) |
+|------|----------------------------|
+| **Quản trị** | Dashboard · Sản phẩm · Danh mục · Đơn hàng |
+| **Tài chính** | Công nợ · Chi phí · Báo cáo |
+| **Kho vận** | Quản lý kho · Nhà cung cấp |
+| **Người dùng** | Khách hàng · Nhân sự · Tin nhắn |
+| **Cài đặt** | Trang chủ · Cửa hàng · Nội dung website · Tiện ích |
 
-### Tính năng chỉ Chủ shop thấy
+### Mục chỉ Chủ shop thấy
 
-- **Chi phí** — chi phí vận hành.
-- **Nhân sự** — quản lý tài khoản nhân viên.
-- **Cài đặt** — thông tin cửa hàng, nhận diện, banner, footer, mạng xã hội, widget liên hệ, thông báo.
+| Mục | Đường dẫn | Lý do dành riêng |
+|------|-----------|------------------|
+| **Chi phí** | `/expenses` | Liên quan dòng tiền chi vận hành |
+| **Nhân sự** | `/users` | Tạo/sửa/khoá tài khoản nhân viên |
+| **Trang chủ** (cấu hình) | `/homepage` | Cấu hình hiển thị storefront |
+| **Cửa hàng** (cài đặt) | `/settings` | Thông tin in hoá đơn, nhận diện, hạng khách |
+| **Nội dung website** | `/content` | Footer + mạng xã hội |
+| **Tiện ích** | `/widgets` | Widget Messenger trên storefront |
+
+Quản lý còn thấy thêm **Báo cáo** (`/analytics`); Nhân viên không thấy 6 mục dành riêng cho Chủ shop ở trên và cũng không thấy **Báo cáo**.
 
 ### Badge thông báo trên sidebar
 
-Sidebar hiển thị badge đếm thời gian thực:
+Sidebar gọi API mỗi 30–60 giây và hiển thị badge đếm thời gian thực:
 
-| Mục | Badge | Khi nào |
-|-----|-------|---------|
-| **Sản phẩm** | "N SP" | Có sản phẩm |
-| **Danh mục** | "N DM" | Có danh mục |
-| **Đơn hàng** | "N mới" (vàng) | Có đơn `pending` |
-| **Công nợ** | "N quá hạn" (đỏ) | Có nợ &gt; 30 ngày |
-| **Tin nhắn** | "N" hoặc "99+" | Có tin nhắn chưa đọc |
+| Mục | Text badge | Màu | Khi nào |
+|-----|-----------|-----|---------|
+| **Sản phẩm** | `N SP` | Tím | Có sản phẩm |
+| **Danh mục** | `N DM` | Tím | Có danh mục |
+| **Đơn hàng** | `N mới` | Vàng | Có đơn `pending` |
+| **Công nợ** | `N quá hạn` | Đỏ | Có nợ &gt; 30 ngày |
+| **Tin nhắn** | `N` hoặc `99+` | Tím | Có tin nhắn chưa đọc |
+
+### Thanh topbar
+
+Topbar hiển thị từ trái sang phải:
+
+1. Nút thu/mở sidebar.
+2. Breadcrumb (Admin → trang con).
+3. **Global Search** — tìm nhanh sản phẩm, đơn, khách hàng.
+4. **Chuông thông báo** chat (đếm tin chưa đọc).
+5. Avatar tài khoản đang đăng nhập.
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Đăng nhập vào hệ thống">
-    Mở trình duyệt và truy cập trang admin. Nhập email và mật khẩu tài khoản Chủ shop.
+    Mở trang admin và nhập email + mật khẩu tài khoản Owner. Hệ thống tự chuyển về **Dashboard** sau khi đăng nhập thành công.
   </Step>
-  <Step title="Khám phá menu điều hướng">
-    Sau khi đăng nhập, menu bên trái hiển thị đầy đủ 5 nhóm. Chi phí, Nhân sự và Cài đặt chỉ hiển thị với Chủ shop.
+  <Step title="Cấu hình ban đầu (lần đầu)">
+    Vào **Cài đặt → Cửa hàng** nhập tên cửa hàng, địa chỉ, số điện thoại (in trên hoá đơn). Sau đó vào tab **Nhận diện** upload logo và đặt màu thương hiệu.
   </Step>
-  <Step title="Bắt đầu từ Dashboard">
-    Nhấn **Dashboard** để xem KPI hôm nay: doanh thu, đơn chờ xử lý, sản phẩm sắp hết, khách hàng mới — kèm biểu đồ 7 ngày gần nhất.
+  <Step title="Mời nhân viên">
+    Vào **Nhân sự** → **Thêm nhân viên** → nhập họ tên + username + vai trò (Manager/Staff). Mật khẩu mặc định được hệ thống cấp; dùng nút **Đặt lại MK** để xem.
   </Step>
-  <Step title="Cấu hình ban đầu">
-    Vào **Cài đặt** để nhập thông tin cửa hàng (in trên hoá đơn), upload logo và đặt màu thương hiệu.
+  <Step title="Theo dõi vận hành hàng ngày">
+    Mở **Dashboard** xem 4 KPI hôm nay (doanh thu, đơn chờ, sắp hết hàng, khách mới) và 2 biểu đồ 7 ngày gần nhất.
+  </Step>
+  <Step title="Đối soát tài chính cuối tháng">
+    Vào **Báo cáo → Tài chính** chọn tháng cần đối soát để xem báo cáo P&L (doanh thu − COGS − chi phí vận hành = lãi ròng).
   </Step>
 </Steps>
 
 <Note>
-Các mục **Chi phí**, **Nhân sự** và **Cài đặt** chỉ hiển thị khi đăng nhập bằng tài khoản Chủ shop. Quản lý không thấy các mục này.
+**Chi phí**, **Nhân sự**, **Cài đặt → Cửa hàng**, **Nội dung website**, **Tiện ích** và **Trang chủ** chỉ hiển thị khi đăng nhập bằng tài khoản Owner. Nếu bạn không thấy các mục này, hãy kiểm tra lại vai trò.
 </Note>
+
+<Tip>
+Dùng **Global Search** ở topbar (phím tắt thường là biểu tượng kính lúp) để truy cập nhanh sản phẩm, đơn hàng hoặc khách hàng mà không cần qua menu.
+</Tip>

@@ -26,7 +26,7 @@ import {
 import { DebtPaymentDrawer } from "@/components/admin/shared/debt-payment-drawer";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
-import { StatCard } from "@/components/admin/shared/stat-card";
+import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -99,32 +99,31 @@ export default function AdminDebts() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2)]:max-sm:border-r-0 [&>*:last-child]:max-sm:col-span-2 [&>*:last-child]:max-sm:border-r-0 [&>*:last-child]:max-sm:border-b-0 sm:grid-cols-3">
-        <StatCard
-          label="Tổng công nợ"
-          value={summary ? formatVnd(summary.totalDebt) : "—"}
-          delta="Cần thu hồi"
-          direction="down"
-          icon={CircleDollarSign}
-          tone="danger"
-        />
-        <StatCard
-          label="Khách có nợ"
-          value={summary?.customerCount ?? "—"}
-          delta="Đang nợ"
-          direction="down"
-          icon={CircleDollarSign}
-          tone="amber"
-        />
-        <StatCard
-          label="Số đơn nợ hiển thị"
-          value={total}
-          delta={`Trang ${page}`}
-          direction="up"
-          icon={CircleDollarSign}
-          tone="primary"
-        />
-      </div>
+      <MetricStatBar
+        items={[
+          {
+            label: "Tổng công nợ",
+            value: summary ? formatVnd(summary.totalDebt) : "—",
+            icon: <CircleDollarSign className="h-3.5 w-3.5" />,
+            iconClassName: "bg-red-500/10 text-red-500",
+            trend: { text: "Cần thu hồi", className: "text-red-600" },
+          },
+          {
+            label: "Khách có nợ",
+            value: summary?.customerCount ?? "—",
+            icon: <CircleDollarSign className="h-3.5 w-3.5" />,
+            iconClassName: "bg-amber-500/10 text-amber-600",
+            trend: { text: "Đang nợ", className: "text-amber-600" },
+          },
+          {
+            label: "Số đơn nợ hiển thị",
+            value: total,
+            icon: <CircleDollarSign className="h-3.5 w-3.5" />,
+            iconClassName: "bg-primary/10 text-primary",
+            trend: { text: `Trang ${page}`, className: "text-muted-foreground" },
+          },
+        ]}
+      />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <FilterTabs

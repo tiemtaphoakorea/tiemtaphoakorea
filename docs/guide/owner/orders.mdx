@@ -91,25 +91,56 @@ Nhấn vào hàng đơn hoặc nút **Chi tiết** để mở trang chi tiết.
 
 Cuối bảng có dropdown **10 / 25 / 50 / 100** mỗi trang. Mặc định 25.
 
-## Tạo đơn hàng thủ công
+## Tạo đơn hàng thủ công (`/orders/new`)
+
+Form tạo đơn được chia 2 cột: **trái** chứa khách hàng & sản phẩm, **phải** chứa ghi chú, địa chỉ giao, phí ship và tổng quan.
+
+### Cột trái
+
+#### Thông tin khách hàng (`CustomerSelector`)
 
 <Steps>
-  <Step title="Mở form tạo đơn">
-    Nhấn **Tạo đơn** ở thanh công cụ → mở trang `/orders/new`.
+  <Step title="Tìm khách hàng có sẵn">
+    Gõ tên / SĐT / mã KH vào ô tìm kiếm — kết quả debounce 300ms. Nhấn vào khách trong danh sách để chọn.
   </Step>
-  <Step title="Chọn khách hàng">
-    Tìm khách hàng theo tên/SĐT hoặc tạo khách mới ngay tại form.
-  </Step>
-  <Step title="Thêm sản phẩm">
-    Tìm sản phẩm và thêm biến thể vào giỏ. Số lượng có thể chỉnh trực tiếp.
-  </Step>
-  <Step title="Cấu hình giao hàng và giảm giá">
-    Nhập địa chỉ giao, ghi chú, giảm giá (nếu có).
-  </Step>
-  <Step title="Lưu đơn">
-    Nhấn **Lưu** — đơn được tạo ở trạng thái `pending` / `unpaid`.
+  <Step title="Hoặc tạo khách mới ngay tại form">
+    Chọn tab **Khách mới** → nhập **Tên** và **SĐT** (Tên bắt buộc). Khách sẽ được tạo cùng đơn hàng.
   </Step>
 </Steps>
+
+<Note>
+Hai trường khách: chỉ chọn 1 trong 2 — chọn khách có sẵn sẽ huỷ khách mới và ngược lại.
+</Note>
+
+#### Sản phẩm (`ProductSelector` + `OrderItemsTable`)
+
+<Steps>
+  <Step title="Tìm và chọn biến thể">
+    Ô tìm kiếm sản phẩm → chọn biến thể → tự động thêm vào bảng dưới với SL = 1.
+  </Step>
+  <Step title="Chỉnh số lượng / giá">
+    Trong bảng đơn: thay đổi SL (số nguyên ≥ 1), giá tuỳ biến (`customPrice`) hoặc xoá dòng bằng nút thùng rác.
+  </Step>
+  <Step title="Thêm tiếp">
+    Mỗi lần chọn lại biến thể đã có trong giỏ → SL tự +1.
+  </Step>
+</Steps>
+
+### Cột phải
+
+| Thẻ | Mô tả |
+|-----|------|
+| **Ghi chú đơn hàng** | Textarea — ghi chú nội bộ cho đơn |
+| **Địa chỉ giao hàng** | 3 trường: Người nhận, SĐT nhận hàng, Địa chỉ (textarea). Tất cả tuỳ chọn — nếu trống dùng địa chỉ trong hồ sơ khách |
+| **Phí ship** | Switch **Trả phí ship hộ khách** + ô nhập số tiền (chỉ hiện khi switch ON). Cộng vào tổng đơn |
+| **Tổng quan** | Tạm tính · Phí ship trả hộ · **Tổng cộng** + nút **Tạo đơn hàng** |
+
+### Validate khi lưu
+
+- Phải chọn khách (có sẵn hoặc khách mới có **Tên**).
+- Phải có ít nhất 1 sản phẩm.
+
+Nếu hợp lệ — đơn được tạo ở trạng thái `pending` / `unpaid`, redirect đến `/orders/{id}`.
 
 ## Trang chi tiết đơn hàng
 
@@ -141,10 +172,10 @@ Nút hành động ở góc phải tiêu đề thay đổi theo trạng thái hi
 
 | Trạng thái hiện tại | Nút khả dụng |
 |---------------------|---------------|
-| `pending` — Chờ xử lý | **Đánh dấu xuất kho** · **Huỷ đơn** |
-| `stock_out` — Đã xuất kho | **Đánh dấu hoàn thành** · **Huỷ đơn** |
+| `pending` — Chờ xử lý | **Xuất kho** · **Huỷ đơn** · **Thanh toán** (nếu chưa thu đủ) |
+| `stock_out` — Đã xuất kho | **Hoàn tất đơn** (nếu đã thu đủ) · **Thanh toán** (nếu chưa thu đủ) |
 | `completed` — Hoàn thành | *(trạng thái cuối)* |
-| `cancelled` — Đã huỷ | *(trạng thái cuối)* |
+| `cancelled` — Đã huỷ | **Xoá đơn hàng** (cột phải) |
 
 <Steps>
   <Step title="Thêm ghi chú cập nhật (tùy chọn)">
@@ -178,9 +209,45 @@ Phần **Lịch sử trạng thái** là dòng thời gian các lần chuyển t
   </Step>
 </Steps>
 
-### In hoá đơn
+### Sửa danh sách sản phẩm trong đơn
 
-Nhấn **In hoá đơn** ở góc phải tiêu đề để in/xuất PDF. Thông tin cửa hàng (tên, địa chỉ, MST) lấy từ **Cài đặt → Cửa hàng**.
+Chỉ khả dụng khi đơn ở trạng thái `pending` **và** không phải đơn cha/con đã tách:
+
+<Steps>
+  <Step title="Mở chế độ sửa">
+    Nhấn nút **Sửa** trong thẻ "Chi tiết sản phẩm".
+  </Step>
+  <Step title="Thêm / xoá / chỉnh sản phẩm">
+    Dùng selector để thêm biến thể, hoặc thay đổi SL / đơn giá / xoá dòng trực tiếp trong bảng.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu** — hệ thống tính lại tổng tiền, cập nhật tồn kho `reserved`.
+  </Step>
+</Steps>
+
+### Xuất hoá đơn
+
+Nhấn dropdown **Xuất hoá đơn** ở góc phải tiêu đề — 3 lựa chọn:
+
+| Tuỳ chọn | Hành động |
+|----------|----------|
+| **Sao chép** | Copy ảnh hoá đơn vào clipboard (paste vào Zalo, Messenger...) |
+| **Xuất file ảnh** | Tải xuống file PNG hoá đơn |
+| **Xuất file PDF** | Tải xuống file PDF (in trực tiếp) |
+
+Thông tin cửa hàng (tên, địa chỉ, MST, logo) lấy từ **Cài đặt → Cửa hàng**.
+
+### Ghi nhận thanh toán nhiều lần
+
+Phần **Lịch sử thanh toán** hiển thị bảng các lần thu tiền:
+
+| Cột | Nội dung |
+|-----|---------|
+| **Thời gian** | Thời điểm ghi nhận |
+| **Phương thức** | Tiền mặt / Chuyển khoản / Thẻ |
+| **Ghi chú/Mã** | Mã GD (nếu chuyển khoản) + ghi chú nội bộ |
+| **Số tiền** | Số tiền lần thu (in xanh) |
+| **Người thu** | Nhân viên ghi nhận |
 
 ### Xoá đơn hàng
 

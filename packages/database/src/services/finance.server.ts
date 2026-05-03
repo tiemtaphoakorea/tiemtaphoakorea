@@ -145,23 +145,26 @@ export async function getFinancialStats(params: {
   startDate?: Date;
   endDate?: Date;
 }) {
-  let startDate: Date;
-  let endDate: Date;
+  let startDate: Date | null = null;
+  let endDate: Date | null = null;
 
   if (params.startDate && params.endDate) {
     startDate = params.startDate;
     endDate = params.endDate;
-    // Set time to start and end of day respectively if not provided/defaults
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
   } else if (params.month && params.year) {
     startDate = new Date(params.year, params.month - 1, 1);
     endDate = new Date(params.year, params.month, 0, 23, 59, 59, 999);
-  } else {
-    throw new Error("Invalid date parameters: provide either month/year or startDate/endDate");
+  }
+  // No date params → lifetime/shop-wide stats
+
+  const orderConditions: SQL[] = [eq(orders.paymentStatus, PAYMENT_STATUS.PAID)];
+  if (startDate && endDate) {
+    orderConditions.push(gte(orders.createdAt, startDate));
+    orderConditions.push(lte(orders.createdAt, endDate));
   }
 
-  // Cash basis: count by createdAt where paymentStatus = PAID
   const orderStats = await db
     .select({
       revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
@@ -169,25 +172,24 @@ export async function getFinancialStats(params: {
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, startDate),
-        lte(orders.createdAt, endDate),
-        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
-      ),
-    );
+    .where(and(...orderConditions));
 
   const revenue = orderStats[0]?.revenue ?? 0;
   const cogs = orderStats[0]?.cogs ?? 0;
   const grossProfit = revenue - cogs;
 
   // 2. Expenses
+  const expenseWhere =
+    startDate && endDate
+      ? and(gte(expenses.date, startDate), lte(expenses.date, endDate))
+      : undefined;
+
   const expenseStats = await db
     .select({
       total: sql<number>`coalesce(sum(${expenses.amount}), 0)`.mapWith(Number),
     })
     .from(expenses)
-    .where(and(gte(expenses.date, startDate), lte(expenses.date, endDate)));
+    .where(expenseWhere);
 
   const totalExpenses = expenseStats[0]?.total ?? 0;
 

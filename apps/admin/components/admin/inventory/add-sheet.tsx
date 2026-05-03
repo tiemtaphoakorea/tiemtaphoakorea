@@ -109,7 +109,7 @@ export function InventoryAddSheet({
           <div className="flex-1">
             <FieldGroup>
               <Field>
-                <FieldLabel>Sản phẩm & Biến thể</FieldLabel>
+                <FieldLabel required>Sản phẩm & Biến thể</FieldLabel>
                 <Controller
                   name="variantId"
                   control={control}
@@ -260,7 +260,9 @@ export function InventoryAddSheet({
 
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel htmlFor="quantity">Số lượng nhập</FieldLabel>
+                  <FieldLabel htmlFor="quantity" required>
+                    Số lượng nhập
+                  </FieldLabel>
                   <Controller
                     name="quantity"
                     control={control}

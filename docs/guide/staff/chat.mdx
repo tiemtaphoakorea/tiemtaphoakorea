@@ -1,30 +1,86 @@
 ---
 title: "Tin nhắn"
-description: "Hỗ trợ khách hàng qua tin nhắn trực tiếp."
+description: "Hộp thư hỗ trợ khách hàng — text, ảnh, badge chưa đọc."
 ---
 
 ## Mô tả
 
-Trang Tin nhắn để phản hồi câu hỏi và hỗ trợ khách hàng theo thời gian thực.
+Trang **Tin nhắn** là hộp thư hai chiều giữa nhân viên và khách đã đăng nhập storefront. Cập nhật gần realtime (polling 5–15 giây).
 
 ## Cách truy cập
 
 Menu bên trái → **Tin nhắn**.
 
+## Bố cục
+
+| Cột | Nội dung |
+|-----|---------|
+| **Trái (280px)** | Danh sách cuộc hội thoại |
+| **Phải** | Cuộc hội thoại đang chọn |
+
+Mobile: chỉ 1 cột tại 1 thời điểm.
+
+## Cột trái — Danh sách hội thoại
+
+### Header
+
+- Tiêu đề **"Hộp thư (X chưa đọc)"** — X là tổng tin chưa đọc.
+- Ô tìm kiếm **Tìm khách hàng...** — debounce 300ms.
+
+### Mỗi hàng hội thoại
+
+| Thành phần | Nội dung |
+|-----------|----------|
+| **Avatar** | Chữ cái đầu tên khách |
+| **Tên khách** | Họ tên |
+| **Thời gian** | Giờ:phút tin cuối |
+| **Preview** | Nội dung tin cuối (truncate) |
+| **Badge unread** | Vòng tròn đỏ với số tin chưa đọc |
+
+## Cột phải — Cuộc hội thoại
+
+### Header
+
+- Mobile: nút **Quay lại** (←).
+- Avatar khách + tên + SĐT.
+
+### Dòng tin nhắn
+
+| Vị trí | Người gửi |
+|--------|-----------|
+| **Bên phải, nền primary** | Nhân viên (bạn) |
+| **Bên trái, nền trắng viền** | Khách |
+
+Mỗi tin có timestamp giờ:phút bên dưới. Ảnh hiển thị max-width 200px.
+
+### Soạn tin
+
+| Nút | Chức năng |
+|-----|-----------|
+| **Icon ảnh** (🖼️) | Chọn file → upload và gửi ảnh ngay |
+| **Ô nhập** | Soạn text |
+| **Send** (➤) | Gửi tin (Enter cũng gửi) |
+
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Xem tin nhắn mới">
-    Cột bên trái hiển thị danh sách hội thoại. Hội thoại có tin nhắn chưa đọc được đánh dấu nổi bật.
+  <Step title="Tìm hội thoại">
+    Gõ tên khách vào ô tìm.
   </Step>
-  <Step title="Trả lời khách hàng">
-    Nhấn vào hội thoại → gõ phản hồi → nhấn **Gửi** hoặc Enter.
+  <Step title="Trả lời text">
+    Chọn hội thoại → gõ tin → nhấn **Send** (hoặc Enter).
   </Step>
-  <Step title="Xem lịch sử hội thoại">
-    Cuộn lên trong hội thoại để đọc các tin nhắn cũ và ngữ cảnh của cuộc trò chuyện.
+  <Step title="Gửi ảnh">
+    Nhấn icon ảnh → chọn file (chỉ `image/*`) → upload tự động.
+  </Step>
+  <Step title="Đánh dấu đã đọc">
+    Mở hội thoại → tin tự đánh dấu đã đọc, badge unread biến mất.
+  </Step>
+  <Step title="Xem lịch sử cũ">
+    Cuộn lên trong hội thoại để đọc các tin nhắn trước đó.
   </Step>
 </Steps>
 
 <Note>
-Hệ thống có thể được cấu hình để AI tự động trả lời tin nhắn khách hàng. Tính năng này được bật/tắt qua cài đặt môi trường của người triển khai hệ thống.
+Hệ thống có thể được cấu hình để **AI tự động trả lời** tin nhắn khách. Tính năng này bật/tắt qua biến môi trường của người triển khai hệ thống.
 </Note>

@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
@@ -13,6 +14,8 @@ import {
 } from "@workspace/ui/components/select";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -43,19 +46,21 @@ type CollectionDetail = {
   products: Array<{ productId: string; sortOrder: number }>;
 };
 
-type FormState = {
-  type: CollectionType;
-  title: string;
-  subtitle: string;
-  iconKey: string | null;
-  viewAllUrl: string;
-  itemLimit: number;
-  isActive: boolean;
-  categoryId: string | null;
-  daysWindow: number;
-};
+const formSchema = z.object({
+  type: z.enum(["manual", "best_sellers", "new_arrivals", "by_category"]),
+  title: z.string().min(1, "Tiêu đề bắt buộc"),
+  subtitle: z.string().optional(),
+  iconKey: z.string().nullable().optional(),
+  viewAllUrl: z.string().optional(),
+  itemLimit: z.number().min(1).max(50),
+  isActive: z.boolean(),
+  categoryId: z.string().nullable().optional(),
+  daysWindow: z.number().min(1).max(365),
+});
 
-const EMPTY: FormState = {
+type CollectionFormValues = z.infer<typeof formSchema>;
+
+const defaultValues: CollectionFormValues = {
   type: "manual",
   title: "",
   subtitle: "",
@@ -75,9 +80,29 @@ type Props = {
 export function CollectionFormPanel({ collectionId, onClose }: Props) {
   const queryClient = useQueryClient();
   const isEdit = collectionId !== null;
-  const [form, setForm] = useState<FormState>(EMPTY);
+
+  // productIds is managed outside RHF — it's driven by ManualProductPicker
   const [productIds, setProductIds] = useState<string[]>([]);
+  // pendingTypeChange is UI state for the confirmation dialog
   const [pendingTypeChange, setPendingTypeChange] = useState<CollectionType | null>(null);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { isDirty },
+  } = useForm<CollectionFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+    mode: "onChange",
+  });
+
+  const watchType = watch("type");
+  const watchTitle = watch("title");
+  const watchCategoryId = watch("categoryId");
 
   const detailQuery = useQuery({
     queryKey: queryKeys.homepageCollections.detail(collectionId ?? ""),
@@ -94,10 +119,11 @@ export function CollectionFormPanel({ collectionId, onClose }: Props) {
     staleTime: 60_000,
   });
 
+  // Load edit data into form when fetched
   useEffect(() => {
     if (!isEdit || !detailQuery.data) return;
     const c = detailQuery.data.collection;
-    setForm({
+    reset({
       type: c.type,
       title: c.title,
       subtitle: c.subtitle ?? "",
@@ -109,20 +135,20 @@ export function CollectionFormPanel({ collectionId, onClose }: Props) {
       daysWindow: c.daysWindow ?? 30,
     });
     setProductIds((c.products ?? []).map((p) => p.productId));
-  }, [isEdit, detailQuery.data]);
+  }, [isEdit, detailQuery.data, reset]);
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: CollectionFormValues) => {
       const payload = {
-        type: form.type,
-        title: form.title.trim(),
-        subtitle: form.subtitle.trim() || null,
-        iconKey: form.iconKey,
-        viewAllUrl: form.viewAllUrl.trim() || null,
-        itemLimit: form.itemLimit,
-        isActive: form.isActive,
-        categoryId: form.type === "by_category" ? form.categoryId : null,
-        daysWindow: form.type === "new_arrivals" ? form.daysWindow : null,
+        type: data.type,
+        title: data.title.trim(),
+        subtitle: data.subtitle?.trim() || null,
+        iconKey: data.iconKey ?? null,
+        viewAllUrl: data.viewAllUrl?.trim() || null,
+        itemLimit: data.itemLimit,
+        isActive: data.isActive,
+        categoryId: data.type === "by_category" ? (data.categoryId ?? null) : null,
+        daysWindow: data.type === "new_arrivals" ? data.daysWindow : null,
       };
 
       const result = isEdit
@@ -138,7 +164,7 @@ export function CollectionFormPanel({ collectionId, onClose }: Props) {
             collection: { id: string };
           }>);
 
-      if (form.type === "manual") {
+      if (data.type === "manual") {
         await adminClient.setHomepageCollectionProducts(result.collection.id, productIds);
       }
 
@@ -151,140 +177,142 @@ export function CollectionFormPanel({ collectionId, onClose }: Props) {
   });
 
   const canSave =
-    form.title.trim().length > 0 && (form.type !== "by_category" || !!form.categoryId);
+    isDirty && watchTitle.trim().length > 0 && (watchType !== "by_category" || !!watchCategoryId);
 
   function handleTypeChange(next: CollectionType) {
-    if (form.type === "manual" && next !== "manual" && productIds.length > 0) {
+    if (watchType === "manual" && next !== "manual" && productIds.length > 0) {
       setPendingTypeChange(next);
       return;
     }
-    setForm({ ...form, type: next });
+    setValue("type", next, { shouldDirty: true });
   }
 
   function confirmTypeChange() {
     if (!pendingTypeChange) return;
     setProductIds([]);
-    setForm((f) => ({ ...f, type: pendingTypeChange }));
+    setValue("type", pendingTypeChange, { shouldDirty: true });
     setPendingTypeChange(null);
   }
 
   return (
     <div className="border-t border-border bg-muted/20 p-4">
-      <FieldGroup className="gap-4">
-        <Field>
-          <FieldLabel>Loại</FieldLabel>
-          <Select value={form.type} onValueChange={(v) => handleTypeChange(v as CollectionType)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TYPES.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  {t.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field>
-          <FieldLabel>Tiêu đề *</FieldLabel>
-          <Input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="vd: Bán chạy nhất"
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel>Phụ đề</FieldLabel>
-          <Textarea
-            value={form.subtitle}
-            onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-            rows={2}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel>Icon</FieldLabel>
-          <IconSelect value={form.iconKey} onChange={(k) => setForm({ ...form, iconKey: k })} />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
+      <form onSubmit={handleSubmit((data) => saveMutation.mutate(data))}>
+        <FieldGroup className="gap-4">
           <Field>
-            <FieldLabel>Số sản phẩm (limit)</FieldLabel>
-            <Input
-              type="number"
-              min={1}
-              max={50}
-              value={form.itemLimit}
-              onChange={(e) => setForm({ ...form, itemLimit: Number(e.target.value) || 8 })}
+            <FieldLabel>Loại</FieldLabel>
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => handleTypeChange(v as CollectionType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
           </Field>
+
           <Field>
-            <FieldLabel>View all URL</FieldLabel>
-            <Input
-              value={form.viewAllUrl}
-              onChange={(e) => setForm({ ...form, viewAllUrl: e.target.value })}
-              placeholder="/products"
+            <FieldLabel required>Tiêu đề</FieldLabel>
+            <Input {...register("title")} placeholder="vd: Bán chạy nhất" />
+          </Field>
+
+          <Field>
+            <FieldLabel>Phụ đề</FieldLabel>
+            <Textarea {...register("subtitle")} rows={2} />
+          </Field>
+
+          <Field>
+            <FieldLabel>Icon</FieldLabel>
+            <Controller
+              name="iconKey"
+              control={control}
+              render={({ field }) => (
+                <IconSelect value={field.value ?? null} onChange={(k) => field.onChange(k)} />
+              )}
             />
           </Field>
-        </div>
 
-        {form.type === "by_category" && (
-          <Field>
-            <FieldLabel>Danh mục *</FieldLabel>
-            <Select
-              value={form.categoryId ?? ""}
-              onValueChange={(v) => setForm({ ...form, categoryId: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn danh mục" />
-              </SelectTrigger>
-              <SelectContent>
-                {(categoriesQuery.data?.flatCategories ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        )}
+          <div className="grid grid-cols-2 gap-3">
+            <Field>
+              <FieldLabel>Số sản phẩm (limit)</FieldLabel>
+              <Input
+                type="number"
+                min={1}
+                max={50}
+                {...register("itemLimit", { valueAsNumber: true })}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>View all URL</FieldLabel>
+              <Input {...register("viewAllUrl")} placeholder="/products" />
+            </Field>
+          </div>
 
-        {form.type === "new_arrivals" && (
-          <Field>
-            <FieldLabel>Cửa sổ ngày (days)</FieldLabel>
-            <Input
-              type="number"
-              min={1}
-              max={365}
-              value={form.daysWindow}
-              onChange={(e) => setForm({ ...form, daysWindow: Number(e.target.value) || 30 })}
-            />
-          </Field>
-        )}
+          {watchType === "by_category" && (
+            <Field>
+              <FieldLabel required>Danh mục</FieldLabel>
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(categoriesQuery.data?.flatCategories ?? []).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+          )}
 
-        {form.type === "manual" && (
-          <Field>
-            <FieldLabel>Sản phẩm trong collection</FieldLabel>
-            <ManualProductPicker value={productIds} onChange={setProductIds} />
-          </Field>
-        )}
+          {watchType === "new_arrivals" && (
+            <Field>
+              <FieldLabel>Cửa sổ ngày (days)</FieldLabel>
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                {...register("daysWindow", { valueAsNumber: true })}
+              />
+            </Field>
+          )}
 
-        <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Huỷ
-          </Button>
-          <Button
-            size="sm"
-            disabled={!canSave || saveMutation.isPending}
-            onClick={() => saveMutation.mutate()}
-          >
-            {saveMutation.isPending ? "Đang lưu..." : "Lưu"}
-          </Button>
-        </div>
-      </FieldGroup>
+          {watchType === "manual" && (
+            <Field>
+              <FieldLabel>Sản phẩm trong collection</FieldLabel>
+              <ManualProductPicker value={productIds} onChange={setProductIds} />
+            </Field>
+          )}
+
+          <div className="flex justify-end gap-2 border-t border-border pt-3">
+            <Button variant="outline" size="sm" type="button" onClick={onClose}>
+              Huỷ
+            </Button>
+            <Button size="sm" type="submit" disabled={!canSave || saveMutation.isPending}>
+              {saveMutation.isPending ? "Đang lưu..." : "Lưu"}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
 
       <ConfirmDialog
         open={pendingTypeChange !== null}

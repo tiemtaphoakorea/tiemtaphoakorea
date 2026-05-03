@@ -105,7 +105,7 @@ export function ChatWidget({
     );
     observer.observe(footer);
     return () => observer.disconnect();
-  }, [mounted]);
+  }, []);
 
   const sanitizedPhone = phoneNumber?.replace(/[^\d+]/g, "");
   const state = isOpen ? "open" : "closed";
@@ -134,7 +134,9 @@ export function ChatWidget({
           "fixed right-4 bottom-20 z-50 flex flex-col items-end gap-3 transition-all duration-200 ease-out md:bottom-4",
           isChatOpen && "hidden",
           // Auto-hide while reading or when footer is in view — only when speed-dial is collapsed.
-          (hidden || footerVisible) && !isOpen && "pointer-events-none translate-y-[140%] opacity-0",
+          (hidden || footerVisible) &&
+            !isOpen &&
+            "pointer-events-none translate-y-[140%] opacity-0",
         )}
       >
         {/* AI Chat — secondary FAB (top of stack). */}

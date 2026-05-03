@@ -5,6 +5,7 @@ import { Input } from "@workspace/ui/components/input";
 import { ArrowUp, CircleDollarSign, Facebook, Globe, Instagram, Youtube, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useNewsletterSubscribe } from "@/hooks/use-newsletter-subscribe";
 
 type FooterConfig = {
   tagline?: string;
@@ -31,8 +32,13 @@ const DEFAULTS = {
   hq: "Seoul, South Korea",
   office: "Hồ Chí Minh, Việt Nam",
   officeDetail: "Quận 1, TP. Hồ Chí Minh",
-  copyright: "© 2024 K-SMART VN",
 };
+
+const BRAND_NAME = "K-SMART VN";
+
+function defaultCopyright(): string {
+  return `© ${new Date().getFullYear()} ${BRAND_NAME}`;
+}
 
 export function Footer({ footer = {}, social = {} }: FooterProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -50,7 +56,7 @@ export function Footer({ footer = {}, social = {} }: FooterProps) {
   const tagline = footer.tagline || DEFAULTS.tagline;
   const office = footer.office || DEFAULTS.office;
   const officeDetail = footer.officeDetail || DEFAULTS.officeDetail;
-  const copyright = footer.copyright || DEFAULTS.copyright;
+  const copyright = footer.copyright || defaultCopyright();
 
   return (
     // pb-20 mirrors <main>'s padding so the fixed mobile bottom-nav doesn't cover the bottom-bar.
@@ -58,26 +64,7 @@ export function Footer({ footer = {}, social = {} }: FooterProps) {
       {/* Newsletter Band — hidden on desktop where NewsletterCta runs above the footer */}
       <div className="border-b border-white/10 md:hidden">
         <div className="container mx-auto px-4 py-10">
-          <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
-            <div className="space-y-1 text-center lg:text-left">
-              <h3 className="font-display text-2xl font-bold text-white">Nhận ưu đãi độc quyền</h3>
-              <p className="text-sm text-white/60">Voucher 50k cho đơn hàng đầu tiên của bạn</p>
-            </div>
-            <div className="flex w-full max-w-md overflow-hidden rounded-full border border-white/15 bg-white/8">
-              <Input
-                type="email"
-                placeholder="Email của bạn..."
-                className="h-auto min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-sm text-white shadow-none placeholder:text-white/40 focus-visible:ring-0"
-              />
-              <button
-                type="button"
-                aria-label="Đăng ký nhận ưu đãi"
-                className="m-1 rounded-full bg-primary px-5 py-2 text-xs font-bold text-white transition-all hover:bg-primary/90 cursor-pointer"
-              >
-                Đăng ký
-              </button>
-            </div>
-          </div>
+          <FooterNewsletter />
         </div>
       </div>
 
@@ -122,17 +109,17 @@ export function Footer({ footer = {}, social = {} }: FooterProps) {
             Về chúng tôi
           </h4>
           <ul className="space-y-3">
-            <FooterLink label="Giới thiệu" />
-            <FooterLink label="Liên hệ" />
+            <FooterLink label="Giới thiệu" href={PUBLIC_ROUTES.ABOUT} />
+            <FooterLink label="Liên hệ" href={PUBLIC_ROUTES.CONTACT} />
           </ul>
         </div>
 
         <div>
           <h4 className="mb-5 text-xs font-bold uppercase tracking-widest text-white/40">Hỗ trợ</h4>
           <ul className="space-y-3">
-            <FooterLink label="Vận chuyển & Giao hàng" />
-            <FooterLink label="Chính sách đổi trả" />
-            <FooterLink label="Kiểm tra đơn hàng" />
+            <FooterLink label="Vận chuyển & Giao hàng" href={PUBLIC_ROUTES.SHIPPING} />
+            <FooterLink label="Chính sách đổi trả" href={PUBLIC_ROUTES.RETURNS} />
+            <FooterLink label="Kiểm tra đơn hàng" href={PUBLIC_ROUTES.ORDER_LOOKUP} />
           </ul>
         </div>
 
@@ -150,13 +137,13 @@ export function Footer({ footer = {}, social = {} }: FooterProps) {
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-5 md:flex-row">
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/40 md:justify-start">
             <Link
-              href={PUBLIC_ROUTES.HOME}
+              href={PUBLIC_ROUTES.TERMS}
               className="transition-colors hover:text-white cursor-pointer"
             >
               Điều khoản sử dụng
             </Link>
             <Link
-              href={PUBLIC_ROUTES.HOME}
+              href={PUBLIC_ROUTES.PRIVACY}
               className="transition-colors hover:text-white cursor-pointer"
             >
               Chính sách bảo mật
@@ -216,15 +203,67 @@ function SocialBtn({ icon, label, href }: { icon: React.ReactNode; label: string
   );
 }
 
-function FooterLink({ label }: { label: string }) {
+function FooterLink({ label, href }: { label: string; href: string }) {
   return (
     <li>
       <Link
-        href="/"
+        href={href}
         className="cursor-pointer text-sm text-white/55 transition-colors hover:text-white"
       >
         {label}
       </Link>
     </li>
+  );
+}
+
+function FooterNewsletter() {
+  const [email, setEmail] = useState("");
+  const { status, message, subscribe } = useNewsletterSubscribe("footer");
+  const isSubmitting = status === "submitting";
+  const isSuccess = status === "success";
+
+  return (
+    <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
+      <div className="space-y-1 text-center lg:text-left">
+        <h3 className="font-display text-2xl font-bold text-white">Nhận ưu đãi độc quyền</h3>
+        <p className="text-sm text-white/60">Voucher 50k cho đơn hàng đầu tiên của bạn</p>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!isSuccess) void subscribe(email);
+        }}
+        className="flex w-full max-w-md flex-col gap-1.5"
+      >
+        <div className="flex w-full overflow-hidden rounded-full border border-white/15 bg-white/8">
+          <Input
+            type="email"
+            required
+            placeholder="Email của bạn..."
+            aria-label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubmitting || isSuccess}
+            className="h-auto min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-sm text-white shadow-none placeholder:text-white/40 focus-visible:ring-0"
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting || isSuccess}
+            aria-label="Đăng ký nhận ưu đãi"
+            className="m-1 rounded-full bg-primary px-5 py-2 text-xs font-bold text-white transition-all hover:bg-primary/90 disabled:opacity-80 cursor-pointer"
+          >
+            {isSubmitting ? "Đang gửi" : isSuccess ? "Đã đăng ký" : "Đăng ký"}
+          </button>
+        </div>
+        {message && (
+          <p
+            className={`px-3 text-[11px] ${status === "error" ? "text-warning" : "text-white/60"}`}
+            role="status"
+          >
+            {message}
+          </p>
+        )}
+      </form>
+    </div>
   );
 }

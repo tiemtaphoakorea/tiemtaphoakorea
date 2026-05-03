@@ -1012,6 +1012,7 @@ CREATE INDEX idx_product_variants_stock_active
 
 ##### 8.3 Frontend Optimization
 
+- **PageSkeleton loading states**: All 27 dashboard pages display PageSkeleton on initial load, eliminating blank screens during data fetch
+- **Global header search**: 300ms debounced search with 3 parallel queries (products/orders/customers), limit 4 per type, grouped dropdown with keyboard navigation (arrow keys + Enter) and ARIA labels
 - Lazy loading cho widgets không critical
-- Skeleton loading states
 - Optimistic UI updates

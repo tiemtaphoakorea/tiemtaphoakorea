@@ -303,7 +303,39 @@ Bộ test cases toàn diện cho K-SMART Admin Panel, bao gồm happy path, edge
 
 ---
 
-## 15. Error Handling & Edge Cases (13 test cases)
+## 15. Global Search (Header) (5 test cases)
+
+| Test ID | Tiêu đề | Điều kiện tiên quyết | Các bước | Kết quả mong đợi | Priority |
+|---------|---------|---------------------|---------|-----------------|----------|
+| TC-GSEARCH-001 | Global search opens on input | Any dashboard page | 1. Click search icon in header 2. Type 2+ characters | Dropdown opens showing product/order/customer results | P2 |
+| TC-GSEARCH-002 | Global search - 300ms debounce | Search open | 1. Type "laptop" 2. Wait 300ms | Query sent to API after 300ms delay; fast typing shows results only after 300ms | P2 |
+| TC-GSEARCH-003 | Global search - parallel queries | Multiple results exist | 1. Type search term 2. View dropdown | Products (limit 4), Orders (limit 4), Customers (limit 4) load in parallel; grouped by type with icons | P2 |
+| TC-GSEARCH-004 | Global search - keyboard navigation | Search dropdown open with results | 1. Type query 2. Press arrow keys 3. Press Enter | Up/Down arrows cycle through items; Enter navigates to selected item | P3 |
+| TC-GSEARCH-005 | Global search - minimum 2 characters | Search input | 1. Type "a" (1 char) 2. Type "ab" (2+ chars) | No query sent for 1 char; query sent after 300ms debounce for 2+ chars | P2 |
+
+---
+
+## 16. Loading States (27 dashboard pages) (3 test cases)
+
+| Test ID | Tiêu đề | Điều kiện tiên quyết | Các bước | Kết quả mong đợi | Priority |
+|---------|---------|---------------------|---------|-----------------|----------|
+| TC-LOAD-001 | PageSkeleton displays on page load | Dashboard pages 1-27 (products, orders, customers, suppliers, etc.) | 1. Navigate to any dashboard page 2. Page still loading | Skeleton loader displays with page layout shape; no blank white screen | P1 |
+| TC-LOAD-002 | Skeleton animates during load | Page with slow network | 1. Throttle network to slow 3G 2. Navigate to page | Skeleton pulses/animates; content replaces skeleton when ready | P2 |
+| TC-LOAD-003 | Page fully renders after skeleton | Page load complete | 1. Wait for skeleton animation to finish | Skeleton replaced with actual content (table, filters, KPIs) | P1 |
+
+---
+
+## 17. Form Validation - Advanced (3 test cases)
+
+| Test ID | Tiêu đề | Điều kiện tiên quyết | Các bước | Kết quả mong đợi | Priority |
+|---------|---------|---------------------|---------|-----------------|----------|
+| TC-VAL-001 | Shop name - whitespace guard | Settings form | 1. Enter "   " (spaces only) 2. Click Save | Error toast: "Tên cửa hàng không được để trống"; form không submit | P2 |
+| TC-VAL-002 | Customer tier threshold - minimum 1 order | Settings customer tier form | 1. Set loyalMinOrders = 0 2. Click Save | Error toast: "Số đơn tối thiểu phải ≥ 1"; form không submit | P1 |
+| TC-VAL-003 | Customer tier threshold - minimum 0 spend | Settings customer tier form | 1. Set loyalMinSpent = -1000 2. Click Save | Error toast: "Tổng chi tiêu tối thiểu phải ≥ 0"; form không submit | P2 |
+
+---
+
+## 18. Error Handling & Edge Cases (13 test cases)
 
 | Test ID | Tiêu đề | Điều kiện tiên quyết | Các bước | Kết quả mong đợi | Priority |
 |---------|---------|---------------------|---------|-----------------|----------|
@@ -325,7 +357,7 @@ Bộ test cases toàn diện cho K-SMART Admin Panel, bao gồm happy path, edge
 
 ## Summary
 
-**Total Test Cases:** 205
+**Total Test Cases:** 229
 
 **Coverage by Module:**
 - Authentication & RBAC: 16 (P1: 9, P2: 6, P3: 1)
@@ -342,6 +374,9 @@ Bộ test cases toàn diện cho K-SMART Admin Panel, bao gồm happy path, edge
 - Users/HR: 14 (P1: 5, P2: 8, P3: 1)
 - Settings: 11 (P1: 2, P2: 8, P3: 1)
 - Chat: 7 (P1: 1, P2: 3, P3: 3)
+- Global Search: 5 (P1: 0, P2: 4, P3: 1)
+- Loading States: 3 (P1: 2, P2: 1, P3: 0)
+- Form Validation (Advanced): 3 (P1: 1, P2: 2, P3: 0)
 - Error Handling: 13 (P1: 0, P2: 8, P3: 5)
 
 **Business Rules Decided:**

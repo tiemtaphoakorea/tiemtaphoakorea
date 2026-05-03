@@ -1,33 +1,168 @@
 ---
 title: "Nhân sự"
-description: "Quản lý tài khoản nhân viên nội bộ, phân quyền vai trò."
+description: "Quản lý tài khoản nhân viên nội bộ — tạo, sửa, đổi vai trò, khoá/mở khoá, đặt lại mật khẩu."
 ---
 
 ## Mô tả
 
-Trang Nhân sự cho phép Chủ shop tạo, chỉnh sửa và phân quyền tài khoản cho nhân viên. Mỗi tài khoản được gán vai trò **Quản lý** hoặc **Nhân viên**, quyết định các tính năng họ được truy cập.
+Trang **Nhân sự** (`/users`) cho phép Chủ shop quản lý toàn bộ tài khoản nhân viên nội bộ. Bạn có thể tạo tài khoản mới, đổi vai trò, khoá tài khoản nghỉ việc, hoặc đặt lại mật khẩu khi nhân viên quên.
 
 ## Cách truy cập
 
-Menu bên trái → **Nhân sự** *(chỉ hiển thị với tài khoản Chủ shop)*.
+Sidebar → **Người dùng → Nhân sự** *(chỉ Chủ shop)*.
 
-## Các thao tác chính
+---
+
+## Toolbar trên cùng
+
+| Thành phần | Mô tả |
+|------------|-------|
+| **Ô tìm kiếm** (icon Search) | Tìm theo họ tên (debounce 300ms). Khi gõ, phân trang reset về 1. |
+| **Bộ lọc vai trò** (Select) | "Tất cả vai trò" · Owner · Manager · Staff |
+| **+ Thêm nhân viên** | Mở drawer tạo mới |
+
+---
+
+## Bảng nhân viên
+
+4 cột:
+
+| Cột | Nội dung | Định dạng |
+|-----|----------|-----------|
+| **Nhân viên** | Avatar (ảnh hoặc chữ cái đầu nền xanh) + họ tên | Đậm 13px |
+| **Vai trò** | TonePill | Owner (vàng) · Manager (indigo) · Staff (xanh) · Customer (xám) |
+| **Email** | `email` hoặc "—" | 12px, xám |
+| **(actions)** | 3 nút: **Sửa** · **Khoá**/**Mở khoá** · **Đặt lại MK** | Outline, h-7 |
+
+### Trạng thái rỗng / lỗi
+
+- Đang load: 5 dòng skeleton.
+- Rỗng: "Chưa có nhân viên".
+- Lỗi: hiển thị thông báo lỗi.
+
+### Phân trang
+
+- Page size: **10 / 25 / 50 / 100** (mặc định 25).
+- Footer: `Tổng N người dùng`.
+
+---
+
+## Form Thêm nhân viên (drawer)
+
+Mở bằng nút **+ Thêm nhân viên**. Drawer "Thêm nhân viên" có 4 trường:
+
+| Trường | Kiểu | Validation | Placeholder |
+|--------|------|-----------|-------------|
+| **Họ và tên** | Input | Bắt buộc | "VD: Nguyễn Văn A" |
+| **Username (đăng nhập)** | Input | Bắt buộc | "vd: nguyenvana" |
+| **Số điện thoại** | Input | Tuỳ chọn | — |
+| **Vai trò** | Select | "owner" / "manager" / "staff" | Mặc định: staff |
+
+### Validation phía client
+
+- Họ tên rỗng → toast đỏ: *"Họ tên bắt buộc"*.
+- Username rỗng (chỉ khi tạo mới) → toast đỏ: *"Username bắt buộc"*.
+
+### Nút thao tác
+
+- **Huỷ** — đóng drawer.
+- **Thêm** — gọi API. Loading: "Đang lưu...".
+
+Khi thành công: toast xanh *"Đã thêm nhân viên"*, drawer đóng, danh sách refresh.
+
+---
+
+## Form Chỉnh sửa nhân viên (drawer)
+
+Mở bằng nút **Sửa** ở dòng nhân viên. Drawer "Chỉnh sửa nhân viên" hiển thị các trường:
+
+| Trường | Kiểu | Cho phép sửa |
+|--------|------|--------------|
+| **Họ và tên** | Input | Có |
+| **Số điện thoại** | Input | Có |
+| **Vai trò** | Select Owner/Manager/Staff | Có |
+| **Đang hoạt động** (Switch) | Toggle | Có |
+| **Xoá nhân viên** | Nút đỏ (action button) | Có (mở ConfirmDialog) |
+
+> Field **Username** không hiển thị khi sửa — username là khoá đăng nhập, không cho thay đổi.
+
+Nút **Lưu thay đổi** ở footer drawer.
+
+### Xoá nhân viên (trong drawer Sửa)
 
 <Steps>
-  <Step title="Xem danh sách nhân viên">
-    Bảng hiển thị tên, email, vai trò và ngày tạo tài khoản của từng nhân viên.
+  <Step title="Mở drawer Sửa của nhân viên cần xoá">
+    Nhấn **Sửa** ở dòng nhân viên.
   </Step>
-  <Step title="Tạo tài khoản nhân viên mới">
-    Nhấn **Thêm nhân viên** → nhập tên, email → chọn vai trò (Quản lý / Nhân viên) → **Lưu**. Hệ thống sẽ gửi email mời đặt mật khẩu cho nhân viên.
+  <Step title="Nhấn nút Xoá nhân viên (đỏ)">
+    ConfirmDialog hiển thị: *"Xoá nhân viên "{fullName}"?"*.
   </Step>
-  <Step title="Thay đổi vai trò">
-    Nhấn vào tài khoản nhân viên → chỉnh vai trò → **Lưu**. Thay đổi có hiệu lực ngay lập tức.
-  </Step>
-  <Step title="Vô hiệu hóa tài khoản">
-    Nhấn **Vô hiệu hóa** trên tài khoản nhân viên đã nghỉ việc. Tài khoản bị khóa, dữ liệu lịch sử vẫn được giữ lại.
+  <Step title="Xác nhận">
+    Nhấn **Xoá** để xoá, hoặc đóng dialog để huỷ.
   </Step>
 </Steps>
 
 <Warning>
-Chỉ Chủ shop mới có thể tạo, chỉnh sửa và vô hiệu hóa tài khoản nhân viên.
+Xoá nhân viên xoá hoàn toàn tài khoản — **không thể hoàn tác**. Trừ khi cần thiết, hãy dùng **Khoá tài khoản** (giữ lại lịch sử) thay vì xoá.
 </Warning>
+
+---
+
+## Khoá / Mở khoá tài khoản
+
+Cột actions có nút **Khoá** (nếu đang active) hoặc **Mở khoá** (nếu đang khoá).
+
+<Steps>
+  <Step title="Nhấn nút Khoá">
+    Trình duyệt hỏi xác nhận: *"Khoá tài khoản "{fullName}"?"*.
+  </Step>
+  <Step title="Xác nhận">
+    Nhấn OK → API gọi `toggleUserStatus` → toast xanh *"Đã khóa nhân viên"*.
+  </Step>
+  <Step title="Kết quả">
+    Tài khoản không thể đăng nhập. Lịch sử thao tác (đơn đã ghi, chi phí đã tạo...) vẫn được giữ nguyên.
+  </Step>
+</Steps>
+
+Mở khoá tương tự: nhấn **Mở khoá** → toast *"Đã mở khóa nhân viên"*.
+
+---
+
+## Đặt lại mật khẩu
+
+<Steps>
+  <Step title="Nhấn nút Đặt lại MK ở dòng nhân viên">
+    Trình duyệt hỏi xác nhận: *"Đặt lại mật khẩu cho "{fullName}"?"*.
+  </Step>
+  <Step title="Xác nhận">
+    Nhấn OK. API trả về **mật khẩu mới**.
+  </Step>
+  <Step title="Đọc mật khẩu trong toast">
+    Toast xanh hiển thị: *"Mật khẩu mới: {password}"*. Toast giữ trên màn hình **15 giây** — đủ thời gian để bạn copy và gửi cho nhân viên.
+  </Step>
+</Steps>
+
+<Warning>
+Mật khẩu mới chỉ hiển thị **một lần** trong toast. Hãy copy ngay; nếu bỏ lỡ, phải reset lại lần nữa.
+</Warning>
+
+---
+
+## Vai trò — phân biệt
+
+| Vai trò | Tiếng Anh | Phạm vi |
+|---------|-----------|---------|
+| **Owner** | `owner` | Toàn quyền. Bao gồm Chi phí · Nhân sự · Cài đặt cửa hàng · Trang chủ · Báo cáo |
+| **Manager** | `manager` | Toàn bộ vận hành + Báo cáo. Không có Chi phí, Nhân sự, Cài đặt |
+| **Staff** | `staff` | Vận hành hàng ngày. Không có Báo cáo, Chi phí, Nhân sự, Cài đặt |
+| **Customer** | `customer` | Khách hàng đăng ký từ storefront — không cấp qua trang này |
+
+Xem chi tiết tại [Phân quyền vai trò](./permissions).
+
+<Warning>
+Tính năng này chỉ dành cho **Chủ shop**. Quản lý và Nhân viên không thấy menu **Nhân sự** và bị chặn nếu truy cập URL trực tiếp.
+</Warning>
+
+<Tip>
+Khi nâng vai trò Staff lên Manager, nhân viên sẽ thấy thêm menu **Báo cáo** ở lần đăng nhập tiếp theo (cần refresh hoặc đăng nhập lại).
+</Tip>

@@ -1,36 +1,112 @@
 ---
 title: "Báo cáo & Phân tích"
-description: "Báo cáo doanh thu, lợi nhuận, top sản phẩm và cảnh báo tồn kho."
+description: "Bốn thẻ phân tích tổng hợp + 5 trang con chuyên sâu — Quản lý xem đầy đủ giống Chủ shop."
 ---
 
 ## Mô tả
 
-Trang **Báo cáo** tổng hợp 4 thẻ phân tích chính: cơ cấu doanh thu, xu hướng tài chính, top sản phẩm và cảnh báo tồn kho.
+Trang **Báo cáo** (`/analytics`) là trung tâm phân tích kinh doanh. Quản lý có quyền **đầy đủ** trên trang chính và tất cả 5 trang con chuyên sâu.
+
+> Khác biệt duy nhất so với Chủ shop: Quản lý xem được số `expenses` đã trừ vào lợi nhuận ròng, **nhưng không xem được danh sách chi tiết** từng khoản chi (vì không truy cập được trang **Chi phí**).
 
 ## Cách truy cập
 
-Menu bên trái → **Báo cáo**.
+Sidebar → **Tài chính → Báo cáo**.
 
-## Các thẻ phân tích
+---
 
-| Thẻ | Nội dung |
-|-----|----------|
-| **Cơ cấu doanh thu** | Donut chart chia doanh thu theo danh mục |
-| **Xu hướng tài chính** | Biểu đồ vùng: doanh thu + lợi nhuận gộp theo thời gian |
-| **Top sản phẩm** | Top 3 sản phẩm bán chạy nhất |
-| **Cảnh báo tồn kho** | SKU sắp hết / đã hết kèm danh sách ưu tiên |
+## Trang chính `/analytics` — 4 thẻ tổng hợp
+
+Grid 2 cột:
+
+| Thẻ | Loại biểu đồ | Liên kết chi tiết |
+|-----|--------------|-------------------|
+| **Cơ cấu doanh thu** | Donut chart theo danh mục | (xem trên trang Tổng quan) |
+| **Xu hướng tài chính** | Area chart doanh thu + LN gộp | `/analytics/finance` |
+| **Top sản phẩm** | Top 3 sản phẩm bán chạy | `/analytics/products` |
+| **Cảnh báo tồn kho** | Số SKU sắp hết / đã hết | `/analytics/inventory` |
+
+---
+
+## Trang con chuyên sâu
+
+### 1. `/analytics/overview` — Tổng quan
+
+3 thẻ KPI (Doanh thu · Đơn hàng · Khách hàng) + 2 biểu đồ (doanh thu theo tháng + bán theo danh mục).
+
+### 2. `/analytics/products` — Sản phẩm bán chạy
+
+Grid card: số thứ tự, tên SP, số đơn, doanh thu, badge tăng trưởng `+x%` / `−x%`. Mô tả: *"Những sản phẩm mang lại doanh thu cao nhất trong năm."*.
+
+### 3. `/analytics/inventory` — Tồn kho
+
+| Hàng | Chỉ số |
+|------|--------|
+| **Giá trị tồn** | Vốn (theo giá nhập) · Bán (theo giá bán) |
+| **Cảnh báo** | LN tiềm năng · Sắp hết hàng · Hết hàng |
+
+Bên dưới: **Sắp hết hàng** + **Hết hàng** danh sách SKU.
+
+### 4. `/analytics/finance` — Tài chính & Lợi nhuận
+
+Sub-line: *"Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm"* — trang luôn hiển thị **lifetime/toàn shop**, không có bộ chọn kỳ. Để xem một kỳ cụ thể, nhấn **Chi tiết theo ngày**.
+
+4 KPI tổng kỳ (lifetime, lọc `paymentStatus = paid`):
+
+| Chỉ số | Cách tính |
+|--------|-----------|
+| **Tổng doanh thu** | `Σ orders.total` lọc paid (toàn thời gian) |
+| **Giá vốn hàng bán** | `Σ orders.totalCost` lọc paid (toàn thời gian) |
+| **Chi phí vận hành** | `Σ expenses.amount` (toàn thời gian) |
+| **Lợi nhuận ròng** | `revenue − cogs − expenses`; **Margin %** = `netProfit / revenue × 100` |
+
+Bảng waterfall P&L:
+
+```
+Doanh thu gộp  − COGS  = Lợi nhuận gộp  − Chi phí vận hành  = Lợi nhuận ròng
+```
+
+Scorecard sức khoẻ tài chính bên phải: badge **GOOD** (xanh) khi `netProfit > 0`, **LOSS** (đỏ) khi `≤ 0` + tỷ suất lợi nhuận %.
+
+> **Quản lý lưu ý**: Cột **Chi phí vận hành** vẫn hiển thị tổng tiền, nhưng để xem các khoản chi chi tiết bên trong cần là Chủ shop.
+
+### 5. `/analytics/finance/detail` — Chi tiết theo ngày
+
+Bộ chọn kỳ (FinanceRangePicker) với 7 preset:
+
+| Preset | Mô tả |
+|--------|-------|
+| Hôm nay · Hôm qua · 7 ngày · Tháng này · Tháng trước | Chọn nhanh |
+| **Tháng cụ thể** | Popover Select tháng + năm |
+| **Tùy chỉnh** | Popover chọn ngày bắt đầu + kết thúc |
+
+URL được sync `?from=YYYY-MM-DD&to=YYYY-MM-DD&day=YYYY-MM-DD`.
+
+Bảng theo ngày (desktop) hoặc card (mobile): Ngày · Doanh thu · COGS · LN gộp · Biên LN · Số đơn. Nhấn dòng → drawer liệt kê đơn của ngày đó.
+
+---
 
 ## Các thao tác chính
 
 <Steps>
   <Step title="Mở dashboard báo cáo">
-    Vào **Báo cáo** → 4 thẻ hiển thị mặc định.
+    Sidebar → **Báo cáo**. Trang `/analytics` hiển thị 4 thẻ tổng hợp.
   </Step>
-  <Step title="Xem chi tiết">
-    Nhấn liên kết **Xem chi tiết** trên thẻ để mở trang phân tích sâu (top sản phẩm, tồn kho, tài chính).
+  <Step title="Xem chi tiết một thẻ">
+    Nhấn nút **Xem chi tiết** trên thẻ để mở trang con chuyên sâu.
+  </Step>
+  <Step title="Phân tích tài chính theo kỳ">
+    Mở **Tài chính & Lợi nhuận** → trang lifetime toàn shop. Nhấn **Chi tiết theo ngày** để chọn kỳ tuỳ ý (hôm nay, 7 ngày, tháng cụ thể, hoặc khoảng tuỳ chỉnh).
+  </Step>
+  <Step title="Drill-down một ngày">
+    Trong trang detail, nhấn vào dòng → drawer liệt kê tất cả đơn của ngày đó. Nhấn vào đơn để mở chi tiết.
   </Step>
 </Steps>
 
 <Note>
-Trang Báo cáo dành cho Chủ shop và Quản lý. Quản lý không thấy báo cáo chi phí và P&L kèm chi phí vận hành (chỉ Chủ shop có).
+Quản lý xem được tổng số `expenses` đã trừ vào lợi nhuận ròng, **nhưng không truy cập được danh sách chi tiết khoản chi** (chỉ Chủ shop xem được tại trang **Chi phí**).
 </Note>
+
+<Warning>
+Khi nghi ngờ chênh lệch giữa Lợi nhuận gộp và Lợi nhuận ròng (do chi phí vận hành), liên hệ Chủ shop để rà soát từng khoản chi tại `/expenses`.
+</Warning>

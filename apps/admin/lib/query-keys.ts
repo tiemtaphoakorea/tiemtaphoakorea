@@ -55,6 +55,7 @@ export const queryKeys = {
       all: [QK.adminRoot, QK.supplierOrders] as const,
       list: (search: string, status: string) =>
         [QK.adminRoot, QK.supplierOrders, { search, status }] as const,
+      detail: (id: string) => [QK.adminRoot, QK.supplierOrders, id] as const,
     },
     expenses: {
       all: [QK.adminRoot, QK.expenses] as const,
@@ -63,8 +64,8 @@ export const queryKeys = {
     },
     finance: {
       all: [QK.adminRoot, QK.finance] as const,
-      stats: (date: { month: number; year: number }) =>
-        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date] as const,
+      stats: (date?: { month: number; year: number }) =>
+        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date ?? "all"] as const,
       statsByRange: (params: { startDate: string; endDate: string }) =>
         [QK.adminRoot, QK.finance, QK.financeStatsLeaf, params] as const,
       dayOrders: (date: string) => [QK.adminRoot, QK.finance, "day-orders", date] as const,
@@ -161,5 +162,6 @@ export const queryKeys = {
   customerDebt: (customerId: string) => ["customer-debt", customerId] as const,
   settings: {
     shopInfo: ["settings", "shop-info"] as const,
+    branding: ["settings", "branding"] as const,
   },
 } as const;

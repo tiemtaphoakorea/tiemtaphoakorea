@@ -16,9 +16,6 @@ const FinanceStats = dynamic(
 );
 
 export default function AnalyticsFinancePage() {
-  const now = new Date();
-  const financeDate = { month: now.getMonth() + 1, year: now.getFullYear() };
-
   return (
     <div className="flex flex-col gap-8 pb-10">
       <AnalyticsSubpageHeader
@@ -33,9 +30,13 @@ export default function AnalyticsFinancePage() {
         }
       />
 
+      <p className="-mt-4 text-sm font-medium text-muted-foreground">
+        Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm
+      </p>
+
       <ErrorBoundary>
         <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-gray-200" />}>
-          <FinanceStats date={financeDate} />
+          <FinanceStats />
         </Suspense>
       </ErrorBoundary>
     </div>

@@ -112,7 +112,6 @@ function CategorySidebarInner({
             key={cat.slug}
             id={`cat-${cat.slug}`}
             label={cat.name}
-            count={cat.children?.length}
             checked={activeCategorySlugs.includes(cat.slug)}
             onCheckedChange={() => handleCategoryToggle(cat.slug)}
           />

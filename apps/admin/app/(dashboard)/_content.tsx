@@ -20,7 +20,7 @@ import {
 } from "@workspace/ui/components/table";
 import { AlertTriangle, Bell, Box, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
-import { BarChartMini } from "@/components/admin/shared/bar-chart-mini";
+import { BarChartMini, type BarPoint } from "@/components/admin/shared/bar-chart-mini";
 import {
   TableEmptyRow,
   TableErrorRow,
@@ -29,31 +29,53 @@ import {
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
+import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
-import { StatCard } from "@/components/admin/shared/stat-card";
 import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-// 7-day series — kept as static placeholder until backend exposes time-series endpoint.
-const REVENUE_DATA = [
-  { l: "T2", v: 42 },
-  { l: "T3", v: 68 },
-  { l: "T4", v: 55 },
-  { l: "T5", v: 80 },
-  { l: "T6", v: 72 },
-  { l: "T7", v: 95 },
-  { l: "CN", v: 110 },
-];
-const ORDERS_DATA = [
-  { l: "T2", v: 18 },
-  { l: "T3", v: 31 },
-  { l: "T4", v: 24 },
-  { l: "T5", v: 37 },
-  { l: "T6", v: 29 },
-  { l: "T7", v: 44 },
-  { l: "CN", v: 52 },
-];
+const WEEKDAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Build inclusive date range YYYY-MM-DD strings ending at `endDate`, spanning `days` days. */
+function buildRange(endDate: Date, days: number): { startDate: string; endDate: string } {
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+  const start = new Date(end.getTime() - (days - 1) * DAY_MS);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return { startDate: fmt(start), endDate: fmt(end) };
+}
+
+/** Map dailyData rows by date key for O(1) lookup. */
+function indexByDate<T extends { date: string }>(rows: T[]): Map<string, T> {
+  return new Map(rows.map((r) => [r.date.slice(0, 10), r]));
+}
+
+/** Project a 7-day window into BarPoint[] using the indexed daily rows. */
+function projectWeekly(
+  endDate: Date,
+  byDate: Map<string, { revenue: number; orderCount: number }>,
+  field: "revenue" | "orderCount",
+): BarPoint[] {
+  const points: BarPoint[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(endDate.getTime() - i * DAY_MS);
+    day.setHours(0, 0, 0, 0);
+    const key = day.toISOString().slice(0, 10);
+    const row = byDate.get(key);
+    points.push({
+      l: WEEKDAY_LABELS[day.getDay()] ?? "?",
+      v: row ? Number(row[field]) : 0,
+    });
+  }
+  return points;
+}
+
+function pctDelta(current: number, previous: number): number | null {
+  if (previous <= 0) return current > 0 ? null : 0;
+  return Math.round(((current - previous) / previous) * 100);
+}
 
 /** Convert backend fulfillment_status to UI StatusBadge type. */
 const orderStatusType = (status: string): StatusType => {
@@ -91,58 +113,83 @@ export default function AdminDashboard() {
     staleTime: 60_000,
   });
 
+  const today = new Date();
+  const currentRange = buildRange(today, 7);
+  const previousRange = buildRange(new Date(today.getTime() - 7 * DAY_MS), 7);
+
+  const dailyStatsQuery = useQuery({
+    queryKey: queryKeys.admin.finance.daily(currentRange),
+    queryFn: async () => await adminClient.getDailyFinancialStats(currentRange),
+    staleTime: 60_000,
+  });
+
+  const previousStatsQuery = useQuery({
+    queryKey: queryKeys.admin.finance.daily(previousRange),
+    queryFn: async () => await adminClient.getDailyFinancialStats(previousRange),
+    staleTime: 60_000,
+  });
+
+  const dailyByDate = indexByDate(dailyStatsQuery.data?.dailyData ?? []);
+  const revenueData = projectWeekly(today, dailyByDate, "revenue");
+  const ordersData = projectWeekly(today, dailyByDate, "orderCount");
+
+  const currentRevenue = dailyStatsQuery.data?.summary.revenue ?? 0;
+  const previousRevenue = previousStatsQuery.data?.summary.revenue ?? 0;
+  const revenueDelta = pctDelta(currentRevenue, previousRevenue);
+
   const k = kpisQuery.data;
 
   return (
     <div className="flex flex-col gap-4">
       {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2n)]:max-sm:border-r-0 [&>*:nth-last-child(-n+2)]:max-sm:border-b-0 lg:grid-cols-4">
-        {kpisQuery.isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card
-              key={i}
-              className="border border-border p-4 shadow-none max-sm:rounded-none max-sm:border-0 max-sm:border-r max-sm:border-b max-sm:border-border max-sm:ring-0"
-            >
-              <Skeleton className="mb-3 h-3 w-24" />
-              <Skeleton className="h-7 w-32" />
-            </Card>
-          ))
-        ) : (
-          <>
-            <StatCard
-              label="Doanh thu hôm nay"
-              value={k ? formatVnd(k.todayRevenue) : "—"}
-              delta={k ? `${k.todayOrdersCount} đơn` : "—"}
-              icon={TrendingUp}
-              tone="primary"
-            />
-            <StatCard
-              label="Đơn chờ xử lý"
-              value={k?.pendingOrdersCount ?? "—"}
-              delta="Cần xác nhận"
-              direction="up"
-              icon={ShoppingCart}
-              tone="amber"
-            />
-            <StatCard
-              label="Sản phẩm sắp hết"
-              value={k?.lowStockCount ?? "—"}
-              delta={k ? `${k.outOfStockCount} đã hết` : "—"}
-              direction="down"
-              icon={AlertTriangle}
-              tone="danger"
-            />
-            <StatCard
-              label="Khách hàng mới"
-              value={k?.todayCustomersCount ?? "—"}
-              delta="Hôm nay"
-              direction="up"
-              icon={Users}
-              tone="mint"
-            />
-          </>
-        )}
-      </div>
+      {kpisQuery.isLoading ? (
+        <div className="overflow-hidden rounded-2xl border border-border shadow-sm">
+          <div className="grid grid-cols-2 gap-px bg-border lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-card px-4 py-5 sm:px-6">
+                <Skeleton className="mb-3 h-3 w-24" />
+                <Skeleton className="mt-3 h-7 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <MetricStatBar
+          items={[
+            {
+              label: "Doanh thu hôm nay",
+              value: k ? formatVnd(k.todayRevenue) : "—",
+              icon: <TrendingUp className="h-3.5 w-3.5" />,
+              iconClassName: "bg-primary/10 text-primary",
+              trend: {
+                text: k ? `${k.todayOrdersCount} đơn` : "—",
+                className: "text-muted-foreground",
+              },
+            },
+            {
+              label: "Đơn chờ xử lý",
+              value: k?.pendingOrdersCount ?? "—",
+              icon: <ShoppingCart className="h-3.5 w-3.5" />,
+              iconClassName: "bg-amber-500/10 text-amber-600",
+              trend: { text: "Cần xác nhận", className: "text-muted-foreground" },
+            },
+            {
+              label: "Sản phẩm sắp hết",
+              value: k?.lowStockCount ?? "—",
+              icon: <AlertTriangle className="h-3.5 w-3.5" />,
+              iconClassName: "bg-red-500/10 text-red-500",
+              trend: { text: k ? `${k.outOfStockCount} đã hết` : "—", className: "text-red-600" },
+            },
+            {
+              label: "Khách hàng mới",
+              value: k?.todayCustomersCount ?? "—",
+              icon: <Users className="h-3.5 w-3.5" />,
+              iconClassName: "bg-emerald-500/10 text-emerald-600",
+              trend: { text: "Hôm nay", className: "text-muted-foreground" },
+            },
+          ]}
+        />
+      )}
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
@@ -152,9 +199,20 @@ export default function AdminDashboard() {
               <TrendingUp className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
               Doanh thu 7 ngày
             </h3>
-            <TonePill tone="green">+18% tuần trước</TonePill>
+            {revenueDelta === null ? (
+              <TonePill tone="gray">—</TonePill>
+            ) : (
+              <TonePill tone={revenueDelta >= 0 ? "green" : "red"}>
+                {revenueDelta >= 0 ? "+" : ""}
+                {revenueDelta}% tuần trước
+              </TonePill>
+            )}
           </div>
-          <BarChartMini data={REVENUE_DATA} />
+          {dailyStatsQuery.isLoading ? (
+            <Skeleton className="m-[18px] h-[120px] rounded" />
+          ) : (
+            <BarChartMini data={revenueData} />
+          )}
         </Card>
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
@@ -164,7 +222,15 @@ export default function AdminDashboard() {
             </h3>
             <TonePill tone="blue">{k ? `${k.todayOrdersCount} hôm nay` : "—"}</TonePill>
           </div>
-          <BarChartMini data={ORDERS_DATA} highlightClass="bg-amber-500" baseClass="bg-amber-200" />
+          {dailyStatsQuery.isLoading ? (
+            <Skeleton className="m-[18px] h-[120px] rounded" />
+          ) : (
+            <BarChartMini
+              data={ordersData}
+              highlightClass="bg-amber-500"
+              baseClass="bg-amber-200"
+            />
+          )}
         </Card>
       </div>
 

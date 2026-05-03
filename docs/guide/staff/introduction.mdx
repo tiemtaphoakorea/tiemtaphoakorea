@@ -1,52 +1,103 @@
 ---
 title: "Giới thiệu — Nhân viên"
-description: "Tổng quan về vai trò Nhân viên và các tính năng trong hệ thống K-SMART."
+description: "Tổng quan vai trò Nhân viên và phạm vi quyền hạn trong K-SMART."
 ---
 
 ## Mô tả
 
-Nhân viên có quyền truy cập các module vận hành hàng ngày: xử lý đơn hàng, cập nhật sản phẩm, quản lý kho, hỗ trợ khách hàng. Nhân viên **không** truy cập Báo cáo, Chi phí, Nhân sự, Cài đặt.
+Nhân viên (`staff`) là vai trò vận hành hàng ngày — xử lý đơn, cập nhật tồn kho, hỗ trợ khách qua chat. Nhân viên **không** truy cập được Báo cáo, Chi phí, Nhân sự, và toàn bộ cụm Cài đặt.
+
+Khi đăng nhập, sidebar tự động ẩn các mục bị hạn chế.
 
 ## Cách truy cập
 
-Đăng nhập tại trang admin với tài khoản được cấp quyền **Staff**.
+Đăng nhập tại trang admin với tài khoản được Chủ shop cấp vai trò **Staff**.
 
-## Bố cục menu
+---
 
-| Nhóm | Tính năng có quyền |
+## Bố cục menu sidebar
+
+| Nhóm | Mục Nhân viên thấy |
 |------|-------------------|
-| **Quản trị** | Dashboard, Sản phẩm, Danh mục, Trang chủ (collections), Đơn hàng |
-| **Tài chính** | Công nợ |
-| **Kho vận** | Quản lý kho (tồn + nhập hàng), Nhà cung cấp |
-| **Người dùng** | Khách hàng, Tin nhắn |
+| **Quản trị** | Dashboard · Sản phẩm · Danh mục · Đơn hàng |
+| **Tài chính** | Công nợ · ~~Chi phí~~ · ~~Báo cáo~~ |
+| **Kho vận** | Quản lý kho · Nhà cung cấp |
+| **Người dùng** | Khách hàng · ~~Nhân sự~~ · Tin nhắn |
+| ~~Cài đặt~~ | *(toàn bộ nhóm bị ẩn)* |
 
-### Tính năng KHÔNG có quyền
+### Mục bị ẩn (so với Quản lý)
 
-- Báo cáo & Phân tích
-- Chi phí
-- Nhân sự
-- Cài đặt cửa hàng
+- **Báo cáo & Phân tích** — không thấy menu, không truy cập URL `/analytics`.
+- **Chi phí** · **Nhân sự** · **Cài đặt** (4 mục) — không có menu.
+
+### Thao tác bị giới hạn (so với Quản lý)
+
+| Thao tác | Có quyền? | Khi cần |
+|----------|:--------:|---------|
+| Tải ảnh sản phẩm | ❌ | Liên hệ Quản lý/Chủ shop |
+| Vô hiệu hoá / kích hoạt khách hàng | ❌ | Liên hệ Quản lý/Chủ shop |
+| Xem báo cáo phân tích | ❌ | Liên hệ Quản lý nếu cần số liệu |
+
+> Mọi thao tác khác trên Sản phẩm, Danh mục, Đơn hàng, Công nợ, Quản lý kho, Nhà cung cấp, Khách hàng, Tin nhắn — Nhân viên có quyền **đầy đủ giống Quản lý**.
+
+---
+
+## Badge thông báo trên sidebar
+
+Nhân viên thấy đầy đủ badge thời gian thực:
+
+| Mục | Badge | Khi nào |
+|-----|-------|---------|
+| **Sản phẩm** | `N SP` | Có sản phẩm |
+| **Danh mục** | `N DM` | Có danh mục |
+| **Đơn hàng** | `N mới` | Có đơn `pending` |
+| **Công nợ** | `N quá hạn` | Có nợ &gt; 30 ngày |
+| **Tin nhắn** | `N` hoặc `99+` | Có tin nhắn chưa đọc |
+
+---
 
 ## Các thao tác chính
 
 <Steps>
-  <Step title="Đăng nhập">
-    Truy cập trang admin → nhập email và mật khẩu Nhân viên.
+  <Step title="Đăng nhập đầu ca">
+    Truy cập trang admin → nhập username/email + mật khẩu Staff. Nếu quên mật khẩu, liên hệ Chủ shop để được đặt lại.
   </Step>
-  <Step title="Kiểm tra đơn cần xử lý">
-    Vào **Dashboard** để xem nhanh số đơn chờ xử lý và sản phẩm sắp hết.
+  <Step title="Kiểm tra Dashboard">
+    **Dashboard** → xem nhanh số đơn `pending`, số SKU sắp hết, doanh thu hôm nay.
   </Step>
   <Step title="Xử lý đơn hàng">
-    **Đơn hàng** → tab **Chờ xử lý** → mở từng đơn để ghi nhận thanh toán, đánh dấu xuất kho hoặc hoàn thành.
+    **Đơn hàng** → ưu tiên đơn có badge `N mới` (vàng). Mở đơn → ghi nhận thanh toán → đánh dấu xuất kho → hoàn thành.
   </Step>
-  <Step title="Hỗ trợ khách">
-    **Tin nhắn** → trả lời hội thoại từ khách. Sidebar hiển thị badge số tin nhắn chưa đọc.
+  <Step title="Tra cứu công nợ trước khi cho lấy hàng">
+    **Công nợ** → tìm khách theo tên/SĐT. Nếu khách còn nợ &gt; 30 ngày (badge đỏ), thông báo cho Quản lý trước khi cho khách lấy hàng tiếp.
   </Step>
-  <Step title="Tra cứu công nợ">
-    **Công nợ** → tìm khách theo tên/SĐT để biết khách còn nợ bao nhiêu trước khi cho khách lấy hàng tiếp.
+  <Step title="Hỗ trợ khách qua chat">
+    **Tin nhắn** → trả lời các phòng có badge unread. Có thể gửi ảnh đính kèm.
+  </Step>
+  <Step title="Báo cáo hàng sắp hết">
+    Khi thẻ **Sản phẩm sắp hết** trên Dashboard &gt; 0, vào **Quản lý kho** xem chi tiết SKU. Có thể tự tạo đơn nhập NCC nếu được uỷ quyền.
   </Step>
 </Steps>
 
+---
+
+## Khi cần thao tác bị hạn chế
+
+| Tình huống | Liên hệ |
+|------------|---------|
+| Cần thay/upload ảnh sản phẩm | Quản lý hoặc Chủ shop |
+| Cần khoá tài khoản khách hàng có hành vi xấu | Quản lý hoặc Chủ shop |
+| Cần xem báo cáo doanh thu/lợi nhuận | Quản lý hoặc Chủ shop |
+| Cần đặt lại mật khẩu của chính mình | Chủ shop dùng nút **Đặt lại MK** trong **Nhân sự** |
+
 <Warning>
-Nhân viên **không có quyền tải ảnh sản phẩm**. Liên hệ Quản lý hoặc Chủ shop để cập nhật hình ảnh.
+Nhân viên **không có quyền tải ảnh sản phẩm**. Bạn vẫn có thể chỉnh tên, mô tả, giá, tồn kho — nhưng nút upload ảnh bị disable.
 </Warning>
+
+<Warning>
+Truy cập trực tiếp URL `/analytics`, `/expenses`, `/users`, `/settings`, `/homepage`, `/content`, `/widgets` đều bị chặn ở backend (trả 403). Sidebar không hiển thị các mục này.
+</Warning>
+
+<Tip>
+Nếu sidebar đột nhiên hiển thị thêm mục **Báo cáo**, có khả năng tài khoản đã được Chủ shop nâng vai trò lên Manager — đăng nhập lại để áp dụng.
+</Tip>

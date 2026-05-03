@@ -9,13 +9,13 @@ import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
 interface FinanceStatsProps {
-  date: {
+  date?: {
     month: number;
     year: number;
   };
 }
 
-export function FinanceStats({ date }: FinanceStatsProps) {
+export function FinanceStats({ date }: FinanceStatsProps = {}) {
   const { data } = useSuspenseQuery({
     queryKey: queryKeys.admin.finance.stats(date),
     queryFn: () => adminClient.getFinancialStats(date),
