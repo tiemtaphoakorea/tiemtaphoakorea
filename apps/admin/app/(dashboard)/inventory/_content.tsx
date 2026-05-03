@@ -22,8 +22,8 @@ import {
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
+import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
-import { StatCard } from "@/components/admin/shared/stat-card";
 import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -74,38 +74,38 @@ export default function AdminInventory() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2n)]:max-sm:border-r-0 [&>*:nth-last-child(-n+2)]:max-sm:border-b-0 lg:grid-cols-4">
-        <StatCard
-          label="Tổng SKU"
-          value={totalSkus || "—"}
-          delta="Đang quản lý"
-          icon={Package}
-          tone="primary"
-        />
-        <StatCard
-          label="Còn hàng"
-          value={Math.max(0, totalSkus - lowStock.length - outOfStock.length)}
-          delta="Đủ tồn kho"
-          icon={Package}
-          tone="mint"
-        />
-        <StatCard
-          label="Sắp hết"
-          value={lowStock.length}
-          delta="Cần nhập sớm"
-          direction="down"
-          icon={Package}
-          tone="amber"
-        />
-        <StatCard
-          label="Hết hàng"
-          value={outOfStock.length}
-          delta="Cần nhập gấp"
-          direction="down"
-          icon={Package}
-          tone="danger"
-        />
-      </div>
+      <MetricStatBar
+        items={[
+          {
+            label: "Tổng SKU",
+            value: totalSkus || "—",
+            icon: <Package className="h-3.5 w-3.5" />,
+            iconClassName: "bg-primary/10 text-primary",
+            trend: { text: "Đang quản lý", className: "text-muted-foreground" },
+          },
+          {
+            label: "Còn hàng",
+            value: Math.max(0, totalSkus - lowStock.length - outOfStock.length),
+            icon: <Package className="h-3.5 w-3.5" />,
+            iconClassName: "bg-emerald-500/10 text-emerald-600",
+            trend: { text: "Đủ tồn kho", className: "text-muted-foreground" },
+          },
+          {
+            label: "Sắp hết",
+            value: lowStock.length,
+            icon: <Package className="h-3.5 w-3.5" />,
+            iconClassName: "bg-amber-500/10 text-amber-600",
+            trend: { text: "Cần nhập sớm", className: "text-amber-600" },
+          },
+          {
+            label: "Hết hàng",
+            value: outOfStock.length,
+            icon: <Package className="h-3.5 w-3.5" />,
+            iconClassName: "bg-red-500/10 text-red-500",
+            trend: { text: "Cần nhập gấp", className: "text-red-600" },
+          },
+        ]}
+      />
 
       <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">

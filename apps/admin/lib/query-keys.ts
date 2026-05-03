@@ -64,8 +64,8 @@ export const queryKeys = {
     },
     finance: {
       all: [QK.adminRoot, QK.finance] as const,
-      stats: (date: { month: number; year: number }) =>
-        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date] as const,
+      stats: (date?: { month: number; year: number }) =>
+        [QK.adminRoot, QK.finance, QK.financeStatsLeaf, date ?? "all"] as const,
       statsByRange: (params: { startDate: string; endDate: string }) =>
         [QK.adminRoot, QK.finance, QK.financeStatsLeaf, params] as const,
       dayOrders: (date: string) => [QK.adminRoot, QK.finance, "day-orders", date] as const,

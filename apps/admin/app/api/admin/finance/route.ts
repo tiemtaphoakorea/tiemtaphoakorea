@@ -33,12 +33,8 @@ export async function GET(request: NextRequest) {
       }
       stats = await getFinancialStats({ month, year });
     } else {
-      return NextResponse.json(
-        {
-          error: "Missing required parameters: month/year or startDate/endDate",
-        },
-        { status: HTTP_STATUS.BAD_REQUEST },
-      );
+      // No date params → lifetime/shop-wide stats
+      stats = await getFinancialStats({});
     }
 
     return NextResponse.json({ stats });

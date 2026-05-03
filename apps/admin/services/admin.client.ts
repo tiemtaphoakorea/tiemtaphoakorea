@@ -547,7 +547,7 @@ export const adminClient = {
   },
 
   // Finance & Expenses
-  async getFinancialStats(params: { month: number; year: number }) {
+  async getFinancialStats(params?: { month: number; year: number }) {
     return axios.get<{ stats: FinancialStats }>(API_ENDPOINTS.ADMIN.FINANCE, {
       params,
     }) as unknown as Promise<{ stats: FinancialStats }>;

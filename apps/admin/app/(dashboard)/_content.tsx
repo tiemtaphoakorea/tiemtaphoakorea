@@ -29,8 +29,8 @@ import {
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
+import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
-import { StatCard } from "@/components/admin/shared/stat-card";
 import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -142,53 +142,54 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col gap-4">
       {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2n)]:max-sm:border-r-0 [&>*:nth-last-child(-n+2)]:max-sm:border-b-0 lg:grid-cols-4">
-        {kpisQuery.isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card
-              key={i}
-              className="border border-border p-4 shadow-none max-sm:rounded-none max-sm:border-0 max-sm:border-r max-sm:border-b max-sm:border-border max-sm:ring-0"
-            >
-              <Skeleton className="mb-3 h-3 w-24" />
-              <Skeleton className="h-7 w-32" />
-            </Card>
-          ))
-        ) : (
-          <>
-            <StatCard
-              label="Doanh thu hôm nay"
-              value={k ? formatVnd(k.todayRevenue) : "—"}
-              delta={k ? `${k.todayOrdersCount} đơn` : "—"}
-              icon={TrendingUp}
-              tone="primary"
-            />
-            <StatCard
-              label="Đơn chờ xử lý"
-              value={k?.pendingOrdersCount ?? "—"}
-              delta="Cần xác nhận"
-              direction="up"
-              icon={ShoppingCart}
-              tone="amber"
-            />
-            <StatCard
-              label="Sản phẩm sắp hết"
-              value={k?.lowStockCount ?? "—"}
-              delta={k ? `${k.outOfStockCount} đã hết` : "—"}
-              direction="down"
-              icon={AlertTriangle}
-              tone="danger"
-            />
-            <StatCard
-              label="Khách hàng mới"
-              value={k?.todayCustomersCount ?? "—"}
-              delta="Hôm nay"
-              direction="up"
-              icon={Users}
-              tone="mint"
-            />
-          </>
-        )}
-      </div>
+      {kpisQuery.isLoading ? (
+        <div className="overflow-hidden rounded-2xl border border-border shadow-sm">
+          <div className="grid grid-cols-2 gap-px bg-border lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-card px-4 py-5 sm:px-6">
+                <Skeleton className="mb-3 h-3 w-24" />
+                <Skeleton className="mt-3 h-7 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <MetricStatBar
+          items={[
+            {
+              label: "Doanh thu hôm nay",
+              value: k ? formatVnd(k.todayRevenue) : "—",
+              icon: <TrendingUp className="h-3.5 w-3.5" />,
+              iconClassName: "bg-primary/10 text-primary",
+              trend: {
+                text: k ? `${k.todayOrdersCount} đơn` : "—",
+                className: "text-muted-foreground",
+              },
+            },
+            {
+              label: "Đơn chờ xử lý",
+              value: k?.pendingOrdersCount ?? "—",
+              icon: <ShoppingCart className="h-3.5 w-3.5" />,
+              iconClassName: "bg-amber-500/10 text-amber-600",
+              trend: { text: "Cần xác nhận", className: "text-muted-foreground" },
+            },
+            {
+              label: "Sản phẩm sắp hết",
+              value: k?.lowStockCount ?? "—",
+              icon: <AlertTriangle className="h-3.5 w-3.5" />,
+              iconClassName: "bg-red-500/10 text-red-500",
+              trend: { text: k ? `${k.outOfStockCount} đã hết` : "—", className: "text-red-600" },
+            },
+            {
+              label: "Khách hàng mới",
+              value: k?.todayCustomersCount ?? "—",
+              icon: <Users className="h-3.5 w-3.5" />,
+              iconClassName: "bg-emerald-500/10 text-emerald-600",
+              trend: { text: "Hôm nay", className: "text-muted-foreground" },
+            },
+          ]}
+        />
+      )}
 
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">

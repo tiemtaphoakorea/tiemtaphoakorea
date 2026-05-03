@@ -24,7 +24,7 @@ import {
 } from "@/components/admin/shared/data-state";
 import { ExpenseDrawer } from "@/components/admin/shared/expense-drawer";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
-import { StatCard } from "@/components/admin/shared/stat-card";
+import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -87,32 +87,31 @@ export default function AdminExpenses() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 max-sm:gap-0 max-sm:overflow-hidden max-sm:rounded-[10px] max-sm:border max-sm:border-border [&>*:nth-child(2)]:max-sm:border-r-0 [&>*:last-child]:max-sm:col-span-2 [&>*:last-child]:max-sm:border-r-0 [&>*:last-child]:max-sm:border-b-0 sm:grid-cols-3">
-        <StatCard
-          label={`Tổng chi T${month}/${year}`}
-          value={formatVnd(totals.total)}
-          delta={`${list.length} khoản`}
-          direction="down"
-          icon={Wallet}
-          tone="danger"
-        />
-        <StatCard
-          label="Cố định"
-          value={formatVnd(totals.fixed)}
-          delta="Định kỳ hàng tháng"
-          direction="down"
-          icon={Wallet}
-          tone="amber"
-        />
-        <StatCard
-          label="Biến đổi"
-          value={formatVnd(totals.variable)}
-          delta="Phát sinh"
-          direction="down"
-          icon={Wallet}
-          tone="primary"
-        />
-      </div>
+      <MetricStatBar
+        items={[
+          {
+            label: `Tổng chi T${month}/${year}`,
+            value: formatVnd(totals.total),
+            icon: <Wallet className="h-3.5 w-3.5" />,
+            iconClassName: "bg-red-500/10 text-red-500",
+            trend: { text: `${list.length} khoản`, className: "text-muted-foreground" },
+          },
+          {
+            label: "Cố định",
+            value: formatVnd(totals.fixed),
+            icon: <Wallet className="h-3.5 w-3.5" />,
+            iconClassName: "bg-amber-500/10 text-amber-600",
+            trend: { text: "Định kỳ hàng tháng", className: "text-muted-foreground" },
+          },
+          {
+            label: "Biến đổi",
+            value: formatVnd(totals.variable),
+            icon: <Wallet className="h-3.5 w-3.5" />,
+            iconClassName: "bg-primary/10 text-primary",
+            trend: { text: "Phát sinh", className: "text-muted-foreground" },
+          },
+        ]}
+      />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
