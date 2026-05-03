@@ -22,7 +22,7 @@ import { ProductRelatedProducts } from "@/components/products/detail/product-rel
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   return (
-    <div className="bg-background min-h-screen pb-24">
+    <div className="pb-24">
       <main className="container mx-auto px-4 py-4">
         <Suspense fallback={<ProductDetailSkeleton />}>
           <ProductDetailContent params={params} />

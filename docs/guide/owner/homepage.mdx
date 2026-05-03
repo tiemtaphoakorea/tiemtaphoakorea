@@ -1,17 +1,24 @@
 ---
-title: "Trang chủ — Collections"
-description: "Quản lý các collection sản phẩm hiển thị trên trang chủ storefront."
+title: "Trang chủ — Collections & Banners"
+description: "Quản lý collections sản phẩm và banner hero hiển thị trên trang chủ storefront."
 ---
 
 ## Mô tả
 
-Trang **Trang chủ** quản lý các *collection* — các khối sản phẩm xuất hiện trên trang chủ của cửa hàng (ví dụ: "Hàng mới về", "Bán chạy nhất", "Khuyến mãi"). Mỗi collection có icon, tiêu đề, mô tả và danh sách sản phẩm riêng.
+Trang **Trang chủ** gồm hai tab chính:
+
+- **Collections** — các khối sản phẩm xuất hiện bên dưới hero (ví dụ: "Hàng mới về", "Bán chạy nhất").
+- **Banners** — carousel ảnh hero ở đầu trang chủ, hỗ trợ ảnh tự upload hoặc lấy hình từ danh mục.
 
 ## Cách truy cập
 
 Menu bên trái → **Trang chủ** (mục **Quản trị**).
 
-## Các thao tác chính
+---
+
+## Tab Collections
+
+### Các thao tác chính
 
 <Steps>
   <Step title="Xem danh sách collection">
@@ -39,7 +46,7 @@ Menu bên trái → **Trang chủ** (mục **Quản trị**).
   </Step>
 </Steps>
 
-## Manual product picker
+### Manual product picker
 
 Khi chọn loại sản phẩm thủ công:
 
@@ -47,7 +54,7 @@ Khi chọn loại sản phẩm thủ công:
 - Tick chọn nhiều sản phẩm cùng lúc.
 - Sắp xếp lại bằng kéo thả (drag handle).
 
-## Loại collection thường dùng
+### Loại collection thường dùng
 
 | Tiêu đề gợi ý | Cách cấu hình |
 |---------------|---------------|
@@ -59,3 +66,78 @@ Khi chọn loại sản phẩm thủ công:
 <Note>
 Collection chỉ hiển thị trên storefront khi có ít nhất 1 sản phẩm hợp lệ và công tắc **Hiển thị** đang bật.
 </Note>
+
+---
+
+## Tab Banners
+
+Banner là **carousel ảnh lớn ở đầu trang chủ**. Mỗi banner hiển thị như một slide với ảnh nền, tiêu đề, badge, CTA và nhãn ưu đãi.
+
+### Cài đặt ảnh banner (Custom)
+
+<Steps>
+  <Step title="Mở tab Banners">
+    Vào **Trang chủ** → click tab **Banners** ở thanh điều hướng.
+  </Step>
+  <Step title="Mở form chỉnh sửa">
+    Nhấn nút **Sửa** (biểu tượng bút) trên banner cần cập nhật. Form mở rộng ngay dưới hàng banner.
+  </Step>
+  <Step title="Chọn loại Custom">
+    Ở dropdown **Loại**, chọn **Custom (ảnh tự upload)**. Trường **Ảnh banner** xuất hiện bên dưới.
+  </Step>
+  <Step title="Upload ảnh">
+    Nhấn vào vùng upload hoặc kéo thả file vào ô **Ảnh banner**. Sau khi chọn file, hệ thống tự upload lên Supabase Storage và hiển thị preview.
+
+    **Yêu cầu ảnh:**
+    - Định dạng: JPG · PNG · WebP
+    - Tỉ lệ khuyến nghị: **16:9** hoặc **3:1**
+    - Kích thước tối đa: **2 MB**
+  </Step>
+  <Step title="Điền thông tin banner (tùy chọn)">
+    | Trường | Mô tả |
+    |--------|-------|
+    | **Tiêu đề** | Dòng chữ lớn hiển thị trên ảnh |
+    | **Badge text** | Nhãn nhỏ phía trên tiêu đề (ví dụ: "Hàng chính hãng từ Seoul") |
+    | **Phụ đề** | Mô tả ngắn bên dưới tiêu đề |
+    | **CTA label / URL** | Nút kêu gọi hành động (ví dụ: "Mua ngay" → `/products`) |
+    | **Discount tag** | Nhãn ưu đãi ở góc phải (ví dụ: "50%") |
+    | **Discount sub** | Phụ chú ưu đãi (ví dụ: "cho đơn đầu tiên") |
+    | **Màu accent** | Màu gradient phủ lên ảnh (Tím · Hồng · Xanh lá · ...) |
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Banner cập nhật ngay trên trang chủ storefront khi khách hàng reload trang.
+  </Step>
+</Steps>
+
+### Cài đặt banner theo danh mục
+
+Nếu chọn **Loại → Theo danh mục**, hệ thống tự lấy ảnh sản phẩm nổi bật từ danh mục đó làm ảnh nền — không cần upload thủ công.
+
+<Steps>
+  <Step title="Chọn loại Theo danh mục">
+    Dropdown **Loại** → chọn **Theo danh mục**.
+  </Step>
+  <Step title="Chọn danh mục">
+    Dropdown **Danh mục** → chọn danh mục muốn đại diện (ví dụ: Kính mắt, Mỹ phẩm).
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Ảnh nền tự động lấy từ sản phẩm đang active trong danh mục.
+  </Step>
+</Steps>
+
+### Tạo banner mới
+
+Nhấn **+ Tạo banner** ở góc phải → form trống mở ra → điền thông tin và upload ảnh như hướng dẫn trên → **Lưu**.
+
+### Bật/tắt và sắp xếp
+
+- **Công tắc** trên mỗi hàng banner để bật/tắt hiển thị trên storefront mà không cần xóa.
+- **Kéo thả** (biểu tượng ⠿ bên trái) để thay đổi thứ tự slide trên trang chủ.
+
+<Warning>
+Banner custom **bắt buộc** phải có ảnh — nút **Lưu** bị khóa cho đến khi ảnh upload thành công.
+</Warning>
+
+<Tip>
+Dùng ảnh tỉ lệ **3:1** (ví dụ: 1920×640 px) để banner hiển thị đẹp nhất trên cả desktop và mobile.
+</Tip>

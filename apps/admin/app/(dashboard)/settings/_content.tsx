@@ -55,13 +55,17 @@ export default function AdminSettings() {
   }, []);
 
   async function saveShopInfo() {
+    if (!shopName.trim()) {
+      toast.error("Tên cửa hàng không được để trống");
+      return;
+    }
     setShopSaving(true);
     try {
       const res = await fetch("/api/admin/settings/shop-info", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: shopName,
+          name: shopName.trim(),
           address: shopAddress,
           phone: shopPhone,
           taxId: shopTaxId,
@@ -314,6 +318,12 @@ function CustomerTierPanel() {
         !Number.isFinite(data.frequentMinSpent)
       ) {
         throw new Error("Các giá trị phải là số hợp lệ");
+      }
+      if (data.loyalMinOrders < 1 || data.frequentMinOrders < 1) {
+        throw new Error("Số đơn tối thiểu phải ≥ 1");
+      }
+      if (data.loyalMinSpent < 0 || data.frequentMinSpent < 0) {
+        throw new Error("Tổng chi tiêu tối thiểu phải ≥ 0");
       }
       return await adminClient.updateCustomerTierConfig(data);
     },

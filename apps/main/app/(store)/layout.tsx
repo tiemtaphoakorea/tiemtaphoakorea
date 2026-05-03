@@ -4,6 +4,7 @@ import { getSetting } from "@workspace/database/services/settings.server";
 import { Footer } from "@/components/layout/footer";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { Navbar } from "@/components/layout/navbar";
+import { NewsletterCta } from "@/components/sections/newsletter-cta";
 import { ChatWidgetInitializer } from "@/components/store/chat-widget-initializer";
 
 type ContactWidgetConfig = { messengerUrl?: string };
@@ -48,6 +49,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         featuredByCategory={featuredByCategory}
       />
       <main className="w-full flex-1 pb-20 md:pb-0">{children}</main>
+      <NewsletterCta />
       <Footer footer={footerConfig ?? {}} social={socialConfig ?? {}} />
       <MobileBottomNav />
       <ChatWidgetInitializer

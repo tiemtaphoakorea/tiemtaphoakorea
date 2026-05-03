@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { PageSkeleton } from "@/components/layout/page-skeleton";
 
 const Content = dynamic(() => import("./_content"), {
   ssr: false,
-  loading: () => null,
+  loading: () => <PageSkeleton />,
 });
 
 export default function AdminAnalyticsPage() {

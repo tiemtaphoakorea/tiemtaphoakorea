@@ -62,6 +62,7 @@ function CategoryListingInner({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const resolvedActiveSort = PRODUCT_SORT_SET.has(activeSort) ? activeSort : PRODUCT_SORT.LATEST;
+  const searchQuery = searchParams.get("q") ?? "";
 
   const buildParams = () => new URLSearchParams(searchParams.toString());
 
@@ -83,6 +84,13 @@ function CategoryListingInner({
     for (const s of activeCategorySlugs.filter((c) => c !== slug)) {
       params.append("category", s);
     }
+    params.delete("page");
+    pushParams(params);
+  };
+
+  const handleClearCategories = () => {
+    const params = buildParams();
+    params.delete("category");
     params.delete("page");
     pushParams(params);
   };
@@ -126,9 +134,21 @@ function CategoryListingInner({
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Không tìm thấy sản phẩm</h3>
-              <p className="text-sm text-muted-foreground">
-                Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.
-              </p>
+              {activeCategorySlugs.length > 0 && searchQuery ? (
+                <p className="text-sm text-muted-foreground">
+                  Không có kết quả cho <b>"{searchQuery}"</b> trong danh mục này.{" "}
+                  <button
+                    onClick={handleClearCategories}
+                    className="text-primary underline underline-offset-2"
+                  >
+                    Tìm trong tất cả danh mục
+                  </button>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.
+                </p>
+              )}
             </div>
             <Button
               variant="outline"

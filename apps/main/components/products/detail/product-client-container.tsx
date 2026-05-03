@@ -17,7 +17,9 @@ export function ProductClientContainer({ product }: ProductClientContainerProps)
   const selectedVariant =
     product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
 
-  const images = selectedVariant?.images.map((img) => img.imageUrl) || [];
+  const selectedVariantImages = selectedVariant?.images?.map((img) => img.imageUrl) ?? [];
+  const fallbackImages = product.variants[0]?.images?.map((img) => img.imageUrl) ?? [];
+  const images = selectedVariantImages.length > 0 ? selectedVariantImages : fallbackImages;
   const price = Number(selectedVariant?.price || product.basePrice || 0);
   const productBasePrice = Number(product.basePrice ?? 0);
   const hasDiscount = productBasePrice > price && productBasePrice > 0;

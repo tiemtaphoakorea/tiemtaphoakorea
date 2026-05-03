@@ -539,7 +539,79 @@ Các user story cho K-SMART Admin Panel theo vai trò: Owner, Manager, Staff.
 
 ---
 
-## 14. Cross-Cutting (Error Handling & UX)
+## 14. Global Search (Tìm Kiếm Toàn Cục)
+
+### US-GSEARCH-001
+**Là** một Staff/Manager/Owner,
+**Tôi muốn** tìm kiếm sản phẩm, đơn hàng, khách hàng từ header search,
+**Để** nhanh chóng điều hướng đến trang cần thiết mà không cần duyệt menu.
+
+**Acceptance Criteria:**
+- Search icon/input field ở header dashboard
+- Nhập ≥2 ký tự → trigger tìm kiếm sau 300ms debounce
+- Kết quả phân nhóm: Sản phẩm (limit 4), Đơn hàng (limit 4), Khách hàng (limit 4)
+- Mỗi nhóm hiển thị icon tương ứng
+- Nhấn Enter hoặc click item → điều hướng đến trang chi tiết
+- Keyboard navigation: arrow keys di chuyển giữa kết quả, Enter xác nhận
+- ARIA labels cho accessibility
+
+### US-GSEARCH-002
+**Là** một admin,
+**Tôi muốn** search thực hiện song song (parallel) trên 3 domain (sản phẩm/đơn/khách),
+**Để** nhận kết quả nhanh mà không phải chờ từng domain.
+
+**Acceptance Criteria:**
+- API gọi /api/admin/products?search=...&limit=4
+- API gọi /api/admin/orders?search=...&limit=4
+- API gọi /api/admin/customers?search=...&limit=4
+- 3 queries thực hiện đồng thời (Promise.all)
+- Dropdown cập nhật khi bất kỳ query nào trả về kết quả
+
+---
+
+## 15. Loading States (Skeleton Loaders)
+
+### US-LOAD-001
+**Là** một Staff/Manager/Owner,
+**Tôi muốn** thấy skeleton loader khi trang dashboard đang tải dữ liệu,
+**Để** không có cảm giác trang trống/lỗi.
+
+**Acceptance Criteria:**
+- Tất cả 27 trang dashboard (products, orders, customers, suppliers, debts, users, settings, etc.) hiển thị PageSkeleton trên initial load
+- Skeleton có hình dạng giống layout cuối (table shape, KPI cards, etc.)
+- Skeleton animated (pulsing effect) cho đến khi dữ liệu sẵn sàng
+- Không có blank white screen hoặc "loading: () => null"
+
+---
+
+## 16. Form Validation Enhancements (Advanced Guards)
+
+### US-VAL-001
+**Là** một Owner,
+**Tôi muốn** không thể để tên cửa hàng trống hoặc chỉ khoảng trắng,
+**Để** đảm bảo thông tin hợp lệ.
+
+**Acceptance Criteria:**
+- Input shopName: whitespace trim guard (e.g., "   " bị reject)
+- Form validation trigger khi click Save
+- Error toast: "Tên cửa hàng không được để trống"
+- Form không submit nếu validation fail
+
+### US-VAL-002
+**Là** một Owner,
+**Tôi muốn** cấu hình ngưỡng khách tier với giới hạn tối thiểu (orders ≥1, spend ≥0),
+**Để** tránh cấu hình vô lý.
+
+**Acceptance Criteria:**
+- Settings > Customers tier config form
+- loyalMinOrders/frequentMinOrders: phải ≥ 1; error "Số đơn tối thiểu phải ≥ 1" nếu < 1
+- loyalMinSpent/frequentMinSpent: phải ≥ 0; error "Tổng chi tiêu tối thiểu phải ≥ 0" nếu < 0
+- Form không submit nếu validation fail
+- JS-level validation (không chỉ HTML min attribute)
+
+---
+
+## 17. Cross-Cutting (Error Handling & UX)
 
 ### US-CROSS-001
 **Là** một admin (mọi role),
