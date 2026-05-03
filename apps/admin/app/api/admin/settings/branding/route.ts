@@ -9,6 +9,9 @@ export type BrandingConfig = {
   logoAccent: string;
   brandColor: string;
   accentColor: string;
+  faviconUrl: string;
+  appleIconUrl: string;
+  ogImageUrl: string;
 };
 
 const DEFAULT_CONFIG: BrandingConfig = {
@@ -17,6 +20,9 @@ const DEFAULT_CONFIG: BrandingConfig = {
   logoAccent: "",
   brandColor: "#6366F1",
   accentColor: "#F59E0B",
+  faviconUrl: "",
+  appleIconUrl: "",
+  ogImageUrl: "",
 };
 
 const SETTING_KEY = "branding";
@@ -51,6 +57,9 @@ export async function PUT(request: Request) {
     logoAccent: String(body.logoAccent ?? "").trim(),
     brandColor: normalizeHex(body.brandColor, DEFAULT_CONFIG.brandColor),
     accentColor: normalizeHex(body.accentColor, DEFAULT_CONFIG.accentColor),
+    faviconUrl: String(body.faviconUrl ?? "").trim(),
+    appleIconUrl: String(body.appleIconUrl ?? "").trim(),
+    ogImageUrl: String(body.ogImageUrl ?? "").trim(),
   };
 
   await upsertSetting(SETTING_KEY, config);

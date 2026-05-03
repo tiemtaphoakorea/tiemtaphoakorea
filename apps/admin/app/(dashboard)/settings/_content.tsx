@@ -1,11 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
-import { FileUploader } from "@workspace/ui/components/file-uploader";
 import { Input } from "@workspace/ui/components/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Textarea } from "@workspace/ui/components/textarea";
@@ -14,9 +12,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { clearShopInfoCache } from "@/lib/print-invoice";
 import { queryKeys } from "@/lib/query-keys";
-import { uploadImage } from "@/lib/upload-image";
 import { adminClient } from "@/services/admin.client";
-import { ColorPairPicker } from "./_color-pair-picker";
+import { BrandingPanel } from "./_branding-panel";
 
 const SECTIONS = [
   { value: "store", label: "Cửa hàng", icon: Building2 },
@@ -26,21 +23,15 @@ const SECTIONS = [
 
 const PANEL_CLS = "m-0 flex flex-col gap-3.5 p-5";
 
-type BrandingConfig = {
-  logoMainUrl: string;
-  logoSquareUrl: string;
-  logoAccent: string;
-  brandColor: string;
-  accentColor: string;
-};
-
-const HEX_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const SEO_DESCRIPTION_MAX = 160;
 
 export default function AdminSettings() {
   const [shopName, setShopName] = useState("");
   const [shopAddress, setShopAddress] = useState("");
   const [shopPhone, setShopPhone] = useState("");
   const [shopTaxId, setShopTaxId] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [seoKeywords, setSeoKeywords] = useState("");
   const [shopSaving, setShopSaving] = useState(false);
 
   useEffect(() => {
@@ -51,6 +42,8 @@ export default function AdminSettings() {
         setShopAddress(data.address ?? "");
         setShopPhone(data.phone ?? "");
         setShopTaxId(data.taxId ?? "");
+        setSeoDescription(data.seoDescription ?? "");
+        setSeoKeywords(data.seoKeywords ?? "");
       })
       .catch(() => {});
   }, []);
@@ -70,6 +63,8 @@ export default function AdminSettings() {
           address: shopAddress,
           phone: shopPhone,
           taxId: shopTaxId,
+          seoDescription: seoDescription.slice(0, SEO_DESCRIPTION_MAX),
+          seoKeywords,
         }),
       });
       if (!res.ok) throw new Error("save failed");
@@ -137,6 +132,46 @@ export default function AdminSettings() {
               />
             </Field>
           </div>
+
+          <div className="border-t border-border pt-3">
+            <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+              SEO
+            </p>
+            <div className="flex flex-col gap-2.5">
+              <Field>
+                <div className="flex items-baseline justify-between">
+                  <FieldLabel>Mô tả website (meta description)</FieldLabel>
+                  <span
+                    className={`text-[11px] ${seoDescription.length > SEO_DESCRIPTION_MAX - 10 ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {seoDescription.length}/{SEO_DESCRIPTION_MAX}
+                  </span>
+                </div>
+                <Textarea
+                  placeholder="Mô tả ngắn về cửa hàng, hiển thị trên Google Search..."
+                  rows={2}
+                  maxLength={SEO_DESCRIPTION_MAX}
+                  value={seoDescription}
+                  onChange={(e) => setSeoDescription(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Tối đa 160 ký tự. Mô tả hấp dẫn giúp tăng tỉ lệ click từ kết quả tìm kiếm.
+                </p>
+              </Field>
+              <Field>
+                <FieldLabel>Từ khóa SEO (keywords)</FieldLabel>
+                <Input
+                  placeholder="VD: mỹ phẩm korea, skincare, chăm sóc da"
+                  value={seoKeywords}
+                  onChange={(e) => setSeoKeywords(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Phân cách bằng dấu phẩy. Hỗ trợ tìm kiếm nội bộ và một số công cụ tìm kiếm.
+                </p>
+              </Field>
+            </div>
+          </div>
+
           <Button className="self-start" onClick={saveShopInfo} disabled={shopSaving}>
             {shopSaving ? "Đang lưu..." : "Lưu thông tin cửa hàng"}
           </Button>
@@ -151,112 +186,6 @@ export default function AdminSettings() {
         </TabsContent>
       </Card>
     </Tabs>
-  );
-}
-
-function BrandingPanel() {
-  const queryClient = useQueryClient();
-  const [logoMain, setLogoMain] = useState<string[]>([]);
-  const [logoSquare, setLogoSquare] = useState<string[]>([]);
-  const [logoAccent, setLogoAccent] = useState("");
-  const [brandColor, setBrandColor] = useState("#6366F1");
-  const [accentColor, setAccentColor] = useState("#F59E0B");
-
-  const brandingQuery = useQuery({
-    queryKey: queryKeys.settings.branding,
-    queryFn: async () => {
-      const res = await fetch(API_ENDPOINTS.ADMIN.SETTINGS_BRANDING);
-      if (!res.ok) throw new Error("load failed");
-      return (await res.json()) as BrandingConfig;
-    },
-    staleTime: 60_000,
-  });
-
-  useEffect(() => {
-    const cfg = brandingQuery.data;
-    if (!cfg) return;
-    setLogoMain(cfg.logoMainUrl ? [cfg.logoMainUrl] : []);
-    setLogoSquare(cfg.logoSquareUrl ? [cfg.logoSquareUrl] : []);
-    setLogoAccent(cfg.logoAccent ?? "");
-    setBrandColor(cfg.brandColor || "#6366F1");
-    setAccentColor(cfg.accentColor || "#F59E0B");
-  }, [brandingQuery.data]);
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!HEX_PATTERN.test(brandColor) || !HEX_PATTERN.test(accentColor)) {
-        throw new Error("Mã màu HEX không hợp lệ");
-      }
-      const payload: BrandingConfig = {
-        logoMainUrl: logoMain[0] ?? "",
-        logoSquareUrl: logoSquare[0] ?? "",
-        logoAccent: logoAccent.trim(),
-        brandColor,
-        accentColor,
-      };
-      const res = await fetch(API_ENDPOINTS.ADMIN.SETTINGS_BRANDING, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("save failed");
-      return (await res.json()) as BrandingConfig;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings.branding });
-      toast.success("Đã lưu nhận diện thương hiệu");
-    },
-    onError: (err: unknown) => {
-      toast.error((err as Error)?.message || "Không thể lưu nhận diện");
-    },
-  });
-
-  return (
-    <>
-      <div className="grid grid-cols-2 gap-2.5">
-        <Field>
-          <FieldLabel>Logo chính (ngang)</FieldLabel>
-          <FileUploader
-            compact
-            value={logoMain}
-            onChange={setLogoMain}
-            uploadFn={uploadImage}
-            maxFiles={1}
-            hint="PNG/SVG · 1:3 · ≤500KB"
-          />
-        </Field>
-        <Field>
-          <FieldLabel>Logo vuông (favicon)</FieldLabel>
-          <FileUploader
-            compact
-            value={logoSquare}
-            onChange={setLogoSquare}
-            uploadFn={uploadImage}
-            maxFiles={1}
-            hint="PNG/SVG · 1:1 · ≤200KB"
-          />
-        </Field>
-      </div>
-      <Field>
-        <FieldLabel>Logo accent (chữ phụ trên logo)</FieldLabel>
-        <Input value={logoAccent} onChange={(e) => setLogoAccent(e.target.value)} />
-      </Field>
-      <div className="rounded-lg border border-border p-3">
-        <ColorPairPicker
-          brandColor={brandColor}
-          accentColor={accentColor}
-          onBrandChange={setBrandColor}
-          onAccentChange={setAccentColor}
-        />
-      </div>
-      <Button
-        className="self-start"
-        onClick={() => saveMutation.mutate()}
-        disabled={saveMutation.isPending || brandingQuery.isLoading}
-      >
-        {saveMutation.isPending ? "Đang lưu..." : "Lưu nhận diện"}
-      </Button>
-    </>
   );
 }
 

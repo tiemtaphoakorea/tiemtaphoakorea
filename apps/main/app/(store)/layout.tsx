@@ -21,17 +21,26 @@ type SocialConfig = {
   facebook?: string;
   youtube?: string;
 };
+type BrandingConfig = { logoMainUrl?: string };
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const [allCategories, navCategories, contactConfig, footerConfig, socialConfig, shopInfo] =
-    await Promise.all([
-      getCategories(),
-      getCategories({ navOnly: true }),
-      getSetting<ContactWidgetConfig>("contact_widget_config"),
-      getSetting<FooterConfig>("footer_config"),
-      getSetting<SocialConfig>("social_config"),
-      getSetting<ShopInfoConfig>("shop_info"),
-    ]);
+  const [
+    allCategories,
+    navCategories,
+    contactConfig,
+    footerConfig,
+    socialConfig,
+    shopInfo,
+    branding,
+  ] = await Promise.all([
+    getCategories(),
+    getCategories({ navOnly: true }),
+    getSetting<ContactWidgetConfig>("contact_widget_config"),
+    getSetting<FooterConfig>("footer_config"),
+    getSetting<SocialConfig>("social_config"),
+    getSetting<ShopInfoConfig>("shop_info"),
+    getSetting<BrandingConfig>("branding"),
+  ]);
 
   const categories = allCategories.filter((c) => c.isActive);
 
@@ -47,6 +56,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         categories={categories}
         navCategories={navCategories}
         featuredByCategory={featuredByCategory}
+        logoUrl={branding?.logoMainUrl}
       />
       <main className="w-full flex-1 pb-20 md:pb-0">{children}</main>
       <NewsletterCta />

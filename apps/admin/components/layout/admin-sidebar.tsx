@@ -34,6 +34,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -194,6 +195,12 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
     staleTime: 5 * 60_000,
   });
 
+  const { data: branding } = useQuery({
+    queryKey: queryKeys.settings.branding,
+    queryFn: () => fetch("/api/admin/settings/branding").then((r) => r.json()),
+    staleTime: 5 * 60_000,
+  });
+
   const badges = useSidebarBadges(!!user);
 
   async function handleLogout() {
@@ -208,9 +215,19 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
     >
       <SidebarHeader className="border-sidebar-border flex h-[54px] flex-row items-center gap-2.5 border-b px-4">
         <Link href={ADMIN_ROUTES.DASHBOARD} className="flex items-center gap-2.5">
-          <div className="bg-primary grid h-[34px] w-[34px] place-items-center rounded-[9px] font-black text-white text-[17px]">
-            A
-          </div>
+          {branding?.logoSquareUrl ? (
+            <Image
+              src={branding.logoSquareUrl}
+              alt="Logo"
+              width={34}
+              height={34}
+              className="h-[34px] w-[34px] rounded-[9px] object-contain"
+            />
+          ) : (
+            <div className="bg-primary grid h-[34px] w-[34px] place-items-center rounded-[9px] font-black text-white text-[17px]">
+              A
+            </div>
+          )}
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-bold text-foreground">Admin CMS</span>
             <span className="text-[11px] text-muted-foreground">{shopInfo?.name || "Admin"}</span>
