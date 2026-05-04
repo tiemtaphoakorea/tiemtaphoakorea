@@ -58,7 +58,7 @@ export function OrderProductSheet({
             >
               <div className="mb-3 flex items-start justify-between">
                 <h4 className="font-bold text-slate-900">{product.name}</h4>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-xs">
                   {product.category?.name}
                 </Badge>
               </div>
@@ -70,14 +70,14 @@ export function OrderProductSheet({
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{variant.name}</span>
-                      <span className="font-mono text-[10px] text-slate-400">{variant.sku}</span>
+                      <span className="font-mono text-xs text-slate-400">{variant.sku}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <div className="text-primary text-sm font-bold">
                           {formatCurrency(Number(variant.price))}
                         </div>
-                        <div className="text-[10px] text-slate-500">Kho: {variant.onHand}</div>
+                        <div className="text-xs text-slate-500">Kho: {variant.onHand}</div>
                       </div>
                       <Button
                         size="sm"

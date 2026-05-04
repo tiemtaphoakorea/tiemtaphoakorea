@@ -214,7 +214,7 @@ function CategoryListingFallback() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end gap-2">
         <div className="h-9 w-44 animate-pulse rounded-lg bg-muted" />
-        <div className="h-9 w-[76px] animate-pulse rounded-[12px] bg-muted" />
+        <div className="h-9 w-[76px] animate-pulse rounded-xl bg-muted" />
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-5">
         {[1, 2, 3, 4].map((n) => (

@@ -12,14 +12,14 @@ export function SidebarNav() {
         </div>
         <div>
           <p className="text-sm font-semibold text-white">K-SMART</p>
-          <p className="font-mono text-[10px] text-slate-500">Design System</p>
+          <p className="font-mono text-xs text-slate-500">Design System</p>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
         {Object.entries(navGroups).map(([group, items]) => (
           <div key={group} className="mb-4">
-            <p className="px-5 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+            <p className="px-5 pb-1 font-mono text-xs font-semibold uppercase tracking-widest text-slate-600">
               {group}
             </p>
             {items.map((item) => (
@@ -36,7 +36,7 @@ export function SidebarNav() {
       </nav>
 
       <div className="border-t border-slate-800 px-5 py-3">
-        <p className="font-mono text-[10px] text-slate-600">v1.0 · Tailwind CSS 4</p>
+        <p className="font-mono text-xs text-slate-600">v1.0 · Tailwind CSS 4</p>
       </div>
     </aside>
   );

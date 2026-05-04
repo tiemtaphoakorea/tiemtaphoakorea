@@ -128,7 +128,7 @@ export function SupplierOrderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-130">
         <DialogHeader>
           <DialogTitle>Chi tiết đơn nhập hàng</DialogTitle>
           <DialogDescription>
@@ -275,7 +275,7 @@ export function SupplierOrderDetailDialog({
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
       <div className="text-xs">{children}</div>
     </div>
   );

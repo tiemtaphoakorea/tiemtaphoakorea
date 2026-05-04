@@ -29,7 +29,7 @@ export function OrderItemTable({ items, onUpdateQuantity, onRemoveItem }: OrderI
             <TableHead className="text-center">Số lượng</TableHead>
             <TableHead className="text-right">Đơn giá</TableHead>
             <TableHead className="text-right">Thành tiền</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

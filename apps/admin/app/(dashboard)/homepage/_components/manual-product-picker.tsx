@@ -114,7 +114,7 @@ export function ManualProductPicker({ value, onChange }: Props) {
             />
             <CommandList
               onScroll={handleListScroll}
-              className="max-h-[320px] overflow-y-auto overscroll-contain"
+              className="max-h-80 overflow-y-auto overscroll-contain"
             >
               {productsQuery.isLoading && (
                 <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">

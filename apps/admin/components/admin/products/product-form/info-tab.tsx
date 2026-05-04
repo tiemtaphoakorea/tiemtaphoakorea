@@ -69,9 +69,7 @@ export function InfoTab({ form, categories }: InfoTabProps) {
               {errors.basePrice && (
                 <p className="text-xs text-destructive">{errors.basePrice.message}</p>
               )}
-              <p className="text-[11px] text-muted-foreground">
-                Mặc định cho các biến thể tạo mới.
-              </p>
+              <p className="text-xs text-muted-foreground">Mặc định cho các biến thể tạo mới.</p>
             </Field>
           </div>
 
@@ -80,7 +78,7 @@ export function InfoTab({ form, categories }: InfoTabProps) {
             <Textarea
               {...form.register("description")}
               placeholder="Thông tin chi tiết về sản phẩm..."
-              className="min-h-[140px] resize-none"
+              className="min-h-35 resize-none"
             />
           </Field>
 
@@ -126,8 +124,8 @@ function SwitchRow({ control, name, label, description, tone = "default" }: Swit
         )}
       />
       <div className="flex flex-col leading-tight">
-        <Label className="cursor-pointer text-[13px] font-semibold">{label}</Label>
-        <span className="text-[11px] text-muted-foreground">{description}</span>
+        <Label className="cursor-pointer text-sm font-semibold">{label}</Label>
+        <span className="text-xs text-muted-foreground">{description}</span>
       </div>
     </div>
   );

@@ -68,7 +68,7 @@ export function OrderCustomerCard({
             <div className="space-y-1 text-sm font-medium text-slate-600">
               <p>SĐT: {selectedCustomerData.phone || "---"}</p>
               <p>Đ/C: {selectedCustomerData.address || "---"}</p>
-              <Badge variant="secondary" className="mt-2 text-[10px] font-black uppercase">
+              <Badge variant="secondary" className="mt-2 text-xs font-black uppercase">
                 {selectedCustomerData.customerType}
               </Badge>
             </div>

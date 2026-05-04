@@ -20,14 +20,14 @@ export function ChatNotificationBell() {
   return (
     <Link
       href={ADMIN_ROUTES.CHAT}
-      className="relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-accent"
+      className="relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-muted"
       title="Tin nhắn"
     >
       <Bell
         className={`h-5 w-5 ${hasUnread ? "text-primary animate-[ring_1s_ease-in-out_infinite]" : "text-muted-foreground"}`}
       />
       {hasUnread && (
-        <span className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
+        <span className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold text-white">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}

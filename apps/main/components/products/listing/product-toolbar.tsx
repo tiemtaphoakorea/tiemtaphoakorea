@@ -95,7 +95,7 @@ export function ProductToolbar({
         <div
           role="group"
           aria-label="Chế độ hiển thị"
-          className="flex items-center rounded-[12px] border border-primary/30 bg-primary/5 p-0.5"
+          className="flex items-center rounded-xl border border-primary/30 bg-primary/5 p-0.5"
         >
           <button
             type="button"
@@ -104,8 +104,8 @@ export function ProductToolbar({
             onClick={() => onViewModeChange("grid")}
             className={
               viewMode === "grid"
-                ? "size-9 rounded-[10px] inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
-                : "size-9 rounded-[10px] inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                ? "size-9 rounded-lg inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
+                : "size-9 rounded-lg inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
             }
           >
             <LayoutGrid className="size-4" />
@@ -117,8 +117,8 @@ export function ProductToolbar({
             onClick={() => onViewModeChange("list")}
             className={
               viewMode === "list"
-                ? "size-9 rounded-[10px] inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
-                : "size-9 rounded-[10px] inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                ? "size-9 rounded-lg inline-flex items-center justify-center bg-primary text-primary-foreground shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90"
+                : "size-9 rounded-lg inline-flex items-center justify-center text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
             }
           >
             <List className="size-4" />

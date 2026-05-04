@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from "@workspace/shared/api-endpoints";
 import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
 import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -213,12 +214,9 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
   return (
     <div className="flex w-full flex-col gap-5 pb-20">
       {apiError && (
-        <div
-          role="alert"
-          className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-xs font-medium text-destructive"
-        >
-          {apiError}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{apiError}</AlertDescription>
+        </Alert>
       )}
 
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -236,7 +234,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
               {mode === "edit" && initialData?.name && (
                 <Badge
                   variant="outline"
-                  className="border-border text-[11px] font-medium text-muted-foreground"
+                  className="border-border text-xs font-medium text-muted-foreground"
                 >
                   {initialData.name}
                 </Badge>
@@ -302,7 +300,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
           </Tabs>
         </div>
 
-        <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-[280px]">
+        <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-70">
           <Card className="shadow-none">
             <CardContent className="flex flex-col gap-2.5">
               <Button type="submit" size="lg" disabled={apiPending} className="w-full">

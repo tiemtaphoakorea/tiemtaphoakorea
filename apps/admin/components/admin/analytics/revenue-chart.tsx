@@ -33,32 +33,32 @@ export function RevenueChart({ data }: RevenueChartProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="mt-4 h-[400px] py-0">
+      <CardContent className="mt-4 h-100 py-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="hsl(var(--slate-200))"
+              stroke="var(--color-slate-200)"
               opacity={0.5}
             />
             <XAxis
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--slate-500))", fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: "var(--color-slate-500)", fontSize: 11, fontWeight: 700 }}
               dy={10}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--slate-500))", fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: "var(--color-slate-500)", fontSize: 11, fontWeight: 700 }}
               tickFormatter={(value) => `${value / 1000000}M`}
               width={60}
             />
@@ -67,7 +67,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 if (active && payload?.length) {
                   return (
                     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xl">
-                      <p className="mb-2 text-[10px] font-black text-slate-400 uppercase">
+                      <p className="mb-2 text-xs font-black text-slate-400 uppercase">
                         {payload[0].payload.month}
                       </p>
                       <span className="text-primary text-xl font-black">
@@ -82,7 +82,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="hsl(var(--primary))"
+              stroke="var(--primary)"
               strokeWidth={4}
               fillOpacity={1}
               fill="url(#colorRevenue)"

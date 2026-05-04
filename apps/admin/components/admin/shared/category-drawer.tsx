@@ -133,9 +133,9 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
-        <SheetHeader className="border-b border-border px-[22px] py-4">
-          <SheetTitle className="text-[15px] font-bold">
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-120">
+        <SheetHeader className="border-b border-border px-6 py-4">
+          <SheetTitle className="text-sm font-bold">
             {category ? "Chỉnh sửa danh mục" : "Thêm danh mục"}
           </SheetTitle>
         </SheetHeader>
@@ -144,7 +144,7 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
           onSubmit={handleSubmit(onFormSubmit)}
           className="flex flex-1 flex-col overflow-hidden"
         >
-          <div className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]">
+          <div className="flex flex-1 flex-col overflow-y-auto px-6 py-6">
             <FieldGroup>
               <Field>
                 <FieldLabel required>Tên danh mục</FieldLabel>
@@ -181,7 +181,7 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
                 <Textarea {...register("description")} rows={3} />
               </Field>
               <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
-                <span className="text-[13px] font-medium">Đang hiển thị</span>
+                <span className="text-sm font-medium">Đang hiển thị</span>
                 <Controller
                   name="isActive"
                   control={control}
@@ -193,7 +193,7 @@ export function CategoryDrawer({ open, category, onClose }: CategoryDrawerProps)
             </FieldGroup>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">
+          <div className="flex justify-end gap-2 border-t border-border px-6 py-3.5">
             <Button type="button" variant="outline" onClick={onClose}>
               Huỷ
             </Button>

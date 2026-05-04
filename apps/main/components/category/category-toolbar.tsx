@@ -99,7 +99,7 @@ export function CategoryToolbar({
         <div
           role="group"
           aria-label="Chế độ hiển thị"
-          className="flex items-center rounded-[12px] border border-primary/30 bg-primary/5 p-0.5"
+          className="flex items-center rounded-xl border border-primary/30 bg-primary/5 p-0.5"
         >
           <Button
             variant="ghost"

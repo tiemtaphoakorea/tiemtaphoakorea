@@ -136,6 +136,13 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
+  const totalDebts = useQuery({
+    queryKey: queryKeys.debts.list("", 0, 1, 1),
+    queryFn: () => adminClient.getDebts({ page: 1, limit: 1 }),
+    enabled,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
   const chatRooms = useQuery({
     queryKey: queryKeys.admin.chat.rooms.all,
     queryFn: () => adminClient.getChatRooms(),
@@ -161,6 +168,7 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
   const totalCategories = categoryCount.data?.metadata?.total ?? 0;
   const pendingCount = orderStats.data?.pending ?? 0;
   const overdueCount = overdueDebts.data?.metadata?.total ?? 0;
+  const totalDebtCount = totalDebts.data?.metadata?.total ?? 0;
   const unreadCount =
     chatRooms.data?.reduce((sum, room) => sum + (room.unreadCountAdmin ?? 0), 0) ?? 0;
 
@@ -172,7 +180,11 @@ function useSidebarBadges(enabled: boolean): Record<string, DynamicBadge | undef
     [ADMIN_ROUTES.ORDERS]:
       pendingCount > 0 ? { text: `${pendingCount} mới`, tone: "amber" } : undefined,
     [ADMIN_ROUTES.DEBTS]:
-      overdueCount > 0 ? { text: `${overdueCount} quá hạn`, tone: "red" } : undefined,
+      overdueCount > 0
+        ? { text: `${overdueCount} quá hạn`, tone: "red" }
+        : totalDebtCount > 0
+          ? { text: `${totalDebtCount} CN`, tone: "red" }
+          : undefined,
     [ADMIN_ROUTES.CHAT]:
       unreadCount > 0
         ? { text: unreadCount > 99 ? "99+" : String(unreadCount), tone: "indigo" }
@@ -213,7 +225,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
       variant="sidebar"
       className="border-sidebar-border border-r bg-white [&_[data-sidebar=sidebar]]:bg-white"
     >
-      <SidebarHeader className="border-sidebar-border flex h-[54px] flex-row items-center gap-2.5 border-b px-4">
+      <SidebarHeader className="border-sidebar-border flex h-13.5 flex-row items-center gap-2.5 border-b px-4">
         <Link href={ADMIN_ROUTES.DASHBOARD} className="flex items-center gap-2.5">
           {branding?.logoSquareUrl ? (
             <Image
@@ -221,16 +233,16 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
               alt="Logo"
               width={34}
               height={34}
-              className="h-[34px] w-[34px] rounded-[9px] object-contain"
+              className="h-9 w-9 rounded-lg object-contain"
             />
           ) : (
-            <div className="bg-primary grid h-[34px] w-[34px] place-items-center rounded-[9px] font-black text-white text-[17px]">
+            <div className="bg-primary grid h-9 w-9 place-items-center rounded-lg font-black text-white text-lg">
               A
             </div>
           )}
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-bold text-foreground">Admin CMS</span>
-            <span className="text-[11px] text-muted-foreground">{shopInfo?.name || "Admin"}</span>
+            <span className="text-xs text-muted-foreground">{shopInfo?.name || "Admin"}</span>
           </div>
         </Link>
       </SidebarHeader>
@@ -241,7 +253,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
           if (visibleItems.length === 0) return null;
           return (
             <SidebarGroup key={section.label}>
-              <SidebarGroupLabel className="px-2 pt-3.5 pb-1 text-[10px] font-semibold tracking-[0.1em] text-muted-foreground/60 uppercase">
+              <SidebarGroupLabel className="px-2 pt-3.5 pb-1 text-xs font-semibold tracking-widest text-muted-foreground/60 uppercase">
                 {section.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -266,14 +278,14 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
                               asChild
                               isActive={isActive}
                               tooltip={item.label}
-                              className="rounded-sm py-2 pl-3.5 pr-3 text-[13px] font-medium text-muted-foreground hover:bg-[#F4F5F7] hover:text-foreground data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+                              className="rounded-sm py-2 pl-3.5 pr-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
                             >
                               <Link href={item.href} className="flex items-center gap-2.5">
                                 <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                                 <span className="flex-1 truncate">{item.label}</span>
                                 {badge && (
                                   <span
-                                    className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${badgeToneClass[badge.tone]}`}
+                                    className={`ml-auto rounded-full px-1.5 py-0.5 text-xs font-bold ${badgeToneClass[badge.tone]}`}
                                   >
                                     {badge.text}
                                   </span>
@@ -292,7 +304,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
 
       <SidebarFooter className="border-sidebar-border border-t p-3">
         <div className="flex items-center gap-1">
-          <div className="flex flex-1 items-center gap-[9px] rounded-lg px-[14px] py-2 text-[13px] font-medium text-muted-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="flex flex-1 items-center gap-2.5 rounded-lg px-3.5 py-2 text-sm font-medium text-muted-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
             <User className="h-4 w-4 shrink-0" strokeWidth={1.8} />
             <span className="truncate group-data-[collapsible=icon]:hidden">
               {user?.fullName ?? "Admin Shop"}
@@ -302,7 +314,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
             type="button"
             onClick={handleLogout}
             title="Đăng xuất"
-            className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-[#F4F5F7] hover:text-destructive group-data-[collapsible=icon]:hidden"
+            className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive group-data-[collapsible=icon]:hidden"
           >
             <LogOut className="h-4 w-4" strokeWidth={1.8} />
           </button>

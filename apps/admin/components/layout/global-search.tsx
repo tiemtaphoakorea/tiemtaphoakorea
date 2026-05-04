@@ -153,7 +153,7 @@ export function GlobalSearch() {
   let flatIndex = 0;
 
   return (
-    <div ref={containerRef} className="relative hidden h-[34px] w-[300px] md:block">
+    <div ref={containerRef} className="relative hidden h-9 w-75 md:block">
       <Search
         className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60"
         strokeWidth={1.8}
@@ -164,7 +164,7 @@ export function GlobalSearch() {
         aria-expanded={showDropdown}
         aria-autocomplete="list"
         placeholder="Tìm kiếm nhanh..."
-        className="h-full w-full border-border bg-[#F4F5F7] pl-9 pr-3 transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:bg-white focus-visible:ring-0"
+        className="h-full w-full border-border bg-muted pl-9 pr-3 transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:bg-white focus-visible:ring-0"
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
@@ -194,7 +194,7 @@ export function GlobalSearch() {
                 if (!group.isLoading && group.items.length === 0) return null;
                 return (
                   <div key={group.label}>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {group.icon}
                       {group.label}
                       {group.isLoading && <Loader2 className="ml-auto h-3 w-3 animate-spin" />}
@@ -217,11 +217,11 @@ export function GlobalSearch() {
                           }}
                           onClick={() => navigate(group.getHref(item))}
                         >
-                          <span className="truncate text-[13px] font-medium">
+                          <span className="truncate text-sm font-medium">
                             {group.getTitle(item)}
                           </span>
                           {group.getSub(item) && (
-                            <span className="truncate text-[11px] text-muted-foreground">
+                            <span className="truncate text-xs text-muted-foreground">
                               {group.getSub(item)}
                             </span>
                           )}

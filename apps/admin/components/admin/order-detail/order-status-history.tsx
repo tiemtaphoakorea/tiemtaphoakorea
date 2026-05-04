@@ -19,12 +19,12 @@ export function OrderStatusHistory({ history, statusConfig, formatDate }: OrderS
         {history.map((item: any) => (
           <div key={item.id} className="relative">
             <div
-              className={`absolute top-1 -left-[31px] h-4 w-4 rounded-full border-2 border-white ${statusConfig[item.status].color.split(" ")[0]} ${statusConfig[item.status].color.split(" ")[1]}`}
+              className={`absolute top-1 -left-8 h-4 w-4 rounded-full border-2 border-white ${statusConfig[item.status].color.split(" ")[0]} ${statusConfig[item.status].color.split(" ")[1]}`}
             ></div>
             <div className="flex flex-col gap-1">
               <span className="flex items-center gap-2 text-sm font-black text-slate-900">
                 {statusConfig[item.status].label}
-                <span className="ml-auto font-mono text-[10px] font-normal text-slate-400">
+                <span className="ml-auto font-mono text-xs font-normal text-slate-400">
                   {formatDate(item.createdAt)}
                 </span>
               </span>

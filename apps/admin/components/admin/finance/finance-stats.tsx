@@ -183,7 +183,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                 <TrendingUp className="h-10 w-10" />
               </div>
               <div
-                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-[10px] font-bold text-white shadow-lg ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
+                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-xs font-bold text-white shadow-lg ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
               >
                 {(stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
@@ -197,7 +197,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                 </span>
                 <span className="text-lg font-bold">%</span>
               </div>
-              <p className="text-muted-foreground mx-auto max-w-[250px] pt-2 text-sm leading-relaxed font-medium">
+              <p className="text-muted-foreground mx-auto max-w-62 pt-2 text-sm leading-relaxed font-medium">
                 {(stats.netProfit || 0) > 0
                   ? "Tỷ suất lợi nhuận ở mức tích cực. Tiếp tục duy trì và tối ưu chi phí."
                   : "Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."}

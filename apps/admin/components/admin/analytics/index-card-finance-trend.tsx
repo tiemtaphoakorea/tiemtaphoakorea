@@ -82,8 +82,8 @@ export function IndexCardFinanceTrend() {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Lợi nhuận & Tài chính</div>
-          <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          <div className="text-sm font-bold leading-tight">Lợi nhuận & Tài chính</div>
+          <div className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             Xu hướng margin và doanh thu 30 ngày
           </div>
         </div>
@@ -97,25 +97,25 @@ export function IndexCardFinanceTrend() {
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Margin T{thisMonth.month}
                 </span>
                 <span className="text-lg font-bold tabular-nums text-emerald-700">
                   {marginThis.toFixed(1)}%
                 </span>
               </div>
-              <span className={`text-[11px] font-semibold tabular-nums ${deltaTone}`}>
+              <span className={`text-xs font-semibold tabular-nums ${deltaTone}`}>
                 {deltaSign}
                 {deltaPt.toFixed(1)}pt vs T{lastMonth.month}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-semibold tracking-wide text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs font-semibold tracking-wide text-muted-foreground">
               <span className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6366F1]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Doanh thu
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Lợi nhuận gộp
               </span>
             </div>

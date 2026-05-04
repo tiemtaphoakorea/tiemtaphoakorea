@@ -96,14 +96,14 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
-        <SheetHeader className="border-b border-border px-[22px] py-4">
-          <SheetTitle className="text-[15px] font-bold">
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-120">
+        <SheetHeader className="border-b border-border px-6 py-4">
+          <SheetTitle className="text-sm font-bold">
             Thu tiền nợ — {debt?.customer.fullName ?? "..."}
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-6">
           {debtQuery.isLoading && (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -115,8 +115,8 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
           {debt && (
             <FieldGroup>
               {/* Summary */}
-              <div className="rounded-[10px] border border-border bg-muted/40 p-3.5">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="rounded-lg border border-border bg-muted/40 p-3.5">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Tổng nợ
                 </div>
                 <div className="mt-1 text-2xl font-bold tabular-nums text-red-600">
@@ -153,16 +153,16 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
                       >
                         <div>
                           <div className="font-mono text-xs font-semibold">{o.orderNumber}</div>
-                          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                             <span>{fmtDate(o.createdAt)}</span>
                             <StatusBadge type={o.paymentStatus as StatusType} />
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[13px] font-bold tabular-nums text-red-600">
+                          <div className="text-sm font-bold tabular-nums text-red-600">
                             Còn {formatVnd(remaining)}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             /{formatVnd(Number(o.total ?? 0))}
                           </div>
                         </div>
@@ -211,7 +211,7 @@ export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProp
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">
+        <div className="flex justify-end gap-2 border-t border-border px-6 py-3.5">
           <Button variant="outline" onClick={onClose}>
             Đóng
           </Button>

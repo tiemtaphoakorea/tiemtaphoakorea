@@ -76,15 +76,15 @@ export default function HomepageContent() {
   return (
     <Tabs defaultValue="collections" className="w-full gap-4">
       <TabsList variant="line" className="w-full justify-start gap-1 overflow-x-auto px-0">
-        <TabsTrigger value="collections" className="gap-1.5 px-3 py-2.5 text-[13px] font-semibold">
+        <TabsTrigger value="collections" className="gap-1.5 px-3 py-2.5 text-sm font-semibold">
           <Layout className="size-4" strokeWidth={2} />
           Collections
         </TabsTrigger>
-        <TabsTrigger value="banners" className="gap-1.5 px-3 py-2.5 text-[13px] font-semibold">
+        <TabsTrigger value="banners" className="gap-1.5 px-3 py-2.5 text-sm font-semibold">
           <Image className="size-4" strokeWidth={2} />
           Banners
         </TabsTrigger>
-        <TabsTrigger value="settings" className="gap-1.5 px-3 py-2.5 text-[13px] font-semibold">
+        <TabsTrigger value="settings" className="gap-1.5 px-3 py-2.5 text-sm font-semibold">
           <Settings2 className="size-4" strokeWidth={2} />
           Cài đặt
         </TabsTrigger>
@@ -97,7 +97,7 @@ export default function HomepageContent() {
             {collectionsQuery.isLoading ? "Đang tải..." : `${collections.length} collections`}
           </span>
           <Button
-            className="h-[34px] gap-1.5"
+            className="h-9 gap-1.5"
             onClick={() => setEditingCollectionId(null)}
             disabled={editingCollectionId === null}
           >
@@ -134,7 +134,7 @@ export default function HomepageContent() {
             {bannersQuery.isLoading ? "Đang tải..." : `${banners.length} banners`}
           </span>
           <Button
-            className="h-[34px] gap-1.5"
+            className="h-9 gap-1.5"
             onClick={() => setEditingBannerId(null)}
             disabled={editingBannerId === null}
           >

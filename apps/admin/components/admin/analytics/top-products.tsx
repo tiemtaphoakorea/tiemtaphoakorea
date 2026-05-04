@@ -49,7 +49,7 @@ export function TopProducts({ products }: TopProductsProps) {
                 </div>
                 {product.growth != null && (
                   <Badge
-                    className={`${product.growth > 0 ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-red-100 bg-red-50 text-red-600"} text-[10px] font-black tracking-tight uppercase`}
+                    className={`${product.growth > 0 ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-red-100 bg-red-50 text-red-600"} text-xs font-black tracking-tight uppercase`}
                   >
                     {product.growth > 0 ? "+" : ""}
                     {product.growth}%
@@ -59,11 +59,11 @@ export function TopProducts({ products }: TopProductsProps) {
               <div>
                 <h3 className="line-clamp-1 font-black text-slate-900">{product.name}</h3>
                 <div className="mt-2 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-[10px] font-bold tracking-tight text-slate-500 uppercase">
+                  <div className="flex items-center justify-between text-xs font-bold tracking-tight text-slate-500 uppercase">
                     <span>Đơn hàng</span>
                     <span className="text-slate-900">{product.sales}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] font-bold tracking-tight text-slate-500 uppercase">
+                  <div className="flex items-center justify-between text-xs font-bold tracking-tight text-slate-500 uppercase">
                     <span>Doanh thu</span>
                     <span className="text-primary">{formatCurrency(product.revenue)}</span>
                   </div>

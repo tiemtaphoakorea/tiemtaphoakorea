@@ -6,10 +6,7 @@ export function FinanceStatsSkeleton() {
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((n) => (
-          <Card
-            key={n}
-            className="flex h-[130px] flex-col justify-between border-none p-6 shadow-sm"
-          >
+          <Card key={n} className="flex h-32.5 flex-col justify-between border-none p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-4 rounded-full" />
@@ -55,7 +52,7 @@ export function FinanceStatsSkeleton() {
           </CardContent>
         </Card>
 
-        <Card className="flex h-[400px] flex-col overflow-hidden rounded-2xl border-none p-0 shadow-sm ring-1 ring-slate-200">
+        <Card className="flex h-100 flex-col overflow-hidden rounded-2xl border-none p-0 shadow-sm ring-1 ring-slate-200">
           <div className="flex flex-1 flex-col items-center justify-center space-y-6 p-8">
             <Skeleton className="h-24 w-24 rounded-full" />
             <div className="flex w-full flex-col items-center space-y-3">

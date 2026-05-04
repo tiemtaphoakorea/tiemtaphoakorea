@@ -84,7 +84,7 @@ export default function AdminSettings() {
           <TabsTrigger
             key={s.value}
             value={s.value}
-            className="gap-1.5 px-3 py-2.5 text-[13px] font-semibold"
+            className="gap-1.5 px-3 py-2.5 text-sm font-semibold"
           >
             <s.icon className="size-4" strokeWidth={2} />
             {s.label}
@@ -94,7 +94,7 @@ export default function AdminSettings() {
 
       <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
         <TabsContent value="store" className={PANEL_CLS}>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Thông tin cửa hàng hiển thị trên hóa đơn (in/sao chép/PDF).
           </p>
           <Field>
@@ -134,7 +134,7 @@ export default function AdminSettings() {
           </div>
 
           <div className="border-t border-border pt-3">
-            <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               SEO
             </p>
             <div className="flex flex-col gap-2.5">
@@ -142,7 +142,7 @@ export default function AdminSettings() {
                 <div className="flex items-baseline justify-between">
                   <FieldLabel>Mô tả website (meta description)</FieldLabel>
                   <span
-                    className={`text-[11px] ${seoDescription.length > SEO_DESCRIPTION_MAX - 10 ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`text-xs ${seoDescription.length > SEO_DESCRIPTION_MAX - 10 ? "text-destructive" : "text-muted-foreground"}`}
                   >
                     {seoDescription.length}/{SEO_DESCRIPTION_MAX}
                   </span>
@@ -154,7 +154,7 @@ export default function AdminSettings() {
                   value={seoDescription}
                   onChange={(e) => setSeoDescription(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Tối đa 160 ký tự. Mô tả hấp dẫn giúp tăng tỉ lệ click từ kết quả tìm kiếm.
                 </p>
               </Field>
@@ -165,7 +165,7 @@ export default function AdminSettings() {
                   value={seoKeywords}
                   onChange={(e) => setSeoKeywords(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Phân cách bằng dấu phẩy. Hỗ trợ tìm kiếm nội bộ và một số công cụ tìm kiếm.
                 </p>
               </Field>
@@ -247,7 +247,7 @@ function CustomerTierPanel() {
 
   return (
     <>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Ngưỡng tự động phân hạng khách hàng dựa trên số đơn và tổng chi tiêu.
       </p>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

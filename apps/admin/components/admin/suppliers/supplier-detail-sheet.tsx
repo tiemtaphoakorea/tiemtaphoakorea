@@ -72,7 +72,7 @@ export function SupplierDetailSheet({
               {supplier.code}
             </Badge>
             <Badge
-              className={`${supplier.isActive ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-slate-100 bg-slate-50 text-slate-600"} border text-[10px] font-bold`}
+              className={`${supplier.isActive ? "border-emerald-100 bg-emerald-50 text-emerald-600" : "border-slate-100 bg-slate-50 text-slate-600"} border text-xs font-bold`}
             >
               {supplier.isActive ? "Hoạt động" : "Ngừng hợp tác"}
             </Badge>
@@ -119,7 +119,7 @@ export function SupplierDetailSheet({
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
-                    <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                    <CardTitle className="flex items-center gap-1 text-xs font-bold tracking-wider text-slate-400 uppercase">
                       <Package className="h-3 w-3" /> Tổng đơn
                     </CardTitle>
                   </CardHeader>
@@ -130,7 +130,7 @@ export function SupplierDetailSheet({
 
                 <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
-                    <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-amber-500 uppercase">
+                    <CardTitle className="flex items-center gap-1 text-xs font-bold tracking-wider text-amber-500 uppercase">
                       <Clock className="h-3 w-3" /> Đang chờ
                     </CardTitle>
                   </CardHeader>
@@ -143,7 +143,7 @@ export function SupplierDetailSheet({
 
                 <Card className="border-none shadow-sm ring-1 ring-slate-200">
                   <CardHeader className="p-3 pb-1">
-                    <CardTitle className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-emerald-500 uppercase">
+                    <CardTitle className="flex items-center gap-1 text-xs font-bold tracking-wider text-emerald-500 uppercase">
                       <CheckCircle className="h-3 w-3" /> Đã nhận
                     </CardTitle>
                   </CardHeader>
@@ -156,7 +156,7 @@ export function SupplierDetailSheet({
 
                 <Card className="ring-primary/10 bg-primary/5 border-none shadow-sm ring-1">
                   <CardHeader className="p-3 pb-1">
-                    <CardTitle className="text-primary flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase">
+                    <CardTitle className="text-primary flex items-center gap-1 text-xs font-bold tracking-wider uppercase">
                       <TrendingUp className="h-3 w-3" /> Tổng chi
                     </CardTitle>
                   </CardHeader>
@@ -200,7 +200,7 @@ export function SupplierDetailSheet({
                         </TableCell>
                         <TableCell>
                           <Badge
-                            className={`${STATUS_CONFIG[order.status || "pending"]?.color || ""} border text-[10px] font-bold`}
+                            className={`${STATUS_CONFIG[order.status || "pending"]?.color || ""} border text-xs font-bold`}
                           >
                             {STATUS_CONFIG[order.status || "pending"]?.label || order.status}
                           </Badge>

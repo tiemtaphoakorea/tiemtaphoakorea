@@ -72,7 +72,7 @@ export default function AdminCustomers() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
@@ -81,7 +81,7 @@ export default function AdminCustomers() {
               setPage(1);
             }}
             placeholder="Tìm tên, SĐT, mã KH..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
           />
         </div>
         <Select
@@ -90,7 +90,7 @@ export default function AdminCustomers() {
             setStatusFilter(v);
             setPage(1);
           }}
-          className="h-[34px] w-full rounded-lg text-[13px] sm:w-[160px]"
+          className="h-9 w-full rounded-lg text-sm sm:w-40"
         >
           <SelectOption value="all">Tất cả trạng thái</SelectOption>
           <SelectOption value="active">Đang hoạt động</SelectOption>
@@ -99,12 +99,12 @@ export default function AdminCustomers() {
         <div className="flex items-center gap-2 sm:ml-auto">
           <Button
             variant="outline"
-            className="h-[34px] flex-1 sm:flex-none"
+            className="h-9 flex-1 sm:flex-none"
             onClick={() => window.open("/api/admin/customers/export")}
           >
             Xuất danh sách
           </Button>
-          <Button className="h-[34px] flex-1 gap-1.5 sm:flex-none" onClick={() => setEditing(null)}>
+          <Button className="h-9 flex-1 gap-1.5 sm:flex-none" onClick={() => setEditing(null)}>
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             Thêm KH
           </Button>
@@ -115,7 +115,7 @@ export default function AdminCustomers() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {[
                   "Khách hàng",
                   "Mã KH",
@@ -125,12 +125,7 @@ export default function AdminCustomers() {
                   "Tham gia",
                   "Hạng",
                 ].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -157,11 +152,11 @@ export default function AdminCustomers() {
                             className="h-8 w-8 shrink-0 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-[13px] font-bold text-white">
+                          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">
                             {initial}
                           </div>
                         )}
-                        <span className="text-[13px] font-semibold">{c.fullName ?? "—"}</span>
+                        <span className="text-sm font-semibold">{c.fullName ?? "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
@@ -195,7 +190,7 @@ export default function AdminCustomers() {
                 setPageSize(Number(v));
                 setPage(1);
               }}
-              className="h-8 w-[72px] text-[13px]"
+              className="h-8 w-18 text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((s) => (
                 <SelectOption key={s} value={String(s)}>

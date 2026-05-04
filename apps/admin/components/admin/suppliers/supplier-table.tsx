@@ -10,6 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -59,7 +66,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
             <TableHead>Điều khoản thanh toán</TableHead>
             <TableHead>Số đơn hàng</TableHead>
             <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,7 +82,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                   <div className="flex flex-col gap-0.5">
                     <span className="font-black text-slate-900">{supplier.name}</span>
                     {supplier.address && (
-                      <span className="flex max-w-[200px] items-center gap-1 truncate text-[10px] font-medium text-slate-500">
+                      <span className="flex max-w-50 items-center gap-1 truncate text-xs font-medium text-slate-500">
                         <MapPin className="h-3 w-3" />
                         {supplier.address}
                       </span>
@@ -91,7 +98,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                       </div>
                     )}
                     {supplier.email && (
-                      <div className="flex max-w-[180px] items-center gap-2 truncate text-[10px] font-medium text-slate-400">
+                      <div className="flex max-w-45 items-center gap-2 truncate text-xs font-medium text-slate-400">
                         <Mail className="h-3 w-3" />
                         {supplier.email}
                       </div>
@@ -114,7 +121,7 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
                 </TableCell>
                 <TableCell>
                   <Badge
-                    className={`${supplier.isActive ? STATUS_CONFIG.Active.color : STATUS_CONFIG.Inactive.color} border text-[10px] font-black tracking-tight uppercase`}
+                    className={`${supplier.isActive ? STATUS_CONFIG.Active.color : STATUS_CONFIG.Inactive.color} border text-xs font-black tracking-tight uppercase`}
                   >
                     {supplier.isActive ? STATUS_CONFIG.Active.label : STATUS_CONFIG.Inactive.label}
                   </Badge>
@@ -153,17 +160,19 @@ export function SupplierTable({ suppliers, onEdit, onViewDetail, onDelete }: Sup
           ) : (
             <TableRow>
               <TableCell colSpan={7} className="h-64 text-center">
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
-                    <Truck className="h-8 w-8 text-slate-300" />
-                  </div>
-                  <div>
-                    <p className="font-black text-slate-900">Chưa có nhà cung cấp nào</p>
-                    <p className="text-sm font-medium text-slate-500">
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon" className="size-16 rounded-full bg-slate-50">
+                      <Truck className="text-slate-300" />
+                    </EmptyMedia>
+                    <EmptyTitle className="font-black text-slate-900">
+                      Chưa có nhà cung cấp nào
+                    </EmptyTitle>
+                    <EmptyDescription className="font-medium text-slate-500">
                       Hãy thêm nhà cung cấp đầu tiên của bạn.
-                    </p>
-                  </div>
-                </div>
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </TableCell>
             </TableRow>
           )}

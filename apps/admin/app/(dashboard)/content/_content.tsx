@@ -86,7 +86,7 @@ export default function SettingsContent() {
           <TabsTrigger
             key={s.value}
             value={s.value}
-            className="gap-1.5 px-3 py-2.5 text-[13px] font-semibold"
+            className="gap-1.5 px-3 py-2.5 text-sm font-semibold"
           >
             <s.icon className="size-4" strokeWidth={2} />
             {s.label}

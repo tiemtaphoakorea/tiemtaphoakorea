@@ -39,7 +39,7 @@ export function ColorsSection() {
                     <div className="mt-2">
                       <TokenPill value={t.value} />
                     </div>
-                    <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">
+                    <p className="mt-1 font-mono text-xs text-muted-foreground/70">
                       {t.tailwind}
                     </p>
                   </div>
@@ -60,7 +60,7 @@ export function ColorsSection() {
           {statusColors.map((s) => (
             <code
               key={s.token}
-              className="rounded bg-muted px-2 py-1 font-mono text-[10px] text-muted-foreground"
+              className="rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
             >
               {s.classes}
             </code>
@@ -76,8 +76,8 @@ export function ColorsSection() {
                 className="size-10 rounded-lg border border-border shadow-sm"
                 style={{ backgroundColor: c.swatch }}
               />
-              <p className="font-mono text-[10px] text-muted-foreground">{c.token}</p>
-              <p className="text-[10px] text-muted-foreground/70">{c.name}</p>
+              <p className="font-mono text-xs text-muted-foreground">{c.token}</p>
+              <p className="text-xs text-muted-foreground/70">{c.name}</p>
             </div>
           ))}
         </div>

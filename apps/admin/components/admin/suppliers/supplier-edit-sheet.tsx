@@ -104,7 +104,7 @@ export function SupplierEditSheet({
                 name="note"
                 defaultValue={supplier.note || ""}
                 placeholder="Thông tin thêm về nhà cung cấp..."
-                className="min-h-[80px]"
+                className="min-h-20"
               />
             </Field>
           </FieldGroup>

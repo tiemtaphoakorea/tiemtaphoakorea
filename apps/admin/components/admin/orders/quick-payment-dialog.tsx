@@ -82,7 +82,7 @@ export function QuickPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-120">
         <DialogHeader>
           <DialogTitle>Thanh toán nhanh đơn hàng</DialogTitle>
         </DialogHeader>

@@ -70,7 +70,7 @@ export function ProductTable({
           <Select
             value={currentCategoryId}
             onValueChange={onCategoryChange}
-            className="w-full md:w-[200px]"
+            className="w-full md:w-50"
             placeholder="Danh mục"
           >
             <SelectOption value="All">Tất cả danh mục</SelectOption>
@@ -84,14 +84,14 @@ export function ProductTable({
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <Table className="table-fixed min-w-[640px]">
+          <Table className="table-fixed min-w-160">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-0 w-[42%]">Sản phẩm</TableHead>
                 <TableHead className="min-w-0">Danh mục</TableHead>
                 <TableHead className="text-right">Giá bán</TableHead>
                 <TableHead className="text-center">Tồn kho</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -148,7 +148,7 @@ export function ProductTable({
                         </div>
                       </TableCell>
                       <TableCell className="min-w-0 whitespace-normal">
-                        <div className="min-w-0 max-w-[12rem] lg:max-w-[16rem]">
+                        <div className="min-w-0 max-w-48 lg:max-w-64">
                           <Badge
                             variant="secondary"
                             className="max-w-full bg-slate-100 font-bold text-slate-600 hover:bg-slate-200"
@@ -166,7 +166,7 @@ export function ProductTable({
                         {totalStock === 0 ? (
                           <Badge
                             variant="destructive"
-                            className="px-2 py-0.5 text-[10px] font-black uppercase"
+                            className="px-2 py-0.5 text-xs font-black uppercase"
                           >
                             Hết hàng
                           </Badge>
@@ -178,7 +178,7 @@ export function ProductTable({
                           >
                             {totalStock}
                             {totalStock <= 5 && totalStock > 0 && (
-                              <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
+                              <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">
                                 Sắp hết
                               </span>
                             )}

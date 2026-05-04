@@ -189,7 +189,7 @@ export function InventoryMovementsTab() {
       />
 
       <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Điều chỉnh tồn kho</DialogTitle>

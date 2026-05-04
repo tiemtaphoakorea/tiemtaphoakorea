@@ -155,7 +155,7 @@ export function OrderShippingSection({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
-                  className="min-h-[72px]"
+                  className="min-h-18"
                 />
               </Field>
             </div>
