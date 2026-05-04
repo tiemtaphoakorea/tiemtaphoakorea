@@ -30,9 +30,9 @@ const STATUS_MAP: Record<StatusType, { tone: BadgeTone; label: string }> = {
   completed: { tone: "green", label: "Hoàn thành" },
   cancelled: { tone: "red", label: "Đã huỷ" },
   // Backend payment
-  unpaid: { tone: "red", label: "Chưa TT" },
-  partial: { tone: "amber", label: "TT một phần" },
-  paid: { tone: "green", label: "Đã TT" },
+  unpaid: { tone: "red", label: "Chưa thanh toán" },
+  partial: { tone: "amber", label: "Thanh toán một phần" },
+  paid: { tone: "green", label: "Đã thanh toán" },
   // Debts
   overdue: { tone: "red", label: "Quá hạn" },
 };

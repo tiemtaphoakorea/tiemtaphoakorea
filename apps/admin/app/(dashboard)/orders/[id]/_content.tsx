@@ -69,7 +69,9 @@ import { Suspense, use, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
 import { ProductSelector } from "@/components/admin/orders/create/product-selector";
+import { OrderShippingSection } from "@/components/admin/orders/order-shipping-section";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
+import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { FULFILLMENT_BADGE, PAYMENT_BADGE } from "@/lib/order-badges";
 import {
   copyInvoiceImage,
@@ -178,6 +180,53 @@ function buildInvoicePayload(order: any) {
     paidAmount: order.paidAmount,
     adminNote: order.adminNote,
   };
+}
+
+// ---------------------------------------------------------------------------
+// History note translation (handles legacy English/technical entries)
+// ---------------------------------------------------------------------------
+
+const HISTORY_NOTE_FIELD_LABELS: Record<string, string> = {
+  adminNote: "ghi chú admin",
+  discount: "giảm giá",
+  total: "tổng tiền",
+  shippingName: "tên người nhận",
+  shippingPhone: "SĐT giao hàng",
+  shippingAddress: "địa chỉ giao hàng",
+};
+
+const HISTORY_NOTE_LITERALS: Record<string, string> = {
+  "Order created by admin": "Tạo đơn hàng",
+  "Stock out": "Đã xuất kho",
+  "Order completed": "Hoàn tất đơn hàng",
+  "Order cancelled": "Đã hủy đơn hàng",
+};
+
+/** Map legacy English/technical history notes to user-friendly Vietnamese. */
+function translateHistoryNote(note: string): string {
+  if (HISTORY_NOTE_LITERALS[note]) return HISTORY_NOTE_LITERALS[note];
+
+  // Legacy: "Cập nhật đơn hàng: shippingName, shippingPhone, ..."
+  const updateMatch = note.match(/^Cập nhật đơn hàng:\s*(.+)$/);
+  if (updateMatch) {
+    const fields = updateMatch[1]
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((k, _, arr) => !(k === "total" && arr.includes("discount")))
+      .map((k) => HISTORY_NOTE_FIELD_LABELS[k] ?? k);
+    return `Cập nhật ${fields.join(", ")}`;
+  }
+
+  // Legacy: "Payment recorded: 100000 (cash)"
+  const paymentMatch = note.match(/^Payment recorded:\s*(\d+(?:\.\d+)?)\s*\((.+)\)$/);
+  if (paymentMatch) {
+    const amount = Number(paymentMatch[1]);
+    const formatted = `${Math.round(amount).toLocaleString("vi-VN")}đ`;
+    return `Ghi nhận thanh toán: ${formatted} (${paymentMatch[2]})`;
+  }
+
+  return note;
 }
 
 // ---------------------------------------------------------------------------
@@ -387,8 +436,6 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   const paymentStatus = order.paymentStatus as PaymentStatusValue;
   const fulfillmentStatus = order.fulfillmentStatus as FulfillmentStatusValue;
-  const paymentBadge = PAYMENT_BADGE[paymentStatus];
-  const fulfillmentBadge = FULFILLMENT_BADGE[fulfillmentStatus];
   const isTerminal = fulfillmentStatus === "completed" || fulfillmentStatus === "cancelled";
   const canDelete = fulfillmentStatus === "cancelled";
   const canEditItems =
@@ -474,6 +521,22 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     }
   };
 
+  const handleSaveShipping = async (payload: {
+    shippingName: string | null;
+    shippingPhone: string | null;
+    shippingAddress: string | null;
+  }) => {
+    try {
+      await adminClient.updateOrder(order.id, payload);
+      toast.success("Đã cập nhật địa chỉ giao hàng");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
   const handleStartItemEdit = () => {
     setEditableItems(
       (order?.items ?? []).map((item: any) => ({
@@ -556,24 +619,12 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </Link>
           </Button>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">
-                #{order.orderNumber}
-              </h1>
-              {paymentBadge && (
-                <Badge
-                  className={`${paymentBadge.className} border px-2 py-0.5 text-[10px] font-black uppercase sm:text-xs`}
-                >
-                  {paymentBadge.label}
-                </Badge>
-              )}
-              {fulfillmentBadge && (
-                <Badge
-                  className={`${fulfillmentBadge.className} border px-2 py-0.5 text-[10px] font-black uppercase sm:text-xs`}
-                >
-                  {fulfillmentBadge.label}
-                </Badge>
-              )}
+            <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">
+              #{order.orderNumber}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <StatusBadge type={paymentStatus as StatusType} />
+              <StatusBadge type={fulfillmentStatus as StatusType} />
             </div>
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-500 sm:text-sm">
               <Clock className="h-3 w-3 shrink-0" /> Tạo lúc: {formatDate(order.createdAt)}
@@ -1078,7 +1129,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       </span>
                       {history.note && (
                         <p className="mt-1 rounded bg-slate-50 p-2 text-xs text-slate-600 italic">
-                          "{history.note}"
+                          "{translateHistoryNote(history.note)}"
                         </p>
                       )}
                     </div>
@@ -1128,35 +1179,20 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 </div>
               </div>
               <Separator />
-              <div className="space-y-3 text-sm font-medium text-slate-600">
-                <div className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  Giao hàng theo đơn
-                </div>
-                {order.shippingName?.trim() ||
-                order.shippingPhone?.trim() ||
-                order.shippingAddress?.trim() ? (
-                  <>
-                    <div className="flex items-start gap-2">
-                      <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                      <span>{order.shippingName?.trim() || "—"}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                      <span>{order.shippingPhone?.trim() || "—"}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                      <span className="whitespace-pre-wrap">
-                        {order.shippingAddress?.trim() || "—"}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-xs font-medium text-slate-500">
-                    Chưa nhập địa chỉ giao trên đơn.
-                  </p>
-                )}
-              </div>
+              <OrderShippingSection
+                order={{
+                  shippingName: order.shippingName ?? null,
+                  shippingPhone: order.shippingPhone ?? null,
+                  shippingAddress: order.shippingAddress ?? null,
+                }}
+                customer={{
+                  fullName: order.customer.fullName,
+                  phone: order.customer.phone ?? null,
+                  address: order.customer.address ?? null,
+                }}
+                canEdit={fulfillmentStatus === "pending"}
+                onSave={handleSaveShipping}
+              />
               <Separator />
               <div className="space-y-3 text-sm font-medium text-slate-600">
                 <div className="text-xs font-black uppercase tracking-wider text-slate-400">

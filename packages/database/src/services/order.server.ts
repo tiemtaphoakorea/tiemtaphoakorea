@@ -37,6 +37,27 @@ function normalizeOptionalString(value: string | null | undefined): string | und
   return t === "" ? undefined : t;
 }
 
+const ORDER_FIELD_LABELS: Record<string, string> = {
+  adminNote: "ghi chú admin",
+  discount: "giảm giá",
+  total: "tổng tiền",
+  shippingName: "tên người nhận",
+  shippingPhone: "SĐT giao hàng",
+  shippingAddress: "địa chỉ giao hàng",
+};
+
+/** Joins changed field keys into a Vietnamese, user-facing description. */
+function describeUpdatedFields(keys: string[]): string {
+  // Drop `total` when paired with `discount` — it's auto-derived, redundant in the log.
+  const filtered = keys.includes("discount") ? keys.filter((k) => k !== "total") : keys;
+  const labels = filtered.map((k) => ORDER_FIELD_LABELS[k] ?? k);
+  return labels.join(", ");
+}
+
+function formatVnd(amount: number): string {
+  return `${Math.round(amount).toLocaleString("vi-VN")}đ`;
+}
+
 /**
  * Helper function to find or create a customer
  * Handles race conditions when multiple concurrent requests try to create the same customer
@@ -331,7 +352,7 @@ export async function createOrder(data: {
       orderId: newOrder.id,
       paymentStatus: PAYMENT_STATUS.UNPAID,
       fulfillmentStatus: FULFILLMENT_STATUS.PENDING,
-      note: "Order created by admin",
+      note: "Tạo đơn hàng",
       createdBy: data.userId,
     });
 
@@ -425,7 +446,7 @@ export async function stockOut({
       orderId,
       paymentStatus: updated.paymentStatus,
       fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
-      note: note ?? "Stock out",
+      note: note ?? "Đã xuất kho",
       createdBy: userId,
     });
 
@@ -474,7 +495,7 @@ export async function completeOrder({
       orderId,
       paymentStatus: updated.paymentStatus,
       fulfillmentStatus: FULFILLMENT_STATUS.COMPLETED,
-      note: note ?? "Order completed",
+      note: note ?? "Hoàn tất đơn hàng",
       createdBy: userId,
     });
 
@@ -542,7 +563,7 @@ export async function cancelOrder({
       orderId,
       paymentStatus: updated.paymentStatus,
       fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
-      note: note ?? "Order cancelled",
+      note: note ?? "Đã hủy đơn hàng",
       createdBy: userId,
     });
 
@@ -761,6 +782,9 @@ export async function updateOrder(
   data: {
     adminNote?: string;
     discount?: number;
+    shippingName?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
   },
   userId: string,
 ) {
@@ -794,6 +818,16 @@ export async function updateOrder(
       updates.total = newTotal.toString();
     }
 
+    if (data.shippingName !== undefined) {
+      updates.shippingName = data.shippingName?.trim() || null;
+    }
+    if (data.shippingPhone !== undefined) {
+      updates.shippingPhone = data.shippingPhone?.trim() || null;
+    }
+    if (data.shippingAddress !== undefined) {
+      updates.shippingAddress = data.shippingAddress?.trim() || null;
+    }
+
     if (Object.keys(updates).length === 0) {
       const [fullOrder] = await tx.select().from(orders).where(eq(orders.id, orderId));
       return fullOrder; // Nothing to update
@@ -811,7 +845,7 @@ export async function updateOrder(
       orderId,
       paymentStatus: locked.paymentStatus as PaymentStatusValue,
       fulfillmentStatus: locked.fulfillmentStatus as FulfillmentStatusValue,
-      note: `Cập nhật đơn hàng: ${Object.keys(updates).join(", ")}`,
+      note: `Cập nhật ${describeUpdatedFields(Object.keys(updates))}`,
       createdBy: userId,
     });
 
@@ -1070,7 +1104,7 @@ export async function recordPayment(data: {
       paymentStatus: nextPaymentStatus,
       fulfillmentStatus:
         locked.fulfillmentStatus as (typeof FULFILLMENT_STATUS)[keyof typeof FULFILLMENT_STATUS],
-      note: data.note ?? `Payment recorded: ${data.amount} (${data.method})`,
+      note: data.note ?? `Ghi nhận thanh toán: ${formatVnd(data.amount)} (${data.method})`,
       createdBy: data.userId,
     });
 
