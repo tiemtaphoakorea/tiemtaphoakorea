@@ -318,6 +318,9 @@ export const adminClient = {
       adminNote?: string;
       discount?: number;
       items?: Array<{ variantId: string; quantity: number; customPrice?: number }>;
+      shippingName?: string | null;
+      shippingPhone?: string | null;
+      shippingAddress?: string | null;
     },
   ) {
     return axios.put<{ success: boolean; order: AdminOrderDetails }>(

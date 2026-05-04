@@ -16,7 +16,8 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { AlertTriangle, Plus, Search } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
@@ -28,7 +29,6 @@ import {
 } from "@/components/admin/shared/data-state";
 import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
-import { ProductDrawer } from "@/components/admin/shared/product-drawer";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
 import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
@@ -56,13 +56,13 @@ function deriveProductStatus(p: ProductListItem): StatusType {
 const VALID_FILTERS = new Set<ProductFilter>(["all", "in_stock", "low_stock", "out_of_stock"]);
 
 export default function AdminProducts() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlFilter = searchParams.get("filter") as ProductFilter | null;
   const initialFilter = urlFilter && VALID_FILTERS.has(urlFilter) ? urlFilter : "all";
   const [filter, setFilter] = useState<ProductFilter>(initialFilter);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
-  const [editing, setEditing] = useState<ProductListItem | null | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
@@ -109,9 +109,11 @@ export default function AdminProducts() {
             className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
           />
         </div>
-        <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setEditing(null)}>
-          <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-          Thêm sản phẩm
+        <Button asChild className="h-[34px] gap-1.5 sm:ml-auto">
+          <Link href="/products/new">
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+            Thêm sản phẩm
+          </Link>
         </Button>
       </div>
 
@@ -147,7 +149,11 @@ export default function AdminProducts() {
                       : "text-foreground";
                 const status = deriveProductStatus(p);
                 return (
-                  <TableRow key={p.id} className="cursor-pointer" onClick={() => setEditing(p)}>
+                  <TableRow
+                    key={p.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/products/${p.id}/edit`)}
+                  >
                     <TableCell className="px-4 py-2.5">
                       <div className="flex items-center gap-2.5">
                         {p.thumbnail ? (
@@ -208,15 +214,13 @@ export default function AdminProducts() {
                     </TableCell>
                     <TableCell className="px-4 py-2.5">
                       <Button
+                        asChild
                         variant="outline"
                         size="sm"
                         className="h-7 rounded-md text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditing(p);
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        Sửa
+                        <Link href={`/products/${p.id}/edit`}>Sửa</Link>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -247,12 +251,6 @@ export default function AdminProducts() {
           <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Card>
-
-      <ProductDrawer
-        open={editing !== undefined}
-        product={editing ?? null}
-        onClose={() => setEditing(undefined)}
-      />
     </div>
   );
 }
