@@ -7,6 +7,7 @@ import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
 import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { ArrowLeft, ImageIcon, Send } from "lucide-react";
+import Image from "next/image";
 import { Fragment, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
@@ -197,8 +198,14 @@ export default function AdminMessages() {
                   }`}
                 >
                   {m.imageUrl ? (
-                    // biome-ignore lint/performance/noImgElement: chat upload URL
-                    <img src={m.imageUrl} alt="attachment" className="max-w-50 rounded-md" />
+                    <Image
+                      src={m.imageUrl}
+                      alt="attachment"
+                      width={200}
+                      height={200}
+                      className="max-w-50 rounded-md"
+                      style={{ width: "auto", height: "auto" }}
+                    />
                   ) : (
                     m.content
                   )}

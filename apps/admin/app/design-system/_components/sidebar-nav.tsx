@@ -5,7 +5,7 @@ import { navGroups } from "../_data/nav-sections";
 
 export function SidebarNav() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 flex w-56 flex-col bg-slate-950 text-slate-300">
+    <aside className="sticky top-0 z-20 flex h-svh w-56 shrink-0 flex-col bg-slate-950 text-slate-300">
       <div className="flex items-center gap-2.5 border-b border-slate-800 px-5 py-4">
         <div className="flex size-7 items-center justify-center rounded-lg bg-white">
           <Zap className="size-4 text-slate-900" />

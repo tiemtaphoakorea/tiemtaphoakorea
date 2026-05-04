@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Check } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -142,10 +143,11 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                     className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
                   >
                     {it.variant?.images?.[0]?.imageUrl ? (
-                      // biome-ignore lint/performance/noImgElement: order item image URL
-                      <img
+                      <Image
                         src={it.variant.images[0].imageUrl}
                         alt=""
+                        width={36}
+                        height={36}
                         className="h-9 w-9 shrink-0 rounded-lg object-contain"
                       />
                     ) : (

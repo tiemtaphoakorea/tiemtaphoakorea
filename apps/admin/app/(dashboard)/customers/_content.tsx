@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Plus, Search } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import { CustomerDrawer } from "@/components/admin/shared/customer-drawer";
@@ -145,10 +146,11 @@ export default function AdminCustomers() {
                     <TableCell className="px-4 py-2.5">
                       <div className="flex items-center gap-2.5">
                         {c.avatarUrl ? (
-                          // biome-ignore lint/performance/noImgElement: external avatar URL
-                          <img
+                          <Image
                             src={c.avatarUrl}
                             alt={c.fullName ?? ""}
+                            width={32}
+                            height={32}
                             className="h-8 w-8 shrink-0 rounded-full object-cover"
                           />
                         ) : (

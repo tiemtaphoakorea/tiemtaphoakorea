@@ -17,6 +17,7 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { AlertTriangle, Plus, Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -185,10 +186,11 @@ export default function AdminProducts() {
                     <TableCell className="px-4 py-2.5">
                       <div className="flex items-center gap-2.5">
                         {p.thumbnail ? (
-                          // biome-ignore lint/performance/noImgElement: thumbnails are CMS-managed external URLs
-                          <img
+                          <Image
                             src={p.thumbnail}
                             alt={p.name}
+                            width={36}
+                            height={36}
                             className="h-9 w-9 shrink-0 rounded-lg object-contain"
                           />
                         ) : (

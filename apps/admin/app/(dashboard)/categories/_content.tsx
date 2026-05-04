@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Plus, Search } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import { CategoryDrawer } from "@/components/admin/shared/category-drawer";
@@ -107,10 +108,11 @@ export default function AdminCategories() {
                   <TableCell className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       {c.imageUrl ? (
-                        // biome-ignore lint/performance/noImgElement: CMS icon URLs
-                        <img
+                        <Image
                           src={c.imageUrl}
                           alt={c.name}
+                          width={28}
+                          height={28}
                           className="h-7 w-7 shrink-0 rounded object-contain"
                         />
                       ) : (
