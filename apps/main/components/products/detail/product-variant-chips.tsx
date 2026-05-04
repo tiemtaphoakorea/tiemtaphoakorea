@@ -18,7 +18,7 @@ export function ProductVariantChips({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <span>Phân loại</span>
         {selected && (
           <span className="text-xs font-medium normal-case tracking-normal text-foreground">
@@ -36,14 +36,14 @@ export function ProductVariantChips({
               type="button"
               disabled={isOut}
               onClick={() => onSelect(v.id)}
-              className={`flex h-10 items-center gap-1.5 rounded-xl border-[1.5px] px-4 text-[13px] font-medium transition-colors ${
+              className={`flex h-10 items-center gap-1.5 rounded-xl border-2 px-4 text-sm font-medium transition-colors ${
                 isSelected
                   ? "border-primary bg-primary/10 font-bold text-primary"
                   : "border-border bg-card text-foreground hover:border-primary hover:text-primary"
               } ${isOut ? "cursor-not-allowed opacity-45 line-through" : ""}`}
             >
               {v.name}
-              {isOut && <span className="text-[11px] font-normal">(hết)</span>}
+              {isOut && <span className="text-xs font-normal">(hết)</span>}
             </button>
           );
         })}

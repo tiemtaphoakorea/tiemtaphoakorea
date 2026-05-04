@@ -1,7 +1,7 @@
 export function AnnouncementBar() {
   return (
-    <div className="hidden bg-foreground py-2.5 text-center text-[12px] font-medium leading-none tracking-[0.01em] text-white md:block">
-      <b className="font-bold text-[#FACC15]">FREESHIP</b>
+    <div className="hidden bg-foreground py-2.5 text-center text-xs font-medium leading-none tracking-wide text-white md:block">
+      <b className="font-bold text-yellow-400">FREESHIP</b>
       <span> đơn từ 299k toàn quốc</span>
       <span className="mx-3.5 text-white/40">·</span>
       <span>Giao 2H trong nội thành HCM &amp; HN</span>

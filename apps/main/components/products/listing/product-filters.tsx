@@ -97,7 +97,7 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
             )}
           </CardHeader>
           <CardContent className="px-5 py-4">
-            <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Danh mục
             </h4>
             {categoryTree}
@@ -139,7 +139,7 @@ function ProductFiltersInner({ categories, activeCategorySlug }: ProductFiltersP
 
           <div className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-6 py-4">
             <div>
-              <h4 className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Danh mục
               </h4>
               {categoryTree}
@@ -259,7 +259,7 @@ function CategoryRow({
       size="lg"
       onClick={() => onClick(slug)}
       className={`h-auto w-full justify-start gap-2 rounded-lg px-2.5 py-2 text-left font-medium ${
-        isChild ? "text-xs" : "text-[13px]"
+        isChild ? "text-xs" : "text-sm"
       } ${
         active
           ? "bg-primary/10 font-semibold text-primary hover:bg-primary/15 hover:text-primary"

@@ -170,7 +170,7 @@ export function ChatWidget({
                 ? // Mobile bottom-sheet — 90% viewport height with rounded top corners.
                   "h-[90svh] rounded-t-2xl border-t data-[side=bottom]:!h-[90svh]"
                 : // Desktop right-side drawer.
-                  "h-svh border-l-0 data-[side=right]:!w-[420px] sm:!max-w-[420px] sm:border-l",
+                  "h-svh border-l-0 data-[side=right]:!w-105 sm:!max-w-105 sm:border-l",
             )}
           >
             <SheetHeader className="flex flex-row items-center gap-2 bg-primary p-4 text-primary-foreground">

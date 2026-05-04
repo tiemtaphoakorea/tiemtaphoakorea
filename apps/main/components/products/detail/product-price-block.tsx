@@ -27,13 +27,13 @@ export function ProductPriceBlock({ price, basePrice, formatPrice }: ProductPric
             <span className="text-base font-medium text-muted-foreground line-through tabular-nums">
               {formatPrice(basePrice!)}
             </span>
-            <span className="rounded-full bg-destructive px-2.5 py-1 text-[13px] font-bold text-destructive-foreground">
+            <span className="rounded-full bg-destructive px-2.5 py-1 text-sm font-bold text-destructive-foreground">
               −{discountPct}%
             </span>
           </>
         )}
       </div>
-      <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5" />
         Tích luỹ <b className="text-success">{points} điểm Korea</b> cho đơn hàng này
       </p>

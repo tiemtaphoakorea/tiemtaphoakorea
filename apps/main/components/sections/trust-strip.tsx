@@ -56,8 +56,8 @@ export function TrustStrip() {
               <GeneratedIcon src={it.mobileIcon} className="h-7 w-7 rounded-lg object-contain" />
             </div>
             <ShieldCheck className="hidden" />
-            <div className="mt-1 text-[11px] font-bold text-foreground">{it.title}</div>
-            <div className="mt-0.5 text-[10px] text-muted-foreground">{it.desc}</div>
+            <div className="mt-1 text-xs font-bold text-foreground">{it.title}</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">{it.desc}</div>
           </div>
         ))}
       </div>

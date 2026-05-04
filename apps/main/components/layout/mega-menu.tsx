@@ -47,10 +47,10 @@ function MegaMenuTrigger({ open, onActivate }: { open: boolean; onActivate: () =
       aria-haspopup="menu"
       onFocus={onActivate}
       data-state={open ? "open" : "closed"}
-      className={`group relative inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-t-sm px-5 py-3 text-[14px] font-semibold leading-none tracking-[-0.005em] transition-all duration-200 ease-out ${
+      className={`group relative inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-t-sm border-b-2 px-5 py-3 text-sm font-semibold leading-none tracking-tight transition-all duration-200 ease-out ${
         open
-          ? "bg-[#E0E7FF] text-primary shadow-[inset_0_-2px_0_var(--primary)]"
-          : "text-foreground hover:bg-muted/60 hover:text-primary"
+          ? "border-primary bg-indigo-200 text-primary"
+          : "border-transparent text-foreground hover:bg-muted/60 hover:text-primary"
       }`}
     >
       <TriggerHamburger open={open} />
@@ -63,13 +63,13 @@ function TriggerHamburger({ open }: { open: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`flex h-[18px] w-[18px] flex-col justify-center gap-[3px] transition-colors ${
+      className={`flex h-4.5 w-4.5 flex-col justify-center gap-0.75 transition-colors ${
         open ? "text-primary" : "text-foreground group-hover:text-primary"
       }`}
     >
-      <span className="block h-[2px] w-full rounded-full bg-current" />
-      <span className="block h-[2px] w-full rounded-full bg-current" />
-      <span className="block h-[2px] w-full rounded-full bg-current" />
+      <span className="block h-0.5 w-full rounded-full bg-current" />
+      <span className="block h-0.5 w-full rounded-full bg-current" />
+      <span className="block h-0.5 w-full rounded-full bg-current" />
     </span>
   );
 }
@@ -108,7 +108,7 @@ export function MegaMenu({
       {open ? (
         <div
           role="menu"
-          className="absolute left-0 top-full z-50 w-[1000px] overflow-hidden rounded-b-3xl rounded-tr-3xl border border-border bg-white shadow-2xl"
+          className="absolute left-0 top-full z-50 w-250 overflow-hidden rounded-b-3xl rounded-tr-3xl border border-border bg-white shadow-2xl"
         >
           <div className="grid grid-cols-[260px_1fr]">
             {/* Left rail: top-level categories */}
@@ -123,7 +123,7 @@ export function MegaMenu({
                       onMouseEnter={() => setActive(i)}
                       onFocus={() => setActive(i)}
                       className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                        isActive ? "bg-[#EEF2FF]" : "hover:bg-muted/60"
+                        isActive ? "bg-info-soft" : "hover:bg-muted/60"
                       }`}
                     >
                       <GeneratedIcon
@@ -131,7 +131,7 @@ export function MegaMenu({
                         className="h-10 w-10 shrink-0 rounded-md object-contain"
                       />
                       <span
-                        className={`flex-1 text-[14px] font-medium leading-tight ${
+                        className={`flex-1 text-sm font-medium leading-tight ${
                           isActive ? "text-primary" : "text-foreground"
                         }`}
                       >
@@ -147,7 +147,7 @@ export function MegaMenu({
             {/* Right content: active category's children (subcategories) */}
             <div className="flex flex-col gap-5 border-l border-border bg-white p-6">
               <div className="flex items-center justify-between">
-                <h4 className="m-0 text-[12px] font-bold uppercase leading-none tracking-[0.08em] text-muted-foreground">
+                <h4 className="m-0 text-xs font-bold uppercase leading-none tracking-wider text-muted-foreground">
                   <GeneratedIcon
                     src={activeIcon}
                     className="mr-1 inline-block h-5 w-5 rounded-md object-contain align-middle"
@@ -156,7 +156,7 @@ export function MegaMenu({
                 </h4>
                 <Link
                   href={categoryHref(activeCategory.slug)}
-                  className="text-[13px] font-semibold leading-none text-primary"
+                  className="text-sm font-semibold leading-none text-primary"
                 >
                   Xem tất cả →
                 </Link>
@@ -175,7 +175,7 @@ export function MegaMenu({
                         className="h-10 w-10 shrink-0 rounded-md object-contain"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-semibold leading-tight text-foreground">
+                        <div className="truncate text-sm font-semibold leading-tight text-foreground">
                           {sc.name}
                         </div>
                       </div>
@@ -189,7 +189,7 @@ export function MegaMenu({
                   ))}
                 </div>
               ) : (
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Chưa có sản phẩm nổi bật. Bấm vào để xem tất cả sản phẩm trong{" "}
                   <span className="font-semibold text-foreground">{activeCategory.name}</span>.
                 </p>
@@ -224,15 +224,15 @@ function FeaturedProductMiniCard({ product }: { product: MegaMenuFeaturedProduct
         />
       </div>
       <div className="min-w-0">
-        <div className="line-clamp-2 min-h-[2.25rem] text-[12px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
+        <div className="line-clamp-2 min-h-9 text-xs font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
           {product.name}
         </div>
         <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-[13px] font-extrabold tracking-tight text-destructive tabular-nums">
+          <span className="text-sm font-extrabold tracking-tight text-destructive tabular-nums">
             {formatPrice(price)}
           </span>
           {hasDiscount ? (
-            <span className="text-[10px] font-medium text-muted-foreground line-through tabular-nums">
+            <span className="text-xs font-medium text-muted-foreground line-through tabular-nums">
               {formatPrice(basePrice)}
             </span>
           ) : null}

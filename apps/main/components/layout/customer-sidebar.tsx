@@ -60,7 +60,7 @@ export function CustomerSidebar({ profile }: { profile: any }) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/50 mb-2 px-4 text-[10px] font-black tracking-widest uppercase">
+          <SidebarGroupLabel className="text-muted-foreground/50 mb-2 px-4 text-xs font-black tracking-widest uppercase">
             TÀI KHOẢN
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -103,7 +103,7 @@ export function CustomerSidebar({ profile }: { profile: any }) {
               </Avatar>
               <div className="flex flex-1 flex-col items-start overflow-hidden">
                 <span className="truncate text-sm font-bold">{profile?.fullName}</span>
-                <span className="text-muted-foreground truncate text-[10px] font-bold tracking-tighter uppercase">
+                <span className="text-muted-foreground truncate text-xs font-bold tracking-tighter uppercase">
                   Customer
                 </span>
               </div>

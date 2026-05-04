@@ -11,7 +11,7 @@ type HeroEmptyProps = {
 };
 
 /** Neutral hero banner shown when DB has no active banners. No marketing copy. */
-export function HeroEmpty({ heightClass = "h-[320px] md:h-[460px] lg:h-[560px]" }: HeroEmptyProps) {
+export function HeroEmpty({ heightClass = "h-80 md:h-115 lg:h-140" }: HeroEmptyProps) {
   return (
     <div className={`relative overflow-hidden rounded-3xl ${heightClass}`}>
       <Image
@@ -24,8 +24,8 @@ export function HeroEmpty({ heightClass = "h-[320px] md:h-[460px] lg:h-[560px]" 
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
       <div className="absolute inset-0 z-10 flex items-center">
-        <div className="max-w-[18rem] space-y-4 px-8 sm:max-w-xl sm:space-y-5 md:px-14">
-          <h1 className="font-display text-[2rem] font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
+        <div className="max-w-72 space-y-4 px-8 sm:max-w-xl sm:space-y-5 md:px-14">
+          <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
             Khám phá sản phẩm
           </h1>
           <Button

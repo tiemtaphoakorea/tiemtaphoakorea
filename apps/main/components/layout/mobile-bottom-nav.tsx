@@ -52,12 +52,12 @@ export function MobileBottomNav() {
               key={tab.label}
               href={tab.href}
               aria-current={active ? "page" : undefined}
-              className={`relative flex flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-colors ${
-                active ? "bg-[var(--primary-soft,#EEF2FF)] text-primary" : "text-muted-foreground"
+              className={`relative flex select-none flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 transition-all duration-150 ease-out active:scale-90 ${
+                active ? "bg-info-soft text-primary" : "text-muted-foreground active:bg-muted"
               }`}
             >
-              <Icon className={`h-[20px] w-[20px] ${active ? "stroke-[2.4]" : "stroke-2"}`} />
-              <span className={`text-[10px] leading-none ${active ? "font-bold" : "font-medium"}`}>
+              <Icon className={`h-5 w-5 ${active ? "stroke-[2.4]" : "stroke-2"}`} />
+              <span className={`text-xs leading-none ${active ? "font-bold" : "font-medium"}`}>
                 {tab.label}
               </span>
             </Link>

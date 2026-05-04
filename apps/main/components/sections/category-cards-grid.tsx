@@ -42,7 +42,7 @@ function CategoryCard({ card }: { card: CategoryCardItem }) {
         />
         <div className="absolute inset-0 flex flex-col justify-end p-4">
           {card.countText && (
-            <span className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-white/70">
+            <span className="mb-0.5 text-xs font-bold uppercase tracking-widest text-white/70">
               {card.countText}
             </span>
           )}

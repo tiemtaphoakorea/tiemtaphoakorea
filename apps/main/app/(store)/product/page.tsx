@@ -194,7 +194,7 @@ function ProductsPageSkeleton() {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[260px_1fr]">
       <div className="hidden h-fit space-y-4 lg:block">
-        <Skeleton className="h-[600px] w-full rounded-2xl" />
+        <Skeleton className="h-150 w-full rounded-2xl" />
       </div>
       <div className="space-y-4">
         <Skeleton className="h-32 w-full rounded-3xl" />

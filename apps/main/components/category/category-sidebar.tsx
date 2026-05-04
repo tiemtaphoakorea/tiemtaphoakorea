@@ -201,7 +201,7 @@ function SidebarSection({
 }) {
   return (
     <div className={`flex flex-col gap-2 px-5 py-4 ${isLast ? "" : ""}`}>
-      <h4 className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <h4 className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
       <div className="flex flex-col gap-1.5">{children}</div>
@@ -234,7 +234,7 @@ function CategoryCheckbox({
         {label}
       </Label>
       {count !== undefined && (
-        <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{count}</span>
+        <span className="text-xs font-medium text-muted-foreground tabular-nums">{count}</span>
       )}
     </div>
   );

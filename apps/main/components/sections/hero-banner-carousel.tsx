@@ -32,10 +32,7 @@ type Props = {
   heightClass?: string;
 };
 
-export function HeroBannerCarousel({
-  slides,
-  heightClass = "h-[320px] md:h-[460px] lg:h-[560px]",
-}: Props) {
+export function HeroBannerCarousel({ slides, heightClass = "h-80 md:h-115 lg:h-140" }: Props) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [failedImageUrls, setFailedImageUrls] = useState<Record<string, true>>({});
@@ -115,7 +112,7 @@ export function HeroBannerCarousel({
 
         {/* Content — always on top */}
         <div className="absolute inset-0 z-10 flex items-center">
-          <div className="max-w-[18rem] space-y-3 px-8 sm:max-w-xl sm:space-y-5 md:px-14">
+          <div className="max-w-72 space-y-3 px-8 sm:max-w-xl sm:space-y-5 md:px-14">
             {/* Badge */}
             {slide.badgeText && (
               <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 backdrop-blur-sm">
@@ -125,7 +122,7 @@ export function HeroBannerCarousel({
             )}
 
             {/* Headline */}
-            <h1 className="font-display text-[2rem] font-extrabold leading-[1.05] tracking-tight text-white drop-shadow sm:text-4xl md:text-6xl lg:text-7xl">
+            <h1 className="font-display text-3xl font-extrabold leading-none tracking-tight text-white drop-shadow sm:text-4xl md:text-6xl lg:text-7xl">
               {titleLines.map((line, i) => (
                 <span key={i}>
                   {i === 1 ? <span className="text-violet-300">{line}</span> : line}

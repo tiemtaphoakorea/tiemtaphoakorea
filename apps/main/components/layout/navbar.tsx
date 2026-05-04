@@ -63,7 +63,7 @@ export function Navbar({
           aria-label="Thông báo"
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
         >
-          <Bell className="h-[18px] w-[18px]" />
+          <Bell className="h-4.5 w-4.5" />
         </button> */}
       </div>
 
@@ -71,15 +71,16 @@ export function Navbar({
       <div className="container mx-auto hidden h-16 items-center gap-4 px-4 md:flex lg:gap-8">
         <Link href={PUBLIC_ROUTES.HOME} className="group flex shrink-0 items-center gap-2.5">
           {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt="Logo"
-              width={140}
-              height={36}
-              className="max-h-9 w-auto object-contain transition-opacity duration-300 group-hover:opacity-80"
-              style={{ height: "auto" }}
-              priority
-            />
+            <div className="relative h-9 w-35 transition-opacity duration-300 group-hover:opacity-80">
+              <Image
+                src={logoUrl}
+                alt="Logo"
+                fill
+                sizes="140px"
+                className="object-contain object-left"
+                priority
+              />
+            </div>
           ) : (
             <>
               <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30 transition-all duration-300 group-hover:scale-105 group-hover:shadow-primary/50">
@@ -149,7 +150,7 @@ function NavStripLink({
   return (
     <Link
       href={to}
-      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium leading-none transition-colors hover:bg-muted/60 hover:text-primary ${
+      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium leading-none transition-colors hover:bg-muted/60 hover:text-primary ${
         accent ? "text-warning" : "text-foreground"
       }`}
     >

@@ -41,7 +41,7 @@ export function TypographySection() {
             <div key={cls}>
               <p className={`text-2xl text-foreground ${cls}`}>Ag</p>
               <p className="mt-1 font-mono text-xs text-muted-foreground">{cls}</p>
-              <p className="font-mono text-[10px] text-muted-foreground/70">
+              <p className="font-mono text-xs text-muted-foreground/70">
                 {w} · {name}
               </p>
             </div>

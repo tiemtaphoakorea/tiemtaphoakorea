@@ -41,7 +41,7 @@ function ProductGridSkeleton() {
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="h-64 w-[64vw] max-w-[240px] shrink-0 snap-start animate-pulse rounded-2xl bg-gray-200 md:h-80 md:w-[34vw] md:max-w-[280px] lg:w-auto lg:max-w-none"
+              className="h-64 w-[64vw] max-w-60 shrink-0 snap-start animate-pulse rounded-2xl bg-gray-200 md:h-80 md:w-[34vw] md:max-w-70 lg:w-auto lg:max-w-none"
             />
           ))}
         </div>

@@ -34,18 +34,18 @@ export async function CategoryStripEight() {
             <Link
               key={item.id}
               href={PUBLIC_ROUTES.PRODUCTS_BY_CATEGORY(item.slug)}
-              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-white px-2 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[#EEF2FF] hover:shadow-md md:gap-2 md:px-3.5 md:py-[18px]"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-white px-2 py-3.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-info-soft hover:shadow-md md:gap-2 md:px-3.5 md:py-4.5"
             >
-              <span className="grid h-12 w-12 place-items-center rounded-md md:h-[60px] md:w-[60px]">
+              <span className="grid h-12 w-12 place-items-center rounded-md md:h-15 md:w-15">
                 <GeneratedIcon
                   src={pickIcon(item.slug, idx)}
                   className="h-9 w-9 rounded-md object-contain md:h-11 md:w-11"
                 />
               </span>
-              <b className="text-[11px] font-semibold leading-tight text-foreground md:text-[13px]">
+              <b className="text-xs font-semibold leading-tight text-foreground md:text-sm">
                 {item.name}
               </b>
-              <small className="hidden text-[11px] font-normal leading-none text-muted-foreground md:block">
+              <small className="hidden text-xs font-normal leading-none text-muted-foreground md:block">
                 {item.productCount} sản phẩm
               </small>
             </Link>
@@ -74,10 +74,10 @@ export function SectionTitle({
   return (
     <div className="mb-[18px] flex items-end justify-between gap-6">
       <div>
-        <h2 className="m-0 inline-flex items-center gap-2.5 text-2xl font-bold leading-tight tracking-[-0.02em] text-foreground">
+        <h2 className="m-0 inline-flex items-center gap-2.5 text-2xl font-bold leading-tight tracking-tight text-foreground">
           {kr ? (
             <span
-              className="text-[20px] font-bold text-primary"
+              className="text-xl font-bold text-primary"
               style={{ fontFamily: "'Noto Sans KR', sans-serif" }}
             >
               {kr}
@@ -89,13 +89,13 @@ export function SectionTitle({
           {title}
         </h2>
         {sub ? (
-          <small className="mt-1.5 block text-[13px] font-normal leading-snug text-muted-foreground">
+          <small className="mt-1.5 block text-sm font-normal leading-snug text-muted-foreground">
             {sub}
           </small>
         ) : null}
       </div>
       {more && moreHref ? (
-        <a href={moreHref} className="text-[13px] font-semibold leading-none text-primary">
+        <a href={moreHref} className="text-sm font-semibold leading-none text-primary">
           {more} →
         </a>
       ) : null}

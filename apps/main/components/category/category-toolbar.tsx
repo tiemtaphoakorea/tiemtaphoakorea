@@ -64,7 +64,7 @@ export function CategoryToolbar({
               <Badge
                 key={tag.key}
                 variant="secondary"
-                className="h-7 gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary"
+                className="h-7 gap-1 rounded-full bg-primary/10 px-3 text-xs font-semibold text-primary"
               >
                 <span>{tag.label}</span>
                 <Button

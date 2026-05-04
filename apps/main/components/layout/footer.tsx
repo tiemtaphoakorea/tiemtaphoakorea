@@ -257,7 +257,7 @@ function FooterNewsletter() {
         </div>
         {message && (
           <p
-            className={`px-3 text-[11px] ${status === "error" ? "text-warning" : "text-white/60"}`}
+            className={`px-3 text-xs ${status === "error" ? "text-warning" : "text-white/60"}`}
             role="status"
           >
             {message}

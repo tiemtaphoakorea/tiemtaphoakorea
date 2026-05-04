@@ -79,7 +79,7 @@ async function ProductDetailContent({ params }: { params: Promise<{ slug: string
           )}
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage className="max-w-[280px] truncate font-semibold">
+            <BreadcrumbPage className="max-w-70 truncate font-semibold">
               {product.name}
             </BreadcrumbPage>
           </BreadcrumbItem>
