@@ -92,26 +92,31 @@ export async function getProducts({
       : undefined,
   );
 
+  // Resolve HAVING expression for stock status filter
+  let stockHaving: SQL | undefined;
+  if (stockStatus === "in_stock") {
+    stockHaving = sql`${totalAvailableExpr} > ${stockThresholdExpr}`;
+  } else if (stockStatus === "low_stock") {
+    stockHaving = sql`${totalAvailableExpr} > 0 AND ${totalAvailableExpr} <= ${stockThresholdExpr}`;
+  } else if (stockStatus === "out_of_stock") {
+    stockHaving = sql`${totalAvailableExpr} <= 0`;
+  }
+
   // Count must use same filters as data query (including stockStatus HAVING)
   let total: number;
-  if (stockStatus === "low_stock" || stockStatus === "out_of_stock") {
-    const filteredSubquery = db
+  if (stockHaving) {
+    // Subquery to count rows that pass the HAVING clause
+    const baseSubquery = db
       .select({ id: products.id })
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id))
       .leftJoin(productVariants, eq(products.id, productVariants.productId))
       .where(baseWhere)
-      .groupBy(products.id, categories.name);
-    if (stockStatus === "low_stock") {
-      filteredSubquery.having(
-        sql`${totalAvailableExpr} > 0 AND ${totalAvailableExpr} <= ${stockThresholdExpr}`,
-      );
-    } else {
-      filteredSubquery.having(sql`${totalAvailableExpr} <= 0`);
-    }
+      .groupBy(products.id, categories.name)
+      .having(stockHaving);
     const countRows = await db
       .select({ count: sql<number>`count(*)` })
-      .from(filteredSubquery.as("filtered"));
+      .from(baseSubquery.as("filtered"));
     total = Number(countRows[0]?.count ?? 0);
   } else {
     const [totalResult] = await db
@@ -122,50 +127,47 @@ export async function getProducts({
     total = Number(totalResult?.count || 0);
   }
 
-  // Main data query
-  const query = db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      description: products.description,
-      isActive: products.isActive,
-      categoryName: categories.name,
-      basePrice: products.basePrice,
-      totalStock: totalOnHandExpr,
-      totalOnHand: totalOnHandExpr,
-      totalReserved: totalReservedExpr,
-      totalAvailable: totalAvailableExpr,
-      minPrice: sql<number>`min(${productVariants.price})`,
-      maxPrice: sql<number>`max(${productVariants.price})`,
-      minLowStockThreshold: stockThresholdExpr,
-      skus: sql<string>`string_agg(distinct ${productVariants.sku}, ', ')`,
-      thumbnail: sql<string>`(
-        select ${variantImages.imageUrl}
-        from ${variantImages}
-        join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
-        where pv_img.product_id = ${products.id}
-        order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
-        limit 1
-      )`,
-    })
+  // Main data query — HAVING must be chained before limit/offset to ensure it's captured
+  const selectFields = {
+    id: products.id,
+    name: products.name,
+    slug: products.slug,
+    description: products.description,
+    isActive: products.isActive,
+    categoryName: categories.name,
+    basePrice: products.basePrice,
+    totalStock: totalOnHandExpr,
+    totalOnHand: totalOnHandExpr,
+    totalReserved: totalReservedExpr,
+    totalAvailable: totalAvailableExpr,
+    minPrice: sql<number>`min(${productVariants.price})`,
+    maxPrice: sql<number>`max(${productVariants.price})`,
+    minLowStockThreshold: stockThresholdExpr,
+    skus: sql<string>`string_agg(distinct ${productVariants.sku}, ', ')`,
+    thumbnail: sql<string>`(
+      select ${variantImages.imageUrl}
+      from ${variantImages}
+      join ${productVariants} as pv_img on ${variantImages.variantId} = pv_img.id
+      where pv_img.product_id = ${products.id}
+      order by ${variantImages.isPrimary} desc, ${variantImages.displayOrder} asc
+      limit 1
+    )`,
+  };
+
+  const baseDataQuery = db
+    .select(selectFields)
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
     .where(baseWhere)
-    .groupBy(products.id, categories.name)
+    .groupBy(products.id, categories.name);
+
+  const filteredDataQuery = stockHaving ? baseDataQuery.having(stockHaving) : baseDataQuery;
+
+  const results = await filteredDataQuery
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
-
-  // Apply HAVING clause for stock status if requested
-  if (stockStatus === "low_stock") {
-    query.having(sql`${totalAvailableExpr} > 0 AND ${totalAvailableExpr} <= ${stockThresholdExpr}`);
-  } else if (stockStatus === "out_of_stock") {
-    query.having(sql`${totalAvailableExpr} <= 0`);
-  }
-
-  const results = await query;
 
   return {
     data: results,
