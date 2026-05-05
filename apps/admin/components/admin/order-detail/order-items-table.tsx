@@ -56,7 +56,7 @@ export function OrderItemsTable({ items, subtotal, total }: OrderItemsTableProps
                           <ShoppingBag className="h-5 w-5 text-slate-300" />
                         </div>
                       )}
-                      <div className="min-w-0 max-w-[180px]">
+                      <div className="min-w-0 max-w-45">
                         <div
                           className="truncate text-sm font-bold text-slate-900"
                           title={formatVariantDisplayName(item.productName)}

@@ -97,7 +97,7 @@ export function InventoryAddSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto p-6 sm:max-w-[540px] sm:p-10">
+      <SheetContent className="overflow-y-auto p-6 sm:max-w-135 sm:p-10">
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex h-full flex-col">
           <SheetHeader className="mb-8 p-0">
             <SheetTitle className="text-2xl font-black">Tạo đơn nhập hàng</SheetTitle>
@@ -292,7 +292,7 @@ export function InventoryAddSheet({
                   id="note"
                   {...register("note")}
                   placeholder="Thông tin thêm về chuyến hàng, nhà cung cấp..."
-                  className="min-h-[120px] border-slate-200"
+                  className="min-h-30 border-slate-200"
                 />
               </Field>
             </FieldGroup>

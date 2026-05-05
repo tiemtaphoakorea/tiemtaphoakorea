@@ -15,6 +15,7 @@ import {
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@workspace/ui/components/sidebar";
+import { cn } from "@workspace/ui/lib/utils";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,12 +57,12 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider style={{ "--sidebar-width": "13.75rem" } as React.CSSProperties}>
       <AdminSidebar user={user} isLoading={userLoading} />
-      <SidebarInset className="bg-[#F4F5F7]">
+      <SidebarInset className="bg-muted">
         {/* Topbar — matches Admin CMS design: trigger · breadcrumb · search · bell · avatar */}
-        <header className="sticky top-0 z-30 flex h-[54px] shrink-0 items-center gap-3 border-b border-border bg-white px-6">
-          <SidebarTrigger className="h-[34px] w-[34px] rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
+        <header className="sticky top-0 z-30 flex h-13.5 shrink-0 items-center gap-3 border-b border-border bg-white px-6">
+          <SidebarTrigger className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
           <Breadcrumb className="flex-1">
-            <BreadcrumbList className="text-[13px]">
+            <BreadcrumbList className="text-sm">
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink
                   asChild
@@ -120,8 +121,20 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
           </Avatar>
         </header>
 
-        <main className="flex flex-1 flex-col gap-4 p-5 md:p-6">
-          <div key={pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <main
+          className={cn(
+            "flex flex-1 flex-col",
+            pathname === "/chat" ? "overflow-hidden" : "gap-4 p-5 md:p-6",
+          )}
+        >
+          <div
+            key={pathname}
+            className={
+              pathname === "/chat"
+                ? "flex h-full flex-col"
+                : "animate-in fade-in slide-in-from-bottom-4 duration-500"
+            }
+          >
             {children}
           </div>
         </main>

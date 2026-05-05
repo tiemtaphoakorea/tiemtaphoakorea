@@ -783,7 +783,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                           #{sub.orderNumber}
                         </Link>
                         <div className="mt-1 flex items-center gap-2">
-                          <Badge variant="outline" className="bg-white text-[10px]">
+                          <Badge variant="outline" className="bg-white text-xs">
                             {sub.splitType === "in_stock"
                               ? "Hàng có sẵn"
                               : sub.splitType === "pre_order"
@@ -800,14 +800,14 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     <div className="flex flex-col items-end gap-1">
                       {PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue] && (
                         <Badge
-                          className={`${PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue].className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                          className={`${PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue].className} border px-2 py-0.5 text-xs font-bold uppercase`}
                         >
                           {PAYMENT_BADGE[sub.paymentStatus as PaymentStatusValue].label}
                         </Badge>
                       )}
                       {FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue] && (
                         <Badge
-                          className={`${FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue].className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                          className={`${FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue].className} border px-2 py-0.5 text-xs font-bold uppercase`}
                         >
                           {FULFILLMENT_BADGE[sub.fulfillmentStatus as FulfillmentStatusValue].label}
                         </Badge>
@@ -1041,7 +1041,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                             {formatDate(p.createdAt)}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-[10px] uppercase">
+                            <Badge variant="outline" className="text-xs uppercase">
                               {PAYMENT_METHOD_LABEL[p.method as PaymentMethodValue] ?? p.method}
                             </Badge>
                           </TableCell>
@@ -1103,24 +1103,24 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                   FULFILLMENT_BADGE[history.fulfillmentStatus as FulfillmentStatusValue];
                 return (
                   <div key={history.id} className="relative">
-                    <div className="absolute top-1 -left-[23px] h-4 w-4 rounded-full border-2 border-white bg-slate-400 sm:-left-[31px]"></div>
+                    <div className="absolute top-1 -left-5.5 h-4 w-4 rounded-full border-2 border-white bg-slate-400 sm:-left-8"></div>
                     <div className="flex flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {historyPayment && (
                           <Badge
-                            className={`${historyPayment.className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                            className={`${historyPayment.className} border px-2 py-0.5 text-xs font-bold uppercase`}
                           >
                             {historyPayment.label}
                           </Badge>
                         )}
                         {historyFulfillment && (
                           <Badge
-                            className={`${historyFulfillment.className} border px-2 py-0.5 text-[10px] font-bold uppercase`}
+                            className={`${historyFulfillment.className} border px-2 py-0.5 text-xs font-bold uppercase`}
                           >
                             {historyFulfillment.label}
                           </Badge>
                         )}
-                        <span className="ml-auto font-mono text-[10px] font-normal text-slate-400">
+                        <span className="ml-auto font-mono text-xs font-normal text-slate-400">
                           {formatDate(history.createdAt)}
                         </span>
                       </div>
@@ -1219,7 +1219,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                       value={editState.editAdminNote}
                       onChange={(e) => editDispatch({ type: "SET_NOTE", payload: e.target.value })}
                       placeholder="Nhập ghi chú..."
-                      className="min-h-[80px]"
+                      className="min-h-20"
                     />
                   </Field>
                   <Field>

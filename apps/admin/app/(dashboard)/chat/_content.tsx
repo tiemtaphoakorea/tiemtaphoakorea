@@ -3,10 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ChatMessage, ChatRoomWithDetails } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
-import { Card } from "@workspace/ui/components/card";
+import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
 import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { ArrowLeft, ImageIcon, Send } from "lucide-react";
+import Image from "next/image";
 import { Fragment, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { queryKeys } from "@/lib/query-keys";
@@ -79,7 +80,7 @@ export default function AdminMessages() {
   const showConversation = !!activeRoomId;
 
   return (
-    <Card className="grid h-[calc(100vh-54px-48px)] min-h-[400px] grid-cols-1 overflow-hidden border border-border p-0 shadow-none md:grid-cols-[280px_1fr]">
+    <div className="grid h-full grid-cols-1 overflow-hidden md:grid-cols-[280px_1fr]">
       {/* Conversations list */}
       <div
         className={`flex-col overflow-y-auto border-r border-border bg-white md:flex ${
@@ -87,7 +88,7 @@ export default function AdminMessages() {
         }`}
       >
         <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
-          <div className="text-[13px] font-semibold">Hộp thư ({unreadCount} chưa đọc)</div>
+          <div className="text-sm font-semibold">Hộp thư ({unreadCount} chưa đọc)</div>
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -103,9 +104,9 @@ export default function AdminMessages() {
           </div>
         )}
         {!roomsQuery.isLoading && rooms.length === 0 && (
-          <div className="px-4 py-10 text-center text-xs text-muted-foreground">
-            Chưa có cuộc trò chuyện
-          </div>
+          <Empty>
+            <EmptyDescription className="text-xs">Chưa có cuộc trò chuyện</EmptyDescription>
+          </Empty>
         )}
         {rooms.map((r) => {
           const isActive = r.id === currentRoomId;
@@ -129,17 +130,17 @@ export default function AdminMessages() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <div className="text-[13px] font-semibold">{r.customer.fullName ?? "—"}</div>
-                  <div className="ml-2 shrink-0 text-[10px] text-muted-foreground/70">
+                  <div className="text-sm font-semibold">{r.customer.fullName ?? "—"}</div>
+                  <div className="ml-2 shrink-0 text-xs text-muted-foreground/70">
                     {fmtTime(r.lastMessageAt)}
                   </div>
                 </div>
-                <div className="mt-0.5 max-w-[180px] truncate text-xs text-muted-foreground">
+                <div className="mt-0.5 max-w-45 truncate text-xs text-muted-foreground">
                   {preview}
                 </div>
               </div>
               {r.unreadCountAdmin > 0 && (
-                <div className="mt-1.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                <div className="mt-1.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-xs font-bold text-white">
                   {r.unreadCountAdmin}
                 </div>
               )}
@@ -149,8 +150,8 @@ export default function AdminMessages() {
       </div>
 
       {/* Active conversation */}
-      <div className={`flex-col bg-slate-50 md:flex ${showConversation ? "flex" : "hidden"}`}>
-        <div className="flex items-center gap-2.5 border-b border-border bg-white px-[18px] py-3.5">
+      <div className={`flex-col bg-secondary md:flex ${showConversation ? "flex" : "hidden"}`}>
+        <div className="flex items-center gap-2.5 border-b border-border bg-white px-5 py-3.5">
           <button
             type="button"
             onClick={() => setActiveRoomId(null)}
@@ -170,7 +171,7 @@ export default function AdminMessages() {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-[18px] py-4">
+        <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-5 py-4">
           {messagesQuery.isLoading && (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -179,30 +180,38 @@ export default function AdminMessages() {
             </div>
           )}
           {!messagesQuery.isLoading && messages.length === 0 && (
-            <div className="self-center py-10 text-xs text-muted-foreground">
-              Chưa có tin nhắn — hãy bắt đầu cuộc trò chuyện
-            </div>
+            <Empty className="self-center">
+              <EmptyDescription className="text-xs">
+                Chưa có tin nhắn — hãy bắt đầu cuộc trò chuyện
+              </EmptyDescription>
+            </Empty>
           )}
           {messages.map((m) => {
             const fromAdmin = m.sender.role !== "customer";
             return (
               <Fragment key={m.id}>
                 <div
-                  className={`max-w-[72%] rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                  className={`max-w-[72%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
                     fromAdmin
                       ? "self-end rounded-br-sm bg-primary text-white"
                       : "self-start rounded-bl-sm border border-border bg-white"
                   }`}
                 >
                   {m.imageUrl ? (
-                    // biome-ignore lint/performance/noImgElement: chat upload URL
-                    <img src={m.imageUrl} alt="attachment" className="max-w-[200px] rounded-md" />
+                    <Image
+                      src={m.imageUrl}
+                      alt="attachment"
+                      width={200}
+                      height={200}
+                      className="max-w-50 rounded-md"
+                      style={{ width: "auto", height: "auto" }}
+                    />
                   ) : (
                     m.content
                   )}
                 </div>
                 <div
-                  className={`px-1 text-[10px] text-muted-foreground/70 ${fromAdmin ? "self-end" : "self-start"}`}
+                  className={`px-1 text-xs text-muted-foreground/70 ${fromAdmin ? "self-end" : "self-start"}`}
                 >
                   {fmtTime(m.createdAt)}
                 </div>
@@ -230,29 +239,29 @@ export default function AdminMessages() {
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={!currentRoomId || uploadMutation.isPending}
             aria-label="Gửi ảnh"
-            className="gap-1.5"
           >
-            <ImageIcon className="h-3.5 w-3.5" strokeWidth={2} />
+            <ImageIcon strokeWidth={2} />
           </Button>
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Nhập tin nhắn..."
             disabled={!currentRoomId || sendMutation.isPending}
-            className="h-auto flex-1 rounded-lg border-border px-3.5 py-2.5 focus:border-primary focus-visible:ring-0 disabled:opacity-50"
+            className="h-auto flex-1 rounded-lg px-3.5 py-2.5 focus:border-primary focus-visible:ring-0 disabled:opacity-50"
           />
           <Button
             type="submit"
+            size="sm"
             disabled={!currentRoomId || !draft.trim() || sendMutation.isPending}
-            className="gap-1.5"
           >
-            <Send className="h-3.5 w-3.5" strokeWidth={2} />
+            <Send strokeWidth={2} />
           </Button>
         </form>
       </div>
-    </Card>
+    </div>
   );
 }

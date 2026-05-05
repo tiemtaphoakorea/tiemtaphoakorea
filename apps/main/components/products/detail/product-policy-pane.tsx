@@ -38,8 +38,8 @@ export function ProductPolicyPane() {
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
             <p.Icon className="h-5 w-5 text-primary" />
           </div>
-          <h4 className="text-[15px] font-bold text-foreground">{p.title}</h4>
-          <p className="text-[13px] leading-[1.6] text-muted-foreground">{p.desc}</p>
+          <h4 className="text-sm font-bold text-foreground">{p.title}</h4>
+          <p className="text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
         </div>
       ))}
     </div>

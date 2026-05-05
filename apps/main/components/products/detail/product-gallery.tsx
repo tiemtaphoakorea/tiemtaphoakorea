@@ -71,12 +71,12 @@ export function ProductGallery({
 
         <div className="absolute left-4 top-4 flex flex-col gap-1.5">
           {discountPercent !== undefined && discountPercent > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-[13px] font-extrabold text-destructive-foreground shadow-sm">
+            <span className="inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-sm font-extrabold text-destructive-foreground shadow-sm">
               <Zap className="h-3.5 w-3.5 fill-current" />
               Flash −{discountPercent}%
             </span>
           )}
-          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-sm">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card/95 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm">
             <ShieldCheck className="h-3 w-3 text-primary" />
             Chính hãng
           </span>
@@ -102,7 +102,7 @@ export function ProductGallery({
               type="button"
               onClick={() => handleSelectImage(index)}
               aria-label={`Ảnh ${index + 1}`}
-              className={`relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-xl border-2 transition-colors ${
+              className={`relative h-18 w-18 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-colors ${
                 selectedImageIndex === index
                   ? "border-primary"
                   : "border-border opacity-80 hover:border-primary hover:opacity-100"

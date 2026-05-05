@@ -67,15 +67,16 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* ─── Radius scale (token-driven) ────────────────────────── */
+  /* ─── Radius scale — values defined in :root below ──────── */
+  --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+  --radius-4xl: var(--radius-4xl);
   --radius-full: var(--radius-full);
-  --radius-2xl: calc(var(--radius-xl) + 4px);
-  --radius-3xl: calc(var(--radius-xl) + 8px);
-  --radius-4xl: calc(var(--radius-xl) + 12px);
 
   /* ─── Typography scale ───────────────────────────────────── */
   --text-xs: 12px;
@@ -130,12 +131,18 @@
   --input: #E5E7EB;
   --ring: #6366F1;
 
-  /* ─── Geometry (radius tokens) ───────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 999px;
+  /* ─── Geometry (radius tokens) ───────────────────────────────
+   * Tailwind v4 defaults — utilities resolve directly to the
+   * design-system spec (.ftab=6px, .filter-tabs/.btn=8px, .card=12px). */
+  --radius-xs: 0.125rem; /*  2px */
+  --radius-sm: 0.25rem;  /*  4px */
+  --radius-md: 0.375rem; /*  6px */
+  --radius-lg: 0.5rem;   /*  8px */
+  --radius-xl: 0.75rem;  /* 12px */
+  --radius-2xl: 1rem;    /* 16px */
+  --radius-3xl: 1.5rem;  /* 24px */
+  --radius-4xl: 2rem;    /* 32px */
+  --radius-full: 9999px;
   /* shadcn legacy alias — components reading var(--radius) get md */
   --radius: var(--radius-md);
 

@@ -33,7 +33,7 @@ export function StaticPageShell({ title, description, children }: StaticPageShel
       </header>
 
       <div
-        className="mt-8 max-w-3xl space-y-5 text-[15px] leading-relaxed text-foreground/85
+        className="mt-8 max-w-3xl space-y-5 text-sm leading-relaxed text-foreground/85
           [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground
           [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-foreground
           [&_p]:my-3

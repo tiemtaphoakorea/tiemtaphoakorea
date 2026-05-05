@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import {
@@ -11,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,7 +23,6 @@ import {
   thumbLabelFromName,
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
-import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
 import { TonePill } from "@/components/admin/shared/status-badge";
@@ -60,9 +61,9 @@ export default function AdminInventory() {
   return (
     <div className="flex flex-col gap-4">
       {(lowStock.length > 0 || outOfStock.length > 0) && (
-        <div className="flex items-center gap-3 rounded-[10px] border border-red-200 bg-gradient-to-br from-red-50 to-white px-[18px] py-3.5">
-          <AlertTriangle className="h-[18px] w-[18px] shrink-0 text-red-600" strokeWidth={2} />
-          <p className="text-[13px] font-medium leading-snug text-red-600">
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertDescription className="text-destructive">
             <b className="font-bold">{lowStock.length} SP sắp hết</b>
             {outOfStock.length > 0 && (
               <>
@@ -70,8 +71,8 @@ export default function AdminInventory() {
                 <b className="font-bold">{outOfStock.length} SP đã hết hàng</b>
               </>
             )}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       <MetricStatBar
@@ -108,8 +109,16 @@ export default function AdminInventory() {
       />
 
       <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-        <div className="flex flex-col gap-2 border-b border-border px-[18px] py-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <FilterTabs tabs={TABS} value={tab} onChange={setTab} />
+        <div className="flex flex-col gap-2 border-b border-border px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as WarehouseTab)}>
+            <TabsList>
+              {TABS.map((t) => (
+                <TabsTrigger key={t.id} value={t.id}>
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <Button
             size="sm"
             className="h-7 gap-1.5 rounded-md text-xs"
@@ -121,7 +130,7 @@ export default function AdminInventory() {
         </div>
 
         {tab !== "stock" && (
-          <p className="border-b border-border bg-muted/30 px-[18px] py-2 text-[11px] text-muted-foreground">
+          <p className="border-b border-border bg-muted/30 px-5 py-2 text-xs text-muted-foreground">
             Hiển thị 10 SKU cần xử lý nhất · Số liệu đầy đủ theo variant tại{" "}
             <a href="/analytics/inventory" className="font-medium underline underline-offset-2">
               Báo cáo Tồn kho
@@ -133,15 +142,10 @@ export default function AdminInventory() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableRow>
                   {["Sản phẩm", "Danh mục", "Tồn khả dụng", "Tồn vật lý", "Đã giữ chỗ"].map(
                     (h, i) => (
-                      <TableHead
-                        key={i}
-                        className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                      >
-                        {h}
-                      </TableHead>
+                      <TableHead key={i}>{h}</TableHead>
                     ),
                   )}
                 </TableRow>
@@ -169,7 +173,7 @@ export default function AdminInventory() {
                             label={thumbLabelFromName(p.name)}
                             tone={thumbToneFromId(p.id)}
                           />
-                          <span className="text-[13px] font-semibold">
+                          <span className="text-sm font-semibold">
                             {p.name.length > 40 ? `${p.name.slice(0, 40)}…` : p.name}
                           </span>
                         </div>
@@ -198,14 +202,9 @@ export default function AdminInventory() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableRow>
                   {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
-                    <TableHead
-                      key={i}
-                      className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      {h}
-                    </TableHead>
+                    <TableHead key={i}>{h}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -227,8 +226,8 @@ export default function AdminInventory() {
                           tone={thumbToneFromId(v.id)}
                         />
                         <div className="flex flex-col leading-tight">
-                          <span className="text-[13px] font-semibold">{v.productName}</span>
-                          <span className="font-mono text-[11px] text-muted-foreground">
+                          <span className="text-sm font-semibold">{v.productName}</span>
+                          <span className="font-mono text-xs text-muted-foreground">
                             {v.name} · {v.sku ?? "—"}
                           </span>
                         </div>

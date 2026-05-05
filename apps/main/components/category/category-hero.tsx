@@ -54,7 +54,7 @@ export function CategoryHero({
       <CardContent className="relative z-10 grid grid-cols-[1fr_auto] items-center gap-3 px-5 py-4 md:gap-4 md:px-10 md:py-9">
         <div className="min-w-0 space-y-1 md:space-y-2">
           <div
-            className={`text-[10px] font-bold uppercase tracking-[0.1em] md:text-[11px] md:tracking-[0.12em] ${styles.eyebrowColor}`}
+            className={`text-xs font-bold uppercase tracking-widest md:text-xs md:tracking-widest ${styles.eyebrowColor}`}
           >
             {eyebrow || defaultEyebrow}
           </div>
@@ -70,16 +70,14 @@ export function CategoryHero({
             <b className={`text-xl font-extrabold tracking-tight md:text-3xl ${styles.statColor}`}>
               {total}
             </b>
-            <small className="text-[10px] font-medium text-muted-foreground md:text-[11px]">
-              sản phẩm
-            </small>
+            <small className="text-xs font-medium text-muted-foreground md:text-xs">sản phẩm</small>
           </div>
           {newCount > 0 && (
             <div className="flex flex-col items-end">
               <b className="text-xl font-extrabold tracking-tight text-success md:text-3xl">
                 +{newCount}
               </b>
-              <small className="text-[10px] font-medium text-muted-foreground md:text-[11px]">
+              <small className="text-xs font-medium text-muted-foreground md:text-xs">
                 mới tuần này
               </small>
             </div>

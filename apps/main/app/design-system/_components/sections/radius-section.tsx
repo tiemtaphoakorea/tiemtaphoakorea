@@ -19,8 +19,8 @@ export function RadiusSection() {
             <div key={r.tailwind} className="flex flex-col items-center gap-2">
               <div className={`size-14 border-2 border-primary bg-primary/10 ${r.tailwind}`} />
               <TokenPill value={r.tailwind} />
-              <p className="font-mono text-[10px] text-muted-foreground/70">{r.computed}</p>
-              <p className="max-w-[80px] text-center text-[10px] text-muted-foreground/70">
+              <p className="font-mono text-xs text-muted-foreground/70">{r.computed}</p>
+              <p className="max-w-20 text-center text-xs text-muted-foreground/70">
                 {r.usage}
               </p>
             </div>

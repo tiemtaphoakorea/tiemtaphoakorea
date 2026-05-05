@@ -67,8 +67,8 @@ export function IndexCardStockAlert() {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Tồn kho cảnh báo</div>
-          <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          <div className="text-sm font-bold leading-tight">Tồn kho cảnh báo</div>
+          <div className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             Sản phẩm sắp hết hoặc đã hết hàng
           </div>
         </div>
@@ -81,17 +81,17 @@ export function IndexCardStockAlert() {
           </div>
         ) : isHealthy ? (
           <div className="flex flex-col gap-1">
-            <span className="text-[20px] font-bold leading-none text-emerald-700">An toàn</span>
+            <span className="text-xl font-bold leading-none text-emerald-700">An toàn</span>
             <span className="text-xs text-muted-foreground">Không có SP nào cần xử lý</span>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <span className="text-[20px] font-bold leading-none text-amber-700">
+            <span className="text-xl font-bold leading-none text-amber-700">
               {totalAlerts} SP cần xử lý
             </span>
             <ul className="flex flex-col gap-1.5">
               {top2.map((item) => (
-                <li key={item.id} className="flex items-center gap-2 text-[12px] leading-tight">
+                <li key={item.id} className="flex items-center gap-2 text-xs leading-tight">
                   <span
                     className={`h-2 w-2 shrink-0 rounded-full ${
                       item.status === "out" ? "bg-red-500" : "bg-amber-500"
@@ -102,7 +102,7 @@ export function IndexCardStockAlert() {
                     {item.variantName ? ` · ${item.variantName}` : ""}
                   </span>
                   <span
-                    className={`shrink-0 text-[11px] font-semibold tabular-nums ${
+                    className={`shrink-0 text-xs font-semibold tabular-nums ${
                       item.status === "out" ? "text-red-600" : "text-amber-700"
                     }`}
                   >
@@ -112,7 +112,7 @@ export function IndexCardStockAlert() {
               ))}
             </ul>
             {remaining > 0 ? (
-              <span className="text-[11px] text-muted-foreground">+ {remaining} SP khác</span>
+              <span className="text-xs text-muted-foreground">+ {remaining} SP khác</span>
             ) : null}
           </div>
         )}

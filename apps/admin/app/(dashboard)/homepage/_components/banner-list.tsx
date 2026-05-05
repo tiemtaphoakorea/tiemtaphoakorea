@@ -16,6 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { queryKeys } from "@/lib/query-keys";
@@ -85,9 +86,9 @@ export function BannerList({ banners, isLoading, editingId, onEdit, onCloseEdit 
 
   if (isLoading || banners.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-        {isLoading ? "Đang tải..." : "Chưa có banner nào."}
-      </div>
+      <Empty bordered>
+        <EmptyDescription>{isLoading ? "Đang tải..." : "Chưa có banner nào."}</EmptyDescription>
+      </Empty>
     );
   }
 

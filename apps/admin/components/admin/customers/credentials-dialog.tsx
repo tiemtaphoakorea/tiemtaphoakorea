@@ -17,7 +17,7 @@ interface CredentialsDialogProps {
 export function CredentialsDialog({ credentials, onClose, onCopy }: CredentialsDialogProps) {
   return (
     <Dialog open={!!credentials} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="rounded-[2rem] border-none shadow-2xl sm:max-w-md">
+      <DialogContent className="rounded-4xl border-none shadow-2xl sm:max-w-md">
         <DialogHeader className="items-center space-y-4 pt-4 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
             <CheckCircle2 className="h-8 w-8" />
@@ -32,7 +32,7 @@ export function CredentialsDialog({ credentials, onClose, onCopy }: CredentialsD
         </DialogHeader>
         <div className="space-y-4 rounded-3xl border border-slate-100 bg-slate-50 p-6">
           <div className="space-y-1">
-            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+            <p className="text-xs font-black tracking-widest text-slate-400 uppercase">
               Mã khách hàng / Email
             </p>
             <div className="flex items-center justify-between">
@@ -49,7 +49,7 @@ export function CredentialsDialog({ credentials, onClose, onCopy }: CredentialsD
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+            <p className="text-xs font-black tracking-widest text-slate-400 uppercase">
               Mật khẩu mới
             </p>
             <div className="flex items-center justify-between">

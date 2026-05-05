@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Check } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -21,7 +22,7 @@ type OrderDrawerProps = {
   onClose: () => void;
 };
 
-const SECTION_LABEL = "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+const SECTION_LABEL = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 const fmtDate = (d: Date | string | null): string => {
   if (!d) return "—";
@@ -86,14 +87,14 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
-        <SheetHeader className="border-b border-border px-[22px] py-4">
-          <SheetTitle className="text-[15px] font-bold">
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-120">
+        <SheetHeader className="border-b border-border px-6 py-4">
+          <SheetTitle className="text-sm font-bold">
             Chi tiết đơn {order?.orderNumber ?? ""}
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-6">
           {orderQuery.isLoading && (
             <div className="flex flex-col gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -108,7 +109,7 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
           {order && (
             <>
               {/* Meta box */}
-              <div className="flex flex-col gap-2 rounded-[10px] border border-border bg-muted/40 p-3.5">
+              <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3.5">
                 {[
                   ["Khách hàng", order.customer.fullName],
                   ["Mã KH", order.customer.customerCode],
@@ -118,7 +119,7 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                 ].map(([l, v]) => (
                   <div key={l} className="flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-muted-foreground">{l}</span>
-                    <span className="max-w-[260px] text-right text-[13px] font-semibold text-foreground">
+                    <span className="max-w-65 text-right text-sm font-semibold text-foreground">
                       {v}
                     </span>
                   </div>
@@ -142,11 +143,12 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                     className="flex items-center gap-2.5 border-b border-border py-2 last:border-b-0"
                   >
                     {it.variant?.images?.[0]?.imageUrl ? (
-                      // biome-ignore lint/performance/noImgElement: order item image URL
-                      <img
+                      <Image
                         src={it.variant.images[0].imageUrl}
                         alt=""
-                        className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 shrink-0 rounded-lg object-contain"
                       />
                     ) : (
                       <ProductThumb
@@ -155,28 +157,28 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                       />
                     )}
                     <div className="flex-1">
-                      <div className="text-[13px] font-medium leading-tight">
+                      <div className="text-sm font-medium leading-tight">
                         {it.productName ?? "—"}
                       </div>
-                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      <div className="mt-0.5 text-xs text-muted-foreground">
                         {it.variantName} · ×{it.quantity}
                       </div>
                     </div>
-                    <div className="text-[13px] font-bold tabular-nums text-red-600">
+                    <div className="text-sm font-bold tabular-nums text-red-600">
                       {formatVnd(Number(it.unitPrice) * it.quantity)}
                     </div>
                   </div>
                 ))}
                 <div className="flex items-center justify-between pt-2.5">
-                  <span className="text-[13px] font-semibold text-muted-foreground">Tổng cộng</span>
-                  <span className="text-[17px] font-extrabold tabular-nums text-red-600">
+                  <span className="text-sm font-semibold text-muted-foreground">Tổng cộng</span>
+                  <span className="text-lg font-extrabold tabular-nums text-red-600">
                     {formatVnd(Number(order.total ?? 0))}
                   </span>
                 </div>
                 {Number(order.paidAmount ?? 0) > 0 && (
                   <div className="mt-1 flex items-center justify-between">
-                    <span className="text-[12px] text-muted-foreground">Đã thanh toán</span>
-                    <span className="text-[13px] font-semibold tabular-nums text-emerald-700">
+                    <span className="text-xs text-muted-foreground">Đã thanh toán</span>
+                    <span className="text-sm font-semibold tabular-nums text-emerald-700">
                       {formatVnd(Number(order.paidAmount ?? 0))}
                     </span>
                   </div>
@@ -191,21 +193,21 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                     {order.statusHistory.map((h, i, arr) => (
                       <li key={h.id} className="relative flex gap-2.5 pb-3.5">
                         {i < arr.length - 1 && (
-                          <span className="absolute left-[10px] top-[22px] bottom-0 w-px bg-border" />
+                          <span className="absolute left-2.5 top-5 bottom-0 w-px bg-border" />
                         )}
-                        <span className="z-10 grid h-[22px] w-[22px] place-items-center rounded-full border-2 border-primary bg-primary/10 text-primary">
+                        <span className="z-10 grid h-5 w-5 place-items-center rounded-full border-2 border-primary bg-primary/10 text-primary">
                           <Check className="h-3 w-3" strokeWidth={3} />
                         </span>
                         <div>
-                          <b className="text-[13px] font-semibold text-foreground">
+                          <b className="text-sm font-semibold text-foreground">
                             {h.fulfillmentStatus} · {h.paymentStatus}
                           </b>
-                          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
                             {fmtDate(h.createdAt)}
                             {h.creator?.fullName ? ` · ${h.creator.fullName}` : ""}
                           </span>
                           {h.note && (
-                            <span className="mt-0.5 block text-[11px] italic text-muted-foreground">
+                            <span className="mt-0.5 block text-xs italic text-muted-foreground">
                               {h.note}
                             </span>
                           )}
@@ -219,7 +221,7 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap justify-end gap-2 border-t border-border px-[22px] py-3.5">
+        <div className="flex flex-wrap justify-end gap-2 border-t border-border px-6 py-3.5">
           {order && order.fulfillmentStatus === "pending" && (
             <Button
               size="sm"

@@ -41,7 +41,7 @@ export function CustomerOrderStatusCard({
               <div key={history.id} className="relative flex gap-4">
                 {/* Line connecting dots */}
                 {index !== order.statusHistory.length - 1 && (
-                  <div className="absolute top-6 bottom-[-20px] left-[7px] w-0.5 bg-slate-200" />
+                  <div className="absolute top-6 -bottom-5 left-1.75 w-0.5 bg-slate-200" />
                 )}
                 <div className="bg-primary z-10 mt-1 h-4 w-4 flex-shrink-0 rounded-full ring-4 ring-white" />
                 <div className="flex flex-col gap-1 pb-1">

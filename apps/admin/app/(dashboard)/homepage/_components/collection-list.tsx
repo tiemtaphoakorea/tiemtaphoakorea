@@ -16,6 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { queryKeys } from "@/lib/query-keys";
@@ -94,9 +95,9 @@ export function CollectionList({ collections, isLoading, editingId, onEdit, onCl
 
   if (isLoading || collections.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-        {isLoading ? "Đang tải..." : "Chưa có collection nào."}
-      </div>
+      <Empty bordered>
+        <EmptyDescription>{isLoading ? "Đang tải..." : "Chưa có collection nào."}</EmptyDescription>
+      </Empty>
     );
   }
 

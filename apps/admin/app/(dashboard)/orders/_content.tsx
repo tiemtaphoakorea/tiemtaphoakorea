@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import {
   FULFILLMENT_STATUS,
   type FulfillmentStatusValue,
@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,6 @@ import {
   TableErrorRow,
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
-import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
@@ -101,6 +101,26 @@ export default function AdminOrders() {
     staleTime: 30_000,
   });
 
+  const tabCountResults = useQueries({
+    queries: TABS.map((t) => ({
+      queryKey: queryKeys.orders.list(debouncedQuery, "all", t.id, false, 1, 1),
+      queryFn: async () => {
+        const res = await adminClient.getOrders({
+          search: debouncedQuery || undefined,
+          fulfillmentStatus: t.id === "all" ? undefined : t.id,
+          page: 1,
+          limit: 1,
+        });
+        return res as unknown as { metadata: { total: number } };
+      },
+      staleTime: 60_000,
+      select: (data: { metadata: { total: number } }) => data.metadata.total,
+    })),
+  });
+  const tabCounts = Object.fromEntries(
+    TABS.map((t, i) => [t.id, tabCountResults[i]?.data ?? null]),
+  ) as Record<FulfillmentFilter, number | null>;
+
   const list = ordersQuery.data?.data ?? [];
   const total = ordersQuery.data?.metadata.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -108,15 +128,26 @@ export default function AdminOrders() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <FilterTabs
-          tabs={TABS}
+        <Tabs
           value={filter}
-          onChange={(v) => {
-            setFilter(v);
+          onValueChange={(v) => {
+            setFilter(v as FulfillmentFilter);
             setPage(1);
           }}
-        />
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
+        >
+          <TabsList>
+            {TABS.map((t) => {
+              const count = tabCounts[t.id];
+              return (
+                <TabsTrigger key={t.id} value={t.id}>
+                  {t.label}
+                  {count != null && <span className="ml-1 tabular-nums opacity-70">({count})</span>}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
@@ -125,7 +156,7 @@ export default function AdminOrders() {
               setPage(1);
             }}
             placeholder="Tìm mã đơn, khách hàng..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -134,12 +165,12 @@ export default function AdminOrders() {
           </span>
           <Button
             variant="outline"
-            className="ml-auto h-[34px]"
+            className="ml-auto h-9"
             onClick={() => window.open("/api/admin/orders/export")}
           >
             Xuất Excel
           </Button>
-          <Button asChild className="h-[34px] gap-1.5">
+          <Button asChild className="h-9 gap-1.5">
             <Link href="/orders/new">
               <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
               Tạo đơn
@@ -152,7 +183,7 @@ export default function AdminOrders() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {[
                   "Mã đơn",
                   "Khách hàng",
@@ -164,12 +195,7 @@ export default function AdminOrders() {
                   "Thời gian",
                   "",
                 ].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -185,29 +211,27 @@ export default function AdminOrders() {
                   className="cursor-pointer"
                   onClick={() => router.push(`/orders/${o.id}`)}
                 >
-                  <TableCell className="px-4 py-2.5 font-mono text-xs font-semibold">
-                    {o.orderNumber}
-                  </TableCell>
-                  <TableCell className="px-4 py-2.5 text-[13px] font-semibold">
+                  <TableCell className="font-mono text-xs font-semibold">{o.orderNumber}</TableCell>
+                  <TableCell className="text-sm font-semibold">
                     {o.customer.fullName ?? "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground">
                     {o.customer.phone ?? "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5">{o.itemCount} món</TableCell>
-                  <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
+                  <TableCell>{o.itemCount} món</TableCell>
+                  <TableCell className="font-bold tabular-nums text-red-600">
                     {formatVnd(Number(o.total ?? 0))}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5">
+                  <TableCell>
                     <StatusBadge type={o.paymentStatus as StatusType} />
                   </TableCell>
-                  <TableCell className="px-4 py-2.5">
+                  <TableCell>
                     <StatusBadge type={o.fulfillmentStatus as StatusType} />
                   </TableCell>
-                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground">
                     {fmtDate(o.createdAt)}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Button asChild variant="outline" size="sm" className="h-7 rounded-md text-xs">
                       <Link href={`/orders/${o.id}`}>Chi tiết</Link>
                     </Button>
@@ -226,7 +250,7 @@ export default function AdminOrders() {
                 setPageSize(Number(v));
                 setPage(1);
               }}
-              className="h-8 w-[72px] text-[13px]"
+              className="h-8 w-18 text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((s) => (
                 <SelectOption key={s} value={String(s)}>

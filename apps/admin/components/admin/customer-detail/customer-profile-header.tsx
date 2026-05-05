@@ -44,14 +44,14 @@ export function CustomerProfileHeader({ customer }: CustomerProfileHeaderProps) 
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-4xl font-black tracking-tight text-slate-900">{fullName}</h1>
               <Badge
-                className={`${customer.isActive !== false ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-red-200 bg-red-100 text-red-700"} border px-3 py-1 text-[10px] font-black uppercase`}
+                className={`${customer.isActive !== false ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-red-200 bg-red-100 text-red-700"} border px-3 py-1 text-xs font-black uppercase`}
               >
                 {customer.isActive !== false ? "Đang hoạt động" : "Đã bị khóa"}
               </Badge>
               {customer.customerCode && (
                 <Badge
                   variant="outline"
-                  className="border-slate-200 px-3 py-1 text-[10px] font-black uppercase"
+                  className="border-slate-200 px-3 py-1 text-xs font-black uppercase"
                 >
                   {customer.customerCode}
                 </Badge>
@@ -64,7 +64,7 @@ export function CustomerProfileHeader({ customer }: CustomerProfileHeaderProps) 
                   <Phone className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] tracking-widest text-slate-400 uppercase">
+                  <span className="text-xs tracking-widest text-slate-400 uppercase">
                     Số điện thoại
                   </span>
                   <span>{customer.phone || "Chưa cập nhật"}</span>
@@ -76,9 +76,7 @@ export function CustomerProfileHeader({ customer }: CustomerProfileHeaderProps) 
                   <MapPin className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] tracking-widest text-slate-400 uppercase">
-                    Địa chỉ
-                  </span>
+                  <span className="text-xs tracking-widest text-slate-400 uppercase">Địa chỉ</span>
                   <span className="line-clamp-2 text-sm">
                     {customer.address || "Chưa cập nhật"}
                   </span>
@@ -90,7 +88,7 @@ export function CustomerProfileHeader({ customer }: CustomerProfileHeaderProps) 
                   <User className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] tracking-widest text-slate-400 uppercase">
+                  <span className="text-xs tracking-widest text-slate-400 uppercase">
                     Loại khách
                   </span>
                   <span>{customerTypeLabel}</span>

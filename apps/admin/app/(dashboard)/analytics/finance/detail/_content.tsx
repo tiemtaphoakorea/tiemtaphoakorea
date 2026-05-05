@@ -5,6 +5,8 @@ import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { formatCurrency } from "@workspace/shared/utils";
 import { Badge } from "@workspace/ui/components/badge";
 import { Card, CardContent } from "@workspace/ui/components/card";
+import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
+import { Progress } from "@workspace/ui/components/progress";
 import {
   Table,
   TableBody,
@@ -53,12 +55,7 @@ function MarginBar({ margin }: { margin: number }) {
   const isNeg = margin < 0;
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-        <div
-          className={`h-full rounded-full transition-all ${isNeg ? "bg-red-400" : "bg-emerald-400"}`}
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
+      <Progress value={clamped} tone={isNeg ? "destructive" : "success"} className="w-16" />
       <span
         className={`text-xs font-bold tabular-nums ${isNeg ? "text-red-500" : "text-emerald-600"}`}
       >
@@ -176,9 +173,9 @@ export default function AnalyticsFinanceDetailPage() {
           ))}
         </div>
       ) : !rows.length ? (
-        <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
-          Không có giao dịch trong khoảng này.
-        </p>
+        <Empty bordered>
+          <EmptyDescription>Không có giao dịch trong khoảng này.</EmptyDescription>
+        </Empty>
       ) : (
         <>
           {/* Desktop table */}
@@ -186,22 +183,22 @@ export default function AnalyticsFinanceDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-xs font-black tracking-widest uppercase">
                     Ngày
                   </TableHead>
-                  <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-right text-xs font-black tracking-widest uppercase">
                     Doanh thu
                   </TableHead>
-                  <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-right text-xs font-black tracking-widest uppercase">
                     COGS
                   </TableHead>
-                  <TableHead className="text-right text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-right text-xs font-black tracking-widest uppercase">
                     LN gộp
                   </TableHead>
-                  <TableHead className="text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-xs font-black tracking-widest uppercase">
                     Biên LN
                   </TableHead>
-                  <TableHead className="text-center text-[10px] font-black tracking-widest uppercase">
+                  <TableHead className="text-center text-xs font-black tracking-widest uppercase">
                     Đơn
                   </TableHead>
                   <TableHead className="w-8" />
@@ -219,10 +216,7 @@ export default function AnalyticsFinanceDetailPage() {
                     >
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <Badge
-                            variant="secondary"
-                            className="px-1.5 py-0.5 text-[10px] font-black"
-                          >
+                          <Badge variant="secondary" className="px-1.5 py-0.5 text-xs font-black">
                             {day}
                           </Badge>
                           <span className="text-sm font-semibold tabular-nums">{date}</span>
@@ -270,7 +264,7 @@ export default function AnalyticsFinanceDetailPage() {
                 >
                   <CardContent className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Badge variant="secondary" className="px-1.5 text-[10px] font-black">
+                      <Badge variant="secondary" className="px-1.5 text-xs font-black">
                         {day}
                       </Badge>
                       <div className="flex flex-col gap-0.5">
@@ -289,7 +283,7 @@ export default function AnalyticsFinanceDetailPage() {
                           LN {formatCurrency(row.grossProfit)}
                         </span>
                         <span
-                          className={`text-[10px] font-bold ${margin >= 0 ? "text-emerald-500" : "text-red-400"}`}
+                          className={`text-xs font-bold ${margin >= 0 ? "text-emerald-500" : "text-red-400"}`}
                         >
                           {margin.toFixed(1)}%
                         </span>

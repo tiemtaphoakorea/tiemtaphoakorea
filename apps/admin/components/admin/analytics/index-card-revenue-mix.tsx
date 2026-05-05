@@ -49,8 +49,8 @@ export function IndexCardRevenueMix({ data, isLoading }: IndexCardRevenueMixProp
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Cơ cấu danh mục</div>
-          <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          <div className="text-sm font-bold leading-tight">Cơ cấu danh mục</div>
+          <div className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             Tỷ trọng doanh thu theo danh mục
           </div>
         </div>
@@ -83,7 +83,7 @@ export function IndexCardRevenueMix({ data, isLoading }: IndexCardRevenueMixProp
             </div>
             <ul className="flex min-w-0 flex-1 flex-col gap-1.5">
               {segments.map((s) => (
-                <li key={s.category} className="flex items-center gap-2 text-[12px] leading-tight">
+                <li key={s.category} className="flex items-center gap-2 text-xs leading-tight">
                   <span
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: s.color }}
@@ -92,7 +92,7 @@ export function IndexCardRevenueMix({ data, isLoading }: IndexCardRevenueMixProp
                   <span className="shrink-0 tabular-nums text-muted-foreground">
                     {s.percent.toFixed(0)}%
                   </span>
-                  <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/70">
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
                     {formatCurrency(s.revenue)}
                   </span>
                 </li>

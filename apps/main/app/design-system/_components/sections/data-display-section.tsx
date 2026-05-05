@@ -41,7 +41,7 @@ export function DataDisplaySection() {
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <Avatar className="size-6">
-                <AvatarFallback className="text-[10px]">EF</AvatarFallback>
+                <AvatarFallback className="text-xs">EF</AvatarFallback>
               </Avatar>
               <p className="text-xs text-muted-foreground/70">size-6</p>
             </div>

@@ -62,15 +62,15 @@ export function ExpenseDrawer({ open, onClose }: ExpenseDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]">
-        <SheetHeader className="border-b border-border px-[22px] py-4">
-          <SheetTitle className="text-[15px] font-bold">Ghi chi phí mới</SheetTitle>
+      <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-120">
+        <SheetHeader className="border-b border-border px-6 py-4">
+          <SheetTitle className="text-sm font-bold">Ghi chi phí mới</SheetTitle>
         </SheetHeader>
 
         <form
           id="expense-form"
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-1 flex-col overflow-y-auto px-[22px] py-[22px]"
+          className="flex flex-1 flex-col overflow-y-auto px-6 py-6"
         >
           <FieldGroup>
             <Field>
@@ -118,7 +118,7 @@ export function ExpenseDrawer({ open, onClose }: ExpenseDrawerProps) {
           </FieldGroup>
         </form>
 
-        <div className="flex justify-end gap-2 border-t border-border px-[22px] py-3.5">
+        <div className="flex justify-end gap-2 border-t border-border px-6 py-3.5">
           <Button variant="outline" onClick={onClose}>
             Huỷ
           </Button>

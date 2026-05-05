@@ -43,10 +43,10 @@ export default function SettingsWidgets() {
   return (
     <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
       <div className={PANEL_CLS}>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Cấu hình nút liên hệ nổi ở góc dưới phải cửa hàng. Để trống để ẩn tùy chọn đó.
         </p>
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Số điện thoại lấy từ{" "}
           <a href="/settings" className="underline underline-offset-2">
             Cài đặt → Cửa hàng

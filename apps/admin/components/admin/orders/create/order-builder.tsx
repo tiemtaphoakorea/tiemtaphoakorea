@@ -150,7 +150,7 @@ export function OrderBuilder() {
           </CardContent>
         </Card>
 
-        <Card className="min-h-[400px]">
+        <Card className="min-h-100">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
@@ -178,7 +178,7 @@ export function OrderBuilder() {
           <CardContent>
             <Textarea
               placeholder="Ghi chú nội bộ cho đơn hàng..."
-              className="min-h-[100px]"
+              className="min-h-25"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -213,7 +213,7 @@ export function OrderBuilder() {
                 <FieldLabel htmlFor="ship-address">Địa chỉ giao hàng</FieldLabel>
                 <Textarea
                   id="ship-address"
-                  className="min-h-[80px]"
+                  className="min-h-20"
                   value={shippingAddress}
                   onChange={(e) => setShippingAddress(e.target.value)}
                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."

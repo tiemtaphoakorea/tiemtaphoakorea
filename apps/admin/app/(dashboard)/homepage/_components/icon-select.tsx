@@ -2,6 +2,7 @@
 
 import { GENERATED_ICONS } from "@workspace/shared/generated-icons";
 import { cn } from "@workspace/ui/lib/utils";
+import Image from "next/image";
 
 const ICON_KEYS = Object.keys(GENERATED_ICONS) as Array<keyof typeof GENERATED_ICONS>;
 
@@ -39,8 +40,13 @@ export function IconSelect({ value, onChange }: Props) {
           title={key}
           aria-label={key}
         >
-          {/* biome-ignore lint/performance/noImgElement: inline SVG data URL, next/image not applicable */}
-          <img src={GENERATED_ICONS[key]} alt={key} className="h-full w-full object-contain" />
+          <Image
+            src={GENERATED_ICONS[key]}
+            alt={key}
+            width={32}
+            height={32}
+            className="h-full w-full object-contain"
+          />
         </button>
       ))}
     </div>

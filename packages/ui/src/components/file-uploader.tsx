@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { cn } from "@workspace/ui/lib/utils"
-import { Loader2, Upload, X } from "lucide-react"
-import * as React from "react"
-import { useDropzone } from "react-dropzone"
-import { toast } from "sonner"
+import { cn } from "@workspace/ui/lib/utils";
+import { Loader2, Upload, X } from "lucide-react";
+import * as React from "react";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 
-const EMPTY: string[] = []
+const EMPTY: string[] = [];
 
 interface FileUploaderProps {
-  value?: string[]
-  onChange: (urls: string[]) => void
+  value?: string[];
+  onChange: (urls: string[]) => void;
   /** Async fn that uploads a File and returns its public URL */
-  uploadFn: (file: File) => Promise<string>
-  maxFiles?: number
-  accept?: string
+  uploadFn: (file: File) => Promise<string>;
+  maxFiles?: number;
+  accept?: string;
   /** Compact 110px single-image dropzone */
-  compact?: boolean
-  hint?: string
-  className?: string
+  compact?: boolean;
+  hint?: string;
+  className?: string;
 }
 
 export function FileUploader({
@@ -30,32 +30,32 @@ export function FileUploader({
   hint,
   className,
 }: FileUploaderProps) {
-  "use no memo"
-  const [uploading, setUploading] = React.useState(false)
-  const disabled = uploading || value.length >= maxFiles
+  "use no memo";
+  const [uploading, setUploading] = React.useState(false);
+  const disabled = uploading || value.length >= maxFiles;
 
   const handleFiles = React.useCallback(
     async (files: File[]) => {
-      if (!files.length) return
+      if (!files.length) return;
       if (value.length + files.length > maxFiles) {
-        toast.error(`Chỉ được tải tối đa ${maxFiles} ảnh`)
-        return
+        toast.error(`Chỉ được tải tối đa ${maxFiles} ảnh`);
+        return;
       }
-      setUploading(true)
-      const results = await Promise.allSettled(files.map((f) => uploadFn(f)))
-      const newUrls: string[] = []
+      setUploading(true);
+      const results = await Promise.allSettled(files.map((f) => uploadFn(f)));
+      const newUrls: string[] = [];
       for (const r of results) {
-        if (r.status === "fulfilled") newUrls.push(r.value)
-        else toast.error("Tải ảnh thất bại")
+        if (r.status === "fulfilled") newUrls.push(r.value);
+        else toast.error("Tải ảnh thất bại");
       }
       if (newUrls.length > 0) {
-        onChange([...value, ...newUrls])
-        toast.success("Đã tải ảnh lên")
+        onChange([...value, ...newUrls]);
+        toast.success("Đã tải ảnh lên");
       }
-      setUploading(false)
+      setUploading(false);
     },
-    [value, maxFiles, uploadFn, onChange]
-  )
+    [value, maxFiles, uploadFn, onChange],
+  );
 
   // Use react-dropzone's own input (getInputProps) so click handling is managed
   // by the library — avoids Chrome's anti-phishing block on opacity-0 overlays.
@@ -65,19 +65,19 @@ export function FileUploader({
     maxFiles: maxFiles - value.length,
     disabled,
     multiple: !compact && maxFiles > 1,
-  })
+  });
 
   // ── Compact single-image ───────────────────────────────────────────────────
   if (compact) {
-    const url = value[0] ?? null
+    const url = value[0] ?? null;
     return (
       <div
         {...getRootProps()}
         className={cn(
-          "group relative cursor-pointer overflow-hidden rounded-[10px] border-2 border-dashed border-border bg-muted/40 transition-colors",
+          "group relative cursor-pointer overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/40 transition-colors",
           isDragActive && "border-primary bg-primary/5",
           disabled && "cursor-not-allowed opacity-60",
-          className
+          className,
         )}
       >
         <input {...getInputProps()} />
@@ -98,10 +98,7 @@ export function FileUploader({
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           ) : (
             <>
-              <Upload
-                className="h-6 w-6 text-muted-foreground/60"
-                strokeWidth={1.5}
-              />
+              <Upload className="h-6 w-6 text-muted-foreground/60" strokeWidth={1.5} />
               {hint && (
                 <span className="px-3 text-center text-xs font-medium text-muted-foreground">
                   {hint}
@@ -111,7 +108,7 @@ export function FileUploader({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   // ── Default multi-image grid ───────────────────────────────────────────────
@@ -125,11 +122,7 @@ export function FileUploader({
               className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={url}
-                alt={`upload-${idx}`}
-                className="h-full w-full object-contain"
-              />
+              <img src={url} alt={`upload-${idx}`} className="h-full w-full object-contain" />
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, i) => i !== idx))}
@@ -147,14 +140,14 @@ export function FileUploader({
           {...getRootProps()}
           className={cn(
             "w-full cursor-pointer overflow-hidden rounded-lg border-2 border-dashed border-border transition-colors",
-            isDragActive && "border-primary bg-primary/5"
+            isDragActive && "border-primary bg-primary/5",
           )}
         >
           <input {...getInputProps()} />
           <div
             className={cn(
               "flex w-full flex-col items-center justify-center p-8",
-              uploading && "opacity-50"
+              uploading && "opacity-50",
             )}
           >
             {uploading ? (
@@ -180,5 +173,5 @@ export function FileUploader({
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -7,7 +7,7 @@ export function TableLoadingRows({ rows = 5, cols }: { rows?: number; cols: numb
     <TableRow key={r}>
       {Array.from({ length: cols }).map((_, c) => (
         <TableCell key={c} className="px-4 py-2.5">
-          <Skeleton className="h-4 w-full max-w-[180px] rounded" />
+          <Skeleton className="h-4 w-full max-w-45 rounded" />
         </TableCell>
       ))}
     </TableRow>

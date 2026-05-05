@@ -85,7 +85,7 @@ export function ProductCard({
             sizes="(max-width: 768px) 128px, 160px"
           />
           {hasDiscount && (
-            <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-[10px] font-bold text-destructive-foreground">
+            <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-xs font-bold text-destructive-foreground">
               −{discountPct}%
             </Badge>
           )}
@@ -101,17 +101,17 @@ export function ProductCard({
         <CardContent className="flex flex-1 items-start gap-3 p-4 sm:p-5">
           <div className="min-w-0 flex-1">
             {product.categoryName && (
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              <div className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {product.categoryName}
               </div>
             )}
             <Link href={detailHref}>
-              <h3 className="mb-2 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+              <h3 className="mb-2 line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                 {product.name}
               </h3>
             </Link>
             {product.description && (
-              <p className="mb-3 line-clamp-3 max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mb-3 line-clamp-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
                 {product.description}
               </p>
             )}
@@ -130,7 +130,7 @@ export function ProductCard({
                 {formatPrice(price)}
               </span>
               {hasDiscount && (
-                <span className="text-[11px] font-medium text-muted-foreground line-through tabular-nums">
+                <span className="text-xs font-medium text-muted-foreground line-through tabular-nums">
                   {formatPrice(basePrice)}
                 </span>
               )}
@@ -160,7 +160,7 @@ export function ProductCard({
           sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
         />
         {hasDiscount && (
-          <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-[10px] font-bold text-destructive-foreground">
+          <Badge className="absolute left-2 top-2 h-5 rounded-full bg-destructive px-2 text-xs font-bold text-destructive-foreground">
             −{discountPct}%
           </Badge>
         )}
@@ -177,24 +177,24 @@ export function ProductCard({
 
       <CardContent className="flex flex-1 flex-col gap-1.5 p-3 md:p-3.5">
         {product.categoryName && (
-          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {product.categoryName}
           </span>
         )}
         <Link href={detailHref}>
-          <h3 className="line-clamp-2 min-h-[2.5rem] text-[13px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary md:text-sm">
+          <h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary md:text-sm">
             {product.name}
           </h3>
         </Link>
         <div className="flex items-baseline gap-1.5 pt-1">
           <span
             data-testid="product-card-price"
-            className="text-[15px] font-extrabold tracking-tight text-destructive tabular-nums md:text-base"
+            className="text-sm font-extrabold tracking-tight text-destructive tabular-nums md:text-base"
           >
             {formatPrice(price)}
           </span>
           {hasDiscount && (
-            <span className="text-[11px] font-medium text-muted-foreground line-through tabular-nums">
+            <span className="text-xs font-medium text-muted-foreground line-through tabular-nums">
               {formatPrice(basePrice)}
             </span>
           )}
@@ -214,13 +214,13 @@ function VariantTags({ names, primaryName }: { names: string[]; primaryName?: st
       {visible.map((name) => (
         <span
           key={name}
-          className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+          className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
         >
           {name}
         </span>
       ))}
       {overflow > 0 && (
-        <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+        <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           +{overflow}
         </span>
       )}
@@ -264,7 +264,7 @@ function StockBar({ stock }: { stock: number }) {
           style={{ width: `${fillPct}%` }}
         />
       </div>
-      <span className={`block text-[11px] font-semibold tabular-nums ${labelColor}`}>{label}</span>
+      <span className={`block text-xs font-semibold tabular-nums ${labelColor}`}>{label}</span>
     </div>
   );
 }

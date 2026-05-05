@@ -31,7 +31,7 @@ export function MetricStatBar({ items }: MetricStatBarProps) {
         {items.map((item, i) => (
           <div key={i} className="bg-card px-4 py-5 sm:px-6">
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-black tracking-widest text-muted-foreground uppercase">
+              <p className="text-xs font-black tracking-widest text-muted-foreground uppercase">
                 {item.label}
               </p>
               <div
@@ -46,7 +46,7 @@ export function MetricStatBar({ items }: MetricStatBarProps) {
             {item.trend && (
               <div className={`mt-2 flex items-center gap-1 ${item.trend.className}`}>
                 {item.trend.icon}
-                <span className="text-[10px] font-bold tracking-tight uppercase">
+                <span className="text-xs font-bold tracking-tight uppercase">
                   {item.trend.text}
                 </span>
               </div>

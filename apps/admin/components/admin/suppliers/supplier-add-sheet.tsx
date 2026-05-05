@@ -81,7 +81,7 @@ export function SupplierAddSheet({ isOpen, onOpenChange, isSubmitting }: Supplie
                 id="add-supplier-note"
                 name="note"
                 placeholder="Thông tin thêm về nhà cung cấp..."
-                className="min-h-[80px]"
+                className="min-h-20"
               />
             </Field>
           </FieldGroup>

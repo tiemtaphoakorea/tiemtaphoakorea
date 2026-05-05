@@ -67,7 +67,7 @@ export default function AdminSuppliers() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
@@ -76,10 +76,10 @@ export default function AdminSuppliers() {
               setPage(1);
             }}
             placeholder="Tìm nhà cung cấp..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-50"
           />
         </div>
-        <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setEditing(null)}>
+        <Button className="h-9 gap-1.5 sm:ml-auto" onClick={() => setEditing(null)}>
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Thêm nhà CC
         </Button>
@@ -89,14 +89,9 @@ export default function AdminSuppliers() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {["Nhà cung cấp", "Mã", "SĐT", "Email", "Số đơn", "Trạng thái", ""].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -112,13 +107,13 @@ export default function AdminSuppliers() {
                 <TableRow key={s.id}>
                   <TableCell className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg bg-primary/10">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10">
                         <Building2 className="h-4 w-4 text-primary" strokeWidth={1.8} />
                       </div>
                       <div className="flex flex-col leading-tight">
-                        <span className="text-[13px] font-semibold">{s.name}</span>
+                        <span className="text-sm font-semibold">{s.name}</span>
                         {s.address && (
-                          <span className="text-[11px] text-muted-foreground">{s.address}</span>
+                          <span className="text-xs text-muted-foreground">{s.address}</span>
                         )}
                       </div>
                     </div>
@@ -169,7 +164,7 @@ export default function AdminSuppliers() {
                 setPageSize(Number(v));
                 setPage(1);
               }}
-              className="h-8 w-[72px] text-[13px]"
+              className="h-8 w-18 text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((s) => (
                 <SelectOption key={s} value={String(s)}>

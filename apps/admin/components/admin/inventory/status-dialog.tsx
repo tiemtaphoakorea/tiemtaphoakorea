@@ -17,6 +17,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { NumberInput } from "@workspace/ui/components/number-input";
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Controller, useForm } from "react-hook-form";
 
@@ -71,7 +72,7 @@ export function InventoryStatusDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106">
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <DialogHeader>
             <DialogTitle>Cập nhật trạng thái</DialogTitle>
@@ -83,25 +84,29 @@ export function InventoryStatusDialog({
             <FieldGroup>
               <Field>
                 <FieldLabel required>Trạng thái</FieldLabel>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id={key}
-                        value={key}
-                        {...register("status")}
-                        className="peer text-primary focus:ring-primary h-4 w-4 border-gray-300"
-                      />
-                      <FieldLabel
-                        htmlFor={key}
-                        className="cursor-pointer text-sm font-medium text-slate-700"
-                      >
-                        {config.label}
-                      </FieldLabel>
-                    </div>
-                  ))}
-                </div>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex flex-wrap gap-x-6 gap-y-2"
+                    >
+                      {Object.entries(statusConfig).map(([key, config]) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <RadioGroupItem id={key} value={key} />
+                          <FieldLabel
+                            htmlFor={key}
+                            className="cursor-pointer text-sm font-medium text-slate-700"
+                          >
+                            {config.label}
+                          </FieldLabel>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
                 {errors.status && (
                   <p className="text-destructive text-sm">{errors.status.message}</p>
                 )}
@@ -131,7 +136,7 @@ export function InventoryStatusDialog({
               <Field>
                 <FieldLabel htmlFor="note">Ghi chú</FieldLabel>
                 <Textarea id="note" {...register("note")} placeholder="Ghi chú thêm..." />
-                <p className="text-[10px] font-medium text-slate-400">
+                <p className="text-xs font-medium text-slate-400">
                   * Ghi chú này sẽ được lưu lại khi bạn nhấn nút "Lưu thay đổi".
                 </p>
               </Field>

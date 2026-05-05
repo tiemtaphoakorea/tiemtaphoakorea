@@ -25,7 +25,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
           Đơn hàng theo danh mục trong năm {currentYear}.
         </CardDescription>
       </CardHeader>
-      <CardContent className="mt-4 h-[400px] py-0">
+      <CardContent className="mt-4 h-100 py-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -35,7 +35,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
             <CartesianGrid
               strokeDasharray="3 3"
               horizontal={false}
-              stroke="hsl(var(--slate-200))"
+              stroke="var(--color-slate-200)"
               opacity={0.5}
             />
             <XAxis type="number" hide />
@@ -45,14 +45,14 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
               axisLine={false}
               tickLine={false}
               tick={{
-                fill: "hsl(var(--slate-900))",
+                fill: "var(--color-slate-900)",
                 fontSize: 12,
                 fontWeight: 800,
               }}
               width={100}
             />
             <Tooltip
-              cursor={{ fill: "hsl(var(--slate-50))", opacity: 0.5 }}
+              cursor={{ fill: "var(--color-slate-50)", opacity: 0.5 }}
               content={({ active, payload }) => {
                 if (active && payload?.length) {
                   return (
@@ -74,7 +74,7 @@ export function CategorySalesChart({ data }: CategorySalesChartProps) {
         </ResponsiveContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 border-t border-slate-100 pt-6">
-        <div className="text-muted-foreground text-[10px] leading-none font-medium">
+        <div className="text-muted-foreground text-xs leading-none font-medium">
           Hiển thị số đơn hàng theo danh mục trong năm {currentYear}
         </div>
       </CardFooter>

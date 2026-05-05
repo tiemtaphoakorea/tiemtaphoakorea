@@ -2,7 +2,15 @@
 
 import type { OrderBuilderItem } from "@workspace/database/types/order";
 import { formatCurrency } from "@workspace/shared/utils";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@workspace/ui/components/empty";
 import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
@@ -29,15 +37,17 @@ export function OrderItemsTable({
 }: OrderItemsTableProps) {
   if (items.length === 0) {
     return (
-      <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-8 text-center animate-in fade-in-50">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <Plus className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-lg font-medium">Chưa có sản phẩm nào</h3>
-        <p className="mt-2 text-sm text-muted-foreground max-w-sm">
-          Vui lòng thêm sản phẩm vào đơn hàng từ danh sách bên phải hoặc nút "Thêm sản phẩm".
-        </p>
-      </div>
+      <Empty bordered className="min-h-37 animate-in fade-in-50">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Plus />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có sản phẩm nào</EmptyTitle>
+          <EmptyDescription>
+            Vui lòng thêm sản phẩm vào đơn hàng từ danh sách bên phải hoặc nút "Thêm sản phẩm".
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -46,18 +56,18 @@ export function OrderItemsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[180px]">Sản phẩm</TableHead>
-            <TableHead className="w-[130px] text-right">Đơn giá</TableHead>
-            <TableHead className="w-[70px] text-center">Tồn kho</TableHead>
-            <TableHead className="w-[160px] text-center">Số lượng</TableHead>
-            <TableHead className="w-[110px] text-right">Thành tiền</TableHead>
-            <TableHead className="w-[46px]"></TableHead>
+            <TableHead className="min-w-45">Sản phẩm</TableHead>
+            <TableHead className="w-32 text-right">Đơn giá</TableHead>
+            <TableHead className="w-17 text-center">Tồn kho</TableHead>
+            <TableHead className="w-40 text-center">Số lượng</TableHead>
+            <TableHead className="w-27 text-right">Thành tiền</TableHead>
+            <TableHead className="w-11.5"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.variantId}>
-              <TableCell className="max-w-[220px]">
+              <TableCell className="max-w-55">
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate font-medium" title={item.productName}>
                     {item.productName}
@@ -116,10 +126,12 @@ export function OrderItemsTable({
                     </Button>
                   </div>
                   {item.quantity > item.available && (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700">
-                      Sắp thiếu hàng, cần nhập thêm {item.quantity - Math.max(0, item.available)}{" "}
-                      cái
-                    </div>
+                    <Alert variant="warning" className="px-2 py-1 text-xs">
+                      <AlertDescription className="text-warning">
+                        Sắp thiếu hàng, cần nhập thêm {item.quantity - Math.max(0, item.available)}{" "}
+                        cái
+                      </AlertDescription>
+                    </Alert>
                   )}
                 </div>
               </TableCell>

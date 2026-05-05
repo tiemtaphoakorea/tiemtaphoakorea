@@ -33,16 +33,16 @@ export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps)
         <Table>
           <TableHeader className="border-b border-slate-100 bg-slate-50/50">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+              <TableHead className="text-xs font-black tracking-widest text-slate-400 uppercase">
                 Sản phẩm
               </TableHead>
-              <TableHead className="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
+              <TableHead className="text-center text-xs font-black tracking-widest text-slate-400 uppercase">
                 SL
               </TableHead>
-              <TableHead className="text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">
+              <TableHead className="text-right text-xs font-black tracking-widest text-slate-400 uppercase">
                 Đơn giá
               </TableHead>
-              <TableHead className="text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">
+              <TableHead className="text-right text-xs font-black tracking-widest text-slate-400 uppercase">
                 Thành tiền
               </TableHead>
             </TableRow>
@@ -73,7 +73,7 @@ export function CustomerOrderItemsTable({ order }: CustomerOrderItemsTableProps)
                       </p>
                       <span className="text-xs font-medium text-slate-500">SKU: {item.sku}</span>
                       {item.variantName && item.variantName !== "Default" && (
-                        <Badge variant="secondary" className="ml-2 h-4 px-1 text-[10px]">
+                        <Badge variant="secondary" className="ml-2 h-4 px-1 text-xs">
                           {formatVariantDisplayName(item.variantName)}
                         </Badge>
                       )}

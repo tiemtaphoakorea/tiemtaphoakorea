@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { CircleDollarSign, Search } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -24,7 +25,6 @@ import {
   TableLoadingRows,
 } from "@/components/admin/shared/data-state";
 import { DebtPaymentDrawer } from "@/components/admin/shared/debt-payment-drawer";
-import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { MetricStatBar } from "@/components/admin/shared/metric-stat-bar";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
@@ -126,15 +126,22 @@ export default function AdminDebts() {
       />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <FilterTabs
-          tabs={TABS}
+        <Tabs
           value={filter}
-          onChange={(v) => {
-            setFilter(v);
+          onValueChange={(v) => {
+            setFilter(v as DebtAgeFilter);
             setPage(1);
           }}
-        />
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
+        >
+          <TabsList>
+            {TABS.map((t) => (
+              <TabsTrigger key={t.id} value={t.id}>
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
@@ -143,7 +150,7 @@ export default function AdminDebts() {
               setPage(1);
             }}
             placeholder="Tìm tên KH, SĐT..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[220px]"
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
           />
         </div>
       </div>
@@ -152,7 +159,7 @@ export default function AdminDebts() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {[
                   "Khách hàng",
                   "SĐT",
@@ -162,12 +169,7 @@ export default function AdminDebts() {
                   "Trạng thái",
                   "",
                 ].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -181,7 +183,7 @@ export default function AdminDebts() {
                 const days = daysSince(d.oldestDebtDate);
                 return (
                   <TableRow key={d.customerId}>
-                    <TableCell className="px-4 py-2.5 text-[13px] font-semibold">
+                    <TableCell className="px-4 py-2.5 text-sm font-semibold">
                       {d.customerName ?? "—"}
                     </TableCell>
                     <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
@@ -224,7 +226,7 @@ export default function AdminDebts() {
                 setPageSize(Number(v));
                 setPage(1);
               }}
-              className="h-8 w-[72px] text-[13px]"
+              className="h-8 w-18 text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((s) => (
                 <SelectOption key={s} value={String(s)}>

@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
                     <span className="text-primary text-2xl leading-none font-black tracking-tight">
                       K-SMART
                     </span>
-                    <span className="text-muted-foreground text-[10px] font-bold tracking-[0.2em] uppercase">
+                    <span className="text-muted-foreground text-xs font-bold tracking-[0.2em] uppercase">
                       Admin Panel
                     </span>
                   </div>

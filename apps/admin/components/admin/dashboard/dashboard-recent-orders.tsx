@@ -6,6 +6,7 @@ import { formatCurrency } from "@workspace/shared/utils";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Empty, EmptyDescription } from "@workspace/ui/components/empty";
 import {
   Table,
   TableBody,
@@ -75,7 +76,7 @@ export function DashboardRecentOrders() {
                   <TableHead>Khách hàng</TableHead>
                   <TableHead className="text-right">Tổng tiền</TableHead>
                   <TableHead className="text-center">Trạng thái</TableHead>
-                  <TableHead className="w-[140px]"></TableHead>
+                  <TableHead className="w-35"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -108,9 +109,11 @@ export function DashboardRecentOrders() {
             </Table>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="font-medium text-slate-500 italic">Chưa có đơn hàng nào trong hôm nay</p>
-          </div>
+          <Empty>
+            <EmptyDescription className="italic">
+              Chưa có đơn hàng nào trong hôm nay
+            </EmptyDescription>
+          </Empty>
         )}
       </CardContent>
     </Card>

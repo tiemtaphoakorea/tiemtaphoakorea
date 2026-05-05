@@ -53,27 +53,23 @@ export default function SupplierOrdersContent() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
           <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm theo SKU, sản phẩm, ghi chú..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[260px]"
+            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-65"
           />
         </div>
-        <Select
-          value={statusFilter}
-          onValueChange={setStatusFilter}
-          className="h-[34px] w-full sm:w-[180px]"
-        >
+        <Select value={statusFilter} onValueChange={setStatusFilter} className="h-9 w-full sm:w-45">
           {STATUS_OPTIONS.map((opt) => (
             <SelectOption key={opt.value} value={opt.value}>
               {opt.label}
             </SelectOption>
           ))}
         </Select>
-        <Button className="h-[34px] gap-1.5 sm:ml-auto" onClick={() => setCreateOpen(true)}>
+        <Button className="h-9 gap-1.5 sm:ml-auto" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Tạo đơn nhập
         </Button>
@@ -83,14 +79,9 @@ export default function SupplierOrdersContent() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {["Sản phẩm", "SKU", "SL", "Trạng thái", "Ngày dự kiến", "Ngày tạo"].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -104,15 +95,13 @@ export default function SupplierOrdersContent() {
                 <TableRow key={o.id} className="cursor-pointer" onClick={() => setDetailId(o.id)}>
                   <TableCell className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-lg bg-primary/10">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10">
                         <Package className="h-4 w-4 text-primary" strokeWidth={1.8} />
                       </div>
                       <div className="flex flex-col leading-tight">
-                        <span className="text-[13px] font-semibold">
-                          {o.item.productName ?? "—"}
-                        </span>
+                        <span className="text-sm font-semibold">{o.item.productName ?? "—"}</span>
                         {o.item.variantName && (
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             {o.item.variantName}
                           </span>
                         )}

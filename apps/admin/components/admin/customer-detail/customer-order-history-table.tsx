@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty";
 import {
   Table,
   TableBody,
@@ -50,7 +51,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                 <TableHead>Ngày đặt</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead className="text-right">Tổng tiền</TableHead>
-                <TableHead className="w-[150px]"></TableHead>
+                <TableHead className="w-37"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,7 +76,7 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="bg-white text-[10px] font-black tracking-tight uppercase"
+                        className="bg-white text-xs font-black tracking-tight uppercase"
                       >
                         {order.status}
                       </Badge>
@@ -103,14 +104,16 @@ export function CustomerOrderHistoryTable({ orders, formatDate }: CustomerOrderH
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
-                        <ShoppingBag className="h-8 w-8 text-slate-200" />
-                      </div>
-                      <p className="text-xs font-black tracking-widest text-slate-400 uppercase">
-                        Chưa có đơn hàng nào
-                      </p>
-                    </div>
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon" className="size-16 rounded-full bg-slate-50">
+                          <ShoppingBag className="text-slate-200" />
+                        </EmptyMedia>
+                        <EmptyTitle className="text-xs font-black tracking-widest text-slate-400 uppercase">
+                          Chưa có đơn hàng nào
+                        </EmptyTitle>
+                      </EmptyHeader>
+                    </Empty>
                   </TableCell>
                 </TableRow>
               )}

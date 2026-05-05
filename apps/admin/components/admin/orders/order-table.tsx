@@ -30,7 +30,7 @@ export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps
             <TableHead>Trạng thái</TableHead>
             <TableHead className="text-right">Tổng tiền</TableHead>
             <TableHead className="text-center">Ngày tạo</TableHead>
-            <TableHead className="w-[140px]"></TableHead>
+            <TableHead className="w-35"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,7 +63,7 @@ export function OrderTable({ orders, statusConfig, formatDate }: OrderTableProps
                     <Badge
                       className={`${
                         statusConfig[order.status]?.color
-                      } pointer-events-none flex w-fit items-center gap-1 border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-none select-none`}
+                      } pointer-events-none flex w-fit items-center gap-1 border px-2 py-0.5 text-xs font-black tracking-tight uppercase shadow-none select-none`}
                     >
                       {StatusIcon && <StatusIcon className="h-3 w-3" />}
                       {statusConfig[order.status]?.label || order.status}

@@ -33,16 +33,16 @@ export function StatCard({
   const deltaClass = direction === "up" ? "text-emerald-700" : "text-red-600";
   const ArrowIcon = direction === "up" ? ArrowUp : ArrowDown;
   return (
-    <Card className="flex flex-col gap-2.5 border border-border p-4 px-[18px] py-4 shadow-none max-sm:rounded-none max-sm:border-0 max-sm:border-r max-sm:border-b max-sm:border-border max-sm:shadow-none max-sm:ring-0">
+    <Card className="flex flex-col gap-2.5 border border-border p-4 px-5 py-4 shadow-none max-sm:rounded-none max-sm:border-0 max-sm:border-r max-sm:border-b max-sm:border-border max-sm:shadow-none max-sm:ring-0">
       <div className="flex items-start justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {label}
         </span>
-        <div className={`grid h-[34px] w-[34px] place-items-center rounded-[9px] ${t.bg}`}>
-          <Icon className={`h-[17px] w-[17px] ${t.ic}`} strokeWidth={2} />
+        <div className={`grid h-9 w-9 place-items-center rounded-lg ${t.bg}`}>
+          <Icon className={`h-4 w-4 ${t.ic}`} strokeWidth={2} />
         </div>
       </div>
-      <div className="text-[24px] font-extrabold leading-none tracking-tight tabular-nums text-foreground">
+      <div className="text-2xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">
         {value}
       </div>
       {delta && (

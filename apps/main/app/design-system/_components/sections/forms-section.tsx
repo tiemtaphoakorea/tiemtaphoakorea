@@ -97,7 +97,7 @@ export function FormsSection() {
             <Textarea
               id="ds-message"
               placeholder="Write your message here…"
-              className="min-h-[100px]"
+              className="min-h-25"
             />
           </div>
         </ShowcaseBox>

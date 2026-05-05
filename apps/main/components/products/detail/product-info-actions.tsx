@@ -38,16 +38,16 @@ export function ProductInfoActions({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] font-semibold text-foreground">
+        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-foreground">
           🇰🇷 Nhập khẩu chính ngạch
         </span>
         {product.category?.name && (
-          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
             {product.category.name}
           </span>
         )}
         {productBasePrice > price && (
-          <span className="rounded-full bg-destructive px-2.5 py-1 text-[11px] font-bold text-destructive-foreground">
+          <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground">
             −{Math.round(100 - (price / productBasePrice) * 100)}%
           </span>
         )}
@@ -55,11 +55,11 @@ export function ProductInfoActions({
 
       <div>
         {product.category?.name && (
-          <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-primary">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             {product.category.name}
           </p>
         )}
-        <h1 className="mt-1.5 text-[28px] font-extrabold leading-tight tracking-tight text-foreground lg:text-[30px]">
+        <h1 className="mt-1.5 text-3xl font-extrabold leading-tight tracking-tight text-foreground lg:text-3xl">
           {product.name}
         </h1>
         {subtitle && (

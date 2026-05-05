@@ -48,7 +48,7 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
   indigo: "bg-primary/10 text-primary border-transparent",
 };
 
-const BASE = "rounded-full px-2 py-[3px] text-[11px] font-semibold leading-none";
+const BASE = "rounded-full px-2 py-0.5 text-xs font-semibold leading-none";
 
 /** Render a status pill from a known status type. */
 export function StatusBadge({ type }: { type: StatusType }) {

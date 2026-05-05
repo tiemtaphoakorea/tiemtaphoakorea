@@ -31,8 +31,8 @@ export function IndexCardTopProducts({ data, isLoading }: IndexCardTopProductsPr
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-[15px] font-bold leading-tight">Sản phẩm bán chạy</div>
-          <div className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          <div className="text-sm font-bold leading-tight">Sản phẩm bán chạy</div>
+          <div className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             Top 3 sản phẩm bán chạy nhất
           </div>
         </div>
@@ -54,8 +54,8 @@ export function IndexCardTopProducts({ data, isLoading }: IndexCardTopProductsPr
               const sharePct = totalRevenue > 0 ? (p.revenue / totalRevenue) * 100 : 0;
               return (
                 <li key={p.name} className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-[12px]">
-                    <span className="grid h-4 w-4 shrink-0 place-items-center rounded bg-violet-100 text-[10px] font-bold text-violet-700">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="grid h-4 w-4 shrink-0 place-items-center rounded bg-violet-100 text-xs font-bold text-violet-700">
                       {idx + 1}
                     </span>
                     <span className="min-w-0 flex-1 truncate font-medium" title={p.name}>
@@ -72,7 +72,7 @@ export function IndexCardTopProducts({ data, isLoading }: IndexCardTopProductsPr
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/70">
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
                       {formatCurrency(p.revenue)}
                     </span>
                   </div>

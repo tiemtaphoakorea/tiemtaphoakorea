@@ -194,9 +194,9 @@ export default function AdminDashboard() {
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-          <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <TrendingUp className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
+              <TrendingUp className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
               Doanh thu 7 ngày
             </h3>
             {revenueDelta === null ? (
@@ -209,21 +209,21 @@ export default function AdminDashboard() {
             )}
           </div>
           {dailyStatsQuery.isLoading ? (
-            <Skeleton className="m-[18px] h-[120px] rounded" />
+            <Skeleton className="m-4.5 h-30 rounded" />
           ) : (
             <BarChartMini data={revenueData} />
           )}
         </Card>
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-          <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <ShoppingCart className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
+              <ShoppingCart className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
               Đơn hàng 7 ngày
             </h3>
             <TonePill tone="blue">{k ? `${k.todayOrdersCount} hôm nay` : "—"}</TonePill>
           </div>
           {dailyStatsQuery.isLoading ? (
-            <Skeleton className="m-[18px] h-[120px] rounded" />
+            <Skeleton className="m-4.5 h-30 rounded" />
           ) : (
             <BarChartMini
               data={ordersData}
@@ -238,9 +238,9 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {/* Top products */}
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-          <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <Box className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
+              <Box className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
               Sản phẩm bán chạy
             </h3>
             <Button asChild variant="outline" size="sm" className="h-7 rounded-md text-xs">
@@ -250,14 +250,9 @@ export default function AdminDashboard() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableRow>
                   {["Sản phẩm", "Đã bán"].map((h, i) => (
-                    <TableHead
-                      key={i}
-                      className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      {h}
-                    </TableHead>
+                    <TableHead key={i}>{h}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -277,7 +272,7 @@ export default function AdminDashboard() {
                           label={thumbLabelFromName(p.name)}
                           tone={thumbToneFromId(p.id)}
                         />
-                        <span className="text-[13px] font-semibold leading-tight">
+                        <span className="text-sm font-semibold leading-tight">
                           {p.name.length > 38 ? `${p.name.slice(0, 38)}…` : p.name}
                         </span>
                       </div>
@@ -294,9 +289,9 @@ export default function AdminDashboard() {
 
         {/* Recent orders / activity */}
         <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-          <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <Bell className="h-[15px] w-[15px] text-primary" strokeWidth={2} />
+              <Bell className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
               Đơn hàng gần đây
             </h3>
             <Button asChild variant="outline" size="sm" className="h-7 rounded-md text-xs">
@@ -311,10 +306,10 @@ export default function AdminDashboard() {
             </div>
           )}
           {recentOrdersQuery.error && (
-            <div className="px-[18px] py-10 text-center text-sm text-red-600">Lỗi tải dữ liệu</div>
+            <div className="px-5 py-10 text-center text-sm text-red-600">Lỗi tải dữ liệu</div>
           )}
           {!recentOrdersQuery.isLoading && recentOrdersQuery.data?.length === 0 && (
-            <div className="px-[18px] py-10 text-center text-sm text-muted-foreground">
+            <div className="px-5 py-10 text-center text-sm text-muted-foreground">
               Chưa có đơn hàng
             </div>
           )}
@@ -322,12 +317,12 @@ export default function AdminDashboard() {
             {recentOrdersQuery.data?.slice(0, 6).map((o) => (
               <li
                 key={o.id}
-                className="flex items-start gap-3 border-b border-border px-[18px] py-2.5 last:border-b-0"
+                className="flex items-start gap-3 border-b border-border px-5 py-2.5 last:border-b-0"
               >
                 <div className="flex flex-1 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-xs font-semibold">{o.orderNumber}</span>
-                    <span className="text-[11px] text-muted-foreground/70">
+                    <span className="text-xs text-muted-foreground/70">
                       {new Date(o.createdAt).toLocaleString("vi-VN", {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -337,9 +332,9 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] text-foreground">{o.customerName}</span>
+                    <span className="text-sm text-foreground">{o.customerName}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-bold tabular-nums text-red-600">
+                      <span className="text-sm font-bold tabular-nums text-red-600">
                         {formatVnd(o.total)}
                       </span>
                       <StatusBadge type={orderStatusType(o.status)} />

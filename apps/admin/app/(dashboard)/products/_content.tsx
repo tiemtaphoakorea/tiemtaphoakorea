@@ -1,10 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import type { ProductListItem } from "@workspace/database/types/admin";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { PaginationControls } from "@workspace/ui/components/pagination-controls";
 import {
@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { AlertTriangle, Plus, Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -27,7 +29,6 @@ import {
   thumbLabelFromName,
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
-import { FilterTabs } from "@/components/admin/shared/filter-tabs";
 import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
 import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";
@@ -79,6 +80,25 @@ export default function AdminProducts() {
     staleTime: 30_000,
   });
 
+  const TAB_FILTERS: ProductFilter[] = ["all", "in_stock", "low_stock", "out_of_stock"];
+  const countResults = useQueries({
+    queries: TAB_FILTERS.map((f) => ({
+      queryKey: queryKeys.products.list(debouncedQuery, 1, 1, f),
+      queryFn: async () =>
+        await adminClient.getProducts({
+          search: debouncedQuery || undefined,
+          page: 1,
+          limit: 1,
+          stockStatus: f,
+        }),
+      staleTime: 60_000,
+      select: (data: Awaited<ReturnType<typeof adminClient.getProducts>>) => data.metadata.total,
+    })),
+  });
+  const tabCounts = Object.fromEntries(
+    TAB_FILTERS.map((f, i) => [f, countResults[i]?.data ?? null]),
+  ) as Record<ProductFilter, number | null>;
+
   const list = productsQuery.data?.data ?? [];
   const total = productsQuery.data?.metadata.total ?? 0;
   const totalPages = productsQuery.data?.metadata.totalPages ?? 1;
@@ -99,17 +119,31 @@ export default function AdminProducts() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <FilterTabs tabs={TABS} value={filter} onChange={handleFilterChange} />
-        <div className="flex h-[34px] items-center gap-2 rounded-lg border border-border bg-white px-3">
-          <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
-          <Input
+        <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as ProductFilter)}>
+          <TabsList>
+            {TABS.map((t) => {
+              const count = tabCounts[t.id];
+              return (
+                <TabsTrigger key={t.id} value={t.id}>
+                  {t.label}
+                  {count != null && <span className="ml-1 tabular-nums opacity-70">({count})</span>}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
+        <InputGroup className="h-9 w-full rounded-lg border-border bg-white sm:w-auto">
+          <InputGroupAddon>
+            <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
+          </InputGroupAddon>
+          <InputGroupInput
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Tìm tên, mã SP..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-[200px]"
+            className="w-full placeholder:text-muted-foreground/60 sm:w-50"
           />
-        </div>
-        <Button asChild className="h-[34px] gap-1.5 sm:ml-auto">
+        </InputGroup>
+        <Button asChild className="h-9 gap-1.5 sm:ml-auto">
           <Link href="/products/new">
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             Thêm sản phẩm
@@ -121,14 +155,9 @@ export default function AdminProducts() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {["Sản phẩm", "Danh mục", "Giá bán", "Tồn kho", "Trạng thái", ""].map((h, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    {h}
-                  </TableHead>
+                  <TableHead key={i}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -157,11 +186,12 @@ export default function AdminProducts() {
                     <TableCell className="px-4 py-2.5">
                       <div className="flex items-center gap-2.5">
                         {p.thumbnail ? (
-                          // biome-ignore lint/performance/noImgElement: thumbnails are CMS-managed external URLs
-                          <img
+                          <Image
                             src={p.thumbnail}
                             alt={p.name}
-                            className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
+                            width={36}
+                            height={36}
+                            className="h-9 w-9 shrink-0 rounded-lg object-contain"
                           />
                         ) : (
                           <ProductThumb
@@ -169,12 +199,12 @@ export default function AdminProducts() {
                             tone={thumbToneFromId(p.id)}
                           />
                         )}
-                        <div className="flex max-w-[260px] flex-col leading-tight md:max-w-[320px] lg:max-w-[420px]">
-                          <span className="truncate text-[13px] font-semibold" title={p.name}>
+                        <div className="flex max-w-65 flex-col leading-tight md:max-w-80 lg:max-w-105">
+                          <span className="truncate text-sm font-semibold" title={p.name}>
                             {p.name}
                           </span>
                           <span
-                            className="truncate font-mono text-[11px] text-muted-foreground"
+                            className="truncate font-mono text-xs text-muted-foreground"
                             title={p.skus ?? p.slug ?? undefined}
                           >
                             {p.skus ?? p.slug}
@@ -235,7 +265,7 @@ export default function AdminProducts() {
             <Select
               value={String(pageSize)}
               onValueChange={(v) => handlePageSizeChange(Number(v))}
-              className="h-8 w-[72px] text-[13px]"
+              className="h-8 w-18 text-sm"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <SelectOption key={size} value={String(size)}>

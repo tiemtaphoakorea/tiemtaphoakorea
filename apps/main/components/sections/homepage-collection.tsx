@@ -36,7 +36,7 @@ export function HomepageCollection({ collection }: Props) {
       <div className="container mx-auto px-4">
         <div className="mb-4 flex items-end justify-between gap-6 md:mb-[18px]">
           <div>
-            <h2 className="m-0 inline-flex items-center gap-2.5 text-base font-bold tracking-[-0.02em] text-foreground md:text-2xl md:leading-tight">
+            <h2 className="m-0 inline-flex items-center gap-2.5 text-base font-bold tracking-tight text-foreground md:text-2xl md:leading-tight">
               {iconSrc && (
                 <GeneratedIcon
                   src={iconSrc}
@@ -46,14 +46,14 @@ export function HomepageCollection({ collection }: Props) {
               <span>{collection.title}</span>
             </h2>
             {collection.subtitle && (
-              <small className="mt-1 block text-[11px] font-normal leading-snug text-muted-foreground md:mt-1.5 md:text-[13px]">
+              <small className="mt-1 block text-xs font-normal leading-snug text-muted-foreground md:mt-1.5 md:text-sm">
                 {collection.subtitle}
               </small>
             )}
           </div>
           <Link
             href={viewAllHref}
-            className="group inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-xs font-semibold text-primary md:gap-1.5 md:text-[13px]"
+            className="group inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-xs font-semibold text-primary md:gap-1.5 md:text-sm"
           >
             <span className="md:hidden">Xem tất cả →</span>
             <span className="hidden md:inline">Xem tất cả</span>
@@ -64,7 +64,7 @@ export function HomepageCollection({ collection }: Props) {
           {collection.products.map((product, i) => (
             <div
               key={product.id}
-              className="w-[64vw] max-w-[240px] shrink-0 snap-start md:w-[34vw] md:max-w-[280px] lg:w-auto lg:max-w-none"
+              className="w-[64vw] max-w-60 shrink-0 snap-start md:w-[34vw] md:max-w-70 lg:w-auto lg:max-w-none"
             >
               <ProductCard product={product} priority={i < 4} />
             </div>

@@ -50,7 +50,7 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
         side={isDesktop ? "right" : "bottom"}
         className={
           isDesktop
-            ? "flex w-[400px] flex-col overflow-y-auto sm:max-w-[400px]"
+            ? "flex w-100 flex-col overflow-y-auto sm:max-w-100"
             : "max-h-[80vh] overflow-y-auto rounded-t-2xl"
         }
       >

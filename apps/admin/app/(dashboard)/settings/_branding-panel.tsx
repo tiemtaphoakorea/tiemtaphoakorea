@@ -144,7 +144,7 @@ export function BrandingPanel() {
                 maxFiles={1}
                 hint="PNG/SVG · 1:3 · ≤500KB"
               />
-              <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.main}</p>
+              <p className="text-xs text-muted-foreground">{LOGO_HINTS.main}</p>
             </Field>
             <Field>
               <FieldLabel>Logo vuông</FieldLabel>
@@ -156,7 +156,7 @@ export function BrandingPanel() {
                 maxFiles={1}
                 hint="PNG/SVG · 1:1 · ≤200KB"
               />
-              <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.square}</p>
+              <p className="text-xs text-muted-foreground">{LOGO_HINTS.square}</p>
             </Field>
           </div>
 
@@ -175,7 +175,7 @@ export function BrandingPanel() {
               maxFiles={1}
               hint="PNG/JPG · 1200×630px · ≤1MB"
             />
-            <p className="text-[11px] text-muted-foreground">{LOGO_HINTS.og}</p>
+            <p className="text-xs text-muted-foreground">{LOGO_HINTS.og}</p>
           </Field>
         </div>
 
@@ -196,7 +196,7 @@ export function BrandingPanel() {
                 variant="outline"
                 onClick={handleGenerateVariants}
                 disabled={!logoSquare[0] || generating}
-                className="gap-1 text-[11px] h-7 px-2"
+                className="gap-1 text-xs h-7 px-2"
               >
                 {generating ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -206,7 +206,7 @@ export function BrandingPanel() {
                 {generating ? "Đang tạo..." : "Tạo"}
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">Resize từ logo vuông</p>
+            <p className="text-xs text-muted-foreground">Resize từ logo vuông</p>
             <div className="grid grid-cols-2 gap-2">
               <Field>
                 <FieldLabel className="flex items-center gap-1">
@@ -229,7 +229,7 @@ export function BrandingPanel() {
                       height={20}
                       className="h-5 w-5 rounded object-contain border border-border"
                     />
-                    <span className="text-[10px] text-muted-foreground">32px</span>
+                    <span className="text-xs text-muted-foreground">32px</span>
                   </div>
                 )}
               </Field>
@@ -254,7 +254,7 @@ export function BrandingPanel() {
                       height={20}
                       className="h-5 w-5 rounded object-contain border border-border"
                     />
-                    <span className="text-[10px] text-muted-foreground">180px</span>
+                    <span className="text-xs text-muted-foreground">180px</span>
                   </div>
                 )}
               </Field>

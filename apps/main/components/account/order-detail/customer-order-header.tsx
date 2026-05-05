@@ -30,7 +30,7 @@ export function CustomerOrderHeader({ order, statusInfo, formatDate }: CustomerO
               Đơn hàng #{order.orderNumber}
             </h1>
             <Badge
-              className={`${statusInfo.color} h-7 border px-3 text-[10px] font-black tracking-wider uppercase`}
+              className={`${statusInfo.color} h-7 border px-3 text-xs font-black tracking-wider uppercase`}
             >
               {statusInfo.label}
             </Badge>

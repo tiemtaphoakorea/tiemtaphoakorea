@@ -13,6 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { cn } from "@workspace/ui/lib/utils";
 import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -114,7 +115,7 @@ export function ManualProductPicker({ value, onChange }: Props) {
             />
             <CommandList
               onScroll={handleListScroll}
-              className="max-h-[320px] overflow-y-auto overscroll-contain"
+              className="max-h-80 overflow-y-auto overscroll-contain"
             >
               {productsQuery.isLoading && (
                 <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
@@ -142,10 +143,11 @@ export function ManualProductPicker({ value, onChange }: Props) {
                       />
                       <div className="flex min-w-0 items-center gap-2 overflow-hidden">
                         {p.thumbnail ? (
-                          // biome-ignore lint/performance/noImgElement: thumbnails are CMS-managed external URLs
-                          <img
+                          <Image
                             src={p.thumbnail}
                             alt={p.name}
+                            width={32}
+                            height={32}
                             className="h-8 w-8 shrink-0 rounded-md border bg-muted object-contain"
                           />
                         ) : (
@@ -196,10 +198,11 @@ export function ManualProductPicker({ value, onChange }: Props) {
               return (
                 <li key={id} className="flex items-center gap-3 px-3 py-2">
                   {cached?.thumbnail ? (
-                    // biome-ignore lint/performance/noImgElement: thumbnails are CMS-managed external URLs
-                    <img
+                    <Image
                       src={cached.thumbnail}
                       alt={name}
+                      width={36}
+                      height={36}
                       className="h-9 w-9 shrink-0 rounded-md border bg-muted object-contain"
                     />
                   ) : (
