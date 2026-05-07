@@ -859,11 +859,11 @@ export const adminClient = {
   }) {
     return axios.get<{
       items: InventoryFlowRow[];
-      totals: { totalNhap: number; totalXuat: number; skuCount: number };
+      totals: { totalIn: number; totalOut: number; skuCount: number };
       metadata: { total: number; page: number; totalPages: number };
     }>(API_ENDPOINTS.ADMIN.INVENTORY_FLOW, { params }) as unknown as Promise<{
       items: InventoryFlowRow[];
-      totals: { totalNhap: number; totalXuat: number; skuCount: number };
+      totals: { totalIn: number; totalOut: number; skuCount: number };
       metadata: { total: number; page: number; totalPages: number };
     }>;
   },

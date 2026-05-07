@@ -1,6 +1,5 @@
 CREATE TYPE "public"."purchase_order_status" AS ENUM('draft', 'ordered', 'partial', 'received', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."receipt_status" AS ENUM('draft', 'completed', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."stock_count_status" AS ENUM('draft', 'counting', 'balanced', 'cancelled');--> statement-breakpoint
 ALTER TYPE "public"."movement_type" ADD VALUE 'stock_count_balance';--> statement-breakpoint
 ALTER TYPE "public"."movement_type" ADD VALUE 'cost_adjustment';--> statement-breakpoint
 CREATE TABLE "document_sequences" (
@@ -97,6 +96,7 @@ CREATE TABLE "supplier_payments" (
 	CONSTRAINT "supplier_payments_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
+DROP TABLE "daily_reports" CASCADE;--> statement-breakpoint
 ALTER TABLE "purchase_order_items" ADD CONSTRAINT "purchase_order_items_purchase_order_id_purchase_orders_id_fk" FOREIGN KEY ("purchase_order_id") REFERENCES "public"."purchase_orders"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchase_order_items" ADD CONSTRAINT "purchase_order_items_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "public"."product_variants"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchase_orders" ADD CONSTRAINT "purchase_orders_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

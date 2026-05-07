@@ -21,7 +21,7 @@ import { FinanceRangePicker } from "./finance-range-picker";
 
 interface InventoryFlowTableProps {
   items: InventoryFlowRow[];
-  totals: { totalNhap: number; totalXuat: number; skuCount: number } | null;
+  totals: { totalIn: number; totalOut: number; skuCount: number } | null;
   metadata: { total: number; page: number; totalPages: number } | null;
   isLoading: boolean;
   dateRange: DateRange;
@@ -103,7 +103,7 @@ export function InventoryFlowTable({
               )}
               {!isLoading &&
                 items.map((row) => {
-                  const closingStock = Number(row.tonCuoi);
+                  const closingStock = Number(row.closingStock);
                   const closingStockClass =
                     closingStock === 0
                       ? "text-red-600 font-bold"
@@ -124,21 +124,21 @@ export function InventoryFlowTable({
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-2.5 text-right tabular-nums">
-                        {Number(row.tonDau).toLocaleString("vi-VN")}
+                        {Number(row.openingStock).toLocaleString("vi-VN")}
                       </TableCell>
                       <TableCell className="px-4 py-2.5 text-right tabular-nums">
-                        {Number(row.nhap) > 0 ? (
+                        {Number(row.stockIn) > 0 ? (
                           <span className="font-semibold text-emerald-600">
-                            +{Number(row.nhap).toLocaleString("vi-VN")}
+                            +{Number(row.stockIn).toLocaleString("vi-VN")}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell className="px-4 py-2.5 text-right tabular-nums">
-                        {Number(row.xuat) > 0 ? (
+                        {Number(row.stockOut) > 0 ? (
                           <span className="font-semibold text-red-500">
-                            -{Number(row.xuat).toLocaleString("vi-VN")}
+                            -{Number(row.stockOut).toLocaleString("vi-VN")}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">—</span>
@@ -163,10 +163,10 @@ export function InventoryFlowTable({
                     Tổng ({totals.skuCount} SKU)
                   </TableCell>
                   <TableCell className="px-4 py-2.5 text-right font-bold tabular-nums text-emerald-600">
-                    +{totals.totalNhap.toLocaleString("vi-VN")}
+                    +{totals.totalIn.toLocaleString("vi-VN")}
                   </TableCell>
                   <TableCell className="px-4 py-2.5 text-right font-bold tabular-nums text-red-500">
-                    -{totals.totalXuat.toLocaleString("vi-VN")}
+                    -{totals.totalOut.toLocaleString("vi-VN")}
                   </TableCell>
                   <TableCell />
                 </TableRow>

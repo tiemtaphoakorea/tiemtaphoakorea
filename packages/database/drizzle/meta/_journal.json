@@ -61,29 +61,8 @@
     {
       "idx": 8,
       "version": "7",
-      "when": 1778064706385,
-      "tag": "0008_striped_tempest",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1778064728978,
-      "tag": "0009_seed_document_sequences_and_backfill_supplier_orders",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1778147117198,
-      "tag": "0010_backfill_pending_supplier_orders_to_received",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1778148098866,
-      "tag": "0011_drop_daily_reports",
+      "when": 1778151817725,
+      "tag": "0008_friendly_post",
       "breakpoints": true
     }
   ]

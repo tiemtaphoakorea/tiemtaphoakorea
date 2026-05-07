@@ -255,10 +255,10 @@ export type InventoryFlowRow = {
   productName: string | null;
   categoryName: string | null;
   categoryId: string | null;
-  tonDau: number;
-  nhap: number;
-  xuat: number;
-  tonCuoi: number;
+  openingStock: number;
+  stockIn: number;
+  stockOut: number;
+  closingStock: number;
 };
 
 export async function getInventoryFlowReport({
@@ -290,15 +290,15 @@ export async function getInventoryFlowReport({
   const ctePrefix = sql`
     WITH period_movements AS (
       SELECT variant_id,
-        SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END)      AS nhap,
-        SUM(CASE WHEN quantity < 0 THEN ABS(quantity) ELSE 0 END) AS xuat
+        SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END)      AS qty_in,
+        SUM(CASE WHEN quantity < 0 THEN ABS(quantity) ELSE 0 END) AS qty_out
       FROM inventory_movements
       WHERE created_at >= ${startIso}::timestamptz AND created_at <= ${endIso}::timestamptz
       GROUP BY variant_id
     ),
     begin_stock AS (
       SELECT DISTINCT ON (variant_id)
-        variant_id, on_hand_after AS ton_dau
+        variant_id, on_hand_after AS opening_stock
       FROM inventory_movements
       WHERE created_at < ${startIso}::timestamptz
       ORDER BY variant_id, created_at DESC
@@ -311,7 +311,7 @@ export async function getInventoryFlowReport({
     LEFT JOIN categories c ON c.id = p.category_id
     LEFT JOIN period_movements pm ON pm.variant_id = pv.id
     LEFT JOIN begin_stock  bs ON bs.variant_id = pv.id
-    WHERE (pm.nhap > 0 OR pm.xuat > 0 OR COALESCE(bs.ton_dau, 0) > 0 OR pv.on_hand > 0)
+    WHERE (pm.qty_in > 0 OR pm.qty_out > 0 OR COALESCE(bs.opening_stock, 0) > 0 OR pv.on_hand > 0)
       ${searchCond} ${categoryCond}
   `;
 
@@ -321,25 +321,25 @@ export async function getInventoryFlowReport({
     db.execute(sql`
       ${ctePrefix}
       SELECT
-        COALESCE(SUM(COALESCE(pm.nhap, 0)), 0) AS "totalNhap",
-        COALESCE(SUM(COALESCE(pm.xuat, 0)), 0) AS "totalXuat"
+        COALESCE(SUM(COALESCE(pm.qty_in,  0)), 0) AS "totalIn",
+        COALESCE(SUM(COALESCE(pm.qty_out, 0)), 0) AS "totalOut"
       ${baseFrom}
     `),
     db.execute(sql`
       ${ctePrefix}
       SELECT
-        pv.id                                                                   AS "variantId",
-        pv.sku                                                                  AS sku,
-        pv.name                                                                 AS "variantName",
-        p.name                                                                  AS "productName",
-        c.name                                                                  AS "categoryName",
-        c.id                                                                    AS "categoryId",
-        COALESCE(bs.ton_dau, 0)                                                 AS "tonDau",
-        COALESCE(pm.nhap, 0)                                                    AS nhap,
-        COALESCE(pm.xuat, 0)                                                    AS xuat,
-        COALESCE(bs.ton_dau, 0) + COALESCE(pm.nhap, 0) - COALESCE(pm.xuat, 0) AS "tonCuoi"
+        pv.id                                                                         AS "variantId",
+        pv.sku                                                                        AS sku,
+        pv.name                                                                       AS "variantName",
+        p.name                                                                        AS "productName",
+        c.name                                                                        AS "categoryName",
+        c.id                                                                          AS "categoryId",
+        COALESCE(bs.opening_stock, 0)                                                 AS "openingStock",
+        COALESCE(pm.qty_in,  0)                                                       AS "stockIn",
+        COALESCE(pm.qty_out, 0)                                                       AS "stockOut",
+        COALESCE(bs.opening_stock, 0) + COALESCE(pm.qty_in, 0) - COALESCE(pm.qty_out, 0) AS "closingStock"
       ${baseFrom}
-      ORDER BY (COALESCE(pm.nhap, 0) + COALESCE(pm.xuat, 0)) DESC, pv.sku
+      ORDER BY (COALESCE(pm.qty_in, 0) + COALESCE(pm.qty_out, 0)) DESC, pv.sku
       LIMIT ${limit} OFFSET ${offset}
     `),
   ]);
@@ -351,8 +351,8 @@ export async function getInventoryFlowReport({
   return {
     items,
     totals: {
-      totalNhap: Number(agg?.totalNhap ?? 0),
-      totalXuat: Number(agg?.totalXuat ?? 0),
+      totalIn: Number(agg?.totalIn ?? 0),
+      totalOut: Number(agg?.totalOut ?? 0),
       skuCount: total,
     },
     metadata: { total, page, totalPages: Math.ceil(total / limit) },

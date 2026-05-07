@@ -1,5 +1,5 @@
 {
-  "id": "a64e3aac-e2dc-45b2-b32a-2e599d56fdcc",
+  "id": "60424263-ab15-4359-97e3-3c8b5e5870d0",
   "prevId": "1c5f6fa9-2b62-4579-a7fe-adc04d9dfc5a",
   "version": "7",
   "dialect": "postgresql",
@@ -3856,118 +3856,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.daily_reports": {
-      "name": "daily_reports",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "report_date": {
-          "name": "report_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "total_orders": {
-          "name": "total_orders",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "completed_orders": {
-          "name": "completed_orders",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "cancelled_orders": {
-          "name": "cancelled_orders",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "total_revenue": {
-          "name": "total_revenue",
-          "type": "numeric(15, 2)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'0'"
-        },
-        "total_cost": {
-          "name": "total_cost",
-          "type": "numeric(15, 2)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'0'"
-        },
-        "total_profit": {
-          "name": "total_profit",
-          "type": "numeric(15, 2)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'0'"
-        },
-        "top_products": {
-          "name": "top_products",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "idx_daily_reports_date": {
-          "name": "idx_daily_reports_date",
-          "columns": [
-            {
-              "expression": "report_date",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "daily_reports_report_date_unique": {
-          "name": "daily_reports_report_date_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "report_date"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.system_settings": {
       "name": "system_settings",
       "schema": "",
@@ -4250,16 +4138,6 @@
       "values": [
         "draft",
         "completed",
-        "cancelled"
-      ]
-    },
-    "public.stock_count_status": {
-      "name": "stock_count_status",
-      "schema": "public",
-      "values": [
-        "draft",
-        "counting",
-        "balanced",
         "cancelled"
       ]
     },
