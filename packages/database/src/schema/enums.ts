@@ -54,12 +54,3 @@ export type PurchaseOrderStatus = (typeof purchaseOrderStatusEnum.enumValues)[nu
 // PON (goods receipt) overall status
 export const receiptStatusEnum = pgEnum("receipt_status", ["draft", "completed", "cancelled"]);
 export type ReceiptStatus = (typeof receiptStatusEnum.enumValues)[number];
-
-// IAN (stock count) multi-stage status
-export const stockCountStatusEnum = pgEnum("stock_count_status", [
-  "draft",
-  "counting",
-  "balanced",
-  "cancelled",
-]);
-export type StockCountStatus = (typeof stockCountStatusEnum.enumValues)[number];

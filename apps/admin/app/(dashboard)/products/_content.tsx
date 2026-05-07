@@ -16,7 +16,8 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-import { AlertTriangle, Plus, Search } from "lucide-react";
+import { format } from "date-fns";
+import { Plus, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -29,9 +30,8 @@ import {
   thumbLabelFromName,
   thumbToneFromId,
 } from "@/components/admin/shared/data-state";
-import { formatVnd } from "@/components/admin/shared/format-vnd";
 import { ProductThumb } from "@/components/admin/shared/product-thumb";
-import { StatusBadge, type StatusType, TonePill } from "@/components/admin/shared/status-badge";
+import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -46,15 +46,18 @@ const TABS: ReadonlyArray<{ id: ProductFilter; label: string }> = [
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 20;
-
-/** Pick StatusBadge type from product flags. */
-function deriveProductStatus(p: ProductListItem): StatusType {
-  if (p.isActive === false) return "draft";
-  if (p.totalAvailable <= 0) return "outstock";
-  return "active";
-}
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 const VALID_FILTERS = new Set<ProductFilter>(["all", "in_stock", "low_stock", "out_of_stock"]);
+
+function getProductBrand(product: ProductListItem): string | null {
+  const productWithBrand = product as ProductListItem & {
+    brand?: string | null;
+    brandName?: string | null;
+  };
+
+  return productWithBrand.brandName ?? productWithBrand.brand ?? null;
+}
 
 export default function AdminProducts() {
   const router = useRouter();
@@ -151,23 +154,27 @@ export default function AdminProducts() {
         </Button>
       </div>
 
-      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-        <div className="overflow-x-auto">
-          <Table>
+      <Card className="min-w-0 gap-0 overflow-hidden border border-border p-0 shadow-none">
+        <div className="min-w-0 max-w-full overflow-x-auto">
+          <Table className="min-w-[980px] table-fixed">
             <TableHeader>
               <TableRow>
-                {["Sản phẩm", "Danh mục", "Giá bán", "Tồn kho", "Trạng thái", ""].map((h, i) => (
-                  <TableHead key={i}>{h}</TableHead>
-                ))}
+                <TableHead className="w-[76px]">Ảnh</TableHead>
+                <TableHead className="w-[300px]">Tên sản phẩm</TableHead>
+                <TableHead className="w-[160px]">Loại</TableHead>
+                <TableHead className="w-[140px]">Nhãn hiệu</TableHead>
+                <TableHead className="w-[120px]">Có thể bán</TableHead>
+                <TableHead className="w-[120px]">Tồn kho</TableHead>
+                <TableHead className="w-[120px]">Ngày tạo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productsQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
+              {productsQuery.isLoading && <TableLoadingRows cols={7} rows={6} />}
               {productsQuery.error && (
-                <TableErrorRow cols={6} message={String(productsQuery.error)} />
+                <TableErrorRow cols={7} message={String(productsQuery.error)} />
               )}
               {!productsQuery.isLoading && list.length === 0 && (
-                <TableEmptyRow cols={6} message="Không tìm thấy sản phẩm" />
+                <TableEmptyRow cols={7} message="Không tìm thấy sản phẩm" />
               )}
               {list.map((p) => {
                 const stockClass =
@@ -176,7 +183,7 @@ export default function AdminProducts() {
                     : p.totalAvailable < (p.minLowStockThreshold ?? 30)
                       ? "text-amber-700 font-bold"
                       : "text-foreground";
-                const status = deriveProductStatus(p);
+                const brand = getProductBrand(p);
                 return (
                   <TableRow
                     key={p.id}
@@ -184,33 +191,26 @@ export default function AdminProducts() {
                     onClick={() => router.push(`/products/${p.id}/edit`)}
                   >
                     <TableCell className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        {p.thumbnail ? (
-                          <Image
-                            src={p.thumbnail}
-                            alt={p.name}
-                            width={36}
-                            height={36}
-                            className="h-9 w-9 shrink-0 rounded-lg object-contain"
-                          />
-                        ) : (
-                          <ProductThumb
-                            label={thumbLabelFromName(p.name)}
-                            tone={thumbToneFromId(p.id)}
-                          />
-                        )}
-                        <div className="flex max-w-65 flex-col leading-tight md:max-w-80 lg:max-w-105">
-                          <span className="truncate text-sm font-semibold" title={p.name}>
-                            {p.name}
-                          </span>
-                          <span
-                            className="truncate font-mono text-xs text-muted-foreground"
-                            title={p.skus ?? p.slug ?? undefined}
-                          >
-                            {p.skus ?? p.slug}
-                          </span>
-                        </div>
-                      </div>
+                      {p.thumbnail ? (
+                        <Image
+                          src={p.thumbnail}
+                          alt={p.name}
+                          width={44}
+                          height={44}
+                          className="h-11 w-11 shrink-0 rounded-lg object-contain"
+                        />
+                      ) : (
+                        <ProductThumb
+                          label={thumbLabelFromName(p.name)}
+                          tone={thumbToneFromId(p.id)}
+                          size={44}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
+                      <span className="block truncate text-sm font-semibold" title={p.name}>
+                        {p.name}
+                      </span>
                     </TableCell>
                     <TableCell className="px-4 py-2.5">
                       {p.categoryName ? (
@@ -219,39 +219,15 @@ export default function AdminProducts() {
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-2.5 font-bold tabular-nums">
-                      {p.maxPrice === 0 ? (
-                        <span
-                          className="flex items-center gap-1 text-amber-600"
-                          title="Sản phẩm chưa có giá bán — ảnh hưởng đến báo cáo lợi nhuận"
-                        >
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                          0đ
-                        </span>
-                      ) : (
-                        <span className="text-red-600">
-                          {p.minPrice === p.maxPrice
-                            ? formatVnd(p.minPrice)
-                            : `${formatVnd(p.minPrice)} – ${formatVnd(p.maxPrice)}`}
-                        </span>
-                      )}
+                    <TableCell className="px-4 py-2.5 text-sm">
+                      {brand ?? <span className="text-xs text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
                       {p.totalAvailable}
                     </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      <StatusBadge type={status} />
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="h-7 rounded-md text-xs"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Link href={`/products/${p.id}/edit`}>Sửa</Link>
-                      </Button>
+                    <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                      {fmtDate(p.createdAt)}
                     </TableCell>
                   </TableRow>
                 );

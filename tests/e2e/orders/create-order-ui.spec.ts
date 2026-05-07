@@ -11,7 +11,7 @@ import {
  * Order - Create (UI flow)
  * E2E test tạo đơn hàng qua giao diện: /orders/new
  * - Chọn khách hàng (tìm theo SĐT)
- * - Thêm sản phẩm (chọn sản phẩm + phân loại, bấm Thêm)
+ * - Thêm sản phẩm (combobox grouped-flat, chọn variant trực tiếp)
  * - Bấm "Tạo đơn hàng" và kiểm tra redirect + nội dung trang chi tiết đơn
  */
 test.describe("Order - Create (UI)", () => {
@@ -64,24 +64,14 @@ test.describe("Order - Create (UI)", () => {
 
     await expect(page.getByText(TEST_CUSTOMERS.primary.fullName)).toBeVisible();
 
-    // --- Thêm sản phẩm: chọn sản phẩm gốc (sau khi chọn khách, chỉ còn 1 combobox = product) ---
+    // --- Thêm sản phẩm: combobox grouped-flat, chọn variant trực tiếp bằng SKU ---
     await page.locator('button[role="combobox"]').first().click();
-    await page.getByPlaceholder(/Tìm tên hoặc SKU/i).fill(TEST_PRODUCTS.testTshirt.sku);
+    await page.getByPlaceholder(/Gõ tên SP hoặc SKU/i).fill(TEST_PRODUCTS.testTshirt.sku);
     await page.waitForTimeout(500);
-    await page
-      .getByRole("option")
-      .filter({ hasText: TEST_PRODUCTS.testTshirt.name })
-      .first()
-      .click();
-
-    // Chọn phân loại (biến thể)
-    await page
-      .getByRole("combobox")
-      .filter({ has: page.locator("text=Chọn phân loại") })
-      .click();
     await page.getByRole("option").first().click();
 
-    await page.getByRole("button", { name: /^Thêm$/ }).click();
+    // Đóng popover (popover ở chế độ "thêm liên tục", giữ mở để add tiếp)
+    await page.keyboard.press("Escape");
 
     // Có ít nhất một dòng trong bảng đơn (sản phẩm đã thêm)
     await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(1);

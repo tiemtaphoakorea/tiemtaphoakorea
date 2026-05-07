@@ -30,11 +30,12 @@ export const STATUS_OPTIONS = [
   { value: SUPPLIER_ORDER_STATUS.CANCELLED, label: "Đã huỷ" },
 ];
 
-export function formatDate(value: string | Date | null | undefined) {
+import { format } from "date-fns";
+
+export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("vi-VN");
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "—" : format(d, "dd/MM/yyyy, HH:mm");
 }
 
 export function toDateInputValue(value: string | Date | null | undefined) {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
-import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import {
   Table,
   TableBody,
@@ -13,9 +14,10 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-import { AlertTriangle, Package, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { AlertTriangle, Package, Search } from "lucide-react";
 import { useState } from "react";
+import { useDebounce } from "use-debounce";
 import {
   TableEmptyRow,
   TableErrorRow,
@@ -29,16 +31,20 @@ import { TonePill } from "@/components/admin/shared/status-badge";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
-type WarehouseTab = "stock" | "low" | "out";
+type WarehouseTab = "stock" | "in" | "low" | "out";
+
 const TABS: ReadonlyArray<{ id: WarehouseTab; label: string }> = [
   { id: "stock", label: "Tồn kho" },
+  { id: "in", label: "Còn hàng" },
   { id: "low", label: "Sắp hết" },
   { id: "out", label: "Hết hàng" },
 ];
 
 export default function AdminInventory() {
-  const router = useRouter();
   const [tab, setTab] = useState<WarehouseTab>("stock");
+  const [query, setQuery] = useState("");
+  const [debouncedQuery] = useDebounce(query, 300);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   const stockQuery = useQuery({
     queryKey: queryKeys.admin.stockAlerts,
@@ -46,10 +52,26 @@ export default function AdminInventory() {
     staleTime: 60_000,
   });
 
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.categories.list("", 1, 200),
+    queryFn: () => adminClient.getCategoriesList({ limit: 200 }),
+    staleTime: 5 * 60_000,
+  });
+  const categories = categoriesQuery.data?.data ?? [];
+
+  const stockStatus = tab === "in" ? "in_stock" : undefined;
   const productsQuery = useQuery({
-    queryKey: queryKeys.products.list("", 1, 50, "all"),
-    queryFn: async () => await adminClient.getProducts({ page: 1, limit: 50 }),
-    enabled: tab === "stock",
+    queryKey: [...queryKeys.products.list(debouncedQuery, 1, 50, stockStatus ?? "all"), categoryId],
+    queryFn: async () =>
+      await adminClient.getProducts({
+        search: debouncedQuery || undefined,
+        page: 1,
+        limit: 50,
+        stockStatus,
+        categoryId: categoryId || undefined,
+      }),
+    enabled: tab === "stock" || tab === "in",
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 
@@ -108,55 +130,72 @@ export default function AdminInventory() {
         ]}
       />
 
-      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-        <div className="flex flex-col gap-2 border-b border-border px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as WarehouseTab)}>
-            <TabsList>
-              {TABS.map((t) => (
-                <TabsTrigger key={t.id} value={t.id}>
-                  {t.label}
-                </TabsTrigger>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v as WarehouseTab);
+            setQuery("");
+            setCategoryId("");
+          }}
+        >
+          <TabsList>
+            {TABS.map((t) => (
+              <TabsTrigger key={t.id} value={t.id}>
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
+        {(tab === "stock" || tab === "in") && (
+          <div className="flex flex-wrap gap-2">
+            <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 sm:w-72">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" strokeWidth={2} />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tìm tên sản phẩm, SKU..."
+                className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+              />
+            </div>
+            <Select value={categoryId} onValueChange={setCategoryId} className="h-9 w-full sm:w-44">
+              <SelectOption value="">Tất cả danh mục</SelectOption>
+              {categories.map((c) => (
+                <SelectOption key={c.id} value={c.id}>
+                  {c.name}
+                </SelectOption>
               ))}
-            </TabsList>
-          </Tabs>
-          <Button
-            size="sm"
-            className="h-7 gap-1.5 rounded-md text-xs"
-            onClick={() => router.push("/supplier-orders")}
-          >
-            <Plus className="h-3 w-3" strokeWidth={2.5} />
-            Nhập hàng
-          </Button>
-        </div>
-
-        {tab !== "stock" && (
-          <p className="border-b border-border bg-muted/30 px-5 py-2 text-xs text-muted-foreground">
-            Hiển thị 10 SKU cần xử lý nhất · Số liệu đầy đủ theo variant tại{" "}
-            <a href="/analytics/inventory" className="font-medium underline underline-offset-2">
-              Báo cáo Tồn kho
-            </a>
-          </p>
+            </Select>
+          </div>
         )}
+      </div>
 
-        {tab === "stock" ? (
+      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
+        {tab === "stock" || tab === "in" ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  {["Sản phẩm", "Danh mục", "Tồn khả dụng", "Tồn vật lý", "Đã giữ chỗ"].map(
-                    (h, i) => (
-                      <TableHead key={i}>{h}</TableHead>
-                    ),
-                  )}
+                  {[
+                    "Sản phẩm",
+                    "Ngày khởi tạo",
+                    "Có thể bán",
+                    "Đang giữ",
+                    "Tồn kho",
+                    "Giá nhập",
+                  ].map((h, i) => (
+                    <TableHead key={i}>{h}</TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {productsQuery.isLoading && <TableLoadingRows cols={5} rows={6} />}
+                {productsQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
                 {productsQuery.error && (
-                  <TableErrorRow cols={5} message={String(productsQuery.error)} />
+                  <TableErrorRow cols={6} message={String(productsQuery.error)} />
                 )}
                 {!productsQuery.isLoading && products.length === 0 && (
-                  <TableEmptyRow cols={5} message="Chưa có dữ liệu kho" />
+                  <TableEmptyRow cols={6} message="Không tìm thấy sản phẩm" />
                 )}
                 {products.map((p) => {
                   const stockClass =
@@ -165,11 +204,16 @@ export default function AdminInventory() {
                       : p.totalAvailable < (p.minLowStockThreshold ?? 30)
                         ? "text-amber-700 font-bold"
                         : "text-foreground font-bold";
+                  const createdDate = p.createdAt
+                    ? format(new Date(p.createdAt), "dd/MM/yyyy, HH:mm")
+                    : "—";
+                  const costPrice = Number(p.avgCostPrice);
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="px-4 py-2.5">
                         <div className="flex items-center gap-2.5">
                           <ProductThumb
+                            src={p.thumbnail || undefined}
                             label={thumbLabelFromName(p.name)}
                             tone={thumbToneFromId(p.id)}
                           />
@@ -178,19 +222,26 @@ export default function AdminInventory() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-2.5">
-                        {p.categoryName ? (
-                          <TonePill tone="indigo">{p.categoryName}</TonePill>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
+                      <TableCell className="px-4 py-2.5 text-sm text-muted-foreground">
+                        {createdDate}
                       </TableCell>
                       <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
                         {p.totalAvailable}
                       </TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums">
+                        {p.totalReserved > 0 ? (
+                          <span className="font-semibold text-amber-700">{p.totalReserved}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </TableCell>
                       <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
-                      <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
-                        {p.totalReserved}
+                      <TableCell className="px-4 py-2.5 tabular-nums text-sm">
+                        {costPrice > 0 ? (
+                          `${costPrice.toLocaleString("vi-VN")}đ`
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -199,55 +250,66 @@ export default function AdminInventory() {
             </Table>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
-                    <TableHead key={i}>{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stockQuery.isLoading && <TableLoadingRows cols={3} rows={5} />}
-                {stockQuery.error && <TableErrorRow cols={3} message={String(stockQuery.error)} />}
-                {!stockQuery.isLoading && (tab === "low" ? lowStock : outOfStock).length === 0 && (
-                  <TableEmptyRow
-                    cols={3}
-                    message={tab === "low" ? "Không có SP sắp hết" : "Không có SP hết hàng"}
-                  />
-                )}
-                {(tab === "low" ? lowStock : outOfStock).map((v) => (
-                  <TableRow key={v.id}>
-                    <TableCell className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <ProductThumb
-                          label={thumbLabelFromName(v.productName)}
-                          tone={thumbToneFromId(v.id)}
-                        />
-                        <div className="flex flex-col leading-tight">
-                          <span className="text-sm font-semibold">{v.productName}</span>
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {v.name} · {v.sku ?? "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className={`px-4 py-2.5 font-bold tabular-nums ${tab === "out" ? "text-red-600" : "text-amber-700"}`}
-                    >
-                      {v.onHand}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      <TonePill tone={tab === "out" ? "red" : "amber"}>
-                        {tab === "out" ? "Hết hàng" : "Sắp hết"}
-                      </TonePill>
-                    </TableCell>
+          <>
+            <p className="border-b border-border bg-muted/30 px-5 py-2 text-xs text-muted-foreground">
+              Hiển thị 10 SKU cần xử lý nhất · Số liệu đầy đủ theo variant tại{" "}
+              <a href="/analytics/inventory" className="font-medium underline underline-offset-2">
+                Báo cáo Tồn kho
+              </a>
+            </p>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
+                      <TableHead key={i}>{h}</TableHead>
+                    ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {stockQuery.isLoading && <TableLoadingRows cols={3} rows={5} />}
+                  {stockQuery.error && (
+                    <TableErrorRow cols={3} message={String(stockQuery.error)} />
+                  )}
+                  {!stockQuery.isLoading &&
+                    (tab === "low" ? lowStock : outOfStock).length === 0 && (
+                      <TableEmptyRow
+                        cols={3}
+                        message={tab === "low" ? "Không có SP sắp hết" : "Không có SP hết hàng"}
+                      />
+                    )}
+                  {(tab === "low" ? lowStock : outOfStock).map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <ProductThumb
+                            label={thumbLabelFromName(v.productName)}
+                            tone={thumbToneFromId(v.id)}
+                          />
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-sm font-semibold">{v.productName}</span>
+                            <span className="font-mono text-xs text-muted-foreground">
+                              {v.name} · {v.sku ?? "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell
+                        className={`px-4 py-2.5 font-bold tabular-nums ${tab === "out" ? "text-red-600" : "text-amber-700"}`}
+                      >
+                        {v.onHand}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        <TonePill tone={tab === "out" ? "red" : "amber"}>
+                          {tab === "out" ? "Hết hàng" : "Sắp hết"}
+                        </TonePill>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </Card>
     </div>

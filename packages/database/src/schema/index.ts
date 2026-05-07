@@ -15,6 +15,5 @@ export * from "./profiles";
 export * from "./purchases";
 export * from "./receipts";
 export * from "./relations";
-export * from "./reports";
 export * from "./settings";
 export * from "./suppliers";

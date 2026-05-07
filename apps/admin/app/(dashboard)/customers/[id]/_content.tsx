@@ -3,6 +3,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CustomerDetail } from "@workspace/database/types/admin";
 import { formatDate } from "@workspace/shared/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +38,8 @@ export default function CustomerDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  type ConfirmAction = "block" | "delete" | null;
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const { data, isLoading, isError } = useQuery<{ customer?: CustomerDetail }>({
     queryKey: queryKeys.customer(id),
@@ -58,10 +70,9 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleToggleStatus = async () => {
+  const doToggleStatus = async () => {
     if (!customer) return;
     const nextActive = !customer.isActive;
-    if (!nextActive && !window.confirm("Chặn khách hàng này?")) return;
     setIsToggling(true);
     try {
       await adminClient.toggleCustomerStatus(id, nextActive);
@@ -74,9 +85,8 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const doDelete = async () => {
     if (!customer) return;
-    if (!window.confirm("Xóa khách hàng này? Hành động không thể hoàn tác.")) return;
     setIsDeleting(true);
     try {
       await adminClient.deleteCustomer(id);
@@ -86,6 +96,26 @@ export default function CustomerDetailPage() {
       toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
       setIsDeleting(false);
     }
+  };
+
+  const handleToggleStatus = () => {
+    if (!customer) return;
+    if (customer.isActive) {
+      setConfirmAction("block");
+    } else {
+      doToggleStatus();
+    }
+  };
+
+  const handleDelete = () => {
+    if (!customer) return;
+    setConfirmAction("delete");
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction === "block") doToggleStatus();
+    else if (confirmAction === "delete") doDelete();
+    setConfirmAction(null);
   };
 
   if (isLoading) {
@@ -172,6 +202,39 @@ export default function CustomerDetailPage() {
         isSubmitting={isSubmitting}
         onSubmit={handleEditCustomer}
       />
+
+      <AlertDialog
+        open={!!confirmAction}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "block" ? "Chặn khách hàng" : "Xóa khách hàng"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "block"
+                ? "Khách hàng sẽ không thể đăng nhập sau khi bị chặn."
+                : "Hành động này không thể hoàn tác. Khách hàng sẽ bị xóa vĩnh viễn."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ</AlertDialogCancel>
+            <AlertDialogAction
+              className={
+                confirmAction === "delete"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : ""
+              }
+              onClick={handleConfirm}
+            >
+              Xác nhận
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <CustomerProfileHeader customer={customer} />
 

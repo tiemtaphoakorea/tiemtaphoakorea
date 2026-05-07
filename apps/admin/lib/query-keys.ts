@@ -87,7 +87,7 @@ export const queryKeys = {
         ["admin", "inventory", "daily-summary", params] as const,
       valuation: (params: Record<string, unknown>) =>
         ["admin", "inventory", "valuation", params] as const,
-      xnt: (params: Record<string, unknown>) => ["admin", "inventory", "xnt", params] as const,
+      flow: (params: Record<string, unknown>) => ["admin", "inventory", "flow", params] as const,
     },
     purchases: {
       all: [QK.adminRoot, "purchases"] as const,

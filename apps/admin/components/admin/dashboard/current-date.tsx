@@ -1,5 +1,7 @@
 "use client";
 
+import { format } from "date-fns";
+
 export function CurrentDate() {
-  return <>{new Date().toLocaleDateString("vi-VN")}</>;
+  return <>{format(new Date(), "dd/MM/yyyy")}</>;
 }

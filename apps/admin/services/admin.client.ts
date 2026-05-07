@@ -1,6 +1,6 @@
 import type { StockAlertVariant } from "@workspace/database/services/analytics.server";
 import type { DailyStatRow, DayOrderRow } from "@workspace/database/services/finance.server";
-import type { XntRow } from "@workspace/database/services/inventory.server";
+import type { InventoryFlowRow } from "@workspace/database/services/inventory.server";
 import type {
   AdminOrderDetails,
   AdminProfile,
@@ -43,7 +43,7 @@ import {
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
-export type { XntRow } from "@workspace/database/services/inventory.server";
+export type { InventoryFlowRow } from "@workspace/database/services/inventory.server";
 export type { DailyStatRow, DayOrderRow, StockAlertVariant };
 
 export type InventoryMovement = {
@@ -241,6 +241,7 @@ export const adminClient = {
     page?: number;
     limit?: number;
     stockStatus?: string;
+    categoryId?: string;
   }) {
     return axios.get<PaginatedResponse<ProductListItem>>(API_ENDPOINTS.ADMIN.PRODUCTS, {
       params,
@@ -770,6 +771,7 @@ export const adminClient = {
     search?: string;
     status?: string;
     supplierId?: string;
+    paymentStatus?: string;
     page?: number;
     limit?: number;
   }) {
@@ -832,13 +834,22 @@ export const adminClient = {
   },
 
   // Reports
-  async getInventoryValuation(params?: { search?: string; categoryId?: string }) {
+  async getInventoryValuation(params?: {
+    search?: string;
+    categoryId?: string;
+    page?: number;
+    limit?: number;
+  }) {
     return axios.get<{ items: any[]; totals: any }>(API_ENDPOINTS.ADMIN.INVENTORY_VALUATION, {
       params,
-    }) as unknown as Promise<{ items: any[]; totals: any }>;
+    }) as unknown as Promise<{
+      items: any[];
+      totals: any;
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>;
   },
 
-  async getXntReport(params: {
+  async getInventoryFlowReport(params: {
     startDate: string;
     endDate: string;
     search?: string;
@@ -847,11 +858,11 @@ export const adminClient = {
     limit?: number;
   }) {
     return axios.get<{
-      items: XntRow[];
+      items: InventoryFlowRow[];
       totals: { totalNhap: number; totalXuat: number; skuCount: number };
       metadata: { total: number; page: number; totalPages: number };
-    }>(API_ENDPOINTS.ADMIN.INVENTORY_XNT, { params }) as unknown as Promise<{
-      items: XntRow[];
+    }>(API_ENDPOINTS.ADMIN.INVENTORY_FLOW, { params }) as unknown as Promise<{
+      items: InventoryFlowRow[];
       totals: { totalNhap: number; totalXuat: number; skuCount: number };
       metadata: { total: number; page: number; totalPages: number };
     }>;

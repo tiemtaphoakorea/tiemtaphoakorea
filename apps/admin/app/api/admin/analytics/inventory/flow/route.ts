@@ -1,5 +1,5 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
-import { getXntReport } from "@workspace/database/services/inventory.server";
+import { getInventoryFlowReport } from "@workspace/database/services/inventory.server";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(100, parseInt(searchParams.get("limit") ?? "30", 10) || 30);
 
   try {
-    const data = await getXntReport({
+    const data = await getInventoryFlowReport({
       startDate,
       endDate: endOfDay,
       search: searchParams.get("search") || undefined,
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Failed to load XNT report:", error);
+    console.error("Failed to load inventory flow report:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },

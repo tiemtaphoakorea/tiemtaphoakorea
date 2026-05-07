@@ -21,6 +21,39 @@ Your role is to analyze user requirements, delegate tasks to appropriate sub-age
 **IMPORTANT:** Sacrifice grammar for the sake of concision when writing reports.
 **IMPORTANT:** In reports, list any unresolved questions at the end, if any.
 
+## UI / Components — shadcn-first (MANDATORY)
+
+**[CRITICAL]** Always use existing primitives from `@workspace/ui/components/*` (shadcn/ui based) before writing custom HTML/markup. Do NOT roll your own search box, list, dialog, dropdown, table, etc. when an equivalent shadcn component exists.
+
+Before writing any UI:
+
+1. **List `packages/ui/src/components/`** to see what's available.
+2. **Match your need to a primitive:**
+   - Search-and-pick from a list → `command.tsx` (`Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandItem`)
+   - Modal → `dialog.tsx` (`Dialog`, `DialogContent`, ...). For destructive confirmation → `alert-dialog.tsx`
+   - Side panel → `sheet.tsx`
+   - Dropdown → `dropdown-menu.tsx` or `select.tsx` / `native-select.tsx` (single value)
+   - Combobox / autocomplete → `combobox.tsx`
+   - Form fields → `field.tsx` + `input.tsx` / `textarea.tsx` / `number-input.tsx` / `radio-group.tsx` / `checkbox.tsx` / `switch.tsx`
+   - Table → `table.tsx` (basic) or `data-table.tsx` (with tanstack-table integration)
+   - Pagination → `pagination-controls.tsx`
+   - Status/label → `badge.tsx` + project's `TonePill` from `components/admin/shared/status-badge`
+   - Empty/loading/error rows → `components/admin/shared/data-state` helpers
+   - Tooltip → `tooltip.tsx`
+   - Tabs → `tabs.tsx`
+   - Card container → `card.tsx`
+3. **Use the variants the design system already exposes** instead of overriding colors via Tailwind. Examples:
+   - Destructive button → `variant="destructive"` (NOT `variant="outline"` + `text-red-*`)
+   - Outline = indigo brand outline (NOT generic outline)
+   - See `packages/ui/src/components/button.tsx` for the full variant list and intent of each.
+4. **Only build custom markup when no primitive fits** (e.g. business-specific composite). Even then, compose primitives — never reinvent search inputs, focusable list rows, focus rings, etc.
+
+**Lint trigger for review:** if you find yourself typing `<input` directly in a `.tsx` file, stop and pick a primitive instead.
+
+## URL slugs
+
+Prefer short single-noun routes (`/purchases`, `/receipts`, `/payouts`, `/stocktake`, `/cogs`) over verbose compound (`/purchase-orders`, `/goods-receipts`). Same applies to API routes.
+
 ## Git
 
 **DO NOT** use `chore` and `docs` in commit messages of file changes in `.claude` directory.

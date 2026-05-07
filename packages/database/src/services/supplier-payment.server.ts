@@ -1,5 +1,5 @@
 import { DOC_PREFIX, type PaymentMethodValue } from "@workspace/shared/constants";
-import { and, desc, eq, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { profiles } from "../schema/profiles";
 import { goodsReceipts, supplierPayments } from "../schema/receipts";
@@ -11,6 +11,8 @@ export type SupplierPaymentListFilter = {
   supplierId?: string;
   receiptId?: string;
   method?: PaymentMethodValue;
+  page?: number;
+  limit?: number;
 };
 
 function toMoney(n: number | string): string {
@@ -24,29 +26,46 @@ export async function listSupplierPayments(filter: SupplierPaymentListFilter = {
   if (filter.method) conditions.push(eq(supplierPayments.method, filter.method));
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const page = Math.max(1, filter.page ?? 1);
+  const limit = Math.max(1, Math.min(filter.limit ?? 25, 200));
 
-  return db
-    .select({
-      id: supplierPayments.id,
-      code: supplierPayments.code,
-      supplierId: supplierPayments.supplierId,
-      supplierName: suppliers.name,
-      receiptId: supplierPayments.receiptId,
-      receiptCode: goodsReceipts.code,
-      amount: supplierPayments.amount,
-      method: supplierPayments.method,
-      referenceCode: supplierPayments.referenceCode,
-      paidAt: supplierPayments.paidAt,
-      note: supplierPayments.note,
-      createdAt: supplierPayments.createdAt,
-      createdByName: profiles.fullName,
-    })
-    .from(supplierPayments)
-    .leftJoin(suppliers, eq(supplierPayments.supplierId, suppliers.id))
-    .leftJoin(goodsReceipts, eq(supplierPayments.receiptId, goodsReceipts.id))
-    .leftJoin(profiles, eq(supplierPayments.createdBy, profiles.id))
-    .where(where)
-    .orderBy(desc(supplierPayments.paidAt));
+  const [data, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: supplierPayments.id,
+        code: supplierPayments.code,
+        supplierId: supplierPayments.supplierId,
+        supplierName: suppliers.name,
+        receiptId: supplierPayments.receiptId,
+        receiptCode: goodsReceipts.code,
+        amount: supplierPayments.amount,
+        method: supplierPayments.method,
+        referenceCode: supplierPayments.referenceCode,
+        paidAt: supplierPayments.paidAt,
+        note: supplierPayments.note,
+        createdAt: supplierPayments.createdAt,
+        createdByName: profiles.fullName,
+      })
+      .from(supplierPayments)
+      .leftJoin(suppliers, eq(supplierPayments.supplierId, suppliers.id))
+      .leftJoin(goodsReceipts, eq(supplierPayments.receiptId, goodsReceipts.id))
+      .leftJoin(profiles, eq(supplierPayments.createdBy, profiles.id))
+      .where(where)
+      .orderBy(desc(supplierPayments.paidAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
+    db.select({ total: count() }).from(supplierPayments).where(where),
+  ]);
+
+  return {
+    data,
+    metadata: {
+      total: Number(total),
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(Number(total) / limit)),
+    },
+  };
 }
 
 export async function createSupplierPayment(input: {

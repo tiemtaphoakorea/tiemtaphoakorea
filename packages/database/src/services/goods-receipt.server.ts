@@ -1,6 +1,7 @@
 import { DOC_PREFIX, RECEIPT_STATUS, type ReceiptStatusValue } from "@workspace/shared/constants";
-import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
+import type { PaymentStatus } from "../schema/enums";
 import { costPriceHistory, products, productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
 import { goodsReceiptItems, goodsReceipts, supplierPayments } from "../schema/receipts";
@@ -28,6 +29,9 @@ export type ReceiptListFilter = {
   search?: string;
   status?: ReceiptStatusValue | "All";
   supplierId?: string;
+  paymentStatus?: PaymentStatus;
+  page?: number;
+  limit?: number;
 };
 
 function toMoney(n: number | string): string {
@@ -139,33 +143,57 @@ export async function listGoodsReceipts(filter: ReceiptListFilter = {}) {
   if (filter.supplierId) {
     conditions.push(eq(goodsReceipts.supplierId, filter.supplierId));
   }
+  if (filter.paymentStatus) {
+    conditions.push(eq(goodsReceipts.paymentStatus, filter.paymentStatus));
+  }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const page = Math.max(1, filter.page ?? 1);
+  const limit = Math.max(1, Math.min(filter.limit ?? 25, 200));
 
-  return db
-    .select({
-      id: goodsReceipts.id,
-      code: goodsReceipts.code,
-      status: goodsReceipts.status,
-      supplierId: goodsReceipts.supplierId,
-      supplierName: suppliers.name,
-      purchaseOrderId: goodsReceipts.purchaseOrderId,
-      receivedAt: goodsReceipts.receivedAt,
-      totalQty: goodsReceipts.totalQty,
-      totalAmount: goodsReceipts.totalAmount,
-      payableAmount: goodsReceipts.payableAmount,
-      paidAmount: goodsReceipts.paidAmount,
-      debtAmount: goodsReceipts.debtAmount,
-      paymentStatus: goodsReceipts.paymentStatus,
-      createdAt: goodsReceipts.createdAt,
-      createdByName: profiles.fullName,
-      note: goodsReceipts.note,
-    })
-    .from(goodsReceipts)
-    .leftJoin(suppliers, eq(goodsReceipts.supplierId, suppliers.id))
-    .leftJoin(profiles, eq(goodsReceipts.createdBy, profiles.id))
-    .where(where)
-    .orderBy(desc(goodsReceipts.createdAt));
+  const [data, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: goodsReceipts.id,
+        code: goodsReceipts.code,
+        status: goodsReceipts.status,
+        supplierId: goodsReceipts.supplierId,
+        supplierName: suppliers.name,
+        purchaseOrderId: goodsReceipts.purchaseOrderId,
+        receivedAt: goodsReceipts.receivedAt,
+        totalQty: goodsReceipts.totalQty,
+        totalAmount: goodsReceipts.totalAmount,
+        payableAmount: goodsReceipts.payableAmount,
+        paidAmount: goodsReceipts.paidAmount,
+        debtAmount: goodsReceipts.debtAmount,
+        paymentStatus: goodsReceipts.paymentStatus,
+        createdAt: goodsReceipts.createdAt,
+        createdByName: profiles.fullName,
+        note: goodsReceipts.note,
+      })
+      .from(goodsReceipts)
+      .leftJoin(suppliers, eq(goodsReceipts.supplierId, suppliers.id))
+      .leftJoin(profiles, eq(goodsReceipts.createdBy, profiles.id))
+      .where(where)
+      .orderBy(desc(goodsReceipts.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
+    db
+      .select({ total: count() })
+      .from(goodsReceipts)
+      .leftJoin(suppliers, eq(goodsReceipts.supplierId, suppliers.id))
+      .where(where),
+  ]);
+
+  return {
+    data,
+    metadata: {
+      total: Number(total),
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(Number(total) / limit)),
+    },
+  };
 }
 
 export async function getGoodsReceiptById(id: string) {

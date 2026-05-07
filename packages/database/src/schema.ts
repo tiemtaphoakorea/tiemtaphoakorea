@@ -8,6 +8,5 @@ export * from "./schema/orders";
 export * from "./schema/products";
 export * from "./schema/profiles";
 export * from "./schema/relations";
-export * from "./schema/reports";
 export * from "./schema/settings";
 export * from "./schema/suppliers";

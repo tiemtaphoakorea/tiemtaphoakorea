@@ -57,7 +57,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider style={{ "--sidebar-width": "13.75rem" } as React.CSSProperties}>
       <AdminSidebar user={user} isLoading={userLoading} />
-      <SidebarInset className="bg-muted">
+      <SidebarInset className="w-0 min-w-0 overflow-x-hidden bg-muted">
         {/* Topbar — matches Admin CMS design: trigger · breadcrumb · search · bell · avatar */}
         <header className="sticky top-0 z-30 flex h-13.5 shrink-0 items-center gap-3 border-b border-border bg-white px-6">
           <SidebarTrigger className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
@@ -123,7 +123,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
 
         <main
           className={cn(
-            "flex flex-1 flex-col",
+            "flex flex-1 flex-col min-w-0 overflow-x-hidden",
             pathname === "/chat" ? "overflow-hidden" : "gap-4 p-5 md:p-6",
           )}
         >

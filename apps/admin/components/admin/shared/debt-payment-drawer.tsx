@@ -9,6 +9,7 @@ import { NumberInput } from "@workspace/ui/components/number-input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
@@ -22,8 +23,7 @@ type DebtPaymentDrawerProps = {
   onClose: () => void;
 };
 
-const fmtDate = (d: Date | string | null): string =>
-  d ? new Date(d).toLocaleDateString("vi-VN") : "—";
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 /** Drawer for recording debt payments — list unpaid orders, pick one, enter amount. */
 export function DebtPaymentDrawer({ customerId, onClose }: DebtPaymentDrawerProps) {

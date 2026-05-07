@@ -163,10 +163,17 @@ export async function getInventoryMovements({
 export async function getInventoryValuation({
   search,
   categoryId,
+  page = 1,
+  limit = 20,
 }: {
   search?: string;
   categoryId?: string;
+  page?: number;
+  limit?: number;
 } = {}) {
+  const safePage = Number.isFinite(page) ? Math.max(1, page) : 1;
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(limit, 100)) : 20;
+  const offset = (safePage - 1) * safeLimit;
   const conditions: SQL[] = [];
   if (search) {
     conditions.push(
@@ -177,6 +184,23 @@ export async function getInventoryValuation({
     conditions.push(eq(products.categoryId, categoryId));
   }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [countRow] = await db
+    .select({ count: count() })
+    .from(productVariants)
+    .leftJoin(products, eq(productVariants.productId, products.id))
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .where(where);
+
+  const [totalsRow] = await db
+    .select({
+      totalQty: sql<number>`coalesce(sum(${productVariants.onHand}), 0)`,
+      totalValue: sql<number>`coalesce(sum(${productVariants.onHand} * ${productVariants.costPrice}), 0)`,
+    })
+    .from(productVariants)
+    .leftJoin(products, eq(productVariants.productId, products.id))
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .where(where);
 
   const rows = await db
     .select({
@@ -195,7 +219,9 @@ export async function getInventoryValuation({
     .leftJoin(products, eq(productVariants.productId, products.id))
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .where(where)
-    .orderBy(desc(productVariants.onHand));
+    .orderBy(desc(productVariants.onHand))
+    .limit(safeLimit)
+    .offset(offset);
 
   const items = rows.map((r) => {
     const onHand = r.onHand ?? 0;
@@ -206,16 +232,23 @@ export async function getInventoryValuation({
     };
   });
 
-  const totalValue = items.reduce((sum, i) => sum + Number(i.stockValue), 0).toFixed(2);
-  const totalQty = items.reduce((sum, i) => sum + (i.onHand ?? 0), 0);
+  const total = Number(countRow?.count ?? 0);
+  const totalValue = Number(totalsRow?.totalValue ?? 0).toFixed(2);
+  const totalQty = Number(totalsRow?.totalQty ?? 0);
 
   return {
     items,
-    totals: { totalValue, totalQty, sku: items.length },
+    totals: { totalValue, totalQty, sku: total },
+    metadata: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+    },
   };
 }
 
-export type XntRow = {
+export type InventoryFlowRow = {
   variantId: string;
   sku: string | null;
   variantName: string | null;
@@ -228,7 +261,7 @@ export type XntRow = {
   tonCuoi: number;
 };
 
-export async function getXntReport({
+export async function getInventoryFlowReport({
   startDate,
   endDate,
   search,
@@ -251,20 +284,23 @@ export async function getXntReport({
     : sql``;
   const categoryCond = categoryId ? sql`AND p.category_id = ${categoryId}` : sql``;
 
+  const startIso = startDate.toISOString();
+  const endIso = endDate.toISOString();
+
   const ctePrefix = sql`
     WITH period_movements AS (
       SELECT variant_id,
         SUM(CASE WHEN quantity > 0 THEN quantity ELSE 0 END)      AS nhap,
         SUM(CASE WHEN quantity < 0 THEN ABS(quantity) ELSE 0 END) AS xuat
       FROM inventory_movements
-      WHERE created_at >= ${startDate} AND created_at <= ${endDate}
+      WHERE created_at >= ${startIso}::timestamptz AND created_at <= ${endIso}::timestamptz
       GROUP BY variant_id
     ),
     begin_stock AS (
       SELECT DISTINCT ON (variant_id)
         variant_id, on_hand_after AS ton_dau
       FROM inventory_movements
-      WHERE created_at < ${startDate}
+      WHERE created_at < ${startIso}::timestamptz
       ORDER BY variant_id, created_at DESC
     )
   `;
@@ -308,9 +344,9 @@ export async function getXntReport({
     `),
   ]);
 
-  const total = Number((countResult.rows[0] as Record<string, unknown>)?.total ?? 0);
-  const agg = aggregateResult.rows[0] as Record<string, unknown>;
-  const items = dataResult.rows as unknown as XntRow[];
+  const total = Number((countResult[0] as Record<string, unknown>)?.total ?? 0);
+  const agg = aggregateResult[0] as Record<string, unknown>;
+  const items = dataResult as unknown as InventoryFlowRow[];
 
   return {
     items,

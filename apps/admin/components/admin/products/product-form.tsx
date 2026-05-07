@@ -8,20 +8,29 @@ import { LOW_STOCK_DEFAULT_THRESHOLD } from "@workspace/shared/constants";
 import { type ProductFormValues, productSchema } from "@workspace/shared/schemas";
 import type { ProductFormProps, ProductFormVariant } from "@workspace/shared/types/product";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent } from "@workspace/ui/components/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { ChevronLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { queryKeys } from "@/lib/query-keys";
 import { DEFAULT_VARIANT, type FormState, formReducer } from "./product-form/form-state";
 import { InfoTab } from "./product-form/info-tab";
 import { MediaTab } from "./product-form/media-tab";
+import { StatusSidebar } from "./product-form/status-sidebar";
 import { VariantsTab } from "./product-form/variants-tab";
 
 export function ProductForm({ initialData, categories, mode }: ProductFormProps) {
@@ -60,6 +69,10 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
   });
 
   const basePrice = useWatch({ control: form.control, name: "basePrice" });
+
+  const isDirtyRef = useRef(false);
+  const { showDialog, navigateTo, confirmExit, cancelExit, bypassNextNavigation } =
+    useUnsavedChangesGuard(isDirtyRef);
 
   const handleGenerateVariants = () => {
     const activeAttrs = attributes.filter((a) => a.values.length > 0 && a.name.trim() !== "");
@@ -198,6 +211,8 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       if (mode === "edit" && productId) {
         await queryClient.invalidateQueries({ queryKey: queryKeys.productEdit(productId) });
       }
+      isDirtyRef.current = false;
+      bypassNextNavigation();
       router.push("/products");
       return;
     }
@@ -219,109 +234,103 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         </Alert>
       )}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
-          <Button variant="ghost" size="icon" asChild className="mt-0.5 shrink-0">
-            <Link href="/products">
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                {mode === "create" ? "Thêm sản phẩm mới" : "Chỉnh sửa sản phẩm"}
-              </h1>
-              {mode === "edit" && initialData?.name && (
-                <Badge
-                  variant="outline"
-                  className="border-border text-xs font-medium text-muted-foreground"
-                >
-                  {initialData.name}
-                </Badge>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-              {mode === "create"
-                ? "Tạo sản phẩm và các biến thể của nó."
-                : "Cập nhật thông tin và biến thể sản phẩm."}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <form
         onSubmit={form.handleSubmit(onValidSubmit)}
-        className="flex flex-col items-start gap-5 lg:flex-row"
+        onChange={() => {
+          isDirtyRef.current = true;
+        }}
+        className="flex flex-col gap-5"
       >
-        <div className="w-full flex-1 space-y-5">
-          <Tabs defaultValue="info" className="w-full">
-            <TabsList className="mb-4 w-full justify-start gap-1 rounded-lg border border-border bg-card p-1">
-              <TabsTrigger
-                value="info"
-                className="h-full flex-1 text-xs font-semibold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
-              >
-                Thông tin chung
-              </TabsTrigger>
-              <TabsTrigger
-                value="variants"
-                className="h-full flex-1 text-xs font-semibold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
-              >
-                Biến thể & Giá
-              </TabsTrigger>
-              <TabsTrigger
-                value="media"
-                className="h-full flex-1 text-xs font-semibold shadow-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm"
-              >
-                Hình ảnh
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="mt-0.5 shrink-0"
+              onClick={() => navigateTo("/products")}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  {mode === "create" ? "Thêm sản phẩm mới" : "Chỉnh sửa sản phẩm"}
+                </h1>
+                {mode === "edit" && initialData?.name && (
+                  <Badge
+                    variant="outline"
+                    className="border-border text-xs font-medium text-muted-foreground"
+                  >
+                    {initialData.name}
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                {mode === "create"
+                  ? "Tạo sản phẩm và các biến thể của nó."
+                  : "Cập nhật thông tin và biến thể sản phẩm."}
+              </p>
+            </div>
+          </div>
 
-            <TabsContent value="info">
-              <InfoTab form={form} categories={categories} />
-            </TabsContent>
-
-            <TabsContent value="variants">
-              <VariantsTab
-                attributes={attributes}
-                variants={variants}
-                basePrice={basePrice}
-                dispatch={dispatch}
-                onGenerate={handleGenerateVariants}
-              />
-            </TabsContent>
-
-            <TabsContent value="media">
-              <MediaTab
-                variants={variants}
-                selectedMediaVariantId={selectedMediaVariantId}
-                dispatch={dispatch}
-              />
-            </TabsContent>
-          </Tabs>
+          <div className="flex shrink-0 items-center gap-2 pt-0.5">
+            <Button type="button" variant="outline" onClick={() => navigateTo("/products")}>
+              Hủy bỏ
+            </Button>
+            <Button type="submit" disabled={apiPending}>
+              {apiPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {mode === "create" ? "Đang tạo..." : "Đang lưu..."}
+                </>
+              ) : mode === "create" ? (
+                "Tạo sản phẩm"
+              ) : (
+                "Lưu thay đổi"
+              )}
+            </Button>
+          </div>
         </div>
 
-        <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-70">
-          <Card className="shadow-none">
-            <CardContent className="flex flex-col gap-2.5">
-              <Button type="submit" size="lg" disabled={apiPending} className="w-full">
-                {apiPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {mode === "create" ? "Đang tạo..." : "Đang lưu..."}
-                  </>
-                ) : mode === "create" ? (
-                  "Tạo sản phẩm"
-                ) : (
-                  "Lưu thay đổi"
-                )}
-              </Button>
-              <Button type="button" variant="outline" className="w-full" asChild>
-                <Link href="/products">Hủy bỏ</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </aside>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1 flex flex-col gap-5">
+            <InfoTab form={form} />
+            <VariantsTab
+              attributes={attributes}
+              variants={variants}
+              basePrice={basePrice}
+              dispatch={dispatch}
+              onGenerate={handleGenerateVariants}
+              mode={mode}
+            />
+            <MediaTab
+              variants={variants}
+              selectedMediaVariantId={selectedMediaVariantId}
+              dispatch={dispatch}
+            />
+          </div>
+
+          <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-72">
+            <StatusSidebar form={form} categories={categories} />
+          </aside>
+        </div>
       </form>
+
+      <AlertDialog open={showDialog} onOpenChange={(open) => !open && cancelExit()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Có thay đổi chưa lưu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tất cả thay đổi sẽ bị mất nếu bạn rời khỏi trang này. Bạn có chắc muốn tiếp tục?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelExit}>Tiếp tục chỉnh sửa</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmExit}>Rời khỏi trang</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

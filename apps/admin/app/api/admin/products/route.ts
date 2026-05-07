@@ -22,15 +22,22 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || undefined;
   const { page, limit } = getPaginationParams(request);
   const stockStatus = searchParams.get("stockStatus") || undefined;
+  const categoryId = searchParams.get("categoryId") || undefined;
   const include = searchParams.get("include");
 
   try {
     if (include === "variants") {
-      const products = await getProductsWithVariants();
+      const limitParam = searchParams.get("limit");
+      const inStockOnly = searchParams.get("inStockOnly") === "true";
+      const products = await getProductsWithVariants({
+        search,
+        limit: limitParam ? Number(limitParam) : undefined,
+        inStockOnly,
+      });
       return NextResponse.json({ products });
     }
 
-    const result = await getProducts({ search, page, limit, stockStatus });
+    const result = await getProducts({ search, page, limit, stockStatus, categoryId });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch products:", error);

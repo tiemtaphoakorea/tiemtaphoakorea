@@ -8,16 +8,15 @@ import { useDebounce } from "use-debounce";
 import { AnalyticsSubpageHeader } from "@/components/admin/analytics/analytics-subpage-header";
 import type { DateRange } from "@/components/admin/analytics/finance-range-picker";
 import { InventoryCategoryChart } from "@/components/admin/analytics/inventory-category-chart";
+import { InventoryFlowTable } from "@/components/admin/analytics/inventory-flow-table";
 import { InventoryMovementLog } from "@/components/admin/analytics/inventory-movement-log";
 import { InventoryStats } from "@/components/admin/analytics/inventory-stats";
 import type {
   InventoryValuationItem,
+  InventoryValuationMetadata,
   InventoryValuationTotals,
 } from "@/components/admin/analytics/inventory-valuation-table";
 import { InventoryValuationTable } from "@/components/admin/analytics/inventory-valuation-table";
-import { InventoryXntTable } from "@/components/admin/analytics/inventory-xnt-table";
-import { LowStockList } from "@/components/admin/analytics/low-stock-list";
-import { OutOfStockList } from "@/components/admin/analytics/out-of-stock-list";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
@@ -46,14 +45,15 @@ export default function AnalyticsInventoryPage() {
   // Valuation / existing state
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [valuationPage, setValuationPage] = useState(1);
   const [debouncedSearch] = useDebounce(search, 300);
 
-  // XNT state
-  const [xntDateRange, setXntDateRange] = useState<DateRange>(thisMonthRange);
-  const [xntSearch, setXntSearch] = useState("");
-  const [xntCategoryId, setXntCategoryId] = useState("");
-  const [xntPage, setXntPage] = useState(1);
-  const [debouncedXntSearch] = useDebounce(xntSearch, 300);
+  // Inventory flow (in/out/balance) state
+  const [flowDateRange, setFlowDateRange] = useState<DateRange>(thisMonthRange);
+  const [flowSearch, setFlowSearch] = useState("");
+  const [flowCategoryId, setFlowCategoryId] = useState("");
+  const [flowPage, setFlowPage] = useState(1);
+  const [debouncedFlowSearch] = useDebounce(flowSearch, 300);
 
   // Movement log state
   const [movDateRange, setMovDateRange] = useState<DateRange>(last7DaysRange);
@@ -71,14 +71,11 @@ export default function AnalyticsInventoryPage() {
     },
   });
 
-  const { data: stockAlerts, isLoading: isLoadingStock } = useQuery({
-    queryKey: queryKeys.admin.stockAlerts,
-    queryFn: () => adminClient.getStockAlerts(),
-  });
-
   const valuationParams = {
     search: debouncedSearch || undefined,
     categoryId: categoryId || undefined,
+    page: valuationPage,
+    limit: 20,
   };
   const { data: valuationData, isLoading: isLoadingValuation } = useQuery({
     queryKey: queryKeys.admin.inventory.valuation(valuationParams),
@@ -90,16 +87,16 @@ export default function AnalyticsInventoryPage() {
     queryFn: () => adminClient.getCategories(),
   });
 
-  // XNT query
-  const xntParams = {
-    ...xntDateRange,
-    search: debouncedXntSearch || undefined,
-    categoryId: xntCategoryId || undefined,
-    page: xntPage,
+  // Inventory flow query
+  const flowParams = {
+    ...flowDateRange,
+    search: debouncedFlowSearch || undefined,
+    categoryId: flowCategoryId || undefined,
+    page: flowPage,
   };
-  const { data: xntData, isLoading: isLoadingXnt } = useQuery({
-    queryKey: queryKeys.admin.inventory.xnt(xntParams),
-    queryFn: () => adminClient.getXntReport(xntParams),
+  const { data: flowData, isLoading: isLoadingFlow } = useQuery({
+    queryKey: queryKeys.admin.inventory.flow(flowParams),
+    queryFn: () => adminClient.getInventoryFlowReport(flowParams),
   });
 
   // Movement log query
@@ -116,22 +113,21 @@ export default function AnalyticsInventoryPage() {
     queryFn: () => adminClient.getInventoryMovements(movParams),
   });
 
-  const stockLoading = isLoading || isLoadingStock;
   const flatCategories = (categoriesData?.flatCategories ?? []).map(
     (c: { id: string; name: string }) => ({ id: c.id, name: c.name }),
   );
 
-  function handleXntDateRange(r: DateRange) {
-    setXntDateRange(r);
-    setXntPage(1);
+  function handleFlowDateRange(r: DateRange) {
+    setFlowDateRange(r);
+    setFlowPage(1);
   }
-  function handleXntSearch(v: string) {
-    setXntSearch(v);
-    setXntPage(1);
+  function handleFlowSearch(v: string) {
+    setFlowSearch(v);
+    setFlowPage(1);
   }
-  function handleXntCategory(v: string) {
-    setXntCategoryId(v);
-    setXntPage(1);
+  function handleFlowCategory(v: string) {
+    setFlowCategoryId(v);
+    setFlowPage(1);
   }
   function handleMovDateRange(r: DateRange) {
     setMovDateRange(r);
@@ -145,88 +141,64 @@ export default function AnalyticsInventoryPage() {
     setMovType(v);
     setMovPage(1);
   }
+  function handleValuationSearch(v: string) {
+    setSearch(v);
+    setValuationPage(1);
+  }
+  function handleValuationCategory(v: string) {
+    setCategoryId(v);
+    setValuationPage(1);
+  }
 
   return (
     <div className="flex min-w-0 flex-col gap-8 pb-10">
       <AnalyticsSubpageHeader title="Tồn kho" />
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-200" />
-          ))}
-        </div>
-      ) : (
-        data?.inventory && <InventoryStats data={data.inventory} />
-      )}
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200">
-          <CardContent className="pt-6">
-            {stockLoading ? (
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
+        <CardContent className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:divide-x lg:divide-slate-100">
+          <div className="flex flex-col gap-1">
+            <h2 className="mb-1 text-sm font-black uppercase tracking-wider text-slate-700">
+              Thống kê tồn kho
+            </h2>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Bấm vào Sắp hết hàng hoặc Hết hàng để xem danh sách chi tiết.
+            </p>
+            {isLoading ? (
               <div className="flex flex-col gap-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-200" />
+                  <div key={i} className="h-10 animate-pulse rounded bg-gray-100" />
                 ))}
               </div>
             ) : (
-              <LowStockList items={stockAlerts?.lowStock ?? []} />
+              data?.inventory && <InventoryStats data={data.inventory} layout="column" />
             )}
-          </CardContent>
-        </Card>
-        <Card className="border-none py-0 shadow-sm ring-1 ring-slate-200">
-          <CardContent className="pt-6">
-            {stockLoading ? (
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-200" />
-                ))}
-              </div>
-            ) : (
-              <OutOfStockList items={stockAlerts?.outOfStock ?? []} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <div className="flex flex-col gap-3 lg:pl-6">
+            <h2 className="text-sm font-black uppercase tracking-wider text-slate-700">
+              Tồn kho theo danh mục
+            </h2>
+            <InventoryCategoryChart
+              items={(valuationData?.items ?? []) as InventoryValuationItem[]}
+              isLoading={isLoadingValuation}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-black tracking-tight text-slate-900">
-          Giá trị tồn kho theo SKU
-        </h2>
-        <InventoryValuationTable
-          items={(valuationData?.items ?? []) as InventoryValuationItem[]}
-          totals={(valuationData?.totals ?? null) as InventoryValuationTotals | null}
-          isLoading={isLoadingValuation}
-          search={search}
-          onSearchChange={setSearch}
-          categoryId={categoryId}
-          onCategoryChange={setCategoryId}
-          categories={flatCategories}
-        />
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-black tracking-tight text-slate-900">Tồn kho theo danh mục</h2>
-        <InventoryCategoryChart
-          items={(valuationData?.items ?? []) as InventoryValuationItem[]}
-          isLoading={isLoadingValuation}
-        />
-      </div>
-
-      <InventoryXntTable
-        items={xntData?.items ?? []}
-        totals={xntData?.totals ?? null}
-        metadata={xntData?.metadata ?? null}
-        isLoading={isLoadingXnt}
-        dateRange={xntDateRange}
-        onDateRangeChange={handleXntDateRange}
-        search={xntSearch}
-        onSearchChange={handleXntSearch}
-        categoryId={xntCategoryId}
-        onCategoryChange={handleXntCategory}
+      <InventoryFlowTable
+        items={flowData?.items ?? []}
+        totals={flowData?.totals ?? null}
+        metadata={flowData?.metadata ?? null}
+        isLoading={isLoadingFlow}
+        dateRange={flowDateRange}
+        onDateRangeChange={handleFlowDateRange}
+        search={flowSearch}
+        onSearchChange={handleFlowSearch}
+        categoryId={flowCategoryId}
+        onCategoryChange={handleFlowCategory}
         categories={flatCategories}
-        page={xntPage}
-        onPageChange={setXntPage}
+        page={flowPage}
+        onPageChange={setFlowPage}
       />
 
       <InventoryMovementLog
@@ -242,6 +214,25 @@ export default function AnalyticsInventoryPage() {
         page={movPage}
         onPageChange={setMovPage}
       />
+
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-black tracking-tight text-slate-900">
+          Giá trị tồn kho theo SKU
+        </h2>
+        <InventoryValuationTable
+          items={(valuationData?.items ?? []) as InventoryValuationItem[]}
+          totals={(valuationData?.totals ?? null) as InventoryValuationTotals | null}
+          metadata={(valuationData?.metadata ?? null) as InventoryValuationMetadata | null}
+          isLoading={isLoadingValuation}
+          search={search}
+          onSearchChange={handleValuationSearch}
+          categoryId={categoryId}
+          onCategoryChange={handleValuationCategory}
+          categories={flatCategories}
+          page={valuationPage}
+          onPageChange={setValuationPage}
+        />
+      </div>
     </div>
   );
 }

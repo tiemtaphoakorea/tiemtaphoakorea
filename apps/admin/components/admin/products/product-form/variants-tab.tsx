@@ -24,6 +24,7 @@ interface VariantsTabProps {
   basePrice: number;
   dispatch: React.Dispatch<FormAction>;
   onGenerate: () => void;
+  mode?: "create" | "edit";
 }
 
 export function VariantsTab({
@@ -32,11 +33,17 @@ export function VariantsTab({
   basePrice,
   dispatch,
   onGenerate,
+  mode,
 }: VariantsTabProps) {
   return (
     <div className="flex flex-col gap-4">
       <VariantGenerator attributes={attributes} dispatch={dispatch} onGenerate={onGenerate} />
-      <VariantsTable variants={variants} basePrice={basePrice} dispatch={dispatch} />
+      <VariantsTable
+        variants={variants}
+        basePrice={basePrice}
+        dispatch={dispatch}
+        showReserved={mode === "edit"}
+      />
     </div>
   );
 }
@@ -96,9 +103,10 @@ interface VariantsTableProps {
   variants: ProductFormVariant[];
   basePrice: number;
   dispatch: React.Dispatch<FormAction>;
+  showReserved?: boolean;
 }
 
-function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
+function VariantsTable({ variants, basePrice, dispatch, showReserved }: VariantsTableProps) {
   const handleAdd = () => {
     dispatch({
       type: "SET_VARIANTS",
@@ -139,6 +147,7 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                 { label: "Giá bán", width: "min-w-27" },
                 { label: "Giá vốn", width: "min-w-27" },
                 { label: "Tồn kho", width: "min-w-22" },
+                ...(showReserved ? [{ label: "Đang giữ", width: "min-w-22" }] : []),
                 { label: "Ngưỡng cảnh báo", width: "min-w-25" },
                 { label: "", width: "w-10" },
               ].map((h, i) => (
@@ -159,6 +168,7 @@ function VariantsTable({ variants, basePrice, dispatch }: VariantsTableProps) {
                 idx={idx}
                 variants={variants}
                 dispatch={dispatch}
+                showReserved={showReserved}
               />
             ))}
           </TableBody>
@@ -173,9 +183,10 @@ interface VariantRowProps {
   idx: number;
   variants: ProductFormVariant[];
   dispatch: React.Dispatch<FormAction>;
+  showReserved?: boolean;
 }
 
-function VariantRow({ variant, idx, variants, dispatch }: VariantRowProps) {
+function VariantRow({ variant, idx, variants, dispatch, showReserved }: VariantRowProps) {
   const update = (patch: Partial<ProductFormVariant>) => {
     const next = [...variants];
     next[idx] = { ...next[idx], ...patch };
@@ -242,6 +253,15 @@ function VariantRow({ variant, idx, variants, dispatch }: VariantRowProps) {
           className={`${cellInput} text-center font-mono tabular-nums font-semibold`}
         />
       </TableCell>
+      {showReserved && (
+        <TableCell className="px-3 py-1.5 text-center font-mono tabular-nums text-sm">
+          {(variant.reserved ?? 0) > 0 ? (
+            <span className="font-semibold text-amber-700">{variant.reserved}</span>
+          ) : (
+            <span className="text-muted-foreground">0</span>
+          )}
+        </TableCell>
+      )}
       <TableCell className="px-3 py-1.5">
         <NumberInput
           name={`variants.${idx}.lowStockThreshold`}

@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { format, parseISO } from "date-fns";
 import { DollarSign, Percent, PieChart, TrendingUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -31,10 +32,10 @@ import { adminClient } from "@/services/admin.client";
 const DAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
+  const d = parseISO(dateStr);
   return {
     day: DAY_LABELS[d.getDay()],
-    date: d.toLocaleDateString("vi-VN", { day: "numeric", month: "numeric" }),
+    date: format(d, "d/M"),
   };
 }
 
@@ -178,6 +179,10 @@ export default function AnalyticsFinanceDetailPage() {
         </Empty>
       ) : (
         <>
+          <p className="text-xs text-muted-foreground">
+            Nhấn vào từng dòng để xem danh sách đơn hàng trong ngày.
+          </p>
+
           {/* Desktop table */}
           <Card className="hidden border-none shadow-sm md:block">
             <Table>

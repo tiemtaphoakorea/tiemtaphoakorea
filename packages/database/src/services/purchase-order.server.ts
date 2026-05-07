@@ -3,7 +3,7 @@ import {
   PURCHASE_ORDER_STATUS,
   type PurchaseOrderStatusValue,
 } from "@workspace/shared/constants";
-import { and, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { products, productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
@@ -24,9 +24,11 @@ export type PurchaseOrderListFilter = {
   search?: string;
   status?: PurchaseOrderStatusValue | "All";
   supplierId?: string;
+  page?: number;
+  limit?: number;
 };
 
-export type PurchaseOrderListRow = Awaited<ReturnType<typeof listPurchaseOrders>>[number];
+export type PurchaseOrderListRow = Awaited<ReturnType<typeof listPurchaseOrders>>["data"][number];
 
 const ALL = "All";
 
@@ -123,29 +125,50 @@ export async function listPurchaseOrders(filter: PurchaseOrderListFilter = {}) {
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const page = Math.max(1, filter.page ?? 1);
+  const limit = Math.max(1, Math.min(filter.limit ?? 25, 200));
 
-  return db
-    .select({
-      id: purchaseOrders.id,
-      code: purchaseOrders.code,
-      status: purchaseOrders.status,
-      supplierId: purchaseOrders.supplierId,
-      supplierName: suppliers.name,
-      totalQty: purchaseOrders.totalQty,
-      totalAmount: purchaseOrders.totalAmount,
-      discountAmount: purchaseOrders.discountAmount,
-      orderedAt: purchaseOrders.orderedAt,
-      expectedDate: purchaseOrders.expectedDate,
-      completedAt: purchaseOrders.completedAt,
-      createdAt: purchaseOrders.createdAt,
-      createdByName: profiles.fullName,
-      note: purchaseOrders.note,
-    })
-    .from(purchaseOrders)
-    .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
-    .leftJoin(profiles, eq(purchaseOrders.createdBy, profiles.id))
-    .where(where)
-    .orderBy(desc(purchaseOrders.createdAt));
+  const [data, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: purchaseOrders.id,
+        code: purchaseOrders.code,
+        status: purchaseOrders.status,
+        supplierId: purchaseOrders.supplierId,
+        supplierName: suppliers.name,
+        totalQty: purchaseOrders.totalQty,
+        totalAmount: purchaseOrders.totalAmount,
+        discountAmount: purchaseOrders.discountAmount,
+        orderedAt: purchaseOrders.orderedAt,
+        expectedDate: purchaseOrders.expectedDate,
+        completedAt: purchaseOrders.completedAt,
+        createdAt: purchaseOrders.createdAt,
+        createdByName: profiles.fullName,
+        note: purchaseOrders.note,
+      })
+      .from(purchaseOrders)
+      .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
+      .leftJoin(profiles, eq(purchaseOrders.createdBy, profiles.id))
+      .where(where)
+      .orderBy(desc(purchaseOrders.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit),
+    db
+      .select({ total: count() })
+      .from(purchaseOrders)
+      .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
+      .where(where),
+  ]);
+
+  return {
+    data,
+    metadata: {
+      total: Number(total),
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(Number(total) / limit)),
+    },
+  };
 }
 
 export async function getPurchaseOrderById(id: string) {

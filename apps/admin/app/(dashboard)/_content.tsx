@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { format } from "date-fns";
 import { AlertTriangle, Bell, Box, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { BarChartMini, type BarPoint } from "@/components/admin/shared/bar-chart-mini";
@@ -323,12 +324,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-xs font-semibold">{o.orderNumber}</span>
                     <span className="text-xs text-muted-foreground/70">
-                      {new Date(o.createdAt).toLocaleString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
+                      {o.createdAt ? format(new Date(o.createdAt), "dd/MM/yyyy, HH:mm") : "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">

@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { format } from "date-fns";
 import { BarChart3, Plus, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -101,8 +102,7 @@ function CostStructureCard({ totals }: { totals: Totals }) {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
-
-const fmtDate = (d: Date | string): string => new Date(d).toLocaleDateString("vi-VN");
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 export default function AdminExpenses() {
   const now = new Date();

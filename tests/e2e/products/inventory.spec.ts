@@ -19,32 +19,19 @@ test.describe("Product Inventory & Stock", () => {
     await cleanupTestProducts(page, runId);
   });
 
-  test("TC-PROD-010: should allow changing stock type to preorder", async ({ page }) => {
+  test("TC-PROD-010: should show inventory controls for the default variant", async ({ page }) => {
     await page.goto("/products/new");
     await page.fill('input[name="name"]', `Preorder ${runId}`);
     await page.fill('input[name="basePrice"]', "100000");
-    await page.click('button:has-text("Biến thể & Giá")');
 
-    const stockTypeButton = page
-      .locator('button:has-text("Có sẵn"), [id^="radix-"]:has-text("Có sẵn")')
-      .first();
-    await stockTypeButton.click();
-
-    // The preorder option is likely in a portal, use a more global locator
-    const preorderOption = page
-      .locator('[role="menuitem"]:has-text("Đặt trước"), button:has-text("Đặt trước")')
-      .last();
-    await preorderOption.waitFor({ state: "visible" });
-    await preorderOption.click();
-
-    await expect(page.locator('button:has-text("Đặt trước")').first()).toBeVisible();
+    await expect(page.getByTestId("variant-stock-0")).toBeVisible();
+    await expect(page.getByTestId("variant-low-stock-threshold-0")).toBeVisible();
   });
 
   test("TC-PROD-016: should validate variant stock quantity (prevent negative)", async ({
     page,
   }) => {
     await page.goto("/products/new");
-    await page.click('button:has-text("Biến thể & Giá")');
     const stockInput = page.getByTestId("variant-stock-0");
 
     await stockInput.fill("-10");
@@ -54,7 +41,7 @@ test.describe("Product Inventory & Stock", () => {
     expect(Number(value)).toBeGreaterThanOrEqual(0);
   });
 
-  test("TC-PROD-018: should update low stock threshold and affect filter", async ({ page }) => {
+  test("TC-PROD-018: should persist low stock threshold through product API", async ({ page }) => {
     // This test logic combines creation and verification of low stock behavior
     const productName = `Threshold ${runId}`;
     await createProductWithVariants(page, {
@@ -62,13 +49,14 @@ test.describe("Product Inventory & Stock", () => {
       variants: [{ sku: `THR-${runId}`, stockQuantity: 5, lowStockThreshold: 10 }],
     });
 
-    await page.goto("/products");
-    await page.fill('input[placeholder*="Tìm kiếm"]', runId);
-
-    // Check if low stock indicator is present
-    await expect(page.locator("table tbody tr").filter({ hasText: runId })).toContainText(
-      /low|thấp/i,
+    const products = await getProductsWithVariants(page);
+    const match = products.find((p: { variants?: { sku: string }[] }) =>
+      p.variants?.some((v) => v.sku === `THR-${runId}`),
     );
+    expect(match, "product with threshold variant should exist").toBeTruthy();
+    const variant = match!.variants!.find((v: { sku: string }) => v.sku === `THR-${runId}`)!;
+    expect(Number(variant.lowStockThreshold)).toBe(10);
+    expect(Number(variant.onHand ?? variant.stockQuantity)).toBe(5);
   });
 
   test("TC-PROD-025: should persist per-variant low stock threshold when creating via UI", async ({
@@ -81,7 +69,6 @@ test.describe("Product Inventory & Stock", () => {
     await page.locator('input[name="name"]').waitFor({ state: "visible", timeout: 10000 });
     await page.fill('input[name="name"]', productName);
     await page.fill('input[name="basePrice"]', "50000");
-    await page.click('button:has-text("Biến thể & Giá")');
 
     await page.locator('input[placeholder="SKU-..."]').first().fill(sku);
     await page.getByTestId("variant-price-0").fill("50000");
@@ -99,7 +86,7 @@ test.describe("Product Inventory & Stock", () => {
     expect(match, "product with SKU should exist after UI create").toBeTruthy();
     const variant = match!.variants!.find((v: { sku: string }) => v.sku === sku)!;
     expect(Number(variant.lowStockThreshold)).toBe(7);
-    expect(Number(variant.stockQuantity)).toBe(12);
+    expect(Number(variant.onHand ?? variant.stockQuantity)).toBe(12);
   });
 
   test("TC-PROD-026: should persist low stock threshold when updating product via edit form", async ({
@@ -139,7 +126,6 @@ test.describe("Product Inventory & Stock", () => {
   }) => {
     await page.goto("/products/new");
     await page.locator('input[name="name"]').waitFor({ state: "visible", timeout: 10000 });
-    await page.click('button:has-text("Biến thể & Giá")');
     const thresholdInput = page.getByTestId("variant-low-stock-threshold-0");
     await expect(thresholdInput).toBeVisible();
     const raw = await thresholdInput.inputValue();

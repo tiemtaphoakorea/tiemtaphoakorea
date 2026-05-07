@@ -202,7 +202,7 @@ describe("Product Service", () => {
 
       const found = result.data.find((p) => p.slug === input.slug);
       expect(found).toBeDefined();
-      expect(Number(found?.totalStock)).toBe(20);
+      expect(Number(found?.totalOnHand)).toBe(20);
       expect(result.metadata.total).toBeGreaterThan(0);
     });
   });

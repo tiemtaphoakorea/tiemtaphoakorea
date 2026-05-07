@@ -32,7 +32,7 @@ export function ProductCard({
   const basePrice = Number(product.basePrice) || 0;
   const hasDiscount = basePrice > 0 && price > 0 && basePrice > price;
   const discountPct = hasDiscount ? Math.round(100 - (price / basePrice) * 100) : 0;
-  const isOutOfStock = product.totalStock <= 0;
+  const isOutOfStock = (product.totalAvailable ?? 0) <= 0;
   const detailHref = PUBLIC_ROUTES.PRODUCT_DETAIL(product.slug);
 
   const formatPrice = (n: number) =>
@@ -118,7 +118,7 @@ export function ProductCard({
             {product.variantNames && product.variantNames.length > 1 && (
               <VariantTags names={product.variantNames} primaryName={product.primaryVariantName} />
             )}
-            {showStockBar && <StockBar stock={product.totalAvailable ?? product.totalStock ?? 0} />}
+            {showStockBar && <StockBar stock={product.totalAvailable ?? 0} />}
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-2">
@@ -199,7 +199,7 @@ export function ProductCard({
             </span>
           )}
         </div>
-        {showStockBar && <StockBar stock={product.totalAvailable ?? product.totalStock ?? 0} />}
+        {showStockBar && <StockBar stock={product.totalAvailable ?? 0} />}
       </CardContent>
     </Card>
   );
