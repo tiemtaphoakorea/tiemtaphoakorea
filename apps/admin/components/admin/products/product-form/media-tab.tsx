@@ -24,7 +24,7 @@ export function MediaTab({ variants, selectedMediaVariantId, dispatch }: MediaTa
           {selected ? `Chỉnh sửa hình ảnh cho biến thể: ${selected.name}` : "Chưa có biến thể nào"}
         </p>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
+      <CardContent className="space-y-4">
         {variants.length > 0 ? (
           <>
             <Field className="max-w-sm">

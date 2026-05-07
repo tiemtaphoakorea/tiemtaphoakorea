@@ -98,17 +98,17 @@ export interface ProductListItem {
   id: string;
   name: string;
   slug: string;
-  description: string | null;
   isActive: boolean | null;
   categoryName: string | null;
   basePrice: string | null; // Decimal string
-  totalStock: number;
   totalOnHand: number;
   totalReserved: number;
   totalAvailable: number;
   minPrice: number;
   maxPrice: number;
   thumbnail: string;
+  createdAt: string | null;
+  avgCostPrice: number;
   skus?: string | null;
   minLowStockThreshold?: number | null;
 }

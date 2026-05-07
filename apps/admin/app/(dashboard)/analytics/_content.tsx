@@ -21,11 +21,14 @@ export default function AdminAnalytics() {
   });
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <IndexCardRevenueMix data={data?.categorySales} isLoading={isLoading} />
-      <IndexCardFinanceTrend />
-      <IndexCardTopProducts data={data?.topProducts} isLoading={isLoading} />
-      <IndexCardStockAlert />
+    <div className="flex flex-col gap-4">
+      <p className="text-xs text-muted-foreground">Nhấn vào từng thẻ để xem chi tiết.</p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <IndexCardRevenueMix data={data?.categorySales} isLoading={isLoading} />
+        <IndexCardFinanceTrend />
+        <IndexCardTopProducts data={data?.topProducts} isLoading={isLoading} />
+        <IndexCardStockAlert data={data?.inventory} isLoading={isLoading} />
+      </div>
     </div>
   );
 }

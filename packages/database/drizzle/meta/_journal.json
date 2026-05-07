@@ -57,6 +57,13 @@
       "when": 1777823454305,
       "tag": "0007_uneven_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778151817725,
+      "tag": "0008_friendly_post",
+      "breakpoints": true
     }
   ]
 }

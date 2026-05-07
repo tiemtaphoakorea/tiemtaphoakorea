@@ -2,7 +2,18 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AdminProfile } from "@workspace/database/types/admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
+import { useState } from "react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -15,6 +26,8 @@ type Props = {
 export function UserRowActions({ user, onEdit }: Props) {
   const isActive = user.isActive ?? true;
   const queryClient = useQueryClient();
+  type ConfirmAction = "lock" | "reset" | null;
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const toggleMutation = useMutation({
     mutationFn: () => adminClient.toggleUserStatus(user.id, !isActive),
@@ -39,43 +52,79 @@ export function UserRowActions({ user, onEdit }: Props) {
   });
 
   const handleToggle = () => {
-    if (isActive && !window.confirm(`Khóa tài khoản "${user.fullName ?? "?"}"?`)) return;
-    toggleMutation.mutate();
+    if (isActive) {
+      setConfirmAction("lock");
+    } else {
+      toggleMutation.mutate();
+    }
   };
 
   const handleReset = () => {
-    if (!window.confirm(`Đặt lại mật khẩu cho "${user.fullName ?? "?"}"?`)) return;
-    resetMutation.mutate();
+    setConfirmAction("reset");
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction === "lock") toggleMutation.mutate();
+    else if (confirmAction === "reset") resetMutation.mutate();
+    setConfirmAction(null);
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-7 rounded-md text-xs"
-        onClick={() => onEdit(user)}
+    <>
+      <div className="flex flex-wrap items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 rounded-md text-xs"
+          onClick={() => onEdit(user)}
+        >
+          Sửa
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 rounded-md text-xs"
+          onClick={handleToggle}
+          disabled={toggleMutation.isPending}
+        >
+          {isActive ? "Khóa" : "Mở khóa"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 rounded-md text-xs"
+          onClick={handleReset}
+          disabled={resetMutation.isPending}
+        >
+          Đặt lại MK
+        </Button>
+      </div>
+
+      <AlertDialog
+        open={!!confirmAction}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
       >
-        Sửa
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-7 rounded-md text-xs"
-        onClick={handleToggle}
-        disabled={toggleMutation.isPending}
-      >
-        {isActive ? "Khóa" : "Mở khóa"}
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-7 rounded-md text-xs"
-        onClick={handleReset}
-        disabled={resetMutation.isPending}
-      >
-        Đặt lại MK
-      </Button>
-    </div>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "lock"
+                ? `Khóa tài khoản "${user.fullName ?? "?"}"`
+                : `Đặt lại mật khẩu cho "${user.fullName ?? "?"}"`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "lock"
+                ? "Nhân viên sẽ không thể đăng nhập sau khi bị khóa."
+                : "Mật khẩu mới sẽ được tạo tự động và hiển thị sau khi xác nhận."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>Xác nhận</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import { format } from "date-fns";
 import { CircleDollarSign, Search } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -42,8 +43,7 @@ const TABS: ReadonlyArray<{ id: DebtAgeFilter; label: string }> = [
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-const fmtDate = (d: Date | string): string => new Date(d).toLocaleDateString("vi-VN");
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 /** Days since oldestDebtDate. */
 function daysSince(d: Date | string): number {

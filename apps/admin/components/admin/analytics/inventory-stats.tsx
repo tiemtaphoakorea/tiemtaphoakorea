@@ -1,71 +1,130 @@
 import type { AnalyticsInventory } from "@workspace/database/types/admin";
 import { formatCurrency } from "@workspace/shared/utils";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { AlertTriangle, Archive, Box, PackageX, TrendingUp } from "lucide-react";
-import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
+import Link from "next/link";
 
 interface InventoryStatsProps {
   data: AnalyticsInventory;
+  layout?: "row" | "column";
 }
 
-export function InventoryStats({ data }: InventoryStatsProps) {
+export function InventoryStats({ data, layout = "row" }: InventoryStatsProps) {
   const potentialProfit = data.totalRetailValue - data.totalCostValue;
+  const profitPositive = potentialProfit >= 0;
 
-  const valueItems: MetricStatItem[] = [
+  const stats = [
     {
       label: "Giá trị tồn (vốn)",
       value: formatCurrency(data.totalCostValue),
       icon: <Archive className="h-3.5 w-3.5" />,
-      iconClassName: "bg-violet-500/10 text-violet-500",
-      trend: { text: "Tính theo giá nhập", className: "text-muted-foreground" },
+      iconCls: "bg-violet-500/10 text-violet-500",
+      valueCls: "text-slate-900",
+      href: undefined,
     },
     {
       label: "Giá trị tồn (bán)",
       value: formatCurrency(data.totalRetailValue),
       icon: <Box className="h-3.5 w-3.5" />,
-      iconClassName: "bg-primary/10 text-primary",
-      trend: { text: "Tính theo giá bán", className: "text-muted-foreground" },
+      iconCls: "bg-primary/10 text-primary",
+      valueCls: "text-slate-900",
+      href: undefined,
     },
-  ];
-
-  const profitColor = potentialProfit >= 0 ? "text-emerald-600" : "text-red-600";
-  const profitIconBg =
-    potentialProfit >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500";
-  const profitNote =
-    potentialProfit < 0
-      ? "SP chưa có giá bán làm giảm giá trị bán"
-      : `${data.totalUnits.toLocaleString("vi-VN")} đơn vị tồn kho`;
-
-  const alertItems: MetricStatItem[] = [
     {
       label: "Lợi nhuận tiềm năng",
-      value: <span className={profitColor}>{formatCurrency(potentialProfit)}</span>,
+      value: formatCurrency(potentialProfit),
       icon: <TrendingUp className="h-3.5 w-3.5" />,
-      iconClassName: profitIconBg,
-      trend: {
-        text: profitNote,
-        className: potentialProfit < 0 ? "text-red-500" : "text-muted-foreground",
-      },
+      iconCls: profitPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500",
+      valueCls: profitPositive ? "text-emerald-600" : "text-red-600",
+      href: undefined,
     },
     {
       label: "Sắp hết hàng",
-      value: <span className="text-amber-600">{data.lowStockCount}</span>,
+      value: data.lowStockCount.toLocaleString("vi-VN"),
       icon: <AlertTriangle className="h-3.5 w-3.5" />,
-      iconClassName: "bg-amber-500/10 text-amber-500",
-      trend: { text: "Variant dưới ngưỡng tồn kho", className: "text-muted-foreground" },
+      iconCls: "bg-amber-500/10 text-amber-500",
+      valueCls: data.lowStockCount > 0 ? "text-amber-600" : "text-slate-900",
+      href: "/products?filter=low_stock",
     },
     {
       label: "Hết hàng",
-      value: <span className="text-red-600">{data.outOfStockCount}</span>,
+      value: data.outOfStockCount.toLocaleString("vi-VN"),
       icon: <PackageX className="h-3.5 w-3.5" />,
-      iconClassName: "bg-red-500/10 text-red-500",
-      trend: { text: "Variant không còn tồn kho", className: "text-muted-foreground" },
+      iconCls: "bg-red-500/10 text-red-500",
+      valueCls: data.outOfStockCount > 0 ? "text-red-600" : "text-slate-900",
+      href: "/products?filter=out_of_stock",
     },
   ];
 
+  if (layout === "column") {
+    return (
+      <div className="flex flex-col divide-y divide-slate-100">
+        {stats.map((s) => {
+          const row = (
+            <div
+              key={s.label}
+              className={`flex items-center justify-between gap-4 rounded-md py-3 pr-3 ${s.href ? "group cursor-pointer" : ""}`}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${s.iconCls}`}
+                >
+                  {s.icon}
+                </span>
+                <span className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {s.label}
+                </span>
+              </div>
+              <span className={`shrink-0 text-right text-sm font-black tabular-nums ${s.valueCls}`}>
+                {s.value}
+              </span>
+            </div>
+          );
+
+          return s.href ? (
+            <Link key={s.label} href={s.href} className="rounded-md hover:bg-slate-50">
+              {row}
+            </Link>
+          ) : (
+            <div key={s.label}>{row}</div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      <MetricStatBar items={valueItems} />
-      <MetricStatBar items={alertItems} />
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {stats.map((s) => {
+        const card = (
+          <Card
+            key={s.label}
+            className={`border-none shadow-sm ring-1 ring-slate-200 ${s.href ? "cursor-pointer transition-shadow hover:shadow-md hover:ring-slate-300" : ""}`}
+          >
+            <CardContent className="flex flex-col gap-2 px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${s.iconCls}`}
+                >
+                  {s.icon}
+                </span>
+                <span className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {s.label}
+                </span>
+              </div>
+              <p className={`text-xl font-black tabular-nums ${s.valueCls}`}>{s.value}</p>
+            </CardContent>
+          </Card>
+        );
+
+        return s.href ? (
+          <Link key={s.label} href={s.href}>
+            {card}
+          </Link>
+        ) : (
+          <div key={s.label}>{card}</div>
+        );
+      })}
     </div>
   );
 }

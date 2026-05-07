@@ -3,6 +3,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SUPPLIER_ORDER_STATUS } from "@workspace/shared/constants";
 import { formatCurrency } from "@workspace/shared/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
@@ -65,6 +75,7 @@ export function SupplierOrderDetailDialog({
   const [note, setNote] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [actualCostPrice, setActualCostPrice] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (detail) {
@@ -122,153 +133,173 @@ export function SupplierOrderDetailDialog({
   }
 
   function handleDelete() {
-    if (typeof window !== "undefined" && !window.confirm("Xoá đơn nhập đã huỷ này?")) return;
-    deleteMutation.mutate();
+    setDeleteOpen(true);
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-130">
-        <DialogHeader>
-          <DialogTitle>Chi tiết đơn nhập hàng</DialogTitle>
-          <DialogDescription>
-            {detail?.item.productName ?? "Đang tải thông tin đơn..."}
-            {detail?.item.sku ? ` · ${detail.item.sku}` : ""}
-          </DialogDescription>
-        </DialogHeader>
-
-        {detailQuery.isLoading && (
-          <div className="py-8 text-center text-sm text-muted-foreground">Đang tải...</div>
-        )}
-        {detailQuery.error && (
-          <div className="py-8 text-center text-sm text-red-600">{String(detailQuery.error)}</div>
-        )}
-
-        {detail && (
-          <div className="my-2 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-xs">
-              <DetailRow label="Trạng thái">
-                <StatusPill status={detail.status} />
-              </DetailRow>
-              <DetailRow label="Số lượng">
-                <span className="tabular-nums font-medium">{detail.quantity}</span>
-              </DetailRow>
-              <DetailRow label="Sản phẩm">
-                <span>{detail.item.productName ?? "—"}</span>
-              </DetailRow>
-              <DetailRow label="Phiên bản">
-                <span>{detail.item.variantName ?? "—"}</span>
-              </DetailRow>
-              <DetailRow label="Ngày tạo">{formatDate(detail.createdAt)}</DetailRow>
-              <DetailRow label="Ngày đặt">{formatDate(detail.orderedAt)}</DetailRow>
-              <DetailRow label="Ngày nhận">{formatDate(detail.receivedAt)}</DetailRow>
-              <DetailRow label="Giá nhập thực tế">
-                {detail.actualCostPrice ? formatCurrency(detail.actualCostPrice) : "—"}
-              </DetailRow>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <Field>
-                <FieldLabel>Ngày dự kiến</FieldLabel>
-                <Input
-                  type="date"
-                  value={expectedDate}
-                  onChange={(e) => setExpectedDate(e.target.value)}
-                  disabled={isTerminal}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Giá nhập thực tế (đ)</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={actualCostPrice}
-                  onChange={(e) => setActualCostPrice(e.target.value)}
-                  disabled={isTerminal}
-                  placeholder="0"
-                />
-              </Field>
-            </div>
-
-            <Field>
-              <FieldLabel>Ghi chú</FieldLabel>
-              <Textarea
-                rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                disabled={isTerminal}
-                placeholder="Ghi chú nội bộ"
-              />
-            </Field>
-          </div>
-        )}
-
-        <DialogFooter className="flex-wrap">
-          {detail?.status === SUPPLIER_ORDER_STATUS.PENDING && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleAdvance(SUPPLIER_ORDER_STATUS.CANCELLED, "Đã huỷ đơn")}
-                disabled={isPending}
-              >
-                Huỷ đơn
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  handleAdvance(SUPPLIER_ORDER_STATUS.ORDERED, "Đã chuyển sang Đã đặt")
-                }
-                disabled={isPending}
-              >
-                Đánh dấu đã đặt
-              </Button>
-            </>
-          )}
-          {detail?.status === SUPPLIER_ORDER_STATUS.ORDERED && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleAdvance(SUPPLIER_ORDER_STATUS.CANCELLED, "Đã huỷ đơn")}
-                disabled={isPending}
-              >
-                Huỷ đơn
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  handleAdvance(SUPPLIER_ORDER_STATUS.RECEIVED, "Đã nhận hàng, kho đã cập nhật")
-                }
-                disabled={isPending}
-              >
-                Đánh dấu đã nhận
-              </Button>
-            </>
-          )}
-          {detail?.status === SUPPLIER_ORDER_STATUS.CANCELLED && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleDelete}
-              disabled={isPending}
-              className="text-red-600 hover:text-red-700"
+    <>
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xoá đơn nhập</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc muốn xoá đơn nhập đã huỷ này? Hành động không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteMutation.mutate()}
             >
-              Xoá đơn
-            </Button>
+              Xoá
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="sm:max-w-130">
+          <DialogHeader>
+            <DialogTitle>Chi tiết đơn nhập hàng</DialogTitle>
+            <DialogDescription>
+              {detail?.item.productName ?? "Đang tải thông tin đơn..."}
+              {detail?.item.sku ? ` · ${detail.item.sku}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailQuery.isLoading && (
+            <div className="py-8 text-center text-sm text-muted-foreground">Đang tải...</div>
           )}
-          {!isTerminal && detail && (
-            <Button type="button" variant="ghost" onClick={handleSave} disabled={isPending}>
-              Lưu thay đổi
-            </Button>
+          {detailQuery.error && (
+            <div className="py-8 text-center text-sm text-red-600">{String(detailQuery.error)}</div>
           )}
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-            Đóng
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+          {detail && (
+            <div className="my-2 flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-xs">
+                <DetailRow label="Trạng thái">
+                  <StatusPill status={detail.status} />
+                </DetailRow>
+                <DetailRow label="Số lượng">
+                  <span className="tabular-nums font-medium">{detail.quantity}</span>
+                </DetailRow>
+                <DetailRow label="Sản phẩm">
+                  <span>{detail.item.productName ?? "—"}</span>
+                </DetailRow>
+                <DetailRow label="Phiên bản">
+                  <span>{detail.item.variantName ?? "—"}</span>
+                </DetailRow>
+                <DetailRow label="Ngày tạo">{formatDate(detail.createdAt)}</DetailRow>
+                <DetailRow label="Ngày đặt">{formatDate(detail.orderedAt)}</DetailRow>
+                <DetailRow label="Ngày nhận">{formatDate(detail.receivedAt)}</DetailRow>
+                <DetailRow label="Giá nhập thực tế">
+                  {detail.actualCostPrice ? formatCurrency(detail.actualCostPrice) : "—"}
+                </DetailRow>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field>
+                  <FieldLabel>Ngày dự kiến</FieldLabel>
+                  <Input
+                    type="date"
+                    value={expectedDate}
+                    onChange={(e) => setExpectedDate(e.target.value)}
+                    disabled={isTerminal}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel>Giá nhập thực tế (đ)</FieldLabel>
+                  <Input
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={actualCostPrice}
+                    onChange={(e) => setActualCostPrice(e.target.value)}
+                    disabled={isTerminal}
+                    placeholder="0"
+                  />
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>Ghi chú</FieldLabel>
+                <Textarea
+                  rows={2}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  disabled={isTerminal}
+                  placeholder="Ghi chú nội bộ"
+                />
+              </Field>
+            </div>
+          )}
+
+          <DialogFooter className="flex-wrap">
+            {detail?.status === SUPPLIER_ORDER_STATUS.PENDING && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleAdvance(SUPPLIER_ORDER_STATUS.CANCELLED, "Đã huỷ đơn")}
+                  disabled={isPending}
+                >
+                  Huỷ đơn
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    handleAdvance(SUPPLIER_ORDER_STATUS.ORDERED, "Đã chuyển sang Đã đặt")
+                  }
+                  disabled={isPending}
+                >
+                  Đánh dấu đã đặt
+                </Button>
+              </>
+            )}
+            {detail?.status === SUPPLIER_ORDER_STATUS.ORDERED && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleAdvance(SUPPLIER_ORDER_STATUS.CANCELLED, "Đã huỷ đơn")}
+                  disabled={isPending}
+                >
+                  Huỷ đơn
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    handleAdvance(SUPPLIER_ORDER_STATUS.RECEIVED, "Đã nhận hàng, kho đã cập nhật")
+                  }
+                  disabled={isPending}
+                >
+                  Đánh dấu đã nhận
+                </Button>
+              </>
+            )}
+            {detail?.status === SUPPLIER_ORDER_STATUS.CANCELLED && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDelete}
+                disabled={isPending}
+                className="text-red-600 hover:text-red-700"
+              >
+                Xoá đơn
+              </Button>
+            )}
+            {!isTerminal && detail && (
+              <Button type="button" variant="ghost" onClick={handleSave} disabled={isPending}>
+                Lưu thay đổi
+              </Button>
+            )}
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+              Đóng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

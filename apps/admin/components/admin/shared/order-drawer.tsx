@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { format } from "date-fns";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -22,18 +23,9 @@ type OrderDrawerProps = {
   onClose: () => void;
 };
 
-const SECTION_LABEL = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
-const fmtDate = (d: Date | string | null): string => {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+const SECTION_LABEL = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 /** Drawer showing order detail: meta, items, timeline, status actions. */
 export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {

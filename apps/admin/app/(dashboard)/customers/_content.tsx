@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { format } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -33,11 +34,7 @@ import { adminClient } from "@/services/admin.client";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
-
-const fmtDate = (d: Date | string | null): string => {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("vi-VN");
-};
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 export default function AdminCustomers() {
   const [query, setQuery] = useState("");

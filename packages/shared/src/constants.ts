@@ -80,6 +80,46 @@ export const SUPPLIER_ORDER_STATUS = {
 
 export const SUPPLIER_ORDER_STATUS_ALL = "All";
 
+// Sapo-faithful purchase order header status
+export const PURCHASE_ORDER_STATUS = {
+  DRAFT: "draft",
+  ORDERED: "ordered",
+  PARTIAL: "partial",
+  RECEIVED: "received",
+  CANCELLED: "cancelled",
+} as const;
+export type PurchaseOrderStatusValue =
+  (typeof PURCHASE_ORDER_STATUS)[keyof typeof PURCHASE_ORDER_STATUS];
+
+export const PURCHASE_ORDER_STATUS_LABEL: Record<PurchaseOrderStatusValue, string> = {
+  draft: "Nháp",
+  ordered: "Đã đặt",
+  partial: "Nhập một phần",
+  received: "Hoàn thành",
+  cancelled: "Đã huỷ",
+};
+
+// Goods receipt overall status
+export const RECEIPT_STATUS = {
+  DRAFT: "draft",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+} as const;
+export type ReceiptStatusValue = (typeof RECEIPT_STATUS)[keyof typeof RECEIPT_STATUS];
+
+export const RECEIPT_STATUS_LABEL: Record<ReceiptStatusValue, string> = {
+  draft: "Đang giao dịch",
+  completed: "Hoàn thành",
+  cancelled: "Đã huỷ",
+};
+
+// Document code prefixes
+export const DOC_PREFIX = {
+  PURCHASE_ORDER: "OSN",
+  GOODS_RECEIPT: "PON",
+  SUPPLIER_PAYMENT: "PCH",
+} as const;
+
 export const PAYMENT_METHOD = {
   CASH: "cash",
   BANK_TRANSFER: "bank_transfer",
@@ -135,7 +175,7 @@ export const LOW_STOCK_DEFAULT_THRESHOLD = 5;
 
 export const FEATURED_PRODUCTS_LIMIT_DEFAULT = 8;
 
-export const ANALYTICS_TOP_PRODUCTS_LIMIT = 4;
+export const ANALYTICS_TOP_PRODUCTS_LIMIT = 10;
 export const ANALYTICS_DEFAULT_CONVERSION_RATE = 3.45;
 export const ANALYTICS_GROWTH_RANDOM_RANGE = 20;
 export const ANALYTICS_GROWTH_RANDOM_OFFSET = -5;

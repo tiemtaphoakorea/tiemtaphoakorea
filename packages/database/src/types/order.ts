@@ -19,6 +19,7 @@ export type CreateOrderInput = {
 
 export interface OrderBuilderItem {
   variantId: string;
+  productId: string;
   variantName: string;
   productName: string;
   sku: string;
@@ -26,10 +27,10 @@ export interface OrderBuilderItem {
   customPrice?: number;
   quantity: number;
   available: number;
+  addedAt: number;
 }
 
 export interface OrderItemTableItem extends OrderBuilderItem {
-  productId: string;
   image?: string;
 }
 

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { CustomerStatsItem } from "@workspace/database/types/admin";
+import { formatCurrency } from "@workspace/shared/utils";
 import { Button } from "@workspace/ui/components/button";
 import {
   Command,
@@ -15,7 +16,16 @@ import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 import { cn } from "@workspace/ui/lib/utils";
-import { Check, ChevronsUpDown, Loader2, Plus, User } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  MapPin,
+  Phone,
+  Plus,
+  ShoppingBag,
+  User,
+} from "lucide-react";
 import * as React from "react";
 import { useDebounce } from "use-debounce"; // Ensure this pkg is installed or use custom hook
 import { queryKeys } from "@/lib/query-keys";
@@ -61,28 +71,51 @@ export function CustomerSelector({
 
   if (selectedCustomer) {
     return (
-      <div className="flex items-center justify-between rounded-lg border p-4 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <User className="h-5 w-5" />
+      <div className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <User className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{selectedCustomer.fullName}</p>
+              {selectedCustomer.customerCode && (
+                <p className="text-xs text-muted-foreground">
+                  Mã KH: {selectedCustomer.customerCode}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <p className="font-medium">{selectedCustomer.fullName}</p>
-            <p className="text-sm text-muted-foreground">
-              {selectedCustomer.phone || "Không có SĐT"}
-            </p>
+          <Button variant="ghost" size="sm" onClick={handleClear}>
+            Thay đổi
+          </Button>
+        </div>
+        <div className="mt-3 flex flex-col gap-1.5 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Phone className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{selectedCustomer.phone || "Chưa có SĐT"}</span>
+          </div>
+          <div className="flex items-start gap-2 text-muted-foreground">
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span className="line-clamp-2 break-words">
+              {selectedCustomer.address || "Chưa có địa chỉ"}
+            </span>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleClear}>
-          Thay đổi
-        </Button>
+        <div className="mt-3 flex items-center gap-4 border-t pt-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <ShoppingBag className="h-3.5 w-3.5" />
+            {selectedCustomer.orderCount ?? 0} đơn
+          </span>
+          <span>Tổng chi: {formatCurrency(Number(selectedCustomer.totalSpent ?? 0))}</span>
+        </div>
       </div>
     );
   }
 
   if (newCustomer) {
     return (
-      <div className="space-y-4 rounded-lg border p-4 shadow-sm">
+      <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-medium">
             <Plus className="h-4 w-4" /> Khách hàng mới
@@ -116,7 +149,18 @@ export function CustomerSelector({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <div className="flex flex-col items-center gap-3 py-4 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <User className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="text-base font-medium">Chọn khách hàng để bắt đầu</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tìm theo tên hoặc số điện thoại. Thông tin giao hàng sẽ tự điền sau khi chọn.
+          </p>
+        </div>
+      </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

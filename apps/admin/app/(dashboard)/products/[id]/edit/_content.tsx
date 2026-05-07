@@ -42,6 +42,7 @@ export default function EditProductPage() {
               price: parseFloat(v.price),
               costPrice: parseFloat(v.costPrice || "0"),
               onHand: v.onHand ?? 0,
+              reserved: v.reserved ?? 0,
               lowStockThreshold:
                 v.lowStockThreshold != null
                   ? Number(v.lowStockThreshold)

@@ -46,6 +46,8 @@ export type ProductFormVariant = {
   price: number;
   costPrice: number;
   onHand: number;
+  /** Số đang bị giữ bởi đơn hàng chưa xuất kho — readonly, chỉ dùng khi edit. */
+  reserved?: number;
   /** Số tồn tối đa (kể cả) để vẫn coi là "sắp hết" — theo từng biến thể. */
   lowStockThreshold: number;
   images: string[];
@@ -67,6 +69,7 @@ export type AdminProductDetail = {
     price: string;
     costPrice: string | null;
     onHand: number;
+    reserved?: number | null;
     lowStockThreshold?: number | null;
     stockType: string | null;
     images: Array<{ imageUrl: string }>;

@@ -6,6 +6,8 @@ import { inventoryMovements } from "./inventory";
 import { orderItems, orderStatusHistory, orders, payments, supplierOrders } from "./orders";
 import { costPriceHistory, products, productVariants, variantImages } from "./products";
 import { profiles } from "./profiles";
+import { purchaseOrderItems, purchaseOrders } from "./purchases";
+import { goodsReceiptItems, goodsReceipts, supplierPayments } from "./receipts";
 import { suppliers } from "./suppliers";
 
 export const profilesRelations = relations(profiles, ({ many }) => ({
@@ -122,6 +124,93 @@ export const costPriceHistoryRelations = relations(costPriceHistory, ({ one }) =
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   supplierOrders: many(supplierOrders),
+  purchaseOrders: many(purchaseOrders),
+  goodsReceipts: many(goodsReceipts),
+  payments: many(supplierPayments),
+}));
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+  supplier: one(suppliers, {
+    fields: [purchaseOrders.supplierId],
+    references: [suppliers.id],
+  }),
+  items: many(purchaseOrderItems),
+  receipts: many(goodsReceipts),
+  creator: one(profiles, {
+    fields: [purchaseOrders.createdBy],
+    references: [profiles.id],
+    relationName: "purchase_order_creator",
+  }),
+  confirmer: one(profiles, {
+    fields: [purchaseOrders.confirmedBy],
+    references: [profiles.id],
+    relationName: "purchase_order_confirmer",
+  }),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one, many }) => ({
+  purchaseOrder: one(purchaseOrders, {
+    fields: [purchaseOrderItems.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  variant: one(productVariants, {
+    fields: [purchaseOrderItems.variantId],
+    references: [productVariants.id],
+  }),
+  receiptItems: many(goodsReceiptItems),
+}));
+
+export const goodsReceiptsRelations = relations(goodsReceipts, ({ one, many }) => ({
+  supplier: one(suppliers, {
+    fields: [goodsReceipts.supplierId],
+    references: [suppliers.id],
+  }),
+  purchaseOrder: one(purchaseOrders, {
+    fields: [goodsReceipts.purchaseOrderId],
+    references: [purchaseOrders.id],
+  }),
+  items: many(goodsReceiptItems),
+  payments: many(supplierPayments),
+  creator: one(profiles, {
+    fields: [goodsReceipts.createdBy],
+    references: [profiles.id],
+    relationName: "goods_receipt_creator",
+  }),
+  completer: one(profiles, {
+    fields: [goodsReceipts.completedBy],
+    references: [profiles.id],
+    relationName: "goods_receipt_completer",
+  }),
+}));
+
+export const goodsReceiptItemsRelations = relations(goodsReceiptItems, ({ one }) => ({
+  receipt: one(goodsReceipts, {
+    fields: [goodsReceiptItems.receiptId],
+    references: [goodsReceipts.id],
+  }),
+  variant: one(productVariants, {
+    fields: [goodsReceiptItems.variantId],
+    references: [productVariants.id],
+  }),
+  purchaseOrderItem: one(purchaseOrderItems, {
+    fields: [goodsReceiptItems.purchaseOrderItemId],
+    references: [purchaseOrderItems.id],
+  }),
+}));
+
+export const supplierPaymentsRelations = relations(supplierPayments, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [supplierPayments.supplierId],
+    references: [suppliers.id],
+  }),
+  receipt: one(goodsReceipts, {
+    fields: [supplierPayments.receiptId],
+    references: [goodsReceipts.id],
+  }),
+  creator: one(profiles, {
+    fields: [supplierPayments.createdBy],
+    references: [profiles.id],
+  }),
 }));
 
 export const expensesRelations = relations(expenses, ({ one }) => ({

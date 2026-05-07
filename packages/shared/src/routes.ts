@@ -44,6 +44,13 @@ export const ADMIN_ROUTES = {
   // Inventory (đơn nhập hàng + biến động kho)
   INVENTORY: "/inventory",
 
+  // Sapo-faithful purchase workflow
+  PURCHASES: "/purchases",
+  PURCHASE_DETAIL: (id: string | number) => `/purchases/${id}`,
+  RECEIPTS: "/receipts",
+  RECEIPT_DETAIL: (id: string | number) => `/receipts/${id}`,
+  PAYOUTS: "/payouts",
+
   // Suppliers
   SUPPLIERS: "/suppliers",
 
@@ -66,6 +73,7 @@ export const ADMIN_ROUTES = {
   ANALYTICS_INVENTORY: "/analytics/inventory",
   ANALYTICS_FINANCE: "/analytics/finance",
   ANALYTICS_FINANCE_DETAIL: "/analytics/finance/detail",
+  ANALYTICS_DEBTS: "/analytics/debts",
 
   // Finance
   EXPENSES: "/expenses",

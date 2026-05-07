@@ -195,6 +195,7 @@ export async function createProductWithVariants(
       sku: string;
       attributes?: Record<string, any>;
       stockQuantity?: number;
+      onHand?: number;
       lowStockThreshold?: number;
       price?: number;
       retailPrice?: number;
@@ -216,6 +217,7 @@ export async function createProductWithVariants(
       sku: v.sku,
       attributes: v.attributes || {},
       stockQuantity: v.stockQuantity || 0,
+      onHand: v.onHand ?? v.stockQuantity ?? 0,
       lowStockThreshold: v.lowStockThreshold,
       price: v.price || v.retailPrice || 0,
       costPrice: v.costPrice || 0,

@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+import { format } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -65,18 +66,18 @@ const TABS: ReadonlyArray<{ id: FulfillmentFilter; label: string }> = [
   { id: FULFILLMENT_STATUS.CANCELLED, label: "Đã huỷ" },
 ];
 
+const TABLE_HEADERS: ReadonlyArray<{ label: string; className?: string }> = [
+  { label: "Mã đơn", className: "w-[140px]" },
+  { label: "Ngày tạo đơn", className: "w-[140px]" },
+  { label: "Tên khách", className: "w-[240px]" },
+  { label: "Thanh toán", className: "w-[140px]" },
+  { label: "Trạng thái", className: "w-[140px]" },
+  { label: "Tổng tiền", className: "w-[140px]" },
+];
+
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 25;
-
-const fmtDate = (d: string | Date | null): string => {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
 
 export default function AdminOrders() {
   const router = useRouter();
@@ -126,16 +127,17 @@ export default function AdminOrders() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Tabs
           value={filter}
           onValueChange={(v) => {
             setFilter(v as FulfillmentFilter);
             setPage(1);
           }}
+          className="min-w-0 max-w-full"
         >
-          <TabsList>
+          <TabsList className="max-w-full overflow-x-auto">
             {TABS.map((t) => {
               const count = tabCounts[t.id];
               return (
@@ -147,25 +149,25 @@ export default function AdminOrders() {
             })}
           </TabsList>
         </Tabs>
-        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 sm:ml-auto">
-          <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
-          <Input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Tìm mã đơn, khách hàng..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
-          />
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
+          <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
+            <Input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Tìm mã đơn, khách hàng..."
+              className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
+            />
+          </div>
           <span className="text-xs text-muted-foreground">
             {ordersQuery.isLoading ? "Đang tải..." : `${total} đơn`}
           </span>
           <Button
             variant="outline"
-            className="ml-auto h-9"
+            className="h-9"
             onClick={() => window.open("/api/admin/orders/export")}
           >
             Xuất Excel
@@ -179,31 +181,23 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
-        <div className="overflow-x-auto">
-          <Table>
+      <Card className="min-w-0 gap-0 overflow-hidden border border-border p-0 shadow-none">
+        <div className="min-w-0 max-w-full overflow-x-auto">
+          <Table className="min-w-[940px] table-fixed">
             <TableHeader>
               <TableRow>
-                {[
-                  "Mã đơn",
-                  "Khách hàng",
-                  "SĐT",
-                  "Số lượng",
-                  "Tổng tiền",
-                  "Thanh toán",
-                  "Trạng thái",
-                  "Thời gian",
-                  "",
-                ].map((h, i) => (
-                  <TableHead key={i}>{h}</TableHead>
+                {TABLE_HEADERS.map((h) => (
+                  <TableHead key={h.label} className={h.className}>
+                    {h.label}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ordersQuery.isLoading && <TableLoadingRows cols={9} rows={6} />}
-              {ordersQuery.error && <TableErrorRow cols={9} message={String(ordersQuery.error)} />}
+              {ordersQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
+              {ordersQuery.error && <TableErrorRow cols={6} message={String(ordersQuery.error)} />}
               {!ordersQuery.isLoading && list.length === 0 && (
-                <TableEmptyRow cols={9} message="Chưa có đơn nào" />
+                <TableEmptyRow cols={6} message="Chưa có đơn nào" />
               )}
               {list.map((o) => (
                 <TableRow
@@ -211,16 +205,14 @@ export default function AdminOrders() {
                   className="cursor-pointer"
                   onClick={() => router.push(`/orders/${o.id}`)}
                 >
-                  <TableCell className="font-mono text-xs font-semibold">{o.orderNumber}</TableCell>
-                  <TableCell className="text-sm font-semibold">
-                    {o.customer.fullName ?? "—"}
+                  <TableCell className="font-mono text-xs font-semibold">
+                    <span className="block truncate">{o.orderNumber}</span>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {o.customer.phone ?? "—"}
+                    {fmtDate(o.createdAt)}
                   </TableCell>
-                  <TableCell>{o.itemCount} món</TableCell>
-                  <TableCell className="font-bold tabular-nums text-red-600">
-                    {formatVnd(Number(o.total ?? 0))}
+                  <TableCell className="text-sm font-semibold">
+                    <span className="block truncate">{o.customer.fullName ?? "—"}</span>
                   </TableCell>
                   <TableCell>
                     <StatusBadge type={o.paymentStatus as StatusType} />
@@ -228,13 +220,8 @@ export default function AdminOrders() {
                   <TableCell>
                     <StatusBadge type={o.fulfillmentStatus as StatusType} />
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {fmtDate(o.createdAt)}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button asChild variant="outline" size="sm" className="h-7 rounded-md text-xs">
-                      <Link href={`/orders/${o.id}`}>Chi tiết</Link>
-                    </Button>
+                  <TableCell className="font-bold tabular-nums text-red-600">
+                    {formatVnd(Number(o.total ?? 0))}
                   </TableCell>
                 </TableRow>
               ))}

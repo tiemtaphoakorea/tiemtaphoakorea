@@ -1,51 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import type { AnalyticsInventory } from "@workspace/database/types/admin";
 import { ADMIN_ROUTES } from "@workspace/shared/routes";
+import { formatCurrency } from "@workspace/shared/utils";
 import { Card } from "@workspace/ui/components/card";
-import { AlertTriangle, ChevronRight } from "lucide-react";
+import { AlertTriangle, Archive, Box, ChevronRight, Package } from "lucide-react";
 import Link from "next/link";
-import { queryKeys } from "@/lib/query-keys";
-import { adminClient } from "@/services/admin.client";
 
-type AlertItem = {
-  id: string;
-  productName: string;
-  variantName: string | null;
-  onHand: number;
-  status: "out" | "low";
-};
+interface IndexCardStockAlertProps {
+  data?: AnalyticsInventory;
+  isLoading?: boolean;
+}
 
-export function IndexCardStockAlert() {
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.admin.stockAlerts,
-    queryFn: () => adminClient.getStockAlerts(),
-    staleTime: 60_000,
-  });
-
-  const outOfStock = data?.outOfStock ?? [];
-  const lowStock = [...(data?.lowStock ?? [])].sort((a, b) => a.onHand - b.onHand);
-  const totalAlerts = outOfStock.length + lowStock.length;
-
-  const items: AlertItem[] = [
-    ...outOfStock.map((v) => ({
-      id: v.id,
-      productName: v.productName,
-      variantName: v.name,
-      onHand: v.onHand,
-      status: "out" as const,
-    })),
-    ...lowStock.map((v) => ({
-      id: v.id,
-      productName: v.productName,
-      variantName: v.name,
-      onHand: v.onHand,
-      status: "low" as const,
-    })),
-  ];
-  const top2 = items.slice(0, 2);
-  const remaining = Math.max(0, totalAlerts - top2.length);
-  const isHealthy = !isLoading && totalAlerts === 0;
+export function IndexCardStockAlert({ data, isLoading }: IndexCardStockAlertProps) {
+  const hasAlerts = (data?.outOfStockCount ?? 0) + (data?.lowStockCount ?? 0) > 0;
+  const isHealthy = !isLoading && !!data && !hasAlerts;
 
   return (
     <Link href={ADMIN_ROUTES.ANALYTICS_INVENTORY} className="group">
@@ -67,55 +36,73 @@ export function IndexCardStockAlert() {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="text-sm font-bold leading-tight">Tồn kho cảnh báo</div>
+          <div className="text-sm font-bold leading-tight">Thống kê tồn kho</div>
           <div className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-            Sản phẩm sắp hết hoặc đã hết hàng
+            Giá trị và cảnh báo tồn kho
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex flex-col gap-2">
-            <div className="h-7 w-32 animate-pulse rounded bg-muted" />
-            <div className="h-5 animate-pulse rounded bg-muted" />
-            <div className="h-5 animate-pulse rounded bg-muted" />
+            <div className="h-5 w-full animate-pulse rounded bg-muted" />
+            <div className="h-5 w-full animate-pulse rounded bg-muted" />
+            <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="mt-1 h-14 animate-pulse rounded bg-muted" />
           </div>
-        ) : isHealthy ? (
-          <div className="flex flex-col gap-1">
-            <span className="text-xl font-bold leading-none text-emerald-700">An toàn</span>
-            <span className="text-xs text-muted-foreground">Không có SP nào cần xử lý</span>
+        ) : data ? (
+          <div className="flex flex-col gap-3">
+            {/* Value stats */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Archive className="h-3 w-3" />
+                  Giá trị vốn
+                </div>
+                <span className="text-xs font-bold tabular-nums text-slate-800">
+                  {formatCurrency(data.totalCostValue)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Box className="h-3 w-3" />
+                  Giá trị bán
+                </div>
+                <span className="text-xs font-bold tabular-nums text-slate-800">
+                  {formatCurrency(data.totalRetailValue)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Package className="h-3 w-3" />
+                  Tổng SL tồn
+                </div>
+                <span className="text-xs font-bold tabular-nums text-slate-800">
+                  {data.totalUnits.toLocaleString("vi-VN")}
+                </span>
+              </div>
+            </div>
+
+            {/* Stock alert section */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-red-50 px-3 py-2">
+                <div
+                  className={`text-lg font-black leading-none tabular-nums ${data.outOfStockCount > 0 ? "text-red-600" : "text-slate-400"}`}
+                >
+                  {data.outOfStockCount}
+                </div>
+                <div className="mt-1 text-xs font-medium text-red-700">Hết hàng</div>
+              </div>
+              <div className="rounded-lg bg-amber-50 px-3 py-2">
+                <div
+                  className={`text-lg font-black leading-none tabular-nums ${data.lowStockCount > 0 ? "text-amber-700" : "text-slate-400"}`}
+                >
+                  {data.lowStockCount}
+                </div>
+                <div className="mt-1 text-xs font-medium text-amber-800">Sắp hết</div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <span className="text-xl font-bold leading-none text-amber-700">
-              {totalAlerts} SP cần xử lý
-            </span>
-            <ul className="flex flex-col gap-1.5">
-              {top2.map((item) => (
-                <li key={item.id} className="flex items-center gap-2 text-xs leading-tight">
-                  <span
-                    className={`h-2 w-2 shrink-0 rounded-full ${
-                      item.status === "out" ? "bg-red-500" : "bg-amber-500"
-                    }`}
-                  />
-                  <span className="min-w-0 flex-1 truncate font-medium" title={item.productName}>
-                    {item.productName}
-                    {item.variantName ? ` · ${item.variantName}` : ""}
-                  </span>
-                  <span
-                    className={`shrink-0 text-xs font-semibold tabular-nums ${
-                      item.status === "out" ? "text-red-600" : "text-amber-700"
-                    }`}
-                  >
-                    {item.status === "out" ? "đã hết" : `còn ${item.onHand}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {remaining > 0 ? (
-              <span className="text-xs text-muted-foreground">+ {remaining} SP khác</span>
-            ) : null}
-          </div>
-        )}
+        ) : null}
       </Card>
     </Link>
   );

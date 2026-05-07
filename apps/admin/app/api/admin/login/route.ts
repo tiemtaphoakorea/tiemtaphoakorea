@@ -89,7 +89,14 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log(`Login attempt for user: ${username} from IP: ${ip}`);
+    console.log(
+      `User profile found: id=${userProfile.id}, role=${userProfile.role}, isActive=${userProfile.isActive}`,
+    );
+
     const isPasswordCorrect = await verifyPassword(password, userProfile.passwordHash);
+
+    console.log(`Password verification result for user ${username}: ${isPasswordCorrect}`);
 
     if (!isPasswordCorrect) {
       recordFailure(ip);

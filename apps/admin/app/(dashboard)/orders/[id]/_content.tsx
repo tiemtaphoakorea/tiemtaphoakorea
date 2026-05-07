@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ProductWithVariants } from "@workspace/database/types/api";
+import type { OrderProductSelection, OrderProductVariant } from "@workspace/database/types/order";
 import type {
   FulfillmentStatusValue,
   PaymentMethodValue,
@@ -68,7 +68,7 @@ import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
-import { ProductSelector } from "@/components/admin/orders/create/product-selector";
+import { OrderAddRow } from "@/components/admin/orders/create/order-add-row";
 import { OrderShippingSection } from "@/components/admin/orders/order-shipping-section";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { StatusBadge, type StatusType } from "@/components/admin/shared/status-badge";
@@ -551,10 +551,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     setIsItemEditing(true);
   };
 
-  const handleAddVariantToEdit = (
-    variant: ProductWithVariants["variants"][number],
-    product: ProductWithVariants,
-  ) => {
+  const handleAddVariantToEdit = (variant: OrderProductVariant, product: OrderProductSelection) => {
     setEditableItems((prev) => {
       const existing = prev.find((i) => i.variantId === variant.id);
       if (existing) {
@@ -854,7 +851,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
             <CardContent className="p-0">
               {isItemEditing && (
                 <div className="border-b border-slate-100 px-4 py-4">
-                  <ProductSelector onSelectVariant={handleAddVariantToEdit} />
+                  <OrderAddRow onAddItem={handleAddVariantToEdit} />
                 </div>
               )}
               <Table className="table-fixed">

@@ -20,6 +20,8 @@
     "db:studio": "drizzle-kit studio",
     "db:status": "tsx scripts/db-status.ts",
     "db:mark-baseline": "tsx scripts/db-mark-baseline.ts",
+    "db:seed": "tsx scripts/db-seed.ts",
+    "db:backfill-opening-stock": "tsx scripts/db-backfill-inventory-opening-stock.ts",
     "verify:inventory": "tsx src/scripts/verify-inventory-invariants.ts"
   },
   "dependencies": {

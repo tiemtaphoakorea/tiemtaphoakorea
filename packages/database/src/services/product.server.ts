@@ -19,17 +19,18 @@ export type ProductListItem = {
   id: string;
   name: string;
   slug: string;
-  description: string | null;
   isActive: boolean | null;
   categoryName: string | null;
   basePrice: string | null;
-  totalStock: number;
   totalOnHand: number;
   totalReserved: number;
   totalAvailable: number;
+  description: string | null;
   minPrice: number;
   maxPrice: number;
   thumbnail: string;
+  createdAt: Date | null;
+  avgCostPrice: number;
   skus?: string | null;
   minLowStockThreshold?: number | null;
   variantNames?: string[] | null;
@@ -69,11 +70,13 @@ export async function getProducts({
   page = PAGINATION_DEFAULT.PAGE,
   limit = PAGINATION_DEFAULT.LIMIT,
   stockStatus,
+  categoryId,
 }: {
   search?: string;
   page?: number;
   limit?: number;
   stockStatus?: string;
+  categoryId?: string;
 } = {}) {
   const offset = (page - 1) * limit;
   const stockThresholdExpr = sql`coalesce(min(${productVariants.lowStockThreshold}), 5)`;
@@ -90,6 +93,7 @@ export async function getProducts({
           ilike(productVariants.sku, `%${search}%`),
         )
       : undefined,
+    categoryId ? eq(products.categoryId, categoryId) : undefined,
   );
 
   // Resolve HAVING expression for stock status filter
@@ -132,17 +136,18 @@ export async function getProducts({
     id: products.id,
     name: products.name,
     slug: products.slug,
-    description: products.description,
     isActive: products.isActive,
     categoryName: categories.name,
     basePrice: products.basePrice,
-    totalStock: totalOnHandExpr,
     totalOnHand: totalOnHandExpr,
     totalReserved: totalReservedExpr,
     totalAvailable: totalAvailableExpr,
+    description: products.description,
     minPrice: sql<number>`min(${productVariants.price})`,
     maxPrice: sql<number>`max(${productVariants.price})`,
     minLowStockThreshold: stockThresholdExpr,
+    createdAt: products.createdAt,
+    avgCostPrice: sql<number>`coalesce(avg(${productVariants.costPrice}), 0)`,
     skus: sql<string>`string_agg(distinct ${productVariants.sku}, ', ')`,
     thumbnail: sql<string>`(
       select ${variantImages.imageUrl}
@@ -160,7 +165,7 @@ export async function getProducts({
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .leftJoin(productVariants, eq(products.id, productVariants.productId))
     .where(baseWhere)
-    .groupBy(products.id, categories.name);
+    .groupBy(products.id, products.createdAt, categories.name);
 
   const filteredDataQuery = stockHaving ? baseDataQuery.having(stockHaving) : baseDataQuery;
 
@@ -728,8 +733,42 @@ export async function getBestSellers(limit = FEATURED_PRODUCTS_LIMIT_DEFAULT) {
 /**
  * Get products with full variants for Admin/Order creation
  */
-export async function getProductsWithVariants() {
+export async function getProductsWithVariants(params?: {
+  search?: string;
+  limit?: number;
+  inStockOnly?: boolean;
+}) {
+  const search = params?.search?.trim();
+  const limit = params?.limit;
+  const inStockOnly = params?.inStockOnly === true;
+
+  // Restrict to product IDs whose name OR a variant SKU/name matches the search.
+  // Without a search, fall back to most-recent ordering with optional limit.
+  let productIdFilter: SQL | undefined;
+  if (search) {
+    const pattern = `%${search}%`;
+    const matchedIds = await db
+      .selectDistinct({ id: products.id })
+      .from(products)
+      .leftJoin(productVariants, eq(productVariants.productId, products.id))
+      .where(
+        or(
+          ilike(products.name, pattern),
+          ilike(productVariants.sku, pattern),
+          ilike(productVariants.name, pattern),
+        ),
+      )
+      .limit(limit ?? 100);
+
+    if (matchedIds.length === 0) return [];
+    productIdFilter = inArray(
+      products.id,
+      matchedIds.map((r) => r.id),
+    );
+  }
+
   const productsWithVariants = await db.query.products.findMany({
+    where: productIdFilter,
     with: {
       category: true,
       variants: {
@@ -739,8 +778,38 @@ export async function getProductsWithVariants() {
       },
     },
     orderBy: (products, { desc }) => [desc(products.createdAt)],
+    ...(limit && !search ? { limit } : {}),
   });
-  return productsWithVariants;
+
+  if (!inStockOnly) return productsWithVariants;
+
+  // Drop variants with no available stock; drop products that end up empty.
+  return productsWithVariants
+    .map((p) => ({
+      ...p,
+      variants: p.variants.filter((v) => v.onHand - v.reserved > 0),
+    }))
+    .filter((p) => p.variants.length > 0);
+}
+
+/**
+ * Batch-resolve variants by SKU (case-insensitive).
+ * Used by the bulk-paste flow on the order create page.
+ */
+export async function lookupVariantsBySkus(skus: string[]) {
+  if (skus.length === 0) return [];
+  const cleaned = Array.from(new Set(skus.map((s) => s.trim()).filter(Boolean)));
+  if (cleaned.length === 0) return [];
+
+  const lowered = cleaned.map((s) => s.toLowerCase());
+  const matched = await db.query.productVariants.findMany({
+    where: inArray(sql`lower(${productVariants.sku})`, lowered),
+    with: {
+      images: true,
+      product: true,
+    },
+  });
+  return matched;
 }
 
 /**

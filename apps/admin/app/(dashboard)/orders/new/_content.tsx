@@ -7,7 +7,7 @@ export default function NewOrderPage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Tạo đơn hàng mới</h1>
           <p className="mt-1 font-medium text-slate-500">
-            Tạo đơn hàng thủ công cho khách hàng tại quầy hoặc qua điện thoại.
+            Lên đơn hàng để chuẩn bị giao cho khách. Hỗ trợ tìm/dán SKU và nhập nhiều dòng nhanh.
           </p>
         </div>
       </div>

@@ -19,6 +19,7 @@ import {
   BarChart3,
   Building2,
   CircleDollarSign,
+  ClipboardList,
   CreditCard,
   FolderOpen,
   Globe,
@@ -28,11 +29,13 @@ import {
   type LucideIcon,
   MessageCircle,
   Package,
+  PackagePlus,
   Settings2,
   ShoppingCart,
   Truck,
   User,
   Users,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -71,6 +74,9 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Kho vận",
     items: [
       { icon: Truck, label: "Quản lý kho", href: ADMIN_ROUTES.INVENTORY },
+      { icon: ClipboardList, label: "Đặt hàng nhập", href: ADMIN_ROUTES.PURCHASES },
+      { icon: PackagePlus, label: "Nhập hàng", href: ADMIN_ROUTES.RECEIPTS },
+      { icon: Wallet, label: "Phiếu chi NCC", href: ADMIN_ROUTES.PAYOUTS },
       { icon: Building2, label: "Nhà cung cấp", href: ADMIN_ROUTES.SUPPLIERS },
     ],
   },
