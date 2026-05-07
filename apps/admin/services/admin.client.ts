@@ -1,5 +1,6 @@
 import type { StockAlertVariant } from "@workspace/database/services/analytics.server";
 import type { DailyStatRow, DayOrderRow } from "@workspace/database/services/finance.server";
+import type { XntRow } from "@workspace/database/services/inventory.server";
 import type {
   AdminOrderDetails,
   AdminProfile,
@@ -42,6 +43,7 @@ import {
 import type { PaginatedResponse } from "@workspace/shared/pagination";
 import type { LoginFormValues } from "@workspace/shared/schemas";
 
+export type { XntRow } from "@workspace/database/services/inventory.server";
 export type { DailyStatRow, DayOrderRow, StockAlertVariant };
 
 export type InventoryMovement = {
@@ -245,10 +247,45 @@ export const adminClient = {
     }) as unknown as Promise<PaginatedResponse<ProductListItem>>;
   },
 
-  async getProductsWithVariants() {
+  async getProductsWithVariants(params?: {
+    search?: string;
+    limit?: number;
+    inStockOnly?: boolean;
+  }) {
     return axios.get<{ products: ProductWithVariants[] }>(API_ENDPOINTS.ADMIN.PRODUCTS, {
-      params: { include: "variants" },
+      params: {
+        include: "variants",
+        ...(params?.search ? { search: params.search } : {}),
+        ...(params?.limit ? { limit: params.limit } : {}),
+        ...(params?.inStockOnly ? { inStockOnly: "true" } : {}),
+      },
     }) as unknown as Promise<{ products: ProductWithVariants[] }>;
+  },
+
+  async lookupVariantsBySkus(skus: string[]) {
+    return axios.post<{
+      variants: Array<{
+        id: string;
+        productId: string;
+        productName: string;
+        sku: string;
+        name: string;
+        price: string;
+        onHand: number;
+        reserved: number;
+      }>;
+    }>(`${API_ENDPOINTS.ADMIN.PRODUCTS}/lookup-skus`, { skus }) as unknown as Promise<{
+      variants: Array<{
+        id: string;
+        productId: string;
+        productName: string;
+        sku: string;
+        name: string;
+        price: string;
+        onHand: number;
+        reserved: number;
+      }>;
+    }>;
   },
 
   /**
@@ -688,9 +725,146 @@ export const adminClient = {
     ) as unknown as Promise<{ success: boolean }>;
   },
 
+  // Purchase Orders (OSN — Đặt hàng nhập, Sapo-faithful)
+  async getPurchases(params?: {
+    search?: string;
+    status?: string;
+    supplierId?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.PURCHASES, { params }) as unknown as Promise<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>;
+  },
+  async getPurchase(id: string) {
+    return axios.get<{ purchaseOrder: any }>(
+      API_ENDPOINTS.ADMIN.PURCHASE_DETAIL(id),
+    ) as unknown as Promise<{ purchaseOrder: any }>;
+  },
+  async createPurchase(data: any) {
+    return axios.post<{ purchaseOrder: any }>(
+      API_ENDPOINTS.ADMIN.PURCHASES,
+      data,
+    ) as unknown as Promise<{ purchaseOrder: any }>;
+  },
+  async confirmPurchase(id: string) {
+    return axios.post<{ purchaseOrder: any }>(
+      API_ENDPOINTS.ADMIN.PURCHASE_CONFIRM(id),
+      {},
+    ) as unknown as Promise<{ purchaseOrder: any }>;
+  },
+  async cancelPurchase(id: string) {
+    return axios.post<{ purchaseOrder: any }>(
+      API_ENDPOINTS.ADMIN.PURCHASE_CANCEL(id),
+      {},
+    ) as unknown as Promise<{ purchaseOrder: any }>;
+  },
+
+  // Goods Receipts (PON — Nhập hàng)
+  async getReceipts(params?: {
+    search?: string;
+    status?: string;
+    supplierId?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.RECEIPTS, { params }) as unknown as Promise<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>;
+  },
+  async getReceipt(id: string) {
+    return axios.get<{ receipt: any }>(
+      API_ENDPOINTS.ADMIN.RECEIPT_DETAIL(id),
+    ) as unknown as Promise<{ receipt: any }>;
+  },
+  async createReceipt(data: any) {
+    return axios.post<{ receipt: any }>(API_ENDPOINTS.ADMIN.RECEIPTS, data) as unknown as Promise<{
+      receipt: any;
+    }>;
+  },
+  async completeReceipt(id: string) {
+    return axios.post<{ receipt: any }>(
+      API_ENDPOINTS.ADMIN.RECEIPT_COMPLETE(id),
+      {},
+    ) as unknown as Promise<{ receipt: any }>;
+  },
+  async cancelReceipt(id: string) {
+    return axios.post<{ receipt: any }>(
+      API_ENDPOINTS.ADMIN.RECEIPT_CANCEL(id),
+      {},
+    ) as unknown as Promise<{ receipt: any }>;
+  },
+
+  // Supplier Payments (PCH — Phiếu chi NCC)
+  async getPayouts(params?: {
+    supplierId?: string;
+    receiptId?: string;
+    method?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.PAYOUTS, { params }) as unknown as Promise<{
+      data: any[];
+      metadata: { total: number; page: number; limit: number; totalPages: number };
+    }>;
+  },
+  async createPayout(data: any) {
+    return axios.post<{ payment: any }>(API_ENDPOINTS.ADMIN.PAYOUTS, data) as unknown as Promise<{
+      payment: any;
+    }>;
+  },
+  async deletePayout(id: string) {
+    return axios.delete<{ success: boolean }>(
+      API_ENDPOINTS.ADMIN.PAYOUT_DETAIL(id),
+    ) as unknown as Promise<{ success: boolean }>;
+  },
+
+  // Reports
+  async getInventoryValuation(params?: { search?: string; categoryId?: string }) {
+    return axios.get<{ items: any[]; totals: any }>(API_ENDPOINTS.ADMIN.INVENTORY_VALUATION, {
+      params,
+    }) as unknown as Promise<{ items: any[]; totals: any }>;
+  },
+
+  async getXntReport(params: {
+    startDate: string;
+    endDate: string;
+    search?: string;
+    categoryId?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    return axios.get<{
+      items: XntRow[];
+      totals: { totalNhap: number; totalXuat: number; skuCount: number };
+      metadata: { total: number; page: number; totalPages: number };
+    }>(API_ENDPOINTS.ADMIN.INVENTORY_XNT, { params }) as unknown as Promise<{
+      items: XntRow[];
+      totals: { totalNhap: number; totalXuat: number; skuCount: number };
+      metadata: { total: number; page: number; totalPages: number };
+    }>;
+  },
+
+  async getSupplierDebts() {
+    return axios.get<any[]>(API_ENDPOINTS.ADMIN.SUPPLIER_DEBTS) as unknown as Promise<any[]>;
+  },
+
   async getInventoryMovements(params?: {
     variantId?: string;
     type?: string;
+    search?: string;
     startDate?: string;
     endDate?: string;
     page?: number;

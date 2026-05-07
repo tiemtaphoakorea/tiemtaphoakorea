@@ -85,7 +85,25 @@ export const queryKeys = {
         ["admin", "inventory", "movements", params] as const,
       dailySummary: (params: Record<string, unknown>) =>
         ["admin", "inventory", "daily-summary", params] as const,
+      valuation: (params: Record<string, unknown>) =>
+        ["admin", "inventory", "valuation", params] as const,
+      xnt: (params: Record<string, unknown>) => ["admin", "inventory", "xnt", params] as const,
     },
+    purchases: {
+      all: [QK.adminRoot, "purchases"] as const,
+      list: (params: Record<string, unknown>) => [QK.adminRoot, "purchases", params] as const,
+      detail: (id: string) => [QK.adminRoot, "purchases", id] as const,
+    },
+    receipts: {
+      all: [QK.adminRoot, "receipts"] as const,
+      list: (params: Record<string, unknown>) => [QK.adminRoot, "receipts", params] as const,
+      detail: (id: string) => [QK.adminRoot, "receipts", id] as const,
+    },
+    payouts: {
+      all: [QK.adminRoot, "payouts"] as const,
+      list: (params: Record<string, unknown>) => [QK.adminRoot, "payouts", params] as const,
+    },
+    supplierDebts: [QK.adminRoot, "supplier-debts"] as const,
   },
   dashboard: {
     topProducts: [QK.dashboardRoot, QK.topProducts] as const,
