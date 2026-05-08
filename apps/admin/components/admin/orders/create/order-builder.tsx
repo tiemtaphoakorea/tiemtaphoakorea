@@ -85,6 +85,7 @@ export function OrderBuilder() {
   const [shippingAddress, setShippingAddress] = React.useState("");
   const [advanceShipping, setAdvanceShipping] = React.useState(false);
   const [shippingFee, setShippingFee] = React.useState(0);
+  const [autoCreatePurchaseOrder, setAutoCreatePurchaseOrder] = React.useState(true);
 
   const [cartSearch, setCartSearch] = React.useState("");
   const [sortMode, setSortMode] = React.useState<CartSortMode>("added");
@@ -115,6 +116,7 @@ export function OrderBuilder() {
         shippingPhone: shippingPhone.trim() || undefined,
         shippingAddress: shippingAddress.trim() || undefined,
         shippingFee: advanceShipping && shippingFee > 0 ? shippingFee : undefined,
+        autoCreatePurchaseOrder,
       };
 
       return adminClient.createOrder(payload);
@@ -241,6 +243,8 @@ export function OrderBuilder() {
             onAdvanceShippingChange={setAdvanceShipping}
             shippingFee={shippingFee}
             onShippingFeeChange={setShippingFee}
+            autoCreatePurchaseOrder={autoCreatePurchaseOrder}
+            onAutoCreatePurchaseOrderChange={setAutoCreatePurchaseOrder}
           />
         )}
       </div>

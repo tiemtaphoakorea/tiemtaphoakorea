@@ -19,6 +19,8 @@ interface OrderInfoFormProps {
   onAdvanceShippingChange: (value: boolean) => void;
   shippingFee: number;
   onShippingFeeChange: (value: number) => void;
+  autoCreatePurchaseOrder: boolean;
+  onAutoCreatePurchaseOrderChange: (value: boolean) => void;
 }
 
 // Inline panel — always visible alongside the customer card.
@@ -88,6 +90,21 @@ export function OrderInfoForm(props: OrderInfoFormProps) {
             />
           </Field>
         )}
+        <Field>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <FieldLabel htmlFor="auto-purchase-order" className="cursor-pointer">
+                Tự động tạo đơn nhập hàng
+              </FieldLabel>
+              <FieldDescription>Tạo đơn nhập khi sản phẩm không đủ tồn kho.</FieldDescription>
+            </div>
+            <Switch
+              id="auto-purchase-order"
+              checked={props.autoCreatePurchaseOrder}
+              onCheckedChange={props.onAutoCreatePurchaseOrderChange}
+            />
+          </div>
+        </Field>
         <Field>
           <FieldLabel htmlFor="order-note">Ghi chú đơn hàng</FieldLabel>
           <Textarea

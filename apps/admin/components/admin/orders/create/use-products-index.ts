@@ -27,7 +27,7 @@ export function useVariantSearch(search: string): {
       adminClient.getProductsWithVariants({
         search: trimmed || undefined,
         limit: SEARCH_LIMIT,
-        inStockOnly: true,
+        inStockOnly: false,
       }),
   });
 
