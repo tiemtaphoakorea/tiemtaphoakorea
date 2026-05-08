@@ -87,7 +87,7 @@ export function OrderAddRow({ onAddItem, onAddBulk, onOpenPasteDialog }: OrderAd
                   </div>
                 )}
                 {!isLoading && rows.length === 0 && (
-                  <CommandEmpty>Không có sản phẩm còn hàng phù hợp.</CommandEmpty>
+                  <CommandEmpty>Không tìm thấy sản phẩm phù hợp.</CommandEmpty>
                 )}
                 {!isLoading && rows.length > 0 && (
                   <CommandGroup>

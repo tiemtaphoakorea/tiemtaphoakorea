@@ -303,6 +303,7 @@ export const adminClient = {
     shippingPhone?: string;
     shippingAddress?: string;
     shippingFee?: number;
+    autoCreatePurchaseOrder?: boolean;
   }) {
     return axios.post<{ success: boolean; order: Order }>(
       API_ENDPOINTS.ADMIN.ORDERS,

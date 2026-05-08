@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       shippingPhone,
       shippingAddress,
       shippingFee,
+      autoCreatePurchaseOrder,
     } = body;
 
     const idem = await beginIdempotency({
@@ -145,6 +146,7 @@ export async function POST(request: Request) {
       shippingPhone,
       shippingAddress,
       shippingFee: shippingFee != null ? Number(shippingFee) : undefined,
+      autoCreatePurchaseOrder: autoCreatePurchaseOrder !== false,
     };
 
     let result:

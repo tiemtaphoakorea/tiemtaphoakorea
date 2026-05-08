@@ -175,6 +175,8 @@ export async function createOrder(data: {
   shippingAddress?: string | null;
   /** Shipping fee paid on behalf of customer (added to total). 0 / undefined = none. */
   shippingFee?: number | null;
+  /** When true (default), auto-creates a purchase order for any stock shortfall. */
+  autoCreatePurchaseOrder?: boolean;
 }) {
   // Resolve customerId - handle both string ID and customer info object
   let resolvedCustomerId: string;
@@ -356,8 +358,8 @@ export async function createOrder(data: {
       createdBy: data.userId,
     });
 
-    // Auto-create supplier orders for items needing stock
-    if (itemsNeedingStock.length > 0) {
+    // Auto-create supplier orders for items needing stock (opt-in, default true)
+    if (itemsNeedingStock.length > 0 && data.autoCreatePurchaseOrder !== false) {
       const supplierOrderItems = itemsNeedingStock.map((item) => ({
         variantId: item.variantId,
         quantity: item.quantityToOrder,
