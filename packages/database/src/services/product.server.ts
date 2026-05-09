@@ -357,6 +357,47 @@ export async function deleteProduct(id: string) {
 }
 
 /**
+ * Check which products can be deleted (no order history) vs blocked.
+ * Returns two lists: deletable and blocked (with id + name).
+ */
+export async function checkProductsDeletable(ids: string[]): Promise<{
+  canDelete: { id: string; name: string }[];
+  cannotDelete: { id: string; name: string }[];
+}> {
+  if (ids.length === 0) return { canDelete: [], cannotDelete: [] };
+
+  const prods = await db
+    .select({ id: products.id, name: products.name })
+    .from(products)
+    .where(inArray(products.id, ids));
+
+  const variants = await db
+    .select({ id: productVariants.id, productId: productVariants.productId })
+    .from(productVariants)
+    .where(inArray(productVariants.productId, ids));
+
+  const blockedProductIds = new Set<string>();
+
+  if (variants.length > 0) {
+    const variantIds = variants.map((v) => v.id);
+    const referenced = await db
+      .select({ variantId: orderItems.variantId })
+      .from(orderItems)
+      .where(inArray(orderItems.variantId, variantIds));
+
+    const blockedVariantIds = new Set(referenced.map((r) => r.variantId));
+    for (const v of variants) {
+      if (blockedVariantIds.has(v.id)) blockedProductIds.add(v.productId);
+    }
+  }
+
+  return {
+    canDelete: prods.filter((p) => !blockedProductIds.has(p.id)),
+    cannotDelete: prods.filter((p) => blockedProductIds.has(p.id)),
+  };
+}
+
+/**
  * Generate Unique Slug
  */
 export async function generateProductSlug(name: string, excludeId?: string) {

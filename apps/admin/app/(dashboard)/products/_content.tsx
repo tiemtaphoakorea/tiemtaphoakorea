@@ -153,14 +153,7 @@ export default function AdminProducts() {
   const bulkDeleteMutation = useMutation({
     mutationFn: (ids: string[]) => adminClient.bulkDeleteProducts(ids),
     onSuccess: (result) => {
-      const skipped = result.failed?.length ?? 0;
-      if (skipped > 0) {
-        toast.warning(
-          `Đã xóa ${result.deleted} sản phẩm. ${skipped} sản phẩm không thể xóa vì đã có đơn hàng.`,
-        );
-      } else {
-        toast.success(`Đã xóa ${result.deleted} sản phẩm.`);
-      }
+      toast.success(`Đã xóa ${result.deleted} sản phẩm.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
       setSelectedIds(new Set());
       setBulkDeleteOpen(false);
@@ -168,6 +161,14 @@ export default function AdminProducts() {
     onError: () => {
       toast.error("Xóa hàng loạt thất bại.");
     },
+  });
+
+  const selectedIdsArray = [...selectedIds].sort();
+  const checkDeletableQuery = useQuery({
+    queryKey: ["products", "check-deletable", selectedIdsArray],
+    queryFn: () => adminClient.checkProductsDeletable(selectedIdsArray),
+    enabled: bulkDeleteOpen && selectedIdsArray.length > 0,
+    staleTime: 0,
   });
 
   // --- Handlers ---
@@ -455,17 +456,39 @@ export default function AdminProducts() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xóa {selectedCount} sản phẩm?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedCount} sản phẩm đã chọn sẽ bị xóa vĩnh viễn. Sản phẩm đã có đơn hàng sẽ được
-              bỏ qua và không thể xóa.
-            </AlertDialogDescription>
+            {checkDeletableQuery.isLoading ? (
+              <AlertDialogDescription>Đang kiểm tra...</AlertDialogDescription>
+            ) : checkDeletableQuery.data?.cannotDelete?.length ? (
+              <>
+                <AlertDialogDescription>
+                  Không thể xóa vì {checkDeletableQuery.data.cannotDelete.length} sản phẩm dưới đây
+                  đã có đơn hàng. Bỏ chọn chúng trước khi xóa.
+                </AlertDialogDescription>
+                <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                  {checkDeletableQuery.data.cannotDelete.map((p) => (
+                    <li key={p.id} className="truncate py-0.5 text-destructive">
+                      {p.name}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <AlertDialogDescription>
+                {selectedCount} sản phẩm đã chọn sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn
+                tác.
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => bulkDeleteMutation.mutate([...selectedIds])}
-              disabled={bulkDeleteMutation.isPending}
+              onClick={() => bulkDeleteMutation.mutate(selectedIdsArray)}
+              disabled={
+                bulkDeleteMutation.isPending ||
+                checkDeletableQuery.isLoading ||
+                (checkDeletableQuery.data?.cannotDelete?.length ?? 0) > 0
+              }
             >
               Xóa {selectedCount} sản phẩm
             </AlertDialogAction>

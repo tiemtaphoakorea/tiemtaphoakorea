@@ -446,6 +446,19 @@ export const adminClient = {
     }) as unknown as Promise<{ deleted: number; failed: string[] }>;
   },
 
+  /**
+   * Check which products can be deleted (no order history) vs blocked.
+   */
+  async checkProductsDeletable(ids: string[]) {
+    return axios.post<{
+      canDelete: { id: string; name: string }[];
+      cannotDelete: { id: string; name: string }[];
+    }>(`${API_ENDPOINTS.ADMIN.PRODUCTS}/check-deletable`, { ids }) as unknown as Promise<{
+      canDelete: { id: string; name: string }[];
+      cannotDelete: { id: string; name: string }[];
+    }>;
+  },
+
   // Customer Management
   async getCustomerStats() {
     return axios.get<{
