@@ -100,9 +100,31 @@ Cuối bảng — dropdown **10 / 20 / 50 / 100**. Mặc định **20**.
 | **Mã SKU** | Định danh duy nhất (font monospace, nền xanh) |
 | **Giá bán** | VND |
 | **Giá vốn** | Dùng tính lợi nhuận |
-| **Tồn kho** | Số lượng |
+| **Tồn kho** | Tổng vật lý đang có trong kho |
+| **Đang giữ** | Đã giữ chỗ cho đơn pending (chỉ đọc) |
+| **Có thể bán** | `Tồn kho − Đang giữ` (chỉ đọc) |
 | **Ngưỡng cảnh báo** | Mặc định `30` |
-| **Xoá** | Nút thùng rác |
+| **Hành động** | Nút ⏱ **Sửa tồn đầu kỳ** + nút 🗑 **Xoá dòng** |
+
+#### Sửa tồn đầu kỳ
+
+Tồn đầu kỳ là điểm xuất phát của báo cáo XNT. Hệ thống không tự sinh giá trị — Quản lý chủ động set khi đối chiếu được với dữ liệu cũ (Sapo "Lịch sử kho", phiếu nhập PON).
+
+<Steps>
+  <Step title="Mở dialog">
+    Trong bảng biến thể, nhấn icon **⏱** ở row biến thể cần sửa.
+  </Step>
+  <Step title="Nhập giá trị">
+    Dialog hiện **Tồn đầu kỳ hiện tại** (hoặc `(chưa có)`) — nhập giá trị mới.
+  </Step>
+  <Step title="Lưu">
+    Hệ thống tính lại chuỗi xuất/nhập + đồng bộ tồn kho hiện tại.
+  </Step>
+</Steps>
+
+<Warning>
+Sửa tồn đầu kỳ ảnh hưởng đến báo cáo XNT lịch sử của biến thể đó.
+</Warning>
 
 ### Tab Hình ảnh
 

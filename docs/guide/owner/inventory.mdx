@@ -126,6 +126,29 @@ Liệt kê biến thể có `onHand ≤ 0`. Sắp xếp theo tên sản phẩm, 
 Tồn kho tự động giảm khi đơn hàng được tạo (số chuyển sang **Đã giữ chỗ**) và quay về kho khi đơn bị huỷ. Đơn nhập từ NCC cộng vào **Tồn vật lý** sau khi xác nhận **Đã nhận**.
 </Note>
 
+## Tồn đầu kỳ (cho báo cáo XNT)
+
+Báo cáo Xuất–Nhập–Tồn cần một **điểm xuất phát** — số lượng tồn đầu kỳ. Hệ thống lúc đầu **không tự sinh** giá trị này: Chủ shop / Quản lý cần set thủ công cho từng biến thể khi đối chiếu được với dữ liệu cũ.
+
+<Steps>
+  <Step title="Vào sản phẩm">
+    Trang **Sản phẩm** → mở sản phẩm → tab **Phiên bản**.
+  </Step>
+  <Step title="Mở dialog">
+    Click icon ⏱ ở cuối row biến thể → dialog **Sửa tồn đầu kỳ** mở ra.
+  </Step>
+  <Step title="Nhập số tồn đầu thực tế">
+    Đối chiếu với phiếu nhập (PON) hoặc kiểm kê cũ → nhập vào ô **Số lượng tồn đầu kỳ mới**.
+  </Step>
+  <Step title="Lưu">
+    Hệ thống tự tính lại chuỗi xuất/nhập của biến thể này và đồng bộ tồn kho hiện tại.
+  </Step>
+</Steps>
+
+<Warning>
+Sửa tồn đầu kỳ làm thay đổi báo cáo XNT lịch sử của biến thể đó. Chỉ thực hiện khi chắc chắn về số mới.
+</Warning>
+
 <Warning>
 Nút **Điều chỉnh kho** ở góc phải tab hiện chưa có chức năng — đang phát triển. Việc điều chỉnh thủ công (kiểm kê, hao hụt) hiện chưa khả dụng từ giao diện.
 </Warning>

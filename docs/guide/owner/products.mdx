@@ -107,11 +107,43 @@ Bộ tạo chỉ có 2 thuộc tính cố định: **Color** và **Size**. Nếu
 | **Mã SKU** | Mã định danh duy nhất (font monospace, nền xanh) |
 | **Giá bán** | Giá bán cho biến thể (VND) |
 | **Giá vốn** | Giá nhập (VND) — dùng để tính lợi nhuận |
-| **Tồn kho** | Số lượng hiện có |
-| **Ngưỡng cảnh báo** | Khi tồn kho ≤ ngưỡng → cảnh báo "Sắp hết". Mặc định `30` |
-| **Xoá** | Nút thùng rác xoá dòng |
+| **Tồn kho** | Tổng vật lý đang có trong kho (chỉnh sửa được) |
+| **Đang giữ** | Số lượng đã được giữ chỗ cho đơn pending (chỉ đọc) |
+| **Có thể bán** | `Tồn kho − Đang giữ` — số thực sự bán được (chỉ đọc, tự tính) |
+| **Ngưỡng cảnh báo** | Khi `Có thể bán` ≤ ngưỡng → cảnh báo "Sắp hết". Mặc định `30` |
+| **Hành động** | Nút ⏱ **Sửa tồn đầu kỳ** + nút 🗑 **Xoá dòng** |
 
 Nút **Thêm thủ công** ở góc trên phải bảng — thêm 1 dòng biến thể trắng.
+
+#### Sửa tồn đầu kỳ (chỉ ở chế độ chỉnh sửa)
+
+Tồn đầu kỳ là **điểm xuất phát** của báo cáo Xuất–Nhập–Tồn (XNT) cho biến thể này. Hệ thống lúc đầu **không có** tồn đầu kỳ tự sinh — bạn chủ động set khi cần.
+
+<Steps>
+  <Step title="Xác định tồn đầu kỳ thực tế">
+    Mở Sapo (hoặc nguồn dữ liệu cũ) → vào **Lịch sử kho** của biến thể tương ứng → xem các phiếu nhập (PON) đầu tiên trước ngày bắt đầu kỳ. Tồn đầu kỳ = tổng nhập trước ngày bắt đầu (đã trừ xuất nếu có).
+  </Step>
+  <Step title="Mở dialog">
+    Trong bảng biến thể, nhấn icon **⏱** ở cột **Hành động** của row biến thể cần sửa.
+  </Step>
+  <Step title="Đối chiếu giá trị">
+    Dialog hiện **Tồn đầu kỳ hiện tại** (hoặc `(chưa có)`). Nhập **Số lượng tồn đầu kỳ mới**.
+  </Step>
+  <Step title="Lưu">
+    Nhấn **Lưu**. Hệ thống tự:
+    - UPSERT bản ghi tồn đầu kỳ tại `2026-04-18 23:59:59`
+    - Tính lại toàn bộ chuỗi xuất/nhập của biến thể này
+    - Đồng bộ tồn kho hiện tại
+  </Step>
+</Steps>
+
+<Warning>
+Việc sửa tồn đầu kỳ sẽ **thay đổi báo cáo XNT lịch sử** của biến thể đó. Chỉ làm khi bạn chắc chắn về con số mới.
+</Warning>
+
+<Note>
+Nút **⏱** chỉ hiện cho biến thể đã được lưu vào hệ thống (chưa hiện cho biến thể vừa được tạo trong form). Tính năng này chỉ dành cho **Chủ shop** và **Quản lý**.
+</Note>
 
 ### Tab 3: Hình ảnh
 

@@ -461,12 +461,12 @@ export default function AdminProducts() {
             ) : checkDeletableQuery.data?.cannotDelete?.length ? (
               <>
                 <AlertDialogDescription>
-                  Không thể xóa vì {checkDeletableQuery.data.cannotDelete.length} sản phẩm dưới đây
-                  đã có đơn hàng. Bỏ chọn chúng trước khi xóa.
+                  {checkDeletableQuery.data.cannotDelete.length} sản phẩm dưới đây đã có đơn hàng và
+                  không thể xóa. Bỏ chọn chúng để tiếp tục.
                 </AlertDialogDescription>
-                <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                <ul className="mt-3 max-h-48 divide-y divide-border overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5">
                   {checkDeletableQuery.data.cannotDelete.map((p) => (
-                    <li key={p.id} className="truncate py-0.5 text-destructive">
+                    <li key={p.id} className="px-3 py-2 text-sm leading-snug text-destructive">
                       {p.name}
                     </li>
                   ))}

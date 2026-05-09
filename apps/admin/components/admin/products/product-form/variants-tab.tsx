@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
-import { Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
+import { History, Plus, RefreshCw, Trash2, Wand2 } from "lucide-react";
+import { useState } from "react";
+import { EditOpeningStockDialog } from "./edit-opening-stock-dialog";
 import type { Attribute, FormAction } from "./form-state";
 
 interface VariantsTabProps {
@@ -147,7 +149,12 @@ function VariantsTable({ variants, basePrice, dispatch, showReserved }: Variants
                 { label: "Giá bán", width: "min-w-27" },
                 { label: "Giá vốn", width: "min-w-27" },
                 { label: "Tồn kho", width: "min-w-22" },
-                ...(showReserved ? [{ label: "Đang giữ", width: "min-w-22" }] : []),
+                ...(showReserved
+                  ? [
+                      { label: "Đang giữ", width: "min-w-22" },
+                      { label: "Có thể bán", width: "min-w-22" },
+                    ]
+                  : []),
                 { label: "Ngưỡng cảnh báo", width: "min-w-25" },
                 { label: "", width: "w-10" },
               ].map((h, i) => (
@@ -187,6 +194,8 @@ interface VariantRowProps {
 }
 
 function VariantRow({ variant, idx, variants, dispatch, showReserved }: VariantRowProps) {
+  const [openingDialogOpen, setOpeningDialogOpen] = useState(false);
+
   const update = (patch: Partial<ProductFormVariant>) => {
     const next = [...variants];
     next[idx] = { ...next[idx], ...patch };
@@ -195,6 +204,9 @@ function VariantRow({ variant, idx, variants, dispatch, showReserved }: VariantR
 
   const cellInput =
     "h-8 border-transparent bg-transparent px-2 hover:border-border focus:border-border";
+
+  // Opening-stock edit is only meaningful for already-saved variants.
+  const isPersisted = !variant.id.startsWith("temp-");
 
   return (
     <TableRow>
@@ -254,13 +266,33 @@ function VariantRow({ variant, idx, variants, dispatch, showReserved }: VariantR
         />
       </TableCell>
       {showReserved && (
-        <TableCell className="px-3 py-1.5 text-center font-mono tabular-nums text-sm">
-          {(variant.reserved ?? 0) > 0 ? (
-            <span className="font-semibold text-amber-700">{variant.reserved}</span>
-          ) : (
-            <span className="text-muted-foreground">0</span>
-          )}
-        </TableCell>
+        <>
+          <TableCell className="px-3 py-1.5 text-center font-mono tabular-nums text-sm">
+            {(variant.reserved ?? 0) > 0 ? (
+              <span className="font-semibold text-amber-700">{variant.reserved}</span>
+            ) : (
+              <span className="text-muted-foreground">0</span>
+            )}
+          </TableCell>
+          <TableCell className="px-3 py-1.5 text-center font-mono tabular-nums text-sm">
+            {(() => {
+              const available = Math.max(0, (variant.onHand ?? 0) - (variant.reserved ?? 0));
+              return (
+                <span
+                  className={
+                    available === 0
+                      ? "font-semibold text-red-600"
+                      : available <= (variant.lowStockThreshold ?? 0)
+                        ? "font-semibold text-amber-600"
+                        : "font-semibold"
+                  }
+                >
+                  {available}
+                </span>
+              );
+            })()}
+          </TableCell>
+        </>
       )}
       <TableCell className="px-3 py-1.5">
         <NumberInput
@@ -276,19 +308,46 @@ function VariantRow({ variant, idx, variants, dispatch, showReserved }: VariantR
         />
       </TableCell>
       <TableCell className="px-3 py-1.5">
-        <Button
-          type="button"
-          size="icon-xs"
-          variant="ghost-destructive"
-          onClick={() =>
-            dispatch({
-              type: "SET_VARIANTS",
-              payload: variants.filter((_, i) => i !== idx),
-            })
-          }
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        <div className="flex items-center gap-0.5">
+          {isPersisted && showReserved && (
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              title="Sửa tồn đầu kỳ"
+              onClick={() => setOpeningDialogOpen(true)}
+            >
+              <History className="h-3 w-3" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="ghost-destructive"
+            onClick={() =>
+              dispatch({
+                type: "SET_VARIANTS",
+                payload: variants.filter((_, i) => i !== idx),
+              })
+            }
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+        {isPersisted && (
+          <EditOpeningStockDialog
+            open={openingDialogOpen}
+            onOpenChange={setOpeningDialogOpen}
+            variantId={variant.id}
+            variantSku={variant.sku || ""}
+            variantName={variant.name}
+            onUpdated={(result) => {
+              if (!result.noop) {
+                update({ onHand: result.newOnHand });
+              }
+            }}
+          />
+        )}
       </TableCell>
     </TableRow>
   );

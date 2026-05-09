@@ -22,7 +22,13 @@ import { adminClient } from "@/services/admin.client";
 type ProductWithVariantsRow = {
   id: string;
   name: string;
-  variants: Array<{ id: string; name?: string | null; sku: string }>;
+  variants: Array<{
+    id: string;
+    name?: string | null;
+    sku: string;
+    onHand?: number;
+    reserved?: number;
+  }>;
 };
 
 export function CreateSupplierOrderDialog({
@@ -111,12 +117,15 @@ export function CreateSupplierOrderDialog({
                   {productsQuery.isLoading ? "Đang tải..." : "-- Chọn sản phẩm --"}
                 </SelectOption>
                 {products.flatMap((p) =>
-                  p.variants.map((v) => (
-                    <SelectOption key={v.id} value={v.id}>
-                      {p.name}
-                      {v.name ? ` — ${v.name}` : ""} ({v.sku})
-                    </SelectOption>
-                  )),
+                  p.variants.map((v) => {
+                    const available = Math.max(0, (v.onHand ?? 0) - (v.reserved ?? 0));
+                    return (
+                      <SelectOption key={v.id} value={v.id}>
+                        {p.name}
+                        {v.name ? ` — ${v.name}` : ""} ({v.sku}) · CTB {available}
+                      </SelectOption>
+                    );
+                  }),
                 )}
               </Select>
             </Field>

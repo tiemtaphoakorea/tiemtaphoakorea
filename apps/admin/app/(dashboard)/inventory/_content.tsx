@@ -261,20 +261,20 @@ export default function AdminInventory() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {["Sản phẩm / SKU", "Tồn", "Tình trạng"].map((h, i) => (
+                    {["Sản phẩm / SKU", "Có thể bán", "Tồn kho", "Tình trạng"].map((h, i) => (
                       <TableHead key={i}>{h}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stockQuery.isLoading && <TableLoadingRows cols={3} rows={5} />}
+                  {stockQuery.isLoading && <TableLoadingRows cols={4} rows={5} />}
                   {stockQuery.error && (
-                    <TableErrorRow cols={3} message={String(stockQuery.error)} />
+                    <TableErrorRow cols={4} message={String(stockQuery.error)} />
                   )}
                   {!stockQuery.isLoading &&
                     (tab === "low" ? lowStock : outOfStock).length === 0 && (
                       <TableEmptyRow
-                        cols={3}
+                        cols={4}
                         message={tab === "low" ? "Không có SP sắp hết" : "Không có SP hết hàng"}
                       />
                     )}
@@ -297,6 +297,9 @@ export default function AdminInventory() {
                       <TableCell
                         className={`px-4 py-2.5 font-bold tabular-nums ${tab === "out" ? "text-red-600" : "text-amber-700"}`}
                       >
+                        {v.available}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums text-muted-foreground">
                         {v.onHand}
                       </TableCell>
                       <TableCell className="px-4 py-2.5">

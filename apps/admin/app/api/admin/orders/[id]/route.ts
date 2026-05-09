@@ -39,7 +39,8 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
 
   try {
     const body = await request.json();
-    const { adminNote, discount, items, shippingName, shippingPhone, shippingAddress } = body;
+    const { customerId, adminNote, discount, items, shippingName, shippingPhone, shippingAddress } =
+      body;
     const { id } = await params;
 
     if (items !== undefined) {
@@ -58,6 +59,7 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
     const updated = await updateOrder(
       id,
       {
+        customerId,
         adminNote,
         discount: discount !== undefined ? Number(discount) : undefined,
         shippingName,

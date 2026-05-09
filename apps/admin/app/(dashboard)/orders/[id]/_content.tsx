@@ -44,6 +44,7 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 import {
   AlertCircle,
+  ArrowLeftRight,
   Banknote,
   ChevronDown,
   ChevronLeft,
@@ -67,7 +68,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useReducer, useState } from "react";
 import { toast } from "sonner";
-import { CustomerEditSheet } from "@/components/admin/customers/customer-edit-sheet";
+import { ChangeCustomerDialog } from "@/components/admin/order-detail/change-customer-dialog";
 import { OrderAddRow } from "@/components/admin/orders/create/order-add-row";
 import { OrderShippingSection } from "@/components/admin/orders/order-shipping-section";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
@@ -372,8 +373,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [note, setNote] = useState("");
   const [editState, editDispatch] = useReducer(editReducer, initialEditState);
   const [paymentState, paymentDispatch] = useReducer(paymentReducer, initialPaymentState);
-  const [isCustomerEditOpen, setIsCustomerEditOpen] = useState(false);
-  const [isCustomerEditSubmitting, setIsCustomerEditSubmitting] = useState(false);
+  const [isChangeCustomerOpen, setIsChangeCustomerOpen] = useState(false);
 
   // Item editing state (only active for pending orders)
   type EditableItem = {
@@ -389,28 +389,6 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [isSavingItems, setIsSavingItems] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const handleEditCustomer = async (formData: FormData) => {
-    const customerId = formData.get("id") as string;
-    if (!customerId) return;
-    setIsCustomerEditSubmitting(true);
-    const payload = {
-      fullName: (formData.get("fullName") as string) ?? undefined,
-      phone: (formData.get("phone") as string) ?? undefined,
-      address: (formData.get("address") as string) ?? undefined,
-      customerType: (formData.get("customerType") as string) ?? undefined,
-    };
-    try {
-      await adminClient.updateCustomer(customerId, payload);
-      toast.success("Đã cập nhật thông tin khách hàng");
-      setIsCustomerEditOpen(false);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
-    } finally {
-      setIsCustomerEditSubmitting(false);
-    }
-  };
 
   // Loading State
   if (isLoading) {
@@ -440,6 +418,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const canDelete = fulfillmentStatus === "cancelled";
   const canEditItems =
     fulfillmentStatus === "pending" &&
+    !order.parentOrderId &&
+    !((order.subOrders?.length ?? 0) > 0);
+  const canChangeCustomer =
+    fulfillmentStatus === "pending" &&
+    paymentStatus === "unpaid" &&
     !order.parentOrderId &&
     !((order.subOrders?.length ?? 0) > 0);
 
@@ -533,6 +516,18 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra";
       toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  const handleChangeCustomer = async (newCustomerId: string) => {
+    try {
+      await adminClient.updateOrder(order.id, { customerId: newCustomerId });
+      toast.success("Đã đổi khách hàng thành công");
+      setIsChangeCustomerOpen(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.order(id) });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? err?.message ?? "Có lỗi xảy ra");
       throw err;
     }
   };
@@ -1139,12 +1134,11 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Right Column: Customer & Meta */}
         <div className="space-y-4 lg:col-span-1 lg:space-y-6">
-          <CustomerEditSheet
-            isOpen={isCustomerEditOpen}
-            onOpenChange={setIsCustomerEditOpen}
-            customer={order.customer}
-            isSubmitting={isCustomerEditSubmitting}
-            onSubmit={handleEditCustomer}
+          <ChangeCustomerDialog
+            open={isChangeCustomerOpen}
+            onOpenChange={setIsChangeCustomerOpen}
+            currentCustomerId={order.customer.id}
+            onConfirm={handleChangeCustomer}
           />
           <Card className="border-none shadow-xl ring-1 shadow-slate-200/50 ring-slate-200">
             <CardHeader>
@@ -1152,14 +1146,19 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                 <span className="flex items-center gap-2">
                   <User className="text-primary h-5 w-5" /> Khách hàng
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setIsCustomerEditOpen(true)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {canChangeCustomer && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title="Đổi khách hàng"
+                      onClick={() => setIsChangeCustomerOpen(true)}
+                    >
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1193,7 +1192,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
               <Separator />
               <div className="space-y-3 text-sm font-medium text-slate-600">
                 <div className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  Hồ sơ khách
+                  Thông tin khách hàng
                 </div>
                 <div className="flex items-start gap-2">
                   <Phone className="mt-0.5 h-4 w-4 text-slate-400" />

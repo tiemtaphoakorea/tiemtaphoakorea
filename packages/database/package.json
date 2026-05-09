@@ -21,7 +21,8 @@
     "db:status": "tsx scripts/db-status.ts",
     "db:mark-baseline": "tsx scripts/db-mark-baseline.ts",
     "db:seed": "tsx scripts/db-seed.ts",
-    "db:backfill-opening-stock": "tsx scripts/db-backfill-inventory-opening-stock.ts",
+    "db:backfill-early-orders": "tsx scripts/db-backfill-early-order-stockouts.ts",
+    "db:backfill-supplier-orders": "tsx scripts/db-backfill-supplier-orders.ts",
     "verify:inventory": "tsx src/scripts/verify-inventory-invariants.ts"
   },
   "dependencies": {
