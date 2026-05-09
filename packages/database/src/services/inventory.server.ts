@@ -46,6 +46,146 @@ export async function insertInventoryMovement(
   });
 }
 
+/**
+ * Set the opening-stock baseline for a variant and re-chain every subsequent
+ * movement so `on_hand_before/on_hand_after` stay consistent and `on_hand`
+ * matches the latest movement. Idempotent — re-running with the same value
+ * is a no-op.
+ *
+ * Used by admin UI to correct an opening figure (the historical balance
+ * loaded by the migration backfill) without polluting the in-period XNT
+ * report with a runtime adjustment movement.
+ */
+const OPENING_STOCK_NOTE = "Opening stock — historical balance";
+const OPENING_STOCK_DATE = "2026-04-18T23:59:59Z";
+
+/**
+ * Read the current opening-stock quantity for a variant. Returns null if no
+ * opening movement exists. Used by the admin dialog to display the actual
+ * value the user is editing (which may differ from `product_variants.on_hand`
+ * after subsequent stock-outs / receipts).
+ */
+export async function getOpeningStock(variantId: string): Promise<{ quantity: number | null }> {
+  const [row] = await db
+    .select({ quantity: inventoryMovements.quantity })
+    .from(inventoryMovements)
+    .where(
+      and(
+        eq(inventoryMovements.variantId, variantId),
+        eq(inventoryMovements.note, OPENING_STOCK_NOTE),
+      ),
+    )
+    .orderBy(inventoryMovements.createdAt, inventoryMovements.id)
+    .limit(1);
+  return { quantity: row?.quantity ?? null };
+}
+
+export async function updateOpeningStock({
+  variantId,
+  newQuantity,
+  userId,
+}: {
+  variantId: string;
+  newQuantity: number;
+  userId: string;
+}) {
+  if (!Number.isInteger(newQuantity) || newQuantity < 0) {
+    throw new Error("newQuantity must be a non-negative integer");
+  }
+
+  return await db.transaction(async (tx) => {
+    const [variant] = await tx
+      .select({ id: productVariants.id, onHand: productVariants.onHand })
+      .from(productVariants)
+      .where(eq(productVariants.id, variantId))
+      .for("update");
+    if (!variant) throw new Error("Variant not found");
+
+    // 1. UPSERT opening movement
+    const [existing] = await tx
+      .select({ id: inventoryMovements.id, quantity: inventoryMovements.quantity })
+      .from(inventoryMovements)
+      .where(
+        and(
+          eq(inventoryMovements.variantId, variantId),
+          eq(inventoryMovements.note, OPENING_STOCK_NOTE),
+        ),
+      )
+      .orderBy(inventoryMovements.createdAt, inventoryMovements.id)
+      .limit(1);
+
+    const oldOpening = existing?.quantity ?? 0;
+    if (existing) {
+      if (existing.quantity === newQuantity) {
+        return {
+          oldOpening,
+          newOpening: newQuantity,
+          oldOnHand: variant.onHand,
+          newOnHand: variant.onHand,
+          noop: true,
+        };
+      }
+      await tx
+        .update(inventoryMovements)
+        .set({ quantity: newQuantity, onHandAfter: newQuantity, createdBy: userId })
+        .where(eq(inventoryMovements.id, existing.id));
+    } else {
+      await tx.insert(inventoryMovements).values({
+        variantId,
+        type: "manual_adjustment",
+        quantity: newQuantity,
+        onHandBefore: 0,
+        onHandAfter: newQuantity,
+        note: OPENING_STOCK_NOTE,
+        createdAt: new Date(OPENING_STOCK_DATE),
+        createdBy: userId,
+      });
+    }
+
+    // 2. Re-chain every movement of this variant via window function.
+    // INVARIANT: the opening movement is the chronologically first row for the
+    // variant (dated OPENING_STOCK_DATE which precedes PERIOD_START). The
+    // running SUM(quantity) ORDER BY created_at, id therefore produces a chain
+    // starting at `opening_qty` and walking forward through every later
+    // stock_out / supplier_receipt / manual_adjustment row in time order.
+    await tx.execute(sql`
+      WITH chain AS (
+        SELECT id,
+               SUM(quantity) OVER (ORDER BY created_at, id) AS new_after
+        FROM inventory_movements
+        WHERE variant_id = ${variantId}
+      )
+      UPDATE inventory_movements m
+      SET on_hand_after  = c.new_after,
+          on_hand_before = c.new_after - m.quantity
+      FROM chain c
+      WHERE m.id = c.id
+    `);
+
+    // 3. Sync product_variants.on_hand to the latest movement.
+    const [latest] = await tx
+      .select({ onHandAfter: inventoryMovements.onHandAfter })
+      .from(inventoryMovements)
+      .where(eq(inventoryMovements.variantId, variantId))
+      .orderBy(desc(inventoryMovements.createdAt), desc(inventoryMovements.id))
+      .limit(1);
+
+    const newOnHand = latest?.onHandAfter ?? newQuantity;
+    await tx
+      .update(productVariants)
+      .set({ onHand: newOnHand })
+      .where(eq(productVariants.id, variantId));
+
+    return {
+      oldOpening,
+      newOpening: newQuantity,
+      oldOnHand: variant.onHand ?? 0,
+      newOnHand,
+      noop: false,
+    };
+  });
+}
+
 export async function adjustInventory({
   variantId,
   quantity,

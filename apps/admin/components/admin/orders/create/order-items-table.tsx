@@ -87,7 +87,7 @@ export function OrderItemsTable({
                 <TableHead className="w-12 text-center">#</TableHead>
                 <TableHead className="min-w-64">Sản phẩm · SKU</TableHead>
                 <TableHead className="w-36 text-right">Đơn giá</TableHead>
-                <TableHead className="w-16 text-center">Tồn</TableHead>
+                <TableHead className="w-20 text-center">Có thể bán</TableHead>
                 <TableHead className="w-44 text-center">Số lượng</TableHead>
                 <TableHead className="w-32 text-right">Thành tiền</TableHead>
                 <TableHead className="w-12 text-center"></TableHead>

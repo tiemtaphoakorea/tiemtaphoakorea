@@ -354,6 +354,7 @@ export const adminClient = {
   async updateOrder(
     id: string,
     data: {
+      customerId?: string;
       adminNote?: string;
       discount?: number;
       items?: Array<{ variantId: string; quantity: number; customPrice?: number }>;
@@ -444,6 +445,19 @@ export const adminClient = {
     return axios.delete<{ deleted: number; failed: string[] }>(API_ENDPOINTS.ADMIN.PRODUCTS, {
       data: { ids },
     }) as unknown as Promise<{ deleted: number; failed: string[] }>;
+  },
+
+  /**
+   * Check which products can be deleted (no order history) vs blocked.
+   */
+  async checkProductsDeletable(ids: string[]) {
+    return axios.post<{
+      canDelete: { id: string; name: string }[];
+      cannotDelete: { id: string; name: string }[];
+    }>(`${API_ENDPOINTS.ADMIN.PRODUCTS}/check-deletable`, { ids }) as unknown as Promise<{
+      canDelete: { id: string; name: string }[];
+      cannotDelete: { id: string; name: string }[];
+    }>;
   },
 
   // Customer Management

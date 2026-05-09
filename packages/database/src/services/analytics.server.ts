@@ -99,12 +99,16 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
             Number,
           ),
         totalUnits: sql<number>`coalesce(sum(${productVariants.onHand}), 0)`.mapWith(Number),
+        // Low/out-of-stock counted against sellable (on_hand - reserved); a SKU
+        // fully reserved by pending orders is effectively unsellable.
         lowStockCount:
-          sql<number>`count(*) filter (where ${productVariants.onHand} > 0 and ${productVariants.onHand} <= ${productVariants.lowStockThreshold})`.mapWith(
+          sql<number>`count(*) filter (where (${productVariants.onHand} - ${productVariants.reserved}) > 0 and (${productVariants.onHand} - ${productVariants.reserved}) <= ${productVariants.lowStockThreshold})`.mapWith(
             Number,
           ),
         outOfStockCount:
-          sql<number>`count(*) filter (where ${productVariants.onHand} <= 0)`.mapWith(Number),
+          sql<number>`count(*) filter (where (${productVariants.onHand} - ${productVariants.reserved}) <= 0)`.mapWith(
+            Number,
+          ),
       })
       .from(productVariants);
 
@@ -154,6 +158,8 @@ export type StockAlertVariant = {
   name: string;
   sku: string | null;
   onHand: number;
+  reserved: number;
+  available: number;
   productName: string;
 };
 
@@ -161,23 +167,24 @@ export async function getStockAlerts(): Promise<{
   lowStock: StockAlertVariant[];
   outOfStock: StockAlertVariant[];
 }> {
+  // Threshold check is done against `available = on_hand - reserved` so a SKU
+  // fully reserved by pending orders shows up as out-of-stock for the seller.
+  const availableSql = sql<number>`(${productVariants.onHand} - ${productVariants.reserved})`;
+
   const lowStock = await db
     .select({
       id: productVariants.id,
       name: productVariants.name,
       sku: productVariants.sku,
       onHand: sql<number>`${productVariants.onHand}`.mapWith(Number),
+      reserved: sql<number>`${productVariants.reserved}`.mapWith(Number),
+      available: availableSql.mapWith(Number),
       productName: products.name,
     })
     .from(productVariants)
     .innerJoin(products, eq(productVariants.productId, products.id))
-    .where(
-      and(
-        gt(productVariants.onHand, 0),
-        lte(productVariants.onHand, productVariants.lowStockThreshold),
-      ),
-    )
-    .orderBy(asc(productVariants.onHand))
+    .where(and(gt(availableSql, 0), lte(availableSql, productVariants.lowStockThreshold)))
+    .orderBy(asc(availableSql))
     .limit(10);
 
   const outOfStock = await db
@@ -186,11 +193,13 @@ export async function getStockAlerts(): Promise<{
       name: productVariants.name,
       sku: productVariants.sku,
       onHand: sql<number>`${productVariants.onHand}`.mapWith(Number),
+      reserved: sql<number>`${productVariants.reserved}`.mapWith(Number),
+      available: availableSql.mapWith(Number),
       productName: products.name,
     })
     .from(productVariants)
     .innerJoin(products, eq(productVariants.productId, products.id))
-    .where(lte(productVariants.onHand, 0))
+    .where(lte(availableSql, 0))
     .orderBy(asc(products.name))
     .limit(10);
 

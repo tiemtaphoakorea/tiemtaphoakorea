@@ -227,11 +227,15 @@ export function InventoryMovementsTab() {
                     <SelectOption value="">
                       {selectedProduct ? "-- Chọn biến thể --" : "Vui lòng chọn sản phẩm trước"}
                     </SelectOption>
-                    {selectedProduct?.variants.map((v) => (
-                      <SelectOption key={v.id} value={v.id}>
-                        {v.sku} · Tồn {v.onHand ?? 0}
-                      </SelectOption>
-                    ))}
+                    {selectedProduct?.variants.map((v) => {
+                      const onHand = v.onHand ?? 0;
+                      const available = Math.max(0, onHand - (v.reserved ?? 0));
+                      return (
+                        <SelectOption key={v.id} value={v.id}>
+                          {v.sku} · Tồn {onHand} · CTB {available}
+                        </SelectOption>
+                      );
+                    })}
                   </Select>
                 </Field>
                 <Field>

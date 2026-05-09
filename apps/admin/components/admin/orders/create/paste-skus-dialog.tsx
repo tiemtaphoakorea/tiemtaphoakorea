@@ -198,15 +198,27 @@ export function PasteSkusDialog({ open, onOpenChange, onAddItems }: PasteSkusDia
               )}
               {analysed.matched.length > 0 && (
                 <ul className="max-h-40 space-y-1 overflow-y-auto">
-                  {analysed.matched.map((m) => (
-                    <li key={m.variant.id} className="flex items-center gap-2 text-xs">
-                      <span className="text-muted-foreground tabular-nums">×{m.quantity}</span>
-                      <span className="truncate">
-                        {m.product.name} · {m.variant.name || "Mặc định"}
-                      </span>
-                      <span className="ml-auto font-mono text-muted-foreground">{m.sku}</span>
-                    </li>
-                  ))}
+                  {analysed.matched.map((m) => {
+                    const available = Math.max(
+                      0,
+                      (m.variant.onHand ?? 0) - (m.variant.reserved ?? 0),
+                    );
+                    const short = m.quantity > available;
+                    return (
+                      <li key={m.variant.id} className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground tabular-nums">×{m.quantity}</span>
+                        <span className="truncate">
+                          {m.product.name} · {m.variant.name || "Mặc định"}
+                        </span>
+                        <span
+                          className={`tabular-nums ${short ? "font-semibold text-amber-600" : "text-muted-foreground"}`}
+                        >
+                          CTB: {available}
+                        </span>
+                        <span className="font-mono text-muted-foreground">{m.sku}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

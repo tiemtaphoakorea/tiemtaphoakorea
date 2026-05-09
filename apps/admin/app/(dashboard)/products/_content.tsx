@@ -1,9 +1,33 @@
 "use client";
 
-import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { ProductListItem } from "@workspace/database/types/admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
+import { Checkbox } from "@workspace/ui/components/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { PaginationControls } from "@workspace/ui/components/pagination-controls";
@@ -17,11 +41,12 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { format } from "date-fns";
-import { Plus, Search } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import {
   TableEmptyRow,
@@ -47,29 +72,30 @@ const TABS: ReadonlyArray<{ id: ProductFilter; label: string }> = [
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 const DEFAULT_PAGE_SIZE = 20;
 const fmtDate = (d: string | Date | null) => (d ? format(new Date(d), "dd/MM/yyyy, HH:mm") : "—");
-
 const VALID_FILTERS = new Set<ProductFilter>(["all", "in_stock", "low_stock", "out_of_stock"]);
 
 function getProductBrand(product: ProductListItem): string | null {
-  const productWithBrand = product as ProductListItem & {
-    brand?: string | null;
-    brandName?: string | null;
-  };
-
-  return productWithBrand.brandName ?? productWithBrand.brand ?? null;
+  const p = product as ProductListItem & { brand?: string | null; brandName?: string | null };
+  return p.brandName ?? p.brand ?? null;
 }
 
 export default function AdminProducts() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const urlFilter = searchParams.get("filter") as ProductFilter | null;
   const initialFilter = urlFilter && VALID_FILTERS.has(urlFilter) ? urlFilter : "all";
+
   const [filter, setFilter] = useState<ProductFilter>(initialFilter);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
+  // --- Queries ---
   const productsQuery = useQuery({
     queryKey: queryKeys.products.list(debouncedQuery, page, pageSize, filter),
     queryFn: async () =>
@@ -106,21 +132,94 @@ export default function AdminProducts() {
   const total = productsQuery.data?.metadata.total ?? 0;
   const totalPages = productsQuery.data?.metadata.totalPages ?? 1;
 
+  // --- Selection derived state ---
+  const pageIds = list.map((p) => p.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id)) && !allPageSelected;
+
+  // --- Mutations ---
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminClient.deleteProduct(id),
+    onSuccess: () => {
+      toast.success("Đã xóa sản phẩm.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      setDeleteTarget(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error ?? "Xóa sản phẩm thất bại.");
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => adminClient.bulkDeleteProducts(ids),
+    onSuccess: (result) => {
+      toast.success(`Đã xóa ${result.deleted} sản phẩm.`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+    },
+    onError: () => {
+      toast.error("Xóa hàng loạt thất bại.");
+    },
+  });
+
+  const selectedIdsArray = [...selectedIds].sort();
+  const checkDeletableQuery = useQuery({
+    queryKey: ["products", "check-deletable", selectedIdsArray],
+    queryFn: () => adminClient.checkProductsDeletable(selectedIdsArray),
+    enabled: bulkDeleteOpen && selectedIdsArray.length > 0,
+    staleTime: 0,
+  });
+
+  // --- Handlers ---
+  const clearSelection = () => setSelectedIds(new Set());
+
   const handleFilterChange = (next: ProductFilter) => {
     setFilter(next);
     setPage(1);
+    clearSelection();
   };
   const handleQueryChange = (next: string) => {
     setQuery(next);
     setPage(1);
+    clearSelection();
   };
   const handlePageSizeChange = (next: number) => {
     setPageSize(next);
     setPage(1);
+    clearSelection();
   };
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    clearSelection();
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => new Set([...prev, ...pageIds]));
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const selectedCount = selectedIds.size;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Toolbar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as ProductFilter)}>
           <TabsList>
@@ -154,27 +253,56 @@ export default function AdminProducts() {
         </Button>
       </div>
 
+      {/* Bulk action bar */}
+      {selectedCount > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-2.5">
+          <span className="text-sm text-muted-foreground">
+            Đã chọn <span className="font-semibold text-foreground">{selectedCount}</span> sản phẩm
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="ml-auto gap-1.5"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Xóa {selectedCount} sản phẩm
+          </Button>
+          <Button variant="ghost" size="sm" onClick={clearSelection}>
+            Bỏ chọn
+          </Button>
+        </div>
+      )}
+
       <Card className="min-w-0 gap-0 overflow-hidden border border-border p-0 shadow-none">
         <div className="min-w-0 max-w-full overflow-x-auto">
-          <Table className="min-w-[980px] table-fixed">
+          <Table className="min-w-[1020px] table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[76px]">Ảnh</TableHead>
-                <TableHead className="w-[300px]">Tên sản phẩm</TableHead>
+                <TableHead className="w-[44px] px-3 text-center">
+                  <Checkbox
+                    checked={allPageSelected || (somePageSelected ? "indeterminate" : false)}
+                    onCheckedChange={(v) => handleSelectAll(!!v)}
+                    aria-label="Chọn tất cả"
+                  />
+                </TableHead>
+                <TableHead className="w-[72px]">Ảnh</TableHead>
+                <TableHead className="w-[280px]">Tên sản phẩm</TableHead>
                 <TableHead className="w-[160px]">Loại</TableHead>
-                <TableHead className="w-[140px]">Nhãn hiệu</TableHead>
-                <TableHead className="w-[120px]">Có thể bán</TableHead>
-                <TableHead className="w-[120px]">Tồn kho</TableHead>
+                <TableHead className="w-[130px]">Nhãn hiệu</TableHead>
+                <TableHead className="w-[110px]">Có thể bán</TableHead>
+                <TableHead className="w-[110px]">Tồn kho</TableHead>
                 <TableHead className="w-[120px]">Ngày tạo</TableHead>
+                <TableHead className="w-[52px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productsQuery.isLoading && <TableLoadingRows cols={7} rows={6} />}
+              {productsQuery.isLoading && <TableLoadingRows cols={9} rows={6} />}
               {productsQuery.error && (
-                <TableErrorRow cols={7} message={String(productsQuery.error)} />
+                <TableErrorRow cols={9} message={String(productsQuery.error)} />
               )}
               {!productsQuery.isLoading && list.length === 0 && (
-                <TableEmptyRow cols={7} message="Không tìm thấy sản phẩm" />
+                <TableEmptyRow cols={9} message="Không tìm thấy sản phẩm" />
               )}
               {list.map((p) => {
                 const stockClass =
@@ -184,12 +312,24 @@ export default function AdminProducts() {
                       ? "text-amber-700 font-bold"
                       : "text-foreground";
                 const brand = getProductBrand(p);
+                const isSelected = selectedIds.has(p.id);
                 return (
                   <TableRow
                     key={p.id}
                     className="cursor-pointer"
+                    data-selected={isSelected || undefined}
                     onClick={() => router.push(`/products/${p.id}/edit`)}
                   >
+                    <TableCell
+                      className="px-3 py-2.5 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(v) => handleSelectOne(p.id, !!v)}
+                        aria-label={`Chọn ${p.name}`}
+                      />
+                    </TableCell>
                     <TableCell className="px-4 py-2.5">
                       {p.thumbnail ? (
                         <Image
@@ -229,6 +369,32 @@ export default function AdminProducts() {
                     <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
                       {fmtDate(p.createdAt)}
                     </TableCell>
+                    <TableCell
+                      className="px-2 py-2.5 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/products/${p.id}/edit`)}>
+                            <Pencil className="mr-2 h-3.5 w-3.5" />
+                            Chỉnh sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleteTarget({ id: p.id, name: p.name })}
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -254,9 +420,81 @@ export default function AdminProducts() {
               {productsQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} sản phẩm`}
             </span>
           </div>
-          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          <PaginationControls
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       </Card>
+
+      {/* Single delete dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sản phẩm <span className="font-semibold">{deleteTarget?.name}</span> sẽ bị xóa vĩnh
+              viễn. Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete dialog */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa {selectedCount} sản phẩm?</AlertDialogTitle>
+            {checkDeletableQuery.isLoading ? (
+              <AlertDialogDescription>Đang kiểm tra...</AlertDialogDescription>
+            ) : checkDeletableQuery.data?.cannotDelete?.length ? (
+              <>
+                <AlertDialogDescription>
+                  {checkDeletableQuery.data.cannotDelete.length} sản phẩm dưới đây đã có đơn hàng và
+                  không thể xóa. Bỏ chọn chúng để tiếp tục.
+                </AlertDialogDescription>
+                <ul className="mt-3 max-h-48 divide-y divide-border overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5">
+                  {checkDeletableQuery.data.cannotDelete.map((p) => (
+                    <li key={p.id} className="px-3 py-2 text-sm leading-snug text-destructive">
+                      {p.name}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <AlertDialogDescription>
+                {selectedCount} sản phẩm đã chọn sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn
+                tác.
+              </AlertDialogDescription>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => bulkDeleteMutation.mutate(selectedIdsArray)}
+              disabled={
+                bulkDeleteMutation.isPending ||
+                checkDeletableQuery.isLoading ||
+                (checkDeletableQuery.data?.cannotDelete?.length ?? 0) > 0
+              }
+            >
+              Xóa {selectedCount} sản phẩm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

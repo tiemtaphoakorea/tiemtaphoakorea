@@ -38,7 +38,7 @@ export function LowStockList({ items }: LowStockListProps) {
                 </p>
               </div>
               <span className="ml-4 shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-black text-amber-600">
-                {item.onHand} còn lại
+                {item.available} có thể bán
               </span>
             </div>
           ))}
