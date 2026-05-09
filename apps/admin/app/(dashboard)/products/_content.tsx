@@ -1,9 +1,32 @@
 "use client";
 
-import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { ProductListItem } from "@workspace/database/types/admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
 import { PaginationControls } from "@workspace/ui/components/pagination-controls";
@@ -17,11 +40,12 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { format } from "date-fns";
-import { Plus, Search } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import {
   TableEmptyRow,
@@ -61,6 +85,7 @@ function getProductBrand(product: ProductListItem): string | null {
 
 export default function AdminProducts() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const urlFilter = searchParams.get("filter") as ProductFilter | null;
   const initialFilter = urlFilter && VALID_FILTERS.has(urlFilter) ? urlFilter : "all";
@@ -69,6 +94,19 @@ export default function AdminProducts() {
   const [debouncedQuery] = useDebounce(query, 300);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminClient.deleteProduct(id),
+    onSuccess: () => {
+      toast.success("Đã xóa sản phẩm.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      setDeleteTarget(null);
+    },
+    onError: () => {
+      toast.error("Xóa sản phẩm thất bại.");
+    },
+  });
 
   const productsQuery = useQuery({
     queryKey: queryKeys.products.list(debouncedQuery, page, pageSize, filter),
@@ -166,15 +204,16 @@ export default function AdminProducts() {
                 <TableHead className="w-[120px]">Có thể bán</TableHead>
                 <TableHead className="w-[120px]">Tồn kho</TableHead>
                 <TableHead className="w-[120px]">Ngày tạo</TableHead>
+                <TableHead className="w-[52px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productsQuery.isLoading && <TableLoadingRows cols={7} rows={6} />}
+              {productsQuery.isLoading && <TableLoadingRows cols={8} rows={6} />}
               {productsQuery.error && (
-                <TableErrorRow cols={7} message={String(productsQuery.error)} />
+                <TableErrorRow cols={8} message={String(productsQuery.error)} />
               )}
               {!productsQuery.isLoading && list.length === 0 && (
-                <TableEmptyRow cols={7} message="Không tìm thấy sản phẩm" />
+                <TableEmptyRow cols={8} message="Không tìm thấy sản phẩm" />
               )}
               {list.map((p) => {
                 const stockClass =
@@ -229,6 +268,32 @@ export default function AdminProducts() {
                     <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
                       {fmtDate(p.createdAt)}
                     </TableCell>
+                    <TableCell
+                      className="px-2 py-2.5 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/products/${p.id}/edit`)}>
+                            <Pencil className="mr-2 h-3.5 w-3.5" />
+                            Chỉnh sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() => setDeleteTarget({ id: p.id, name: p.name })}
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -257,6 +322,28 @@ export default function AdminProducts() {
           <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Card>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa sản phẩm?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sản phẩm <span className="font-semibold">{deleteTarget?.name}</span> sẽ bị xóa vĩnh
+              viễn. Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
