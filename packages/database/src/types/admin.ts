@@ -335,6 +335,7 @@ export interface CustomerDebtResponse {
 // --- Order Details ---
 export interface AdminOrderDetails extends Order {
   customer: {
+    id: string;
     fullName: string;
     customerCode: string;
     phone: string | null;

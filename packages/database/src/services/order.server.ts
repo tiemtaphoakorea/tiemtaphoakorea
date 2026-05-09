@@ -782,6 +782,7 @@ export async function getOrderDetails(id: string) {
 export async function updateOrder(
   orderId: string,
   data: {
+    customerId?: string;
     adminNote?: string;
     discount?: number;
     shippingName?: string | null;
@@ -800,6 +801,36 @@ export async function updateOrder(
       throw new Error(`Cannot edit order after ${locked.fulfillmentStatus}`);
     }
 
+    if (data.customerId !== undefined) {
+      if (locked.paymentStatus !== PAYMENT_STATUS.UNPAID) {
+        throw new Error("Không thể đổi khách hàng khi đơn đã có thanh toán.");
+      }
+      const [meta] = await tx
+        .select({ parentOrderId: orders.parentOrderId })
+        .from(orders)
+        .where(eq(orders.id, orderId));
+      if (meta?.parentOrderId) {
+        throw new Error("Không thể đổi khách hàng cho đơn hàng con.");
+      }
+      const [{ subCount }] = await tx
+        .select({ subCount: sql<number>`count(*)::int` })
+        .from(orders)
+        .where(eq(orders.parentOrderId, orderId));
+      if (subCount > 0) {
+        throw new Error("Không thể đổi khách hàng cho đơn hàng đã có đơn con.");
+      }
+      const [targetProfile] = await tx
+        .select({ role: profiles.role })
+        .from(profiles)
+        .where(eq(profiles.id, data.customerId));
+      if (!targetProfile) {
+        throw new Error("Khách hàng không tồn tại.");
+      }
+      if (targetProfile.role !== ROLE.CUSTOMER) {
+        throw new Error("Chỉ có thể gán đơn hàng cho tài khoản khách hàng.");
+      }
+    }
+
     // lockOrderForUpdate doesn't surface subtotal; read it on the now-locked row.
     const [currentOrder] = await tx
       .select({ subtotal: orders.subtotal })
@@ -808,6 +839,10 @@ export async function updateOrder(
 
     // 2. Prepare update data
     const updates: Record<string, unknown> = {};
+
+    if (data.customerId !== undefined) {
+      updates.customerId = data.customerId;
+    }
 
     if (data.adminNote !== undefined) {
       updates.adminNote = data.adminNote;
@@ -842,12 +877,32 @@ export async function updateOrder(
       .where(eq(orders.id, orderId))
       .returning();
 
-    // 4. Log to status history
+    // 4. Build audit note and log to status history
+    let historyNote: string;
+    if (updates.customerId !== undefined) {
+      const [oldProfile] = await tx
+        .select({ fullName: profiles.fullName })
+        .from(profiles)
+        .where(eq(profiles.id, locked.customerId));
+      const [newProfile] = await tx
+        .select({ fullName: profiles.fullName })
+        .from(profiles)
+        .where(eq(profiles.id, data.customerId!));
+      const customerNote = `Đổi khách hàng: ${oldProfile?.fullName ?? "?"} → ${newProfile?.fullName ?? "?"}`;
+      const otherKeys = Object.keys(updates).filter((k) => k !== "customerId");
+      historyNote =
+        otherKeys.length > 0
+          ? `${customerNote}; cập nhật ${describeUpdatedFields(otherKeys)}`
+          : customerNote;
+    } else {
+      historyNote = `Cập nhật ${describeUpdatedFields(Object.keys(updates))}`;
+    }
+
     await tx.insert(orderStatusHistory).values({
       orderId,
       paymentStatus: locked.paymentStatus as PaymentStatusValue,
       fulfillmentStatus: locked.fulfillmentStatus as FulfillmentStatusValue,
-      note: `Cập nhật ${describeUpdatedFields(Object.keys(updates))}`,
+      note: historyNote,
       createdBy: userId,
     });
 

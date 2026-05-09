@@ -94,7 +94,7 @@ export function OrderShippingSection({
     <div className="space-y-3 text-sm font-medium text-slate-600">
       <div className="flex items-center justify-between">
         <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-          Giao hàng theo đơn
+          Thông tin giao hàng
         </span>
         {canEdit && !isEditing && (
           <Button

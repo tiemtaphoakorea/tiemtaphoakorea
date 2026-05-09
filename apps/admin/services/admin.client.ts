@@ -354,6 +354,7 @@ export const adminClient = {
   async updateOrder(
     id: string,
     data: {
+      customerId?: string;
       adminNote?: string;
       discount?: number;
       items?: Array<{ variantId: string; quantity: number; customPrice?: number }>;
