@@ -205,6 +205,7 @@ export default function AdminMessages() {
                       height={200}
                       className="max-w-50 rounded-md"
                       style={{ width: "auto", height: "auto" }}
+                      sizes="200px"
                     />
                   ) : (
                     m.content

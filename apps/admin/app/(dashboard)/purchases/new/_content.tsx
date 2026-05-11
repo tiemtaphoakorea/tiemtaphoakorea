@@ -6,6 +6,7 @@ import { Card } from "@workspace/ui/components/card";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
   TableBody,
@@ -249,20 +250,20 @@ export default function NewPurchaseContent() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={row.unitCost}
-                          onChange={(e) => updateRow(idx, "unitCost", e.target.value)}
+                          onValueChange={(vals) => updateRow(idx, "unitCost", vals.value)}
+                          decimalScale={0}
+                          min={0}
                           className="h-8 w-full text-xs"
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={row.discount}
-                          onChange={(e) => updateRow(idx, "discount", e.target.value)}
+                          onValueChange={(vals) => updateRow(idx, "discount", vals.value)}
+                          decimalScale={0}
+                          min={0}
                           placeholder="0"
                           className="h-8 w-full text-xs"
                         />

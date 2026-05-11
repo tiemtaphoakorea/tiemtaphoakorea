@@ -28,10 +28,18 @@
         "owner/products",
         "owner/categories",
         "owner/orders",
-        "owner/supplier-orders",
-        "owner/suppliers",
         "owner/customers",
         "owner/chat"
+      ]
+    },
+    {
+      "group": "Kho vận",
+      "pages": [
+        "owner/inventory",
+        "owner/purchases",
+        "owner/receipts",
+        "owner/payouts",
+        "owner/suppliers"
       ]
     },
     {
@@ -56,10 +64,18 @@
         "manager/products",
         "manager/categories",
         "manager/orders",
-        "manager/supplier-orders",
-        "manager/suppliers",
         "manager/customers",
         "manager/chat"
+      ]
+    },
+    {
+      "group": "Kho vận",
+      "pages": [
+        "manager/inventory",
+        "manager/purchases",
+        "manager/receipts",
+        "manager/payouts",
+        "manager/suppliers"
       ]
     },
     {

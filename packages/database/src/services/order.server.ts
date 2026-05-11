@@ -831,9 +831,9 @@ export async function updateOrder(
       }
     }
 
-    // lockOrderForUpdate doesn't surface subtotal; read it on the now-locked row.
+    // lockOrderForUpdate doesn't surface subtotal/totalCost; read them on the now-locked row.
     const [currentOrder] = await tx
-      .select({ subtotal: orders.subtotal })
+      .select({ subtotal: orders.subtotal, totalCost: orders.totalCost })
       .from(orders)
       .where(eq(orders.id, orderId));
 
@@ -850,9 +850,11 @@ export async function updateOrder(
 
     if (data.discount !== undefined) {
       updates.discount = data.discount.toString();
-      // Recalculate total: total = subtotal - discount
       const newTotal = Number(currentOrder.subtotal) - data.discount;
       updates.total = newTotal.toString();
+      // Keep denormalized profit in sync. profit = (subtotal - discount) - totalCost
+      const newProfit = newTotal - Number(currentOrder.totalCost ?? 0);
+      updates.profit = newProfit.toString();
     }
 
     if (data.shippingName !== undefined) {

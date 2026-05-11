@@ -56,3 +56,5 @@ design-system/
 .repomixignore
 repomix-output.xml
 release-manifest.json
+
+supabase

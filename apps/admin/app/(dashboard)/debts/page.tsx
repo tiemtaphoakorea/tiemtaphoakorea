@@ -1,12 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { PageSkeleton } from "@/components/layout/page-skeleton";
-
-const Content = dynamic(() => import("./_content"), {
-  ssr: false,
-  loading: () => <PageSkeleton />,
-});
+import Content from "./_content";
 
 export default function AdminDebts() {
   return <Content />;

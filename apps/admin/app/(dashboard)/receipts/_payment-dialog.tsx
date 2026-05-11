@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   PAYMENT_METHOD,
   PAYMENT_METHOD_LABEL,
@@ -17,9 +17,12 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
+import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 import { toDateInputValue } from "./_shared";
 
@@ -38,6 +41,19 @@ export function PaymentDialog({ open, receiptId, supplierId, maxAmount, onClose,
   const [referenceCode, setReferenceCode] = useState("");
   const [paidAt, setPaidAt] = useState(toDateInputValue(new Date()));
   const [note, setNote] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState(supplierId);
+
+  const needsSupplier = !supplierId;
+
+  const suppliersQuery = useQuery({
+    queryKey: queryKeys.admin.suppliersActive,
+    queryFn: async () => {
+      const res = await adminClient.getSuppliers({ limit: 200 });
+      return (res as unknown as { data: { id: string; name: string }[] }).data ?? [];
+    },
+    enabled: needsSupplier && open,
+    staleTime: 60_000,
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -45,8 +61,10 @@ export function PaymentDialog({ open, receiptId, supplierId, maxAmount, onClose,
       if (!Number.isFinite(amountNum) || amountNum <= 0) {
         throw new Error("Số tiền phải lớn hơn 0");
       }
+      const sid = needsSupplier ? selectedSupplierId : supplierId;
+      if (!sid) throw new Error("Vui lòng chọn nhà cung cấp");
       return adminClient.createPayout({
-        supplierId,
+        supplierId: sid,
         receiptId,
         amount: String(amountNum),
         method,
@@ -71,6 +89,7 @@ export function PaymentDialog({ open, receiptId, supplierId, maxAmount, onClose,
     setReferenceCode("");
     setPaidAt(toDateInputValue(new Date()));
     setNote("");
+    setSelectedSupplierId(supplierId);
     onClose();
   }
 
@@ -100,16 +119,36 @@ export function PaymentDialog({ open, receiptId, supplierId, maxAmount, onClose,
           </DialogHeader>
 
           <div className="my-4 flex flex-col gap-3.5">
+            {needsSupplier && (
+              <Field>
+                <FieldLabel required>Nhà cung cấp</FieldLabel>
+                <Select
+                  value={selectedSupplierId}
+                  onValueChange={setSelectedSupplierId}
+                  disabled={suppliersQuery.isLoading}
+                >
+                  <SelectOption value="">
+                    {suppliersQuery.isLoading ? "Đang tải..." : "-- Chọn nhà cung cấp --"}
+                  </SelectOption>
+                  {(suppliersQuery.data ?? []).map((s) => (
+                    <SelectOption key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectOption>
+                  ))}
+                </Select>
+              </Field>
+            )}
+
             <Field>
               <FieldLabel required>Số tiền (đ)</FieldLabel>
-              <Input
-                type="number"
+              <NumberInput
+                value={amount}
+                onValueChange={(vals) => setAmount(vals.value)}
+                decimalScale={0}
                 min={1}
                 max={maxAmount}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
-                autoFocus
+                autoFocus={!needsSupplier}
               />
             </Field>
 

@@ -28,7 +28,7 @@ export function ProductThumb({ label, tone = "a", size = 34, src }: ProductThumb
         className="relative shrink-0 overflow-hidden rounded-lg"
         style={{ width: size, height: size }}
       >
-        <Image src={src} alt={label} fill className="object-cover" />
+        <Image src={src} alt={label} fill className="object-cover" sizes={`${size}px`} />
       </div>
     );
   }

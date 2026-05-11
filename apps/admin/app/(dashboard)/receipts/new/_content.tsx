@@ -6,6 +6,7 @@ import { Card } from "@workspace/ui/components/card";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
   TableBody,
@@ -315,20 +316,20 @@ export default function NewReceiptContent() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={line.unitCost}
-                          onChange={(e) => updateLine(idx, { unitCost: e.target.value })}
+                          onValueChange={(vals) => updateLine(idx, { unitCost: vals.value })}
+                          decimalScale={0}
+                          min={0}
                           className="w-28"
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={line.discount}
-                          onChange={(e) => updateLine(idx, { discount: e.target.value })}
+                          onValueChange={(vals) => updateLine(idx, { discount: vals.value })}
+                          decimalScale={0}
+                          min={0}
                           className="w-24"
                         />
                       </TableCell>
@@ -359,21 +360,21 @@ export default function NewReceiptContent() {
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <Field>
             <FieldLabel>Chiết khấu tổng (đ)</FieldLabel>
-            <Input
-              type="number"
-              min={0}
+            <NumberInput
               value={discountAmount}
-              onChange={(e) => setDiscountAmount(e.target.value)}
+              onValueChange={(vals) => setDiscountAmount(vals.value)}
+              decimalScale={0}
+              min={0}
               placeholder="0"
             />
           </Field>
           <Field>
             <FieldLabel>Phí phát sinh (đ)</FieldLabel>
-            <Input
-              type="number"
-              min={0}
+            <NumberInput
               value={extraCost}
-              onChange={(e) => setExtraCost(e.target.value)}
+              onValueChange={(vals) => setExtraCost(vals.value)}
+              decimalScale={0}
+              min={0}
               placeholder="0"
             />
           </Field>

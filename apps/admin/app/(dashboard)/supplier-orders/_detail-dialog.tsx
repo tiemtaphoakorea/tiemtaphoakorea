@@ -24,6 +24,7 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -209,12 +210,11 @@ export function SupplierOrderDetailDialog({
                 </Field>
                 <Field>
                   <FieldLabel>Giá nhập thực tế (đ)</FieldLabel>
-                  <Input
-                    type="number"
-                    min={0}
-                    inputMode="numeric"
+                  <NumberInput
                     value={actualCostPrice}
-                    onChange={(e) => setActualCostPrice(e.target.value)}
+                    onValueChange={(vals) => setActualCostPrice(vals.value)}
+                    decimalScale={0}
+                    min={0}
                     disabled={isTerminal}
                     placeholder="0"
                   />

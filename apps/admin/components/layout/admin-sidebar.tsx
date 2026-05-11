@@ -240,6 +240,7 @@ export function AdminSidebar({ user, isLoading }: AdminSidebarProps) {
               width={34}
               height={34}
               className="h-9 w-9 rounded-lg object-contain"
+              sizes="34px"
             />
           ) : (
             <div className="bg-primary grid h-9 w-9 place-items-center rounded-lg font-black text-white text-lg">

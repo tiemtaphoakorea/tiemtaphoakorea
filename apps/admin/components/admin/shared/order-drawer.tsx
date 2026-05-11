@@ -141,6 +141,7 @@ export function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                         width={36}
                         height={36}
                         className="h-9 w-9 shrink-0 rounded-lg object-contain"
+                        sizes="36px"
                       />
                     ) : (
                       <ProductThumb

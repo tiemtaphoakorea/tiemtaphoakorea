@@ -31,8 +31,21 @@ interface SapoImage {
 interface SapoInventory {
   location_id: number;
   on_hand: number;
-  available: number;
-  committed: number;
+  available?: number;
+  committed?: number;
+}
+
+interface SapoPriceListMeta {
+  is_cost?: boolean;
+  code?: string;
+  name?: string;
+}
+
+interface SapoVariantPrice {
+  name?: string;
+  value: number;
+  included_tax_price?: number;
+  price_list?: SapoPriceListMeta;
 }
 
 interface SapoVariant {
@@ -43,15 +56,32 @@ interface SapoVariant {
   opt1: string | null;
   opt2: string | null;
   opt3: string | null;
-  retail_price: number;
-  whole_price: number;
-  import_price: number;
+  // Admin endpoint shape (preferred)
+  variant_retail_price?: number;
+  variant_whole_price?: number;
+  variant_import_price?: number;
+  variant_prices?: SapoVariantPrice[];
+  cost_price?: number | null;
+  // Legacy OpenAPI shape (fallback for older exports)
+  retail_price?: number;
+  whole_price?: number;
+  import_price?: number;
   status: string;
-  sellable: boolean;
+  sellable?: boolean;
   unit: string | null;
   weight_value: number;
   weight_unit: string;
   inventories: SapoInventory[];
+}
+
+// --- Price extraction (admin endpoint first, OpenAPI fallback) ---
+function getRetailPrice(v: SapoVariant): number {
+  return Number(v.variant_retail_price ?? v.retail_price ?? 0);
+}
+
+function getCostPrice(v: SapoVariant): number {
+  const fromPriceList = (v.variant_prices ?? []).find((p) => p.price_list?.is_cost)?.value;
+  return Number(fromPriceList ?? v.variant_import_price ?? v.cost_price ?? v.import_price ?? 0);
 }
 
 interface SapoProduct {
@@ -103,6 +133,7 @@ async function main() {
   let processed = 0;
   let variantCount = 0;
   let imageCount = 0;
+  let zeroCostCount = 0;
 
   console.log(`\nMigrating ${total} products...\n`);
 
@@ -119,7 +150,7 @@ async function main() {
         const categoryId = null;
 
         // Use first variant's retail price as base price
-        const basePrice = variantsToMigrate[0].retail_price ?? 0;
+        const basePrice = getRetailPrice(variantsToMigrate[0]);
 
         // Generate a unique slug: name + sapo id
         const slug = slugify(sapoProduct.name, sapoProduct.id);
@@ -158,24 +189,28 @@ async function main() {
           // Ensure SKU uniqueness: append sapo variant id if sku is blank
           const sku = v.sku?.trim() || `sapo-${v.id}`;
 
+          const retail = getRetailPrice(v);
+          const cost = getCostPrice(v);
+          if (cost === 0) zeroCostCount++;
+
           const [variant] = await tx
             .insert(schema.productVariants)
             .values({
               productId: product.id,
               sku,
               name: v.name,
-              price: (v.retail_price ?? 0).toFixed(2),
-              costPrice: (v.import_price ?? 0).toFixed(2),
-              stockQuantity: onHand,
+              price: retail.toFixed(2),
+              costPrice: cost.toFixed(2),
+              onHand,
               isActive: v.status === "active",
             })
             .onConflictDoUpdate({
               target: schema.productVariants.sku,
               set: {
                 name: v.name,
-                price: (v.retail_price ?? 0).toFixed(2),
-                costPrice: (v.import_price ?? 0).toFixed(2),
-                stockQuantity: onHand,
+                price: retail.toFixed(2),
+                costPrice: cost.toFixed(2),
+                onHand,
                 isActive: v.status === "active",
               },
             })
@@ -190,20 +225,34 @@ async function main() {
               : productImages.filter((img) => img.position === 1).slice(0, 1);
 
           if (imagesToAssign.length > 0) {
-            await tx
-              .delete(schema.variantImages)
+            // Skip if any image for this variant is already hosted on Supabase Storage —
+            // that means migrate-images-to-supabase.ts has already moved them and we don't
+            // want to overwrite the durable URLs with ephemeral Sapo CDN links.
+            const existingImages = await tx
+              .select({ imageUrl: schema.variantImages.imageUrl })
+              .from(schema.variantImages)
               .where(eq(schema.variantImages.variantId, variant.id));
 
-            await tx.insert(schema.variantImages).values(
-              imagesToAssign.map((img, i) => ({
-                variantId: variant.id,
-                imageUrl: img.full_path,
-                displayOrder: i,
-                isPrimary: i === 0,
-              })),
+            const alreadyOnSupabase = existingImages.some((img) =>
+              img.imageUrl?.includes("supabase"),
             );
 
-            imageCount += imagesToAssign.length;
+            if (!alreadyOnSupabase) {
+              await tx
+                .delete(schema.variantImages)
+                .where(eq(schema.variantImages.variantId, variant.id));
+
+              await tx.insert(schema.variantImages).values(
+                imagesToAssign.map((img, i) => ({
+                  variantId: variant.id,
+                  imageUrl: img.full_path,
+                  displayOrder: i,
+                  isPrimary: i === 0,
+                })),
+              );
+
+              imageCount += imagesToAssign.length;
+            }
           }
         }
 
@@ -221,6 +270,7 @@ async function main() {
 Done.
   Products processed : ${processed}/${total}
   Variants inserted  : ${variantCount}
+  Variants cost = 0  : ${zeroCostCount} (${((100 * zeroCostCount) / Math.max(1, variantCount)).toFixed(1)}%) ← need manual fix in Sapo
   Images inserted    : ${imageCount}
 `);
 

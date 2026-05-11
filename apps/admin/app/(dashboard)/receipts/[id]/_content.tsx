@@ -130,7 +130,7 @@ export default function ReceiptDetailContent() {
   const paidAmount = Number(detail?.paidAmount ?? 0);
   const debtAmount = Number(detail?.debtAmount ?? 0);
   const canCancel = !isCancelled && paidAmount === 0;
-  const canPay = canManage && !isCancelled && debtAmount > 0 && !!detail?.supplierId;
+  const canPay = canManage && !isCancelled && debtAmount > 0;
 
   function handleComplete() {
     setConfirmState({ type: "complete" });
@@ -195,7 +195,12 @@ export default function ReceiptDetailContent() {
                   Huỷ phiếu
                 </Button>
               )}
-              <Button type="button" onClick={handleComplete} disabled={isPending}>
+              <Button
+                type="button"
+                onClick={handleComplete}
+                disabled={isPending || debtAmount > 0}
+                title={debtAmount > 0 ? "Cần thanh toán đủ trước khi hoàn tất" : undefined}
+              >
                 {completeMutation.isPending ? "Đang xử lý..." : "Hoàn tất"}
               </Button>
             </>

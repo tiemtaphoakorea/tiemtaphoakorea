@@ -1,0 +1,58 @@
+---
+title: "Phiếu chi NCC"
+description: "Xem toàn bộ lịch sử thanh toán cho nhà cung cấp. Phiếu chi được tạo từ màn hình chi tiết phiếu nhập."
+---
+
+## Mô tả
+
+Trang **Phiếu chi NCC** liệt kê tất cả các khoản đã trả cho nhà cung cấp. Mỗi phiếu chi tương ứng với một lần ghi nhận thanh toán từ màn hình chi tiết **Nhập hàng**.
+
+Quản lý có **toàn quyền** xem và tra cứu như Chủ shop.
+
+## Cách truy cập
+
+Menu bên trái → **Phiếu chi NCC** (mục **Kho vận**).
+
+## Cách tạo phiếu chi
+
+Phiếu chi **không tạo trực tiếp** từ trang này. Quy trình:
+
+1. Vào **Nhập hàng** → mở phiếu nhập còn nợ
+2. Nhấn **Thanh toán** → nhập số tiền, phương thức
+3. Xác nhận → phiếu chi tự động xuất hiện ở trang này
+
+## Bộ lọc và tìm kiếm
+
+| Thành phần | Mô tả |
+|-----------|-------|
+| Ô tìm kiếm | Tìm theo mã phiếu chi, mã phiếu nhập, tên NCC |
+| **Nhà cung cấp** | Lọc theo NCC |
+| **Phương thức** | Tất cả · Tiền mặt · Chuyển khoản · Thẻ |
+
+## Cột bảng
+
+| Cột | Nội dung |
+|-----|---------|
+| **Mã PCH** | Mã phiếu chi tự sinh |
+| **Phiếu nhập** | Mã GRN liên kết |
+| **Nhà cung cấp** | Tên NCC |
+| **Số tiền** | Số tiền đã trả |
+| **Phương thức** | Tiền mặt / Chuyển khoản / Thẻ |
+| **Ngày thanh toán** | Ngày ghi nhận |
+| **Người tạo** | Nhân viên tạo phiếu chi |
+
+## Xoá phiếu chi
+
+Không thể xoá trực tiếp từ trang này. Để xoá:
+
+1. Vào **Nhập hàng** → mở phiếu nhập liên kết
+2. Phiếu nhập phải ở trạng thái **Đang giao dịch**
+3. Nhấn icon 🗑 trên dòng phiếu chi trong section **Thanh toán**
+
+<Warning>
+Không thể xoá phiếu chi khi phiếu nhập đã **Hoàn thành**.
+</Warning>
+
+<Note>
+Trang này chỉ dùng để tra cứu lịch sử. Mọi thao tác tạo/xoá phiếu chi đều thực hiện từ màn hình chi tiết **Nhập hàng**.
+</Note>

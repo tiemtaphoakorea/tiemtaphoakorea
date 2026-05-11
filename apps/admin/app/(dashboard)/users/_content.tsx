@@ -129,6 +129,7 @@ export default function AdminStaff() {
                             width={32}
                             height={32}
                             className="h-8 w-8 shrink-0 rounded-full object-cover"
+                            sizes="32px"
                           />
                         ) : (
                           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-500 text-sm font-bold text-white">

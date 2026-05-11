@@ -46,6 +46,7 @@ export function IconSelect({ value, onChange }: Props) {
             width={32}
             height={32}
             className="h-full w-full object-contain"
+            sizes="32px"
           />
         </button>
       ))}

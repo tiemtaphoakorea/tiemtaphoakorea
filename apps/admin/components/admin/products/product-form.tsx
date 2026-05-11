@@ -141,6 +141,13 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         });
         return;
       }
+      if (costPrice <= 0) {
+        dispatch({
+          type: "SET_API_ERROR",
+          payload: `Biến thể ${i + 1}: Vui lòng nhập giá vốn (> 0). Bỏ trống sẽ làm sai báo cáo lợi nhuận.`,
+        });
+        return;
+      }
     }
     dispatch({ type: "SET_API_ERROR", payload: null });
     dispatch({ type: "SET_API_PENDING", payload: true });
