@@ -43,6 +43,7 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
 
   const orders = data?.orders ?? [];
   const totalAmount = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const totalProfit = orders.reduce((s, o) => s + (o.grossProfit ?? 0), 0);
 
   return (
     <Sheet open={!!date} onOpenChange={(open) => !open && onClose()}>
@@ -70,25 +71,42 @@ export function FinanceDayDrawer({ date, onClose }: FinanceDayDrawerProps) {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
               <span className="text-sm font-bold text-slate-600">{orders.length} đơn hàng</span>
-              <span className="text-base font-black text-slate-900">
-                {formatCurrency(totalAmount)}
-              </span>
-            </div>
-            {orders.map((order) => (
-              <Link
-                key={order.id}
-                href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}
-                className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-muted"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold text-slate-900">#{order.orderNumber}</span>
-                  <span className="text-xs text-slate-500">{order.customerName}</span>
-                </div>
-                <span className="text-sm font-black">
-                  {formatCurrency(Number(order.total ?? 0))}
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="text-base font-black text-slate-900">
+                  {formatCurrency(totalAmount)}
                 </span>
-              </Link>
-            ))}
+                <span
+                  className={`text-xs font-bold ${totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                >
+                  LN {formatCurrency(totalProfit)}
+                </span>
+              </div>
+            </div>
+            {orders.map((order) => {
+              const profit = order.grossProfit ?? 0;
+              return (
+                <Link
+                  key={order.id}
+                  href={ADMIN_ROUTES.ORDER_DETAIL(order.id)}
+                  className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-muted"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold text-slate-900">#{order.orderNumber}</span>
+                    <span className="text-xs text-slate-500">{order.customerName}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className="text-sm font-black">
+                      {formatCurrency(Number(order.total ?? 0))}
+                    </span>
+                    <span
+                      className={`text-xs font-bold tabular-nums ${profit >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                    >
+                      LN {formatCurrency(profit)}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </SheetContent>

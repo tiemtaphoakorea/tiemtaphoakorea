@@ -2,8 +2,16 @@
 
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@workspace/shared/utils";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { ArrowUpRight, DollarSign, PieChart, TrendingUp, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  DollarSign,
+  PieChart,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { MetricStatBar, type MetricStatItem } from "@/components/admin/shared/metric-stat-bar";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -33,7 +41,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
       iconClassName: "bg-blue-500/10 text-blue-500",
       trend: {
         icon: <ArrowUpRight className="h-3 w-3" />,
-        text: "Ghi nhận theo đơn hoàn thành",
+        text: "Không phụ thuộc trạng thái thanh toán",
         className: "text-muted-foreground",
       },
     },
@@ -43,7 +51,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
       icon: <PieChart className="h-3.5 w-3.5" />,
       iconClassName: "bg-orange-500/10 text-orange-500",
       trend: {
-        text: `${stats.orderCount || 0} đơn hàng đã bán`,
+        text: `${stats.orderCount || 0} đơn hàng không hủy`,
         className: "text-muted-foreground",
       },
     },
@@ -70,8 +78,24 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
     },
   ];
 
+  const missingCostRate = stats.missingCostRate ?? 0;
+  const missingCostItems = stats.missingCostItems ?? 0;
+  const showCostWarning = missingCostRate > 0.05;
+
   return (
     <>
+      {showCostWarning && (
+        <Alert variant="destructive" className="border-amber-500/40 bg-amber-50 text-amber-900">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Báo cáo lợi nhuận có thể chưa chính xác</AlertTitle>
+          <AlertDescription>
+            {missingCostItems} mặt hàng (chiếm {(missingCostRate * 100).toFixed(1)}% tổng dòng) chưa
+            có giá vốn → COGS bị thiếu, lợi nhuận hiển thị cao hơn thực tế. Vui lòng vào phần Sản
+            phẩm và nhập giá vốn cho các biến thể còn thiếu.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <MetricStatBar items={topItems} />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
@@ -183,9 +207,15 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                 <TrendingUp className="h-10 w-10" />
               </div>
               <div
-                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-xs font-bold text-white shadow-lg ${(stats.netProfit || 0) > 0 ? "bg-green-500" : "bg-red-500"}`}
+                className={`absolute -right-2 -bottom-2 rounded-full border-2 border-white px-2 py-1 text-xs font-bold text-white shadow-lg ${
+                  showCostWarning
+                    ? "bg-amber-500"
+                    : (stats.netProfit || 0) > 0
+                      ? "bg-green-500"
+                      : "bg-red-500"
+                }`}
               >
-                {(stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
+                {showCostWarning ? "ƯỚC TÍNH" : (stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
             </div>
 
@@ -198,9 +228,11 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                 <span className="text-lg font-bold">%</span>
               </div>
               <p className="text-muted-foreground mx-auto max-w-62 pt-2 text-sm leading-relaxed font-medium">
-                {(stats.netProfit || 0) > 0
-                  ? "Tỷ suất lợi nhuận ở mức tích cực. Tiếp tục duy trì và tối ưu chi phí."
-                  : "Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."}
+                {showCostWarning
+                  ? "Một số mặt hàng chưa có giá vốn. Số liệu chỉ mang tính tham khảo cho đến khi cập nhật đầy đủ."
+                  : (stats.netProfit || 0) > 0
+                    ? "Tỷ suất lợi nhuận ở mức tích cực. Tiếp tục duy trì và tối ưu chi phí."
+                    : "Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."}
               </p>
             </div>
           </div>

@@ -291,84 +291,89 @@ export default function ReceiptDetailContent() {
           </div>
 
           <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Thanh toán
-            </h3>
-            <Card className="flex flex-col gap-3 border border-border p-4 shadow-none">
-              <div className="grid grid-cols-3 gap-3 text-xs">
-                <div className="flex flex-col gap-0.5 rounded-lg bg-muted/40 px-3 py-2">
-                  <span className="text-muted-foreground">Tiền cần trả</span>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {formatMoney(detail.payableAmount)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5 rounded-lg bg-emerald-50 px-3 py-2">
-                  <span className="text-muted-foreground">Đã trả</span>
-                  <span className="text-sm font-semibold tabular-nums text-emerald-700">
-                    {formatMoney(detail.paidAmount)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5 rounded-lg bg-red-50 px-3 py-2">
-                  <span className="text-muted-foreground">Còn phải trả</span>
-                  <span className="text-sm font-semibold tabular-nums text-red-600">
-                    {formatMoney(detail.debtAmount)}
-                  </span>
-                </div>
+            <Card className="overflow-hidden border border-border shadow-none">
+              <div className="flex flex-col gap-3 border-border bg-muted/20 px-4 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Trạng thái thanh toán
+                </h3>
+                {canPay && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full font-semibold sm:w-auto"
+                    onClick={() => setPaymentOpen(true)}
+                    disabled={isPending}
+                  >
+                    Thanh toán
+                  </Button>
+                )}
               </div>
 
-              {payments.length > 0 && (
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mã PCH</TableHead>
-                        <TableHead>Ngày</TableHead>
-                        <TableHead>Phương thức</TableHead>
-                        <TableHead>Số tiền</TableHead>
-                        <TableHead />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {payments.map((p) => (
-                        <TableRow key={p.id}>
-                          <TableCell className="font-mono">{p.code}</TableCell>
-                          <TableCell>{formatDate(p.paidAt)}</TableCell>
-                          <TableCell>{methodLabel(p.method)}</TableCell>
-                          <TableCell className="tabular-nums font-medium">
-                            {formatMoney(p.amount)}
-                          </TableCell>
-                          <TableCell>
-                            {canManage && isDraft && (
-                              <Button
-                                type="button"
-                                variant="ghost-destructive"
-                                size="icon-xs"
-                                onClick={() => handleDeletePayout(p.id)}
-                                disabled={isPending}
-                                aria-label="Xoá phiếu chi"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              <div className="flex flex-col gap-4 p-4">
+                <div className="grid gap-3 text-xs md:grid-cols-3">
+                  <div className="flex min-h-20 flex-col justify-center gap-1 rounded-lg border border-border bg-background px-4">
+                    <span className="font-medium text-muted-foreground">Tiền cần trả</span>
+                    <span className="text-base font-semibold tabular-nums text-foreground">
+                      {formatMoney(detail.payableAmount)}
+                    </span>
+                  </div>
+                  <div className="flex min-h-20 flex-col justify-center gap-1 rounded-lg border border-emerald-100 bg-emerald-50/80 px-4">
+                    <span className="font-medium text-emerald-700/80">Đã trả</span>
+                    <span className="text-base font-semibold tabular-nums text-emerald-700">
+                      {formatMoney(detail.paidAmount)}
+                    </span>
+                  </div>
+                  <div className="flex min-h-20 flex-col justify-center gap-1 rounded-lg border border-red-100 bg-red-50/80 px-4">
+                    <span className="font-medium text-red-700/80">Còn phải trả</span>
+                    <span className="text-base font-semibold tabular-nums text-red-600">
+                      {formatMoney(detail.debtAmount)}
+                    </span>
+                  </div>
                 </div>
-              )}
 
-              {canPay && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="self-start"
-                  onClick={() => setPaymentOpen(true)}
-                  disabled={isPending}
-                >
-                  Thanh toán
-                </Button>
-              )}
+                {payments.length > 0 && (
+                  <div className="overflow-hidden rounded-lg border border-border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mã PCH</TableHead>
+                          <TableHead>Ngày</TableHead>
+                          <TableHead>Phương thức</TableHead>
+                          <TableHead>Số tiền</TableHead>
+                          <TableHead />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {payments.map((p) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="font-mono">{p.code}</TableCell>
+                            <TableCell>{formatDate(p.paidAt)}</TableCell>
+                            <TableCell>{methodLabel(p.method)}</TableCell>
+                            <TableCell className="tabular-nums font-medium">
+                              {formatMoney(p.amount)}
+                            </TableCell>
+                            <TableCell>
+                              {canManage && isDraft && (
+                                <Button
+                                  type="button"
+                                  variant="ghost-destructive"
+                                  size="icon-xs"
+                                  onClick={() => handleDeletePayout(p.id)}
+                                  disabled={isPending}
+                                  aria-label="Xoá phiếu chi"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
 

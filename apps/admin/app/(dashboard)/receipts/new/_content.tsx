@@ -18,7 +18,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   type PickedVariant,
@@ -26,10 +26,13 @@ import {
 } from "@/components/admin/shared/variant-search-picker";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
+import type { PurchaseOrderDetail } from "../../purchases/_shared";
 import { toDateInputValue } from "../_shared";
+import { buildReceiptPrefillFromPurchaseOrder } from "./purchase-prefill";
 
 type LineItem = {
   variantId: string;
+  purchaseOrderItemId?: string;
   productName: string;
   variantName: string;
   sku: string;
@@ -46,6 +49,7 @@ export default function NewReceiptContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const purchaseOrderIdFromQuery = searchParams.get("purchaseOrderId") ?? "";
+  const prefilledPurchaseOrderIdRef = useRef<string | null>(null);
 
   const [supplierId, setSupplierId] = useState("");
   const [purchaseOrderId, setPurchaseOrderId] = useState(purchaseOrderIdFromQuery);
@@ -65,10 +69,35 @@ export default function NewReceiptContent() {
     staleTime: 60_000,
   });
 
+  const purchaseOrderQuery = useQuery({
+    queryKey: queryKeys.admin.purchases.detail(purchaseOrderId),
+    queryFn: async () => {
+      const res = await adminClient.getPurchase(purchaseOrderId);
+      return (res as unknown as { purchaseOrder: PurchaseOrderDetail }).purchaseOrder;
+    },
+    enabled: !!purchaseOrderId,
+  });
+
+  useEffect(() => {
+    if (!purchaseOrderId) {
+      prefilledPurchaseOrderIdRef.current = null;
+      return;
+    }
+    if (!purchaseOrderQuery.data || prefilledPurchaseOrderIdRef.current === purchaseOrderId) return;
+
+    const prefill = buildReceiptPrefillFromPurchaseOrder(purchaseOrderQuery.data);
+    setSupplierId(prefill.supplierId);
+    setPurchaseOrderId(prefill.purchaseOrderId);
+    setDiscountAmount(prefill.discountAmount);
+    setLines(prefill.lines);
+    prefilledPurchaseOrderIdRef.current = purchaseOrderId;
+  }, [purchaseOrderId, purchaseOrderQuery.data]);
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const items = lines.map((l) => ({
         variantId: l.variantId,
+        purchaseOrderItemId: l.purchaseOrderItemId,
         quantity: Number(l.quantity),
         unitCost: l.unitCost,
         discount: l.discount !== "0" && l.discount !== "" ? l.discount : undefined,
