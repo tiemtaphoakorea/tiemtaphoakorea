@@ -85,12 +85,12 @@ export async function getProducts({
   const totalAvailableExpr = sql`coalesce(sum(${productVariants.onHand} - ${productVariants.reserved}), 0)`;
 
   const baseWhere = and(
-    eq(products.isActive, true),
     search
       ? or(
           ilike(products.name, `%${search}%`),
           ilike(products.slug, `%${search}%`),
           ilike(productVariants.sku, `%${search}%`),
+          ilike(productVariants.name, `%${search}%`),
         )
       : undefined,
     categoryId ? eq(products.categoryId, categoryId) : undefined,

@@ -428,6 +428,7 @@ export interface FinancialStats {
   cogs: number;
   grossProfit: number;
   expenses: number;
+  supplierPayouts: number;
   netProfit: number;
   orderCount: number;
   /** Number of order line items in the window with line_cost = 0 (cost not captured at sale time). */

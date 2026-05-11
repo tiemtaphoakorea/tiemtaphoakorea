@@ -831,10 +831,22 @@ export const adminClient = {
   }) {
     return axios.get<{
       data: any[];
-      metadata: { total: number; page: number; limit: number; totalPages: number };
+      metadata: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        totalAmount: number;
+      };
     }>(API_ENDPOINTS.ADMIN.PAYOUTS, { params }) as unknown as Promise<{
       data: any[];
-      metadata: { total: number; page: number; limit: number; totalPages: number };
+      metadata: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        totalAmount: number;
+      };
     }>;
   },
   async createPayout(data: any) {

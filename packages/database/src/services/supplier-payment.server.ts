@@ -29,7 +29,7 @@ export async function listSupplierPayments(filter: SupplierPaymentListFilter = {
   const page = Math.max(1, filter.page ?? 1);
   const limit = Math.max(1, Math.min(filter.limit ?? 25, 200));
 
-  const [data, [{ total }]] = await Promise.all([
+  const [data, [{ total }], [{ totalAmount }]] = await Promise.all([
     db
       .select({
         id: supplierPayments.id,
@@ -55,6 +55,12 @@ export async function listSupplierPayments(filter: SupplierPaymentListFilter = {
       .limit(limit)
       .offset((page - 1) * limit),
     db.select({ total: count() }).from(supplierPayments).where(where),
+    db
+      .select({
+        totalAmount: sql<number>`coalesce(sum(${supplierPayments.amount}), 0)`.mapWith(Number),
+      })
+      .from(supplierPayments)
+      .where(where),
   ]);
 
   return {
@@ -64,6 +70,7 @@ export async function listSupplierPayments(filter: SupplierPaymentListFilter = {
       page,
       limit,
       totalPages: Math.max(1, Math.ceil(Number(total) / limit)),
+      totalAmount: totalAmount ?? 0,
     },
   };
 }
@@ -98,6 +105,13 @@ export async function createSupplierPayment(input: {
       if (!receipt) throw new Error("Không tìm thấy phiếu nhập");
       if (receipt.supplierId && receipt.supplierId !== input.supplierId) {
         throw new Error("NCC của phiếu chi không khớp NCC của phiếu nhập");
+      }
+      // Backfill supplier onto the receipt if it was created without one
+      if (!receipt.supplierId) {
+        await tx
+          .update(goodsReceipts)
+          .set({ supplierId: input.supplierId })
+          .where(eq(goodsReceipts.id, input.receiptId));
       }
       const outstanding = Number(receipt.payable) - Number(receipt.paid);
       if (Number(input.amount) > outstanding + 0.01) {

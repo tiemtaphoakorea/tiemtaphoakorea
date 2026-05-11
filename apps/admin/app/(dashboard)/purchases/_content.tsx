@@ -102,14 +102,21 @@ export default function PurchasesContent() {
           </TabsList>
         </Tabs>
 
-        <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
-          <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm theo mã đơn, nhà cung cấp, ghi chú..."
-            className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-64"
-          />
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tìm theo mã đơn, nhà cung cấp, ghi chú..."
+              className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-64"
+            />
+          </div>
+          {total > 0 && (
+            <span className="shrink-0 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground tabular-nums">{total}</span> đơn
+            </span>
+          )}
         </div>
         <Select
           value={supplierId}

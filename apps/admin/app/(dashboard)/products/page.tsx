@@ -223,28 +223,31 @@ export default function AdminProducts() {
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as ProductFilter)}>
           <TabsList>
-            {TABS.map((t) => {
-              const count = tabCounts[t.id];
-              return (
-                <TabsTrigger key={t.id} value={t.id}>
-                  {t.label}
-                  {count != null && <span className="ml-1 tabular-nums opacity-70">({count})</span>}
-                </TabsTrigger>
-              );
-            })}
+            {TABS.map((t) => (
+              <TabsTrigger key={t.id} value={t.id}>
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
-        <InputGroup className="h-9 w-full rounded-lg border-border bg-white sm:w-auto">
-          <InputGroupAddon>
-            <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
-          </InputGroupAddon>
-          <InputGroupInput
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Tìm tên, mã SP..."
-            className="w-full placeholder:text-muted-foreground/60 sm:w-50"
-          />
-        </InputGroup>
+        <div className="flex items-center gap-2">
+          <InputGroup className="h-9 w-full rounded-lg border-border bg-white sm:w-auto">
+            <InputGroupAddon>
+              <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="Tìm tên, mã SP..."
+              className="w-full placeholder:text-muted-foreground/60 sm:w-50"
+            />
+          </InputGroup>
+          {tabCounts[filter] != null && (
+            <span className="shrink-0 tabular-nums text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{tabCounts[filter]}</span> sản phẩm
+            </span>
+          )}
+        </div>
         <Button asChild className="h-9 gap-1.5 sm:ml-auto">
           <Link href="/products/new">
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />

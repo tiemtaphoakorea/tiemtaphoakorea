@@ -138,18 +138,14 @@ export default function AdminOrders() {
           className="min-w-0 max-w-full"
         >
           <TabsList className="max-w-full overflow-x-auto">
-            {TABS.map((t) => {
-              const count = tabCounts[t.id];
-              return (
-                <TabsTrigger key={t.id} value={t.id}>
-                  {t.label}
-                  {count != null && <span className="ml-1 tabular-nums opacity-70">({count})</span>}
-                </TabsTrigger>
-              );
-            })}
+            {TABS.map((t) => (
+              <TabsTrigger key={t.id} value={t.id}>
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
-        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
+        <div className="flex items-center gap-2">
           <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3">
             <Search className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={2} />
             <Input
@@ -162,9 +158,16 @@ export default function AdminOrders() {
               className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
             />
           </div>
-          <span className="text-xs text-muted-foreground">
-            {ordersQuery.isLoading ? "Đang tải..." : `${total} đơn`}
-          </span>
+          {!ordersQuery.isLoading && tabCounts[filter] != null && (
+            <span className="shrink-0 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground tabular-nums">
+                {tabCounts[filter]}
+              </span>{" "}
+              đơn
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 sm:ml-auto">
           <Button
             variant="outline"
             className="h-9"
