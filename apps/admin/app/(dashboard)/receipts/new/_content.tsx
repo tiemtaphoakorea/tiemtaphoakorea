@@ -6,6 +6,7 @@ import { Card } from "@workspace/ui/components/card";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import {
   Table,
   TableBody,
@@ -18,7 +19,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   type PickedVariant,
@@ -26,10 +27,13 @@ import {
 } from "@/components/admin/shared/variant-search-picker";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
+import type { PurchaseOrderDetail } from "../../purchases/_shared";
 import { toDateInputValue } from "../_shared";
+import { buildReceiptPrefillFromPurchaseOrder } from "./purchase-prefill";
 
 type LineItem = {
   variantId: string;
+  purchaseOrderItemId?: string;
   productName: string;
   variantName: string;
   sku: string;
@@ -46,6 +50,7 @@ export default function NewReceiptContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const purchaseOrderIdFromQuery = searchParams.get("purchaseOrderId") ?? "";
+  const prefilledPurchaseOrderIdRef = useRef<string | null>(null);
 
   const [supplierId, setSupplierId] = useState("");
   const [purchaseOrderId, setPurchaseOrderId] = useState(purchaseOrderIdFromQuery);
@@ -65,10 +70,35 @@ export default function NewReceiptContent() {
     staleTime: 60_000,
   });
 
+  const purchaseOrderQuery = useQuery({
+    queryKey: queryKeys.admin.purchases.detail(purchaseOrderId),
+    queryFn: async () => {
+      const res = await adminClient.getPurchase(purchaseOrderId);
+      return (res as unknown as { purchaseOrder: PurchaseOrderDetail }).purchaseOrder;
+    },
+    enabled: !!purchaseOrderId,
+  });
+
+  useEffect(() => {
+    if (!purchaseOrderId) {
+      prefilledPurchaseOrderIdRef.current = null;
+      return;
+    }
+    if (!purchaseOrderQuery.data || prefilledPurchaseOrderIdRef.current === purchaseOrderId) return;
+
+    const prefill = buildReceiptPrefillFromPurchaseOrder(purchaseOrderQuery.data);
+    setSupplierId(prefill.supplierId);
+    setPurchaseOrderId(prefill.purchaseOrderId);
+    setDiscountAmount(prefill.discountAmount);
+    setLines(prefill.lines);
+    prefilledPurchaseOrderIdRef.current = purchaseOrderId;
+  }, [purchaseOrderId, purchaseOrderQuery.data]);
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const items = lines.map((l) => ({
         variantId: l.variantId,
+        purchaseOrderItemId: l.purchaseOrderItemId,
         quantity: Number(l.quantity),
         unitCost: l.unitCost,
         discount: l.discount !== "0" && l.discount !== "" ? l.discount : undefined,
@@ -286,20 +316,20 @@ export default function NewReceiptContent() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={line.unitCost}
-                          onChange={(e) => updateLine(idx, { unitCost: e.target.value })}
+                          onValueChange={(vals) => updateLine(idx, { unitCost: vals.value })}
+                          decimalScale={0}
+                          min={0}
                           className="w-28"
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           value={line.discount}
-                          onChange={(e) => updateLine(idx, { discount: e.target.value })}
+                          onValueChange={(vals) => updateLine(idx, { discount: vals.value })}
+                          decimalScale={0}
+                          min={0}
                           className="w-24"
                         />
                       </TableCell>
@@ -330,21 +360,21 @@ export default function NewReceiptContent() {
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <Field>
             <FieldLabel>Chiết khấu tổng (đ)</FieldLabel>
-            <Input
-              type="number"
-              min={0}
+            <NumberInput
               value={discountAmount}
-              onChange={(e) => setDiscountAmount(e.target.value)}
+              onValueChange={(vals) => setDiscountAmount(vals.value)}
+              decimalScale={0}
+              min={0}
               placeholder="0"
             />
           </Field>
           <Field>
             <FieldLabel>Phí phát sinh (đ)</FieldLabel>
-            <Input
-              type="number"
-              min={0}
+            <NumberInput
               value={extraCost}
-              onChange={(e) => setExtraCost(e.target.value)}
+              onValueChange={(vals) => setExtraCost(vals.value)}
+              decimalScale={0}
+              min={0}
               placeholder="0"
             />
           </Field>

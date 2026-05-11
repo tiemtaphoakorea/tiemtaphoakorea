@@ -1,9 +1,29 @@
-import { PAYMENT_STATUS } from "@workspace/shared/constants";
-import { and, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lte, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { expenses } from "../schema/expenses";
-import { orders } from "../schema/orders";
+import { orderItems, orders } from "../schema/orders";
+import { productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
+
+// Revenue = subtotal - discount (excludes shippingFee, which is pass-through reimbursement).
+// COGS = sum of order_items.line_cost (snapshot at sale time, not the stale orders.total_cost column).
+const revenueExpr =
+  sql<number>`coalesce(sum(${orders.subtotal}::numeric - ${orders.discount}::numeric), 0)`.mapWith(
+    Number,
+  );
+const lineCostExpr = sql`coalesce(
+  nullif("order_items"."line_cost"::numeric, 0),
+  coalesce("product_variants"."cost_price"::numeric, 0) * "order_items"."quantity"
+)`;
+
+function buildReportOrderConditions(startDate: Date | null, endDate: Date | null): SQL[] {
+  const conds: SQL[] = [isNull(orders.cancelledAt)];
+  if (startDate && endDate) {
+    conds.push(gte(orders.createdAt, startDate));
+    conds.push(lte(orders.createdAt, endDate));
+  }
+  return conds;
+}
 
 export type CreateExpenseData = {
   description: string;
@@ -93,6 +113,8 @@ export type DayOrderRow = {
   orderNumber: string;
   customerName: string | null;
   total: string | null;
+  cogs: number;
+  grossProfit: number;
 };
 
 export async function getDailyStats(startDate: Date, endDate: Date) {
@@ -101,21 +123,23 @@ export async function getDailyStats(startDate: Date, endDate: Date) {
   start.setHours(0, 0, 0, 0);
   end.setHours(23, 59, 59, 999);
 
+  // COGS pulled from order_items.line_cost (snapshot at sale) per-day.
   const rows = await db
     .select({
       date: sql<string>`DATE(${orders.createdAt})`,
-      revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
-      cogs: sql<number>`coalesce(sum(${orders.totalCost}), 0)`.mapWith(Number),
+      revenue: revenueExpr,
+      cogs: sql<number>`coalesce(sum(
+        (
+          SELECT sum(${lineCostExpr})
+          FROM "order_items"
+          INNER JOIN "product_variants" ON "product_variants"."id" = "order_items"."variant_id"
+          WHERE "order_items"."order_id" = "orders"."id"
+        )
+      ), 0)`.mapWith(Number),
       orderCount: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
-    .where(
-      and(
-        gte(orders.createdAt, start),
-        lte(orders.createdAt, end),
-        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
-      ),
-    )
+    .where(and(...buildReportOrderConditions(start, end)))
     .groupBy(sql`DATE(${orders.createdAt})`)
     .orderBy(sql`DATE(${orders.createdAt})`);
 
@@ -159,24 +183,38 @@ export async function getFinancialStats(params: {
   }
   // No date params → lifetime/shop-wide stats
 
-  const orderConditions: SQL[] = [eq(orders.paymentStatus, PAYMENT_STATUS.PAID)];
-  if (startDate && endDate) {
-    orderConditions.push(gte(orders.createdAt, startDate));
-    orderConditions.push(lte(orders.createdAt, endDate));
-  }
+  const orderConditions = buildReportOrderConditions(startDate, endDate);
 
   const orderStats = await db
     .select({
-      revenue: sql<number>`coalesce(sum(${orders.total}), 0)`.mapWith(Number),
-      cogs: sql<number>`coalesce(sum(${orders.totalCost}), 0)`.mapWith(Number),
+      revenue: revenueExpr,
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
     .where(and(...orderConditions));
 
+  // Prefer sale-time line_cost; fallback to current variant cost when old/negative-stock orders have no snapshot.
+  // Also count items missing cost so the UI can warn about under-reported COGS.
+  const cogsStats = await db
+    .select({
+      cogs: sql<number>`coalesce(sum(${lineCostExpr}), 0)`.mapWith(Number),
+      itemCount: sql<number>`count(${orderItems.id})`.mapWith(Number),
+      missingCostItems: sql<number>`count(${orderItems.id}) FILTER (
+        WHERE (${orderItems.lineCost}::numeric = 0 OR ${orderItems.lineCost} IS NULL)
+          AND (${productVariants.costPrice}::numeric = 0 OR ${productVariants.costPrice} IS NULL)
+      )`.mapWith(Number),
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .innerJoin(productVariants, eq(orderItems.variantId, productVariants.id))
+    .where(and(...orderConditions));
+
   const revenue = orderStats[0]?.revenue ?? 0;
-  const cogs = orderStats[0]?.cogs ?? 0;
+  const cogs = cogsStats[0]?.cogs ?? 0;
   const grossProfit = revenue - cogs;
+  const itemCount = cogsStats[0]?.itemCount ?? 0;
+  const missingCostItems = cogsStats[0]?.missingCostItems ?? 0;
+  const missingCostRate = itemCount > 0 ? missingCostItems / itemCount : 0;
 
   // 2. Expenses
   const expenseWhere =
@@ -203,6 +241,8 @@ export async function getFinancialStats(params: {
     expenses: totalExpenses,
     netProfit,
     orderCount: orderStats[0]?.count ?? 0,
+    missingCostItems,
+    missingCostRate,
   };
 }
 
@@ -216,17 +256,20 @@ export async function getDayOrders(date: string): Promise<DayOrderRow[]> {
       orderNumber: orders.orderNumber,
       customerName: profiles.fullName,
       total: orders.total,
+      cogs: sql<number>`coalesce((
+        SELECT sum(${lineCostExpr})
+        FROM "order_items"
+        INNER JOIN "product_variants" ON "product_variants"."id" = "order_items"."variant_id"
+        WHERE "order_items"."order_id" = "orders"."id"
+      ), 0)`.mapWith(Number),
     })
     .from(orders)
     .innerJoin(profiles, eq(orders.customerId, profiles.id))
-    .where(
-      and(
-        gte(orders.createdAt, start),
-        lte(orders.createdAt, end),
-        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
-      ),
-    )
+    .where(and(...buildReportOrderConditions(start, end)))
     .orderBy(desc(orders.createdAt));
 
-  return rows;
+  return rows.map((r) => ({
+    ...r,
+    grossProfit: Number(r.total ?? 0) - r.cogs,
+  }));
 }

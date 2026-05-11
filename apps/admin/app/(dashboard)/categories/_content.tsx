@@ -114,6 +114,7 @@ export default function AdminCategories() {
                           width={28}
                           height={28}
                           className="h-7 w-7 shrink-0 rounded object-contain"
+                          sizes="28px"
                         />
                       ) : (
                         <div className="grid h-7 w-7 shrink-0 place-items-center rounded bg-primary/10 text-primary">

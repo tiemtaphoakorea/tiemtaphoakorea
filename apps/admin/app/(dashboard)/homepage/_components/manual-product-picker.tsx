@@ -149,6 +149,7 @@ export function ManualProductPicker({ value, onChange }: Props) {
                             width={32}
                             height={32}
                             className="h-8 w-8 shrink-0 rounded-md border bg-muted object-contain"
+                            sizes="32px"
                           />
                         ) : (
                           <ProductThumb
@@ -204,6 +205,7 @@ export function ManualProductPicker({ value, onChange }: Props) {
                       width={36}
                       height={36}
                       className="h-9 w-9 shrink-0 rounded-md border bg-muted object-contain"
+                      sizes="36px"
                     />
                   ) : (
                     <ProductThumb

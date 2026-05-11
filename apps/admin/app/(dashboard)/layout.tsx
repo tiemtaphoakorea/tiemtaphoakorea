@@ -1,6 +1,6 @@
 "use client";
 
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ADMIN_ROUTE_NAMES, ADMIN_TITLE } from "@workspace/shared/constants";
@@ -168,8 +168,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   );
 
   const [persister] = useState(() =>
-    createSyncStoragePersister({
-      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    createAsyncStoragePersister({
+      storage:
+        typeof window !== "undefined"
+          ? {
+              getItem: (key) => Promise.resolve(localStorage.getItem(key)),
+              setItem: (key, value) => Promise.resolve(localStorage.setItem(key, value)),
+              removeItem: (key) => Promise.resolve(localStorage.removeItem(key)),
+            }
+          : undefined,
       key: QUERY_CACHE_PERSIST_KEY,
     }),
   );

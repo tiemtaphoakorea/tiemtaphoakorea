@@ -337,6 +337,9 @@ export async function completeGoodsReceipt(id: string, completedBy: string) {
     if (row.status !== RECEIPT_STATUS.DRAFT) {
       throw new Error(`Chỉ hoàn tất được phiếu ở trạng thái nháp (hiện: ${row.status})`);
     }
+    if (Number(row.debtAmount) > 0) {
+      throw new Error("Cần thanh toán đủ trước khi hoàn tất phiếu nhập");
+    }
 
     const items = await tx
       .select()

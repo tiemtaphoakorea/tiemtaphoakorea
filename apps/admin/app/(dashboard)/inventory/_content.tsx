@@ -75,10 +75,17 @@ export default function AdminInventory() {
     staleTime: 60_000,
   });
 
+  // Separate query for global stats — must not apply any tab/search/category filter
+  const totalStatsQuery = useQuery({
+    queryKey: queryKeys.products.list("", 1, 1, "all"),
+    queryFn: async () => await adminClient.getProducts({ page: 1, limit: 1 }),
+    staleTime: 60_000,
+  });
+
   const lowStock = stockQuery.data?.lowStock ?? [];
   const outOfStock = stockQuery.data?.outOfStock ?? [];
   const products = productsQuery.data?.data ?? [];
-  const totalSkus = productsQuery.data?.metadata.total ?? 0;
+  const totalSkus = totalStatsQuery.data?.metadata.total ?? 0;
 
   return (
     <div className="flex flex-col gap-4">

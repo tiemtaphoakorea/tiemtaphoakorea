@@ -31,7 +31,7 @@ export default function AnalyticsFinancePage() {
       />
 
       <p className="-mt-4 text-sm font-medium text-muted-foreground">
-        Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm
+        Tổng hợp toàn bộ shop · tính trên tất cả đơn không hủy và sản phẩm
       </p>
 
       <ErrorBoundary>

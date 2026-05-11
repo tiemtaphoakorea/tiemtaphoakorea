@@ -228,6 +228,7 @@ export function BrandingPanel() {
                       width={20}
                       height={20}
                       className="h-5 w-5 rounded object-contain border border-border"
+                      sizes="20px"
                     />
                     <span className="text-xs text-muted-foreground">32px</span>
                   </div>
@@ -253,6 +254,7 @@ export function BrandingPanel() {
                       width={20}
                       height={20}
                       className="h-5 w-5 rounded object-contain border border-border"
+                      sizes="20px"
                     />
                     <span className="text-xs text-muted-foreground">180px</span>
                   </div>

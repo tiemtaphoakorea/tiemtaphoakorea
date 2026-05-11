@@ -199,20 +199,55 @@ describe("Finance Service", () => {
   });
 
   describe("getFinancialStats", () => {
-    it("should calculate revenue and COGS from orders", async () => {
-      // Need to mock select chain for both orders and expenses
-      const mockSelectChain = {
+    function mockFinancialSelects({
+      orderStats,
+      cogsStats,
+      expenseStats,
+    }: {
+      orderStats: Array<{ revenue: number; count: number }>;
+      cogsStats: Array<{ cogs: number; itemCount: number; missingCostItems: number }>;
+      expenseStats: Array<{ total: number }>;
+    }) {
+      const orderChain = {
         from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 1000000, cogs: 600000, count: 10 }]),
+        where: vi.fn().mockResolvedValue(orderStats),
       };
-      (db.select as any).mockReturnValueOnce(mockSelectChain);
+      const cogsChain = {
+        from: vi.fn().mockReturnThis(),
+        innerJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue(cogsStats),
+      };
+      const expenseChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue(expenseStats),
+      };
 
-      // Mock second select for expenses
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 100000 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+      (db.select as any)
+        .mockReturnValueOnce(orderChain)
+        .mockReturnValueOnce(cogsChain)
+        .mockReturnValueOnce(expenseChain);
+
+      return { orderChain, cogsChain, expenseChain };
+    }
+
+    function containsText(value: unknown, needle: string, seen = new WeakSet<object>()): boolean {
+      if (typeof value === "string") return value.includes(needle);
+      if (typeof value !== "object" || value === null) return false;
+      if (seen.has(value)) return false;
+      seen.add(value);
+
+      return Object.entries(value).some(([key, child]) => {
+        if (key === "table") return false;
+        return key.includes(needle) || containsText(child, needle, seen);
+      });
+    }
+
+    it("should calculate revenue and COGS from orders", async () => {
+      mockFinancialSelects({
+        orderStats: [{ revenue: 1000000, count: 10 }],
+        cogsStats: [{ cogs: 600000, itemCount: 10, missingCostItems: 0 }],
+        expenseStats: [{ total: 100000 }],
+      });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
@@ -222,17 +257,11 @@ describe("Finance Service", () => {
     });
 
     it("should calculate net profit correctly", async () => {
-      const mockOrderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 500000, cogs: 200000, count: 5 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockOrderChain);
-
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 50000 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+      mockFinancialSelects({
+        orderStats: [{ revenue: 500000, count: 5 }],
+        cogsStats: [{ cogs: 200000, itemCount: 5, missingCostItems: 0 }],
+        expenseStats: [{ total: 50000 }],
+      });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
@@ -242,17 +271,11 @@ describe("Finance Service", () => {
     });
 
     it("should return zero values when no orders exist", async () => {
-      const mockOrderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 0, cogs: 0, count: 0 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockOrderChain);
-
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 0 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+      mockFinancialSelects({
+        orderStats: [{ revenue: 0, count: 0 }],
+        cogsStats: [{ cogs: 0, itemCount: 0, missingCostItems: 0 }],
+        expenseStats: [{ total: 0 }],
+      });
 
       const result = await getFinancialStats({ month: 12, year: 2025 });
 
@@ -262,17 +285,11 @@ describe("Finance Service", () => {
     });
 
     it("should handle expenses exceeding gross profit (loss scenario)", async () => {
-      const mockOrderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 100000, cogs: 80000, count: 2 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockOrderChain);
-
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 50000 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+      mockFinancialSelects({
+        orderStats: [{ revenue: 100000, count: 2 }],
+        cogsStats: [{ cogs: 80000, itemCount: 2, missingCostItems: 0 }],
+        expenseStats: [{ total: 50000 }],
+      });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
@@ -281,51 +298,52 @@ describe("Finance Service", () => {
     });
 
     it("should exclude cancelled orders from revenue calculation", async () => {
-      // Arrange: Two mock db.select calls — orders returns 0 revenue (simulating cancelled excluded)
-      const mockOrderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 0, cogs: 0, count: 0 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockOrderChain);
-
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 0 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+      const { orderChain } = mockFinancialSelects({
+        orderStats: [{ revenue: 0, count: 0 }],
+        cogsStats: [{ cogs: 0, itemCount: 0, missingCostItems: 0 }],
+        expenseStats: [{ total: 0 }],
+      });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
       // Assert: the WHERE clause filters are applied (db.select called with filters)
-      expect(mockOrderChain.where).toHaveBeenCalled();
+      expect(orderChain.where).toHaveBeenCalled();
       // Revenue should be 0 (no valid orders counted, cancelled excluded)
       expect(result.revenue).toBe(0);
       expect(result.orderCount).toBe(0);
     });
 
-    it("should only count PAID, PREPARING, SHIPPING, DELIVERED statuses", async () => {
-      // NOTE: The actual SQL filter (inArray) cannot be inspected in unit tests.
-      // This test documents the expected contract: 5 statuses are valid, PENDING and CANCELLED are not.
-      // Verified by reading source: packages/database/src/services/finance.server.ts line 129-133
-      const mockOrderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ revenue: 500000, cogs: 300000, count: 5 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockOrderChain);
-
-      const mockExpenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([{ total: 50000 }]),
-      };
-      (db.select as any).mockReturnValueOnce(mockExpenseChain);
+    it("should calculate order profit without filtering by payment status", async () => {
+      const { orderChain, cogsChain } = mockFinancialSelects({
+        orderStats: [{ revenue: 500000, count: 5 }],
+        cogsStats: [{ cogs: 300000, itemCount: 5, missingCostItems: 0 }],
+        expenseStats: [{ total: 50000 }],
+      });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
-      // The WHERE clause was called with status filter — if it weren't, mock would need no where() call
-      expect(mockOrderChain.where).toHaveBeenCalled();
+      const orderWhere = orderChain.where.mock.calls[0][0];
+      const cogsWhere = cogsChain.where.mock.calls[0][0];
+      expect(containsText(orderWhere, "paymentStatus")).toBe(false);
+      expect(containsText(orderWhere, "payment_status")).toBe(false);
+      expect(containsText(cogsWhere, "paymentStatus")).toBe(false);
+      expect(containsText(cogsWhere, "payment_status")).toBe(false);
       expect(result.revenue).toBe(500000);
       expect(result.grossProfit).toBe(200000);
       expect(result.netProfit).toBe(150000);
+    });
+
+    it("should fall back to current variant cost price when order line cost is missing", async () => {
+      mockFinancialSelects({
+        orderStats: [{ revenue: 500000, count: 5 }],
+        cogsStats: [{ cogs: 300000, itemCount: 5, missingCostItems: 0 }],
+        expenseStats: [{ total: 0 }],
+      });
+
+      await getFinancialStats({ month: 1, year: 2026 });
+
+      const cogsChain = (db.select as any).mock.results[1].value;
+      expect(cogsChain.innerJoin).toHaveBeenCalledTimes(2);
     });
   });
 });

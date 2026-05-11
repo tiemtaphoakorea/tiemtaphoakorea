@@ -871,6 +871,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
                               width={48}
                               height={48}
                               className="h-10 w-10 shrink-0 rounded-lg bg-slate-100 object-contain sm:h-12 sm:w-12"
+                              sizes="(max-width: 640px) 40px, 48px"
                             />
                           ) : (
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 sm:h-12 sm:w-12">

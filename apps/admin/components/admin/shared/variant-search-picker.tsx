@@ -120,6 +120,7 @@ export function VariantSearchPicker({
                         width={48}
                         height={48}
                         className="h-12 w-12 object-cover"
+                        sizes="48px"
                       />
                     ) : (
                       <ImageIcon className="h-5 w-5 text-muted-foreground/40" strokeWidth={1.5} />

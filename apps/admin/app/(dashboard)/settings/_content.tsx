@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
+import { NumberInput } from "@workspace/ui/components/number-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Building2, Palette, Users } from "lucide-react";
@@ -262,11 +263,11 @@ function CustomerTierPanel() {
         </Field>
         <Field>
           <FieldLabel>Khách thân thiết - Tổng chi tiêu tối thiểu (VNĐ)</FieldLabel>
-          <Input
-            type="number"
-            min={0}
+          <NumberInput
             value={loyalMinSpent}
-            onChange={(e) => setLoyalMinSpent(e.target.value)}
+            onValueChange={(vals) => setLoyalMinSpent(vals.value)}
+            decimalScale={0}
+            min={0}
           />
         </Field>
         <Field>
@@ -280,11 +281,11 @@ function CustomerTierPanel() {
         </Field>
         <Field>
           <FieldLabel>Khách thường xuyên - Tổng chi tiêu tối thiểu (VNĐ)</FieldLabel>
-          <Input
-            type="number"
-            min={0}
+          <NumberInput
             value={frequentMinSpent}
-            onChange={(e) => setFrequentMinSpent(e.target.value)}
+            onValueChange={(vals) => setFrequentMinSpent(vals.value)}
+            decimalScale={0}
+            min={0}
           />
         </Field>
       </div>
