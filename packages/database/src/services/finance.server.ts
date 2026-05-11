@@ -4,6 +4,7 @@ import { expenses } from "../schema/expenses";
 import { orderItems, orders } from "../schema/orders";
 import { productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
+import { supplierPayments } from "../schema/receipts";
 
 // Revenue = subtotal - discount (excludes shippingFee, which is pass-through reimbursement).
 // COGS = sum of order_items.line_cost (snapshot at sale time, not the stale orders.total_cost column).
@@ -231,7 +232,22 @@ export async function getFinancialStats(params: {
 
   const totalExpenses = expenseStats[0]?.total ?? 0;
 
-  // 3. Net Profit
+  const supplierPaymentWhere =
+    startDate && endDate
+      ? and(gte(supplierPayments.paidAt, startDate), lte(supplierPayments.paidAt, endDate))
+      : undefined;
+
+  const supplierPaymentStats = await db
+    .select({
+      total: sql<number>`coalesce(sum(${supplierPayments.amount}), 0)`.mapWith(Number),
+    })
+    .from(supplierPayments)
+    .where(supplierPaymentWhere);
+
+  const supplierPayouts = supplierPaymentStats[0]?.total ?? 0;
+
+  // 3. Net Profit. Supplier payouts are cash movement for purchases; COGS already accounts for
+  // product cost, so do not subtract payouts again from profit.
   const netProfit = grossProfit - totalExpenses;
 
   return {
@@ -239,6 +255,7 @@ export async function getFinancialStats(params: {
     cogs,
     grossProfit,
     expenses: totalExpenses,
+    supplierPayouts,
     netProfit,
     orderCount: orderStats[0]?.count ?? 0,
     missingCostItems,

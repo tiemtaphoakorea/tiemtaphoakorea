@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   DollarSign,
+  HandCoins,
   PieChart,
   TrendingUp,
   Wallet,
@@ -61,6 +62,16 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
       icon: <Wallet className="h-3.5 w-3.5" />,
       iconClassName: "bg-red-500/10 text-red-500",
       trend: { text: "Chi phí cố định & biến phí", className: "text-muted-foreground" },
+    },
+    {
+      label: "Đã chi NCC",
+      value: formatCurrency(stats.supplierPayouts || 0),
+      icon: <HandCoins className="h-3.5 w-3.5" />,
+      iconClassName: "bg-emerald-500/10 text-emerald-600",
+      trend: {
+        text: "Dòng tiền chi mua hàng",
+        className: "text-muted-foreground",
+      },
     },
     {
       label: "Lợi nhuận ròng",
@@ -171,6 +182,24 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                 </div>
                 <div className="text-xl font-black text-red-500">
                   -{formatCurrency(stats.expenses || 0)}
+                </div>
+              </div>
+
+              {/* Supplier payouts */}
+              <div className="group flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-transform group-hover:scale-110">
+                    <HandCoins className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-base font-bold text-slate-800">Đã chi nhà cung cấp</div>
+                    <div className="mt-0.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                      Theo ngày thanh toán phiếu chi
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xl font-black text-emerald-600">
+                  {formatCurrency(stats.supplierPayouts || 0)}
                 </div>
               </div>
 

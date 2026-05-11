@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import { format } from "date-fns";
-import { Search } from "lucide-react";
+import { ReceiptText, Search, WalletCards } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
@@ -71,6 +71,16 @@ function formatMoney(value: string | number | null | undefined): string {
   return `${n.toLocaleString("vi-VN")}đ`;
 }
 
+function normalizeSuppliers(value: unknown): SupplierRow[] {
+  if (Array.isArray(value)) return value as SupplierRow[];
+  if (!value || typeof value !== "object") return [];
+
+  const body = value as { data?: unknown; suppliers?: unknown };
+  if (Array.isArray(body.data)) return body.data as SupplierRow[];
+  if (Array.isArray(body.suppliers)) return body.suppliers as SupplierRow[];
+  return [];
+}
+
 export default function PayoutsContent() {
   const [supplierFilter, setSupplierFilter] = useState("All");
   const [methodFilter, setMethodFilter] = useState("All");
@@ -80,10 +90,10 @@ export default function PayoutsContent() {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const suppliersQuery = useQuery({
-    queryKey: queryKeys.admin.suppliersActive,
+    queryKey: queryKeys.suppliers.list("", 1, 200),
     queryFn: async () => {
       const res = await adminClient.getSuppliers({ limit: 200 });
-      return (res as unknown as { data: SupplierRow[] }).data ?? [];
+      return normalizeSuppliers(res);
     },
     staleTime: 60_000,
   });
@@ -107,10 +117,12 @@ export default function PayoutsContent() {
     staleTime: 30_000,
   });
 
-  const suppliers: SupplierRow[] = suppliersQuery.data ?? [];
+  const suppliers = normalizeSuppliers(suppliersQuery.data);
   const allPayouts: PayoutRow[] = (payoutsQuery.data?.data as PayoutRow[] | undefined) ?? [];
   const total = payoutsQuery.data?.metadata.total ?? 0;
+  const totalAmount = payoutsQuery.data?.metadata.totalAmount ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const selectedSupplier = suppliers.find((s) => s.id === supplierFilter);
 
   // Search remains client-side (small page) — backend pagination already
   // narrows the dataset; users typically search the visible page.
@@ -178,6 +190,42 @@ export default function PayoutsContent() {
         >
           Xoá bộ lọc
         </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="flex min-h-24 flex-row items-center justify-between border border-border px-4 shadow-none">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Tổng đã chi
+            </div>
+            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+              {payoutsQuery.isLoading ? "Đang tải..." : formatMoney(totalAmount)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {selectedSupplier ? selectedSupplier.name : "Tất cả nhà cung cấp"}
+            </div>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <WalletCards className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="flex min-h-24 flex-row items-center justify-between border border-border px-4 shadow-none">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Số phiếu chi
+            </div>
+            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+              {payoutsQuery.isLoading && total === 0
+                ? "Đang tải..."
+                : total.toLocaleString("vi-VN")}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">Theo bộ lọc đang chọn</div>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <ReceiptText className="h-5 w-5" />
+          </div>
+        </Card>
       </div>
 
       <Card className="gap-0 overflow-hidden border border-border p-0 shadow-none">
@@ -252,10 +300,7 @@ export default function PayoutsContent() {
                 </SelectOption>
               ))}
             </Select>
-            <span>
-              / trang ·{" "}
-              {payoutsQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} phiếu chi`}
-            </span>
+            <span>/ trang</span>
           </div>
           <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>

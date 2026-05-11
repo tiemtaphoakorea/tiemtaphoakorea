@@ -203,10 +203,12 @@ describe("Finance Service", () => {
       orderStats,
       cogsStats,
       expenseStats,
+      supplierPaymentStats = [{ total: 0 }],
     }: {
       orderStats: Array<{ revenue: number; count: number }>;
       cogsStats: Array<{ cogs: number; itemCount: number; missingCostItems: number }>;
       expenseStats: Array<{ total: number }>;
+      supplierPaymentStats?: Array<{ total: number }>;
     }) {
       const orderChain = {
         from: vi.fn().mockReturnThis(),
@@ -221,13 +223,18 @@ describe("Finance Service", () => {
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockResolvedValue(expenseStats),
       };
+      const supplierPaymentChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue(supplierPaymentStats),
+      };
 
       (db.select as any)
         .mockReturnValueOnce(orderChain)
         .mockReturnValueOnce(cogsChain)
-        .mockReturnValueOnce(expenseChain);
+        .mockReturnValueOnce(expenseChain)
+        .mockReturnValueOnce(supplierPaymentChain);
 
-      return { orderChain, cogsChain, expenseChain };
+      return { orderChain, cogsChain, expenseChain, supplierPaymentChain };
     }
 
     function containsText(value: unknown, needle: string, seen = new WeakSet<object>()): boolean {
@@ -261,12 +268,14 @@ describe("Finance Service", () => {
         orderStats: [{ revenue: 500000, count: 5 }],
         cogsStats: [{ cogs: 200000, itemCount: 5, missingCostItems: 0 }],
         expenseStats: [{ total: 50000 }],
+        supplierPaymentStats: [{ total: 180000 }],
       });
 
       const result = await getFinancialStats({ month: 1, year: 2026 });
 
       expect(result.grossProfit).toBe(300000); // 500000 - 200000
       expect(result.expenses).toBe(50000);
+      expect(result.supplierPayouts).toBe(180000);
       expect(result.netProfit).toBe(250000); // 300000 - 50000
     });
 
