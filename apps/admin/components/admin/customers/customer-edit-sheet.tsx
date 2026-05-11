@@ -26,6 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@workspace/ui/components/sheet";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 interface CustomerEditSheetProps {
@@ -43,17 +44,33 @@ export function CustomerEditSheet({
   isSubmitting,
   onSubmit,
 }: CustomerEditSheetProps) {
+  // Use defaultValues + manual reset on customer.id change instead of RHF `values:` prop.
+  // `values:` re-syncs the form on every prop change, which silently wipes in-progress edits
+  // when React Query background-refetches the customer record (e.g. on window focus).
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
-    values: customer
-      ? {
-          fullName: customer.fullName ?? "",
-          phone: customer.phone ?? "",
-          address: customer.address ?? "",
-          customerType: (customer.customerType as "retail" | "wholesale") ?? "retail",
-        }
-      : { fullName: "", phone: "", address: "", customerType: "retail" },
+    defaultValues: {
+      fullName: customer?.fullName ?? "",
+      phone: customer?.phone ?? "",
+      address: customer?.address ?? "",
+      customerType: (customer?.customerType as "retail" | "wholesale") ?? "retail",
+    },
   });
+
+  // Intentionally reset only when the customer being edited changes (id) or the sheet re-opens —
+  // NOT on every field change. Including individual fields in deps would re-introduce the
+  // background-refetch wipe (Bug 2): a fresh server fetch with the same id would silently
+  // overwrite the user's in-progress edits.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: see comment above
+  useEffect(() => {
+    if (!isOpen) return;
+    form.reset({
+      fullName: customer?.fullName ?? "",
+      phone: customer?.phone ?? "",
+      address: customer?.address ?? "",
+      customerType: (customer?.customerType as "retail" | "wholesale") ?? "retail",
+    });
+  }, [customer?.id, isOpen, form]);
 
   const onFormSubmit = (data: CustomerFormValues) => {
     const fd = objectToFormData({ ...data, intent: "edit", id: customer?.id });

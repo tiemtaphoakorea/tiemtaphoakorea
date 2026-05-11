@@ -39,7 +39,13 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
   try {
     const updates = await request.json();
     const { id } = await params;
-    const updatedProfile = await updateCustomer(id, updates);
+    // Defense-in-depth: drop empty-string fields so a blank input from any caller cannot
+    // silently overwrite stored values (address, phone, fullName, etc.). Pass through nulls
+    // so callers can still intentionally clear a field by sending `null` explicitly.
+    const sanitized = Object.fromEntries(
+      Object.entries(updates ?? {}).filter(([, v]) => !(typeof v === "string" && v.trim() === "")),
+    );
+    const updatedProfile = await updateCustomer(id, sanitized);
     return NextResponse.json({ success: true, profile: updatedProfile });
   } catch (error: any) {
     console.error("Failed to update customer:", error);

@@ -61,7 +61,12 @@ export function CustomerDrawer({ open, customer, onClose }: CustomerDrawerProps)
     });
   }, [customer, open, reset]);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
+    if (customer?.id) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.customer(customer.id) });
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: (data: CreateCustomerData) => adminClient.createCustomer(data),

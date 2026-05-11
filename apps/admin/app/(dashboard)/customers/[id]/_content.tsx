@@ -52,11 +52,18 @@ export default function CustomerDetailPage() {
     const customerId = formData.get("id") as string;
     if (!customerId) return;
     setIsSubmitting(true);
+    // FormData.get() returns "" for empty inputs (not null), so `??` does not guard against it.
+    // Use trim+`||` so blank fields collapse to `undefined` and are omitted from the PATCH payload —
+    // otherwise an empty input silently overwrites the stored value with "".
+    const pick = (key: string) => {
+      const raw = formData.get(key);
+      return typeof raw === "string" ? raw.trim() || undefined : undefined;
+    };
     const payload = {
-      fullName: (formData.get("fullName") as string) ?? undefined,
-      phone: (formData.get("phone") as string) ?? undefined,
-      address: (formData.get("address") as string) ?? undefined,
-      customerType: (formData.get("customerType") as string) ?? undefined,
+      fullName: pick("fullName"),
+      phone: pick("phone"),
+      address: pick("address"),
+      customerType: pick("customerType"),
     };
     try {
       await adminClient.updateCustomer(customerId, payload);
