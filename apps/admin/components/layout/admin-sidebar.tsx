@@ -21,6 +21,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   CreditCard,
+  FileBarChart2,
   FolderOpen,
   Globe,
   Home,
@@ -67,13 +68,15 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { icon: CircleDollarSign, label: "Công nợ", href: ADMIN_ROUTES.DEBTS },
       { icon: CreditCard, label: "Chi phí", href: ADMIN_ROUTES.EXPENSES },
-      { icon: BarChart3, label: "Báo cáo", href: ADMIN_ROUTES.ANALYTICS },
+      { icon: BarChart3, label: "Phân tích", href: ADMIN_ROUTES.ANALYTICS },
+      { icon: FileBarChart2, label: "Báo cáo", href: ADMIN_ROUTES.REPORTS },
     ],
   },
   {
     label: "Kho vận",
     items: [
       { icon: Truck, label: "Quản lý kho", href: ADMIN_ROUTES.INVENTORY },
+      { icon: ClipboardList, label: "Tồn đầu kỳ", href: ADMIN_ROUTES.INVENTORY_OPENING_STOCK },
       { icon: ClipboardList, label: "Đặt hàng nhập", href: ADMIN_ROUTES.PURCHASES },
       { icon: PackagePlus, label: "Nhập hàng", href: ADMIN_ROUTES.RECEIPTS },
       { icon: Wallet, label: "Phiếu chi NCC", href: ADMIN_ROUTES.PAYOUTS },
@@ -108,10 +111,12 @@ function visibleForRole(href: string, role?: UserRole): boolean {
   if (!role) return false;
   if (href === ADMIN_ROUTES.USERS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.EXPENSES) return role === ROLE.OWNER;
+  if (href === ADMIN_ROUTES.INVENTORY_OPENING_STOCK) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS_CONTENT) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS_WIDGETS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.ANALYTICS) return role === ROLE.OWNER || role === ROLE.MANAGER;
+  if (href === ADMIN_ROUTES.REPORTS) return role === ROLE.OWNER;
   return true;
 }
 
