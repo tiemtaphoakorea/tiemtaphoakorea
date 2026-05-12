@@ -1,0 +1,37 @@
+import { getPurchasesProductReceipts } from "@workspace/database/services/report-purchases.server";
+import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { type NextRequest, NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-auth";
+import { parseDateRange } from "@/lib/date-range";
+
+export async function GET(request: NextRequest) {
+  const auth = await requireApiUser(request, "owner");
+  if (!auth.ok) return auth.response;
+
+  const { searchParams } = new URL(request.url);
+  const range = parseDateRange(searchParams);
+  if (!range.ok) return range.response;
+
+  const variantId = searchParams.get("variantId");
+  if (!variantId) {
+    return NextResponse.json(
+      { error: "Missing required parameter: variantId" },
+      { status: HTTP_STATUS.BAD_REQUEST },
+    );
+  }
+
+  try {
+    const receipts = await getPurchasesProductReceipts({
+      variantId,
+      startDate: range.startDate,
+      endDate: range.endDate,
+    });
+    return NextResponse.json({ data: receipts });
+  } catch (error) {
+    console.error("Failed to fetch product receipts drilldown:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal Server Error" },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+    );
+  }
+}
