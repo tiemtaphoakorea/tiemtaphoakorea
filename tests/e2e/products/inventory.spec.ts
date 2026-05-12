@@ -72,6 +72,7 @@ test.describe("Product Inventory & Stock", () => {
 
     await page.locator('input[placeholder="SKU-..."]').first().fill(sku);
     await page.getByTestId("variant-price-0").fill("50000");
+    await page.getByTestId("variant-cost-0").fill("30000");
     await page.getByTestId("variant-stock-0").fill("12");
     await page.getByTestId("variant-low-stock-threshold-0").fill("7");
 
@@ -95,7 +96,7 @@ test.describe("Product Inventory & Stock", () => {
     const sku = `ELST-${runId}`;
     const { product } = await createProductWithVariants(page, {
       name: `Edit LST ${runId}`,
-      variants: [{ sku, stockQuantity: 20, lowStockThreshold: 5, price: 100000 }],
+      variants: [{ sku, stockQuantity: 20, lowStockThreshold: 5, price: 100000, costPrice: 60000 }],
     });
     const productId = product.id as string;
     await waitForProductVisible(page, productId);

@@ -1,6 +1,7 @@
 import { CUSTOMER_CODE_PREFIX, type CUSTOMER_TYPE, ROLE } from "@workspace/shared/constants";
+import { BusinessError } from "@workspace/shared/http-status";
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { orders } from "../schema/orders";
 import { profiles } from "../schema/profiles";
@@ -35,9 +36,9 @@ export async function getCustomers({
     whereConditions.push(eq(profiles.customerType, customerType as any));
   }
 
-  if (status === "Active") {
+  if (status?.toLowerCase() === "active") {
     whereConditions.push(eq(profiles.isActive, true));
-  } else if (status === "Inactive") {
+  } else if (status?.toLowerCase() === "inactive") {
     whereConditions.push(eq(profiles.isActive, false));
   }
 
@@ -141,12 +142,33 @@ async function generateCustomerCode(): Promise<string> {
   return code;
 }
 
+async function assertCustomerPhoneAvailable(phone: string | undefined, excludeId?: string) {
+  const trimmedPhone = phone?.trim();
+  if (!trimmedPhone) return;
+
+  const existing = await db.query.profiles.findFirst({
+    where: excludeId
+      ? and(
+          eq(profiles.role, ROLE.CUSTOMER),
+          eq(profiles.phone, trimmedPhone),
+          ne(profiles.id, excludeId),
+        )
+      : and(eq(profiles.role, ROLE.CUSTOMER), eq(profiles.phone, trimmedPhone)),
+  });
+
+  if (existing) {
+    throw new BusinessError("Số điện thoại đã tồn tại.");
+  }
+}
+
 export async function createCustomer(data: {
   fullName: string;
   phone?: string;
   address?: string;
   customerType: (typeof CUSTOMER_TYPE)[keyof typeof CUSTOMER_TYPE];
 }) {
+  await assertCustomerPhoneAvailable(data.phone);
+
   // NOTE: Customers do NOT have auth accounts - they are data records only
   // Only internal users (staff/employees) need authentication via User Management
   const customerCode = await generateCustomerCode();
@@ -178,6 +200,8 @@ export async function updateCustomer(
     isActive?: boolean;
   },
 ) {
+  await assertCustomerPhoneAvailable(data.phone, id);
+
   const [updatedProfile] = await db
     .update(profiles)
     .set({

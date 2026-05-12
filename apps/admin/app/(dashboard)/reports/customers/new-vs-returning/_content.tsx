@@ -182,7 +182,7 @@ export default function NewVsReturningContent() {
       )}
 
       {/* Segment summary table */}
-      <Card className="overflow-hidden border-none shadow-sm">
+      <Card className="gap-0 overflow-hidden border-none p-0 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -256,8 +256,8 @@ export default function NewVsReturningContent() {
 
       {/* Time-series breakdown */}
       {data && data.timeSeries.length > 0 && (
-        <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2">
+        <Card className="gap-0 border-none p-0 shadow-sm">
+          <CardHeader className="pt-4 pb-2">
             <CardTitle className="text-sm font-black tracking-widest uppercase text-muted-foreground">
               Xu hướng theo ngày
             </CardTitle>

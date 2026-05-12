@@ -1,12 +1,10 @@
-"use client";
+import { getInternalUser } from "@workspace/database/lib/auth";
+import { redirect } from "next/navigation";
+import Content from "./_content";
 
-import dynamic from "next/dynamic";
+export default async function AdminLoginPage() {
+  const user = await getInternalUser();
+  if (user) redirect("/");
 
-const Content = dynamic(() => import("./_content"), {
-  ssr: false,
-  loading: () => null,
-});
-
-export default function AdminLoginPage() {
   return <Content />;
 }

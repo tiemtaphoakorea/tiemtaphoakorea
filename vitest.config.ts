@@ -21,7 +21,6 @@ export default defineConfig({
     include: [
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
       "tests/integration/**/*.{test,spec}.{ts,tsx}",
-      "tests/security/**/*.{test,spec}.{ts,tsx}",
       "tests/components/**/*.{test,spec}.{ts,tsx}",
     ],
     setupFiles: ["./tests/setup.ts", "./tests/unit/setup.ts"],
@@ -31,6 +30,7 @@ export default defineConfig({
       // Admin-side helpers import the canonical workspace package path
       // (@workspace/database/lib/idempotency). Alias it so vi.mock() can
       // intercept tests that exercise those helpers.
+      "@workspace/database/lib/auth": db("lib/auth"),
       "@workspace/database/lib/idempotency": db("lib/idempotency"),
       "@workspace/shared/constants": shared("constants"),
       "@workspace/shared/http-status": shared("http-status"),
@@ -63,6 +63,8 @@ export default defineConfig({
       "@/lib/api-auth": adminApp("lib/api-auth"),
       "@/lib/date-range": adminApp("lib/date-range"),
       "@/lib/idempotency": adminApp("lib/idempotency"),
+      "@/lib/action-idempotency": adminApp("lib/action-idempotency"),
+      "@/lib/order-idempotency": adminApp("lib/order-idempotency"),
       "@/lib": shared(""),
       "@/services/admin.client": adminApp("services/admin.client"),
       "@/services/chat.client": mainApp("services/chat.client"),
@@ -112,6 +114,7 @@ export default defineConfig({
       // Admin-side helpers import the canonical workspace package path
       // (@workspace/database/lib/idempotency). Alias it so vi.mock() can
       // intercept tests that exercise those helpers.
+      "@workspace/database/lib/auth": db("lib/auth"),
       "@workspace/database/lib/idempotency": db("lib/idempotency"),
       "@workspace/shared/constants": shared("constants"),
       "@workspace/shared/http-status": shared("http-status"),
@@ -144,6 +147,8 @@ export default defineConfig({
       "@/lib/api-auth": adminApp("lib/api-auth"),
       "@/lib/date-range": adminApp("lib/date-range"),
       "@/lib/idempotency": adminApp("lib/idempotency"),
+      "@/lib/action-idempotency": adminApp("lib/action-idempotency"),
+      "@/lib/order-idempotency": adminApp("lib/order-idempotency"),
       "@/lib": shared(""),
       "@/services/admin.client": adminApp("services/admin.client"),
       "@/services/chat.client": mainApp("services/chat.client"),

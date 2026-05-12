@@ -17,7 +17,7 @@ import { Button } from "@workspace/ui/components/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CustomerFinancialStats } from "@/components/admin/customer-detail/customer-financial-stats";
 import { CustomerLocationCard } from "@/components/admin/customer-detail/customer-location-card";
@@ -38,6 +38,7 @@ export default function CustomerDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   type ConfirmAction = "block" | "delete" | null;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
@@ -47,6 +48,10 @@ export default function CustomerDetailPage() {
     enabled: Boolean(id),
   });
   const customer = data?.customer ?? null;
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const handleEditCustomer = async (formData: FormData) => {
     const customerId = formData.get("id") as string;
@@ -98,7 +103,7 @@ export default function CustomerDetailPage() {
     try {
       await adminClient.deleteCustomer(id);
       toast.success("Đã xóa khách hàng");
-      router.push("/admin/customers");
+      router.push("/customers");
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra");
       setIsDeleting(false);
@@ -125,12 +130,12 @@ export default function CustomerDetailPage() {
     setConfirmAction(null);
   };
 
-  if (isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
-            <Link href="/admin/customers">
+            <Link href="/customers">
               <ChevronLeft className="h-4 w-4" />
               Quay lại
             </Link>
@@ -148,7 +153,7 @@ export default function CustomerDetailPage() {
       <div className="flex flex-col gap-8 pb-20">
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
-            <Link href="/admin/customers">
+            <Link href="/customers">
               <ChevronLeft className="h-4 w-4" />
               Quay lại
             </Link>
@@ -156,7 +161,7 @@ export default function CustomerDetailPage() {
         </div>
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-muted-foreground">
           <p>Không tìm thấy khách hàng.</p>
-          <Button variant="outline" onClick={() => router.push("/admin/customers")}>
+          <Button variant="outline" onClick={() => router.push("/customers")}>
             Về danh sách khách hàng
           </Button>
         </div>
@@ -174,7 +179,7 @@ export default function CustomerDetailPage() {
     <div className="flex flex-col gap-8 pb-20">
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" asChild className="gap-2 font-bold hover:bg-slate-100">
-          <Link href="/admin/customers">
+          <Link href="/customers">
             <ChevronLeft className="h-4 w-4" />
             Quay lại
           </Link>

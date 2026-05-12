@@ -202,39 +202,50 @@ describe("Finance Service", () => {
     function mockFinancialSelects({
       orderStats,
       cogsStats,
+      missingCostItemStats = [{ count: 0 }],
+      missingCostOrders = [],
       expenseStats,
       supplierPaymentStats = [{ total: 0 }],
     }: {
       orderStats: Array<{ revenue: number; count: number }>;
-      cogsStats: Array<{ cogs: number; itemCount: number; missingCostItems: number }>;
+      cogsStats: Array<{ cogs: number; itemCount: number; missingCostItems?: number }>;
+      missingCostItemStats?: Array<{ count: number }>;
+      missingCostOrders?: Array<{ id: string; revenue: number }>;
       expenseStats: Array<{ total: number }>;
       supplierPaymentStats?: Array<{ total: number }>;
     }) {
-      const orderChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue(orderStats),
-      };
-      const cogsChain = {
-        from: vi.fn().mockReturnThis(),
-        innerJoin: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue(cogsStats),
-      };
-      const expenseChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue(expenseStats),
-      };
-      const supplierPaymentChain = {
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue(supplierPaymentStats),
-      };
+      function createSelectChain<T>(rows: T[]) {
+        const chain = {
+          from: vi.fn(() => chain),
+          innerJoin: vi.fn(() => chain),
+          where: vi.fn().mockResolvedValue(rows),
+        };
+        return chain;
+      }
+
+      const orderChain = createSelectChain(orderStats);
+      const cogsChain = createSelectChain(cogsStats);
+      const missingCostItemChain = createSelectChain(missingCostItemStats);
+      const missingCostOrdersChain = createSelectChain(missingCostOrders);
+      const expenseChain = createSelectChain(expenseStats);
+      const supplierPaymentChain = createSelectChain(supplierPaymentStats);
 
       (db.select as any)
         .mockReturnValueOnce(orderChain)
         .mockReturnValueOnce(cogsChain)
+        .mockReturnValueOnce(missingCostItemChain)
+        .mockReturnValueOnce(missingCostOrdersChain)
         .mockReturnValueOnce(expenseChain)
         .mockReturnValueOnce(supplierPaymentChain);
 
-      return { orderChain, cogsChain, expenseChain, supplierPaymentChain };
+      return {
+        orderChain,
+        cogsChain,
+        missingCostItemChain,
+        missingCostOrdersChain,
+        expenseChain,
+        supplierPaymentChain,
+      };
     }
 
     function containsText(value: unknown, needle: string, seen = new WeakSet<object>()): boolean {
@@ -342,7 +353,29 @@ describe("Finance Service", () => {
       expect(result.netProfit).toBe(150000);
     });
 
-    it("should fall back to current variant cost price when order line cost is missing", async () => {
+    it("should report missing-cost orders excluded from P&L", async () => {
+      mockFinancialSelects({
+        orderStats: [{ revenue: 700000, count: 2 }],
+        cogsStats: [{ cogs: 400000, itemCount: 3 }],
+        missingCostItemStats: [{ count: 2 }],
+        missingCostOrders: [
+          { id: "order-missing-1", revenue: 100000 },
+          { id: "order-missing-2", revenue: 200000 },
+        ],
+        expenseStats: [{ total: 50000 }],
+      });
+
+      const result = await getFinancialStats({ month: 1, year: 2026 });
+
+      expect(result.revenue).toBe(700000);
+      expect(result.missingCostItems).toBe(2);
+      expect(result.missingCostRate).toBe(2 / 5);
+      expect(result.missingCostOrderCount).toBe(2);
+      expect(result.excludedRevenue).toBe(300000);
+      expect(result.netProfit).toBe(250000);
+    });
+
+    it("should join variants while calculating stock-out COGS", async () => {
       mockFinancialSelects({
         orderStats: [{ revenue: 500000, count: 5 }],
         cogsStats: [{ cogs: 300000, itemCount: 5, missingCostItems: 0 }],

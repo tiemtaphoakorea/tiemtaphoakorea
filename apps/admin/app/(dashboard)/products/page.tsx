@@ -45,7 +45,7 @@ import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 import {
@@ -94,6 +94,11 @@ export default function AdminProducts() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   // --- Queries ---
   const productsQuery = useQuery({
@@ -300,108 +305,109 @@ export default function AdminProducts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productsQuery.isLoading && <TableLoadingRows cols={9} rows={6} />}
-              {productsQuery.error && (
+              {hydrated && productsQuery.isLoading && <TableLoadingRows cols={9} rows={6} />}
+              {hydrated && productsQuery.error && (
                 <TableErrorRow cols={9} message={String(productsQuery.error)} />
               )}
-              {!productsQuery.isLoading && list.length === 0 && (
+              {hydrated && !productsQuery.isLoading && list.length === 0 && (
                 <TableEmptyRow cols={9} message="Không tìm thấy sản phẩm" />
               )}
-              {list.map((p) => {
-                const stockClass =
-                  p.totalAvailable === 0
-                    ? "text-red-600 font-bold"
-                    : p.totalAvailable < (p.minLowStockThreshold ?? 30)
-                      ? "text-amber-700 font-bold"
-                      : "text-foreground";
-                const brand = getProductBrand(p);
-                const isSelected = selectedIds.has(p.id);
-                return (
-                  <TableRow
-                    key={p.id}
-                    className="cursor-pointer"
-                    data-selected={isSelected || undefined}
-                    onClick={() => router.push(`/products/${p.id}/edit`)}
-                  >
-                    <TableCell
-                      className="px-3 py-2.5 text-center"
-                      onClick={(e) => e.stopPropagation()}
+              {hydrated &&
+                list.map((p) => {
+                  const stockClass =
+                    p.totalAvailable === 0
+                      ? "text-red-600 font-bold"
+                      : p.totalAvailable < (p.minLowStockThreshold ?? 30)
+                        ? "text-amber-700 font-bold"
+                        : "text-foreground";
+                  const brand = getProductBrand(p);
+                  const isSelected = selectedIds.has(p.id);
+                  return (
+                    <TableRow
+                      key={p.id}
+                      className="cursor-pointer"
+                      data-selected={isSelected || undefined}
+                      onClick={() => router.push(`/products/${p.id}/edit`)}
                     >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(v) => handleSelectOne(p.id, !!v)}
-                        aria-label={`Chọn ${p.name}`}
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      {p.thumbnail ? (
-                        <Image
-                          src={p.thumbnail}
-                          alt={p.name}
-                          width={44}
-                          height={44}
-                          className="h-11 w-11 shrink-0 rounded-lg object-contain"
-                          sizes="44px"
+                      <TableCell
+                        className="px-3 py-2.5 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(v) => handleSelectOne(p.id, !!v)}
+                          aria-label={`Chọn ${p.name}`}
                         />
-                      ) : (
-                        <ProductThumb
-                          label={thumbLabelFromName(p.name)}
-                          tone={thumbToneFromId(p.id)}
-                          size={44}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      <span className="block truncate text-sm font-semibold" title={p.name}>
-                        {p.name}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      {p.categoryName ? (
-                        <TonePill tone="indigo">{p.categoryName}</TonePill>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 text-sm">
-                      {brand ?? <span className="text-xs text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
-                      {p.totalAvailable}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
-                    <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {fmtDate(p.createdAt)}
-                    </TableCell>
-                    <TableCell
-                      className="px-2 py-2.5 text-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/products/${p.id}/edit`)}>
-                            <Pencil className="mr-2 h-3.5 w-3.5" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => setDeleteTarget({ id: p.id, name: p.name })}
-                          >
-                            <Trash2 className="mr-2 h-3.5 w-3.5" />
-                            Xóa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        {p.thumbnail ? (
+                          <Image
+                            src={p.thumbnail}
+                            alt={p.name}
+                            width={44}
+                            height={44}
+                            className="h-11 w-11 shrink-0 rounded-lg object-contain"
+                            sizes="44px"
+                          />
+                        ) : (
+                          <ProductThumb
+                            label={thumbLabelFromName(p.name)}
+                            tone={thumbToneFromId(p.id)}
+                            size={44}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        <span className="block truncate text-sm font-semibold" title={p.name}>
+                          {p.name}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        {p.categoryName ? (
+                          <TonePill tone="indigo">{p.categoryName}</TonePill>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-sm">
+                        {brand ?? <span className="text-xs text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className={`px-4 py-2.5 tabular-nums ${stockClass}`}>
+                        {p.totalAvailable}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 tabular-nums">{p.totalOnHand}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                        {fmtDate(p.createdAt)}
+                      </TableCell>
+                      <TableCell
+                        className="px-2 py-2.5 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/products/${p.id}/edit`)}>
+                              <Pencil className="mr-2 h-3.5 w-3.5" />
+                              Chỉnh sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => setDeleteTarget({ id: p.id, name: p.name })}
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" />
+                              Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </div>
@@ -421,7 +427,9 @@ export default function AdminProducts() {
             </Select>
             <span>
               / trang ·{" "}
-              {productsQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} sản phẩm`}
+              {!hydrated || (productsQuery.isLoading && total === 0)
+                ? "Đang tải..."
+                : `Tổng ${total} sản phẩm`}
             </span>
           </div>
           <PaginationControls

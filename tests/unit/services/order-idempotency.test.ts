@@ -82,7 +82,7 @@ describe("beginOrderIdempotency", () => {
     expect(mockStore.mock.calls[0][0]).toMatchObject({
       key: "tok-1",
       resourceType: "order",
-      requestPayload: { orderId: "order-1", action: "stock_out", note: "hello" },
+      requestPayload: { resourceId: "order-1", action: "stock_out", note: "hello" },
     });
 
     if ("finalize" in result) {
@@ -97,7 +97,7 @@ describe("beginOrderIdempotency", () => {
   it("returns the cached response on same-payload replay without re-running work", async () => {
     mockCheck.mockResolvedValueOnce({
       exists: true,
-      requestPayload: { orderId: "order-1", action: "complete", note: "n" },
+      requestPayload: { resourceId: "order-1", action: "complete", note: "n" },
       response: { success: true, order: { id: "order-1", fulfillmentStatus: "completed" } },
     });
 
@@ -126,7 +126,7 @@ describe("beginOrderIdempotency", () => {
     // replay the stock_out response for the cancel route.
     mockCheck.mockResolvedValueOnce({
       exists: true,
-      requestPayload: { orderId: "order-1", action: "stock_out", note: "n" },
+      requestPayload: { resourceId: "order-1", action: "stock_out", note: "n" },
       response: { success: true, order: { id: "order-1" } },
     });
 
@@ -148,7 +148,7 @@ describe("beginOrderIdempotency", () => {
   it("returns 409 'in progress' when key exists but response is not yet written", async () => {
     mockCheck.mockResolvedValueOnce({
       exists: true,
-      requestPayload: { orderId: "order-1", action: "stock_out", note: "n" },
+      requestPayload: { resourceId: "order-1", action: "stock_out", note: "n" },
       response: null, // key stored, work not finished
     });
 

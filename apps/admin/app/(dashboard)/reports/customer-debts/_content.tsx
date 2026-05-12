@@ -129,7 +129,7 @@ export default function CustomerDebtsContent() {
         </label>
       </div>
 
-      <Card className="overflow-hidden border-none shadow-sm">
+      <Card className="gap-0 overflow-hidden border-none p-0 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>

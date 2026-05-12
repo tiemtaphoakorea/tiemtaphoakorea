@@ -1,4 +1,4 @@
-export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://admin.localhost:3001";
+export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL || "http://localhost:3001";
 export const STOREFRONT_BASE_URL = process.env.STOREFRONT_BASE_URL || "http://localhost:3000";
 
 export const ROLE = {

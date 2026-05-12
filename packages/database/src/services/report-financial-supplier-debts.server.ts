@@ -9,7 +9,7 @@ import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/paginat
 import { and, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { goodsReceipts, supplierPayments } from "../schema/receipts";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type SupplierDebtRow = {
   supplierId: string;
@@ -47,6 +47,8 @@ export async function getSupplierDebtsReport(params: {
   const page = Math.max(1, params.page ?? PAGINATION_DEFAULT.PAGE);
   const limit = Math.max(1, Math.min(200, params.limit ?? PAGINATION_DEFAULT.LIMIT));
   const includeZero = params.includeZero ?? false;
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const aggregates = await db.execute(sql`
     WITH all_suppliers AS (
@@ -59,15 +61,15 @@ export async function getSupplierDebtsReport(params: {
              COALESCE(SUM(payable_amount::numeric), 0) AS pre_payable
       FROM goods_receipts
       WHERE status = 'completed'
-        AND created_at < ${start}
-        AND (cancelled_at IS NULL OR cancelled_at >= ${start})
+        AND created_at < ${startSql}
+        AND (cancelled_at IS NULL OR cancelled_at >= ${startSql})
       GROUP BY supplier_id
     ),
     pre_pay AS (
       SELECT supplier_id,
              COALESCE(SUM(amount::numeric), 0) AS pre_paid
       FROM supplier_payments
-      WHERE paid_at < ${start}
+      WHERE paid_at < ${startSql}
       GROUP BY supplier_id
     ),
     in_receipt AS (
@@ -75,7 +77,7 @@ export async function getSupplierDebtsReport(params: {
              COALESCE(SUM(payable_amount::numeric), 0) AS in_payable
       FROM goods_receipts
       WHERE status = 'completed'
-        AND created_at >= ${start} AND created_at <= ${end}
+        AND created_at >= ${startSql} AND created_at <= ${endSql}
         AND cancelled_at IS NULL
       GROUP BY supplier_id
     ),
@@ -83,7 +85,7 @@ export async function getSupplierDebtsReport(params: {
       SELECT supplier_id,
              COALESCE(SUM(amount::numeric), 0) AS in_paid
       FROM supplier_payments
-      WHERE paid_at >= ${start} AND paid_at <= ${end}
+      WHERE paid_at >= ${startSql} AND paid_at <= ${endSql}
       GROUP BY supplier_id
     )
     SELECT

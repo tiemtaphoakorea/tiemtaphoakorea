@@ -16,8 +16,10 @@ Menu bên trái → **Đặt hàng nhập** (mục **Kho vận**).
 ```mermaid
 flowchart LR
     A["Nháp<br/>draft"] -->|Xác nhận đơn| B["Đã đặt<br/>ordered"]
-    B -->|Tạo phiếu nhập + Hoàn tất| C["Đã nhận<br/>received"]
-    A & B -->|Huỷ đơn| D["Đã huỷ<br/>cancelled"]
+    B -->|Nhận một phần| P["Nhận một phần<br/>partial"]
+    B -->|Nhận đủ| C["Đã nhận<br/>received"]
+    P -->|Nhận đủ phần còn lại| C
+    A & B & P -->|Huỷ đơn| D["Đã huỷ<br/>cancelled"]
 
     style A fill:#fef3c7,stroke:#f59e0b,color:#92400e
     style B fill:#dbeafe,stroke:#3b82f6,color:#1e40af
@@ -29,7 +31,8 @@ flowchart LR
 |-----------|---------|
 | **Nháp** | Đơn vừa tạo, chưa xác nhận với NCC |
 | **Đã đặt** | Đã xác nhận, chờ hàng về — có thể tạo phiếu nhập |
-| **Đã nhận** | Ít nhất một phiếu nhập đã hoàn tất |
+| **Nhận một phần** | Đã có phiếu nhập hoàn tất nhưng chưa nhận đủ số lượng đặt |
+| **Đã nhận** | Đã nhận đủ số lượng đặt |
 | **Đã huỷ** | Đơn bị huỷ |
 
 ## Bộ lọc và tìm kiếm
@@ -83,11 +86,11 @@ Chuyển trạng thái từ **Nháp** → **Đã đặt**. Sau khi xác nhận, 
 
 ### Tạo phiếu nhập từ đơn
 
-Khi đơn ở trạng thái **Đã đặt**, nút **Tạo phiếu nhập** xuất hiện. Hệ thống tự điền NCC, sản phẩm và giá nhập từ đơn vào phiếu.
+Khi đơn ở trạng thái **Đã đặt** hoặc **Nhận một phần**, nút **Tạo phiếu nhập** xuất hiện. Hệ thống tự điền NCC, sản phẩm và giá nhập từ đơn vào phiếu.
 
 <Steps>
   <Step title="Mở chi tiết đơn đã xác nhận">
-    Đơn phải ở trạng thái **Đã đặt**.
+    Đơn phải ở trạng thái **Đã đặt** hoặc **Nhận một phần**.
   </Step>
   <Step title="Nhấn Tạo phiếu nhập">
     Chuyển đến `/receipts/new` với dữ liệu được điền sẵn từ đơn.
@@ -100,7 +103,7 @@ Khi đơn ở trạng thái **Đã đặt**, nút **Tạo phiếu nhập** xuấ
 ### Huỷ đơn
 
 <Warning>
-Chỉ huỷ được đơn ở trạng thái **Nháp** hoặc **Đã đặt**. Đơn đã **Đã nhận** không thể huỷ.
+Có thể huỷ đơn khi chưa ở trạng thái **Đã nhận**. Đơn **Đã nhận** không thể huỷ.
 </Warning>
 
 ## Cột bảng danh sách

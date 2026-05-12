@@ -26,7 +26,7 @@ export type IdempotencyState =
 
 export async function beginIdempotency(opts: {
   clientToken: string | undefined;
-  resourceType: "order" | "payment";
+  resourceType: "order" | "payment" | "receipt" | "purchase" | "payout";
   resourceId?: string;
   payload: Record<string, unknown>;
 }): Promise<IdempotencyState> {

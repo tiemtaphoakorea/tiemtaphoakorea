@@ -8,7 +8,7 @@
 
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { normalizeRange, rowsOf, TRUNC_FMT } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp, TRUNC_FMT } from "./report-shared.server";
 
 export type PurchasesByTimePeriodRow = {
   period: string;
@@ -39,6 +39,8 @@ export async function getPurchasesByTimeReport(params: {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
   const groupBy = params.groupBy ?? "day";
   const { trunc, format } = TRUNC_FMT[groupBy];
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -51,8 +53,8 @@ export async function getPurchasesByTimeReport(params: {
     FROM goods_receipts
     WHERE status = 'completed'
       AND cancelled_at IS NULL
-      AND COALESCE(received_at, created_at) >= ${start}
-      AND COALESCE(received_at, created_at) <= ${end}
+      AND COALESCE(received_at, created_at) >= ${startSql}
+      AND COALESCE(received_at, created_at) <= ${endSql}
     GROUP BY 1
     ORDER BY 1
   `);

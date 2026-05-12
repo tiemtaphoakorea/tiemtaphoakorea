@@ -1,53 +1,29 @@
-# Docs Navigation for Agents
+# Docs Navigation For Agents
 
-## How this vault is organized
+Start with `docs/current/README.md`.
 
-```
-docs/
-├── 000-Index.md          ← Human-facing top-level index
-├── 010-Planning/         ← OKRs, roadmap, sprints
-├── 020-Requirements/     ← PRD, requirements
-├── 022-User-Stories/     ← Epics and backlog items
-├── 030-Specs/            ← Technical specs per feature
-├── 035-QA/               ← Test plans, test cases, reports
-├── 040-Design/           ← UI system, screen designs
-└── 999-Resources/        ← Glossary
-```
+The active docs are now in `docs/current/`. The old numbered docs folders are legacy until migrated.
 
-## Go directly to what you need
+## Go Directly To What You Need
 
 | Goal | File to read |
-|------|-------------|
-| Find all test cases and their status | `docs/035-QA/TEST-STATUS.md` |
-| Find test cases for a specific domain | `docs/035-QA/QA-MOC.md` (grouped by domain) |
-| Read a specific test case | `docs/035-QA/Test-Cases/TC-<ID>.md` |
-| Find the spec for a feature | `docs/030-Specs/Spec-<Feature>.md` |
-| See recent QA review findings | `docs/035-QA/Reports/QA-Review-2026-04-09.md` |
-| Understand the overall system | `docs/030-Specs/Architecture/SDD-AuthShopPlatform.md` |
-| Find API endpoints | `docs/030-Specs/API/Endpoints.md` |
-| RBAC / permission matrix | `docs/030-Specs/Spec-RBAC-Matrix.md` |
+| --- | --- |
+| Choose reading path | `docs/current/00-agent-map.md` |
+| Understand repo shape | `docs/current/01-system-overview.md` |
+| Understand business logic | `docs/current/06-business-rules.md` |
+| Check migrated legacy rules | `docs/current/07-business-rule-migration-log.md` |
+| Run/build/test safely | `docs/current/02-development-workflow.md` |
+| Work on tests | `docs/current/03-testing.md` |
+| Continue test cleanup | `docs/current/05-test-cleanup-backlog.md` |
+| Clean up old docs | `docs/current/04-docs-migration.md` |
+| Auth/RBAC | `docs/current/modules/auth-rbac.md` |
+| Admin app | `docs/current/modules/admin.md` |
+| Products/categories/homepage | `docs/current/modules/catalog-homepage.md` |
+| Customers/guests/chat | `docs/current/modules/crm-chat.md` |
+| Storefront app | `docs/current/modules/storefront.md` |
+| Orders/inventory | `docs/current/modules/orders-inventory.md` |
+| Reports/finance | `docs/current/modules/reports-finance.md` |
 
-## Test case status values
+Only open legacy docs when a current doc points to them or historical context is required.
 
-| Status | Meaning |
-|--------|---------|
-| `active` | Test exists and passes |
-| `needs-fix` | Test exists but has issues (false positive, wrong assertion, dead code) |
-| `missing` | Test case defined but no spec file exists yet |
-| `reviewed` | Test reviewed, no issues found |
-| `draft` | Test case document drafted, spec may not exist |
-
-## Spec files by domain
-
-| Domain | Spec file |
-|--------|-----------|
-| Auth / RBAC | `030-Specs/Spec-Authentication-Authorization.md` |
-| Products | `030-Specs/Spec-Product-Management.md` |
-| Orders | `030-Specs/Spec-Order-Management.md` |
-| Customers | `030-Specs/Spec-Customer-CRM.md` |
-| Storefront / Catalog | `030-Specs/Spec-Customer-Catalog.md` |
-| Suppliers | `030-Specs/Spec-Supplier-Management.md` |
-| Finance / Accounting | `030-Specs/Spec-Finance-Accounting.md` |
-| Dashboard / Reports | `030-Specs/Spec-Dashboard-Reports.md` |
-| Chat | `030-Specs/Spec-Chat-System.md` |
-| Infrastructure | `030-Specs/Spec-Infrastructure.md` |
+If behavior is unclear, missing from `docs/current`, or appears to come from dead code/old code, ask for confirmation before rewriting tests, deleting files, or changing product behavior.

@@ -64,6 +64,13 @@
       "when": 1778151817725,
       "tag": "0008_friendly_post",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778151817726,
+      "tag": "0009_opening_stock_entries",
+      "breakpoints": true
     }
   ]
 }

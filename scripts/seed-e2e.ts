@@ -964,54 +964,6 @@ async function seedE2E() {
     }
   } // end if (customerProfile)
 
-  console.log("  → Reports");
-  const reportDate = new Date();
-  reportDate.setHours(0, 0, 0, 0);
-  const reportDateString = reportDate.toISOString().slice(0, 10);
-
-  await upsertById(
-    schema.dailyReports,
-    schema.dailyReports.id,
-    () =>
-      db.query.dailyReports.findFirst({
-        where: eq(schema.dailyReports.reportDate, reportDateString),
-      }),
-    {
-      reportDate: reportDateString,
-      totalOrders: 1,
-      completedOrders: 1,
-      cancelledOrders: 0,
-      totalRevenue: "240.00",
-      totalCost: "140.00",
-      totalProfit: "100.00",
-      topProducts: [
-        {
-          variant_id: primaryVariant.id,
-          name: primaryVariant.name,
-          quantity: 2,
-          revenue: "240.00",
-        },
-      ],
-    },
-    {
-      totalOrders: 1,
-      completedOrders: 1,
-      cancelledOrders: 0,
-      totalRevenue: "240.00",
-      totalCost: "140.00",
-      totalProfit: "100.00",
-      topProducts: [
-        {
-          variant_id: primaryVariant.id,
-          name: primaryVariant.name,
-          quantity: 2,
-          revenue: "240.00",
-        },
-      ],
-      updatedAt: new Date(),
-    },
-  );
-
   console.log("  → System Settings");
   for (const setting of SYSTEM_SETTINGS) {
     await upsertById(

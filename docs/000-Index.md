@@ -8,67 +8,43 @@ created: 2026-01-19
 
 # Auth Shop Platform Documentation
 
-Welcome to the documentation for the Auth Shop Platform (Phase 1 - MVP).
+Welcome to the documentation for the Auth Shop Platform.
 
-## 📚 010 Planning
+## Active Docs
 
-Strategy, Timelines, and Roadmaps.
+The active documentation set is `docs/current/`.
 
-- [[Planning-MOC]]
-- [[Roadmap]]
-- [[OKRs]]
+- [Current Docs](current/README.md)
+- [Agent Map](current/00-agent-map.md)
+- [System Overview](current/01-system-overview.md)
+- [Development Workflow](current/02-development-workflow.md)
+- [Testing](current/03-testing.md)
+- [Docs Migration](current/04-docs-migration.md)
+- [Test Cleanup Backlog](current/05-test-cleanup-backlog.md)
+- [Business Rules](current/06-business-rules.md)
+- [Business Rule Migration Log](current/07-business-rule-migration-log.md)
+- [Legacy Doc Review](current/08-legacy-doc-review.md)
 
-## 📋 020 Requirements
+## User Guide
 
-Business Requirements and Use Cases.
+`docs/guide/` is the user-facing documentation site and must be kept in sync with `docs/current/`.
 
-- [[Requirements-MOC]]
-- [[PRD-AuthShopPlatform]]
+## Legacy
 
-## 📝 022 User Stories
+The remaining numbered folders are historical context only until each file is migrated, archived, or retired. Do not use them as source of truth unless a current doc explicitly links to them.
 
-Agile Backlog, Epics, and User Stories.
+Keep for now because some files still contain unmigrated history or test intent:
 
-- [[Stories-MOC]]
-- [[Epics]]
+- `010-Planning/Standards.md`
+- `020-Requirements/PRD-AuthShopPlatform.md`
+- `022-User-Stories/**`
+- `030-Specs/**`
+- `035-QA/Test-Cases/**` except retired security/rate-limit cases
+- `035-QA/Test-Plans/**`
+- `040-Design/Design-System/**`
 
-## 🏗️ 030 Specs
+Retired legacy MOC placeholders, old MVP roadmaps, stale QA snapshots, and deferred security QA cases are tracked in [Legacy Doc Review](current/08-legacy-doc-review.md).
 
-Technical Architectures, APIs, and Schemas.
-
-- [[Specs-MOC]]
-- [[SDD-AuthShopPlatform]]
-
-## 🧪 035 QA
-
-Test Plans, Cases, and Reports.
-
-- [[QA-MOC]]
-
-## 🎨 040 Design
-
-UI/UX Guidelines and Wireframes.
-
-- [[Design-MOC]]
-
-## 🔍 050 Research
-
-Competitor Analysis and User Research.
-
-- [[Research-MOC]]
-
-## 📖 060 Manuals
-
-User and Admin Guides.
-
-- [[Manuals-MOC]]
-
-## 📦 090 Archive
-
-Deprecated documentation.
-
-## 🛠️ 999 Resources
+## Resources
 
 Templates, Scripts, and Glossary.
-
-- [[Glossary]]

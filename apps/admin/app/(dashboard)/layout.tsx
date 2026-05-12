@@ -31,6 +31,13 @@ import { GlobalSearch } from "@/components/layout/global-search";
 import { QUERY_CACHE_PERSIST_KEY, queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
 
+const ADMIN_QUERY_CACHE_BUSTER = "admin-profile-cache-v3";
+const ADMIN_LAYOUT_FALLBACK = (
+  <div className="flex min-h-screen items-center justify-center">
+    <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+  </div>
+);
+
 function AdminLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
@@ -180,29 +187,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       key: QUERY_CACHE_PERSIST_KEY,
     }),
   );
-
   return (
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{
         persister,
+        buster: ADMIN_QUERY_CACHE_BUSTER,
         maxAge: 24 * 60 * 60 * 1000,
         // Only persist profile query — operational data is too volatile to cache across sessions.
         dehydrateOptions: {
           shouldDehydrateQuery: (query) => {
             const [root, leaf] = query.queryKey as string[];
-            return root === "admin" && leaf === "profile";
+            return root === "admin" && leaf === "profile" && query.state.status === "success";
           },
         },
       }}
     >
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center">
-            <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          </div>
-        }
-      >
+      <Suspense fallback={ADMIN_LAYOUT_FALLBACK}>
         <AdminLayoutContent>{children}</AdminLayoutContent>
       </Suspense>
     </PersistQueryClientProvider>

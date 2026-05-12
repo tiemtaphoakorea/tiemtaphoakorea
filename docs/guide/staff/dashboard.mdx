@@ -24,12 +24,16 @@ Sidebar → **Quản trị → Dashboard**.
 | **Sản phẩm sắp hết** | SKU có `0 < onHand ≤ ngưỡng cảnh báo` (mặc định 30) | `M đã hết` — SKU có `onHand = 0` |
 | **Khách hàng mới** | Số khách `role = customer` đăng ký từ 00:00 hôm nay | "Hôm nay" |
 
+<Note>
+Dashboard là màn hình vận hành nhanh. **Doanh thu hôm nay** dùng đơn đã hoàn thành trong ngày, còn biểu đồ 7 ngày dùng thống kê tài chính theo ngày xuất kho.
+</Note>
+
 ---
 
 ## Khu vực 2 — 2 biểu đồ 7 ngày
 
-- **Doanh thu 7 ngày** — bar chart tím + pill so sánh tuần trước (xanh/đỏ).
-- **Đơn hàng 7 ngày** — bar chart vàng + pill `N hôm nay`.
+- **Doanh thu 7 ngày** — đơn chưa huỷ, đã `stock_out` hoặc `completed`, ghi nhận theo `stockOutAt`, doanh thu = `subtotal - discount`.
+- **Đơn hàng 7 ngày** — số đơn theo cùng điều kiện với biểu đồ doanh thu + pill `N hôm nay`.
 
 ---
 
@@ -51,7 +55,7 @@ Trạng thái đơn: `pending` · `stock_out` · `completed` · `cancelled`.
     Nhìn thẻ **Đơn chờ xử lý** → nếu có số &gt; 0, mở bảng **Đơn hàng gần đây** hoặc nhấn **Xem tất cả** để vào `/orders`.
   </Step>
   <Step title="Xử lý từng đơn">
-    Mở chi tiết đơn → ghi nhận thanh toán → đánh dấu xuất kho → hoàn thành. Nếu hết hàng, đánh dấu trạng thái `stock_out` và báo Quản lý.
+    Mở chi tiết đơn → ghi nhận thanh toán → đánh dấu xuất kho → hoàn thành. Nếu thiếu hàng thực tế, báo Quản lý để xử lý nhập hàng trước khi xuất.
   </Step>
   <Step title="Báo cáo hàng sắp hết">
     Thẻ **Sản phẩm sắp hết** &gt; 0 → vào **Quản lý kho** xem chi tiết SKU. Báo Quản lý hoặc Chủ shop nếu cần tạo đơn nhập NCC.

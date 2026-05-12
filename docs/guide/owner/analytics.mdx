@@ -47,6 +47,10 @@ Header: tiêu đề **"Báo cáo & Thống kê"** + nút action ở góc phải.
 - **Revenue Chart** — `Σ orders.total` GROUP BY tháng, từ ngày 1/1 năm hiện tại, lọc `paidAt IS NOT NULL`. Nhãn cột: "Tháng MM".
 - **Category Sales Chart** — `COUNT(orderItems)` và `Σ orderItems.lineTotal` GROUP BY category (toàn thời gian). Mỗi danh mục được gán màu khác nhau.
 
+<Note>
+`/analytics/overview` là dashboard vận hành nhanh, không phải P&L chính thức. Khi cần đối soát lợi nhuận, dùng `/analytics/finance` hoặc `/analytics/finance/detail`.
+</Note>
+
 ### 2. `/analytics/products` — Sản phẩm bán chạy
 
 - Tiêu đề: **"Sản phẩm bán chạy"**.
@@ -84,9 +88,9 @@ Tiêu đề: **"Tồn kho"**. Hiển thị 2 hàng MetricStatBar + 2 danh sách.
 
 ### 4. `/analytics/finance` — Tài chính & Lợi nhuận
 
-Header: tiêu đề **"Tài chính & Lợi nhuận"** + nút **Chi tiết theo ngày** (icon CalendarDays) → `/analytics/finance/detail`. Sub-line: *"Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm"*.
+Header: tiêu đề **"Tài chính & Lợi nhuận"** + nút **Chi tiết theo ngày** (icon CalendarDays) → `/analytics/finance/detail`.
 
-Hiển thị 4 KPI **lifetime/toàn bộ shop** (không lọc theo kỳ). Xem chi tiết công thức tại trang [Tài chính](./finance).
+Hiển thị 4 KPI **lifetime/toàn bộ shop** (không lọc theo kỳ). Công thức chính thức: đơn chưa huỷ, đã `stock_out` hoặc `completed`, ngày ghi nhận theo `stockOutAt`, doanh thu = `subtotal - discount`, COGS = `order_items.line_cost`. Xem chi tiết tại trang [Tài chính](./finance).
 
 ### 5. `/analytics/finance/detail` — Chi tiết theo ngày
 
@@ -110,12 +114,12 @@ URL được sync `?from=YYYY-MM-DD&to=YYYY-MM-DD&day=YYYY-MM-DD`.
 
 #### 4 KPI tổng kỳ (MetricStatBar)
 
-Lấy theo `[startDate, endDate]` đã chọn — chạy trên đơn `paymentStatus = paid` có `createdAt` trong kỳ.
+Lấy theo `[startDate, endDate]` đã chọn — chạy trên đơn chưa huỷ, đã `stock_out` hoặc `completed`, có `stockOutAt` trong kỳ.
 
 | Chỉ số | Cách tính | Màu |
 |--------|-----------|-----|
-| **Doanh thu** | `Σ orders.total` lọc paid + trong kỳ | Xanh dương |
-| **Giá vốn** | `Σ orders.totalCost` lọc paid + trong kỳ | Cam |
+| **Doanh thu** | `Σ (subtotal - discount)` của đơn hợp lệ | Xanh dương |
+| **Giá vốn** | `Σ order_items.line_cost` đã snapshot khi xuất kho | Cam |
 | **LN gộp** | `revenue − cogs` | Emerald nếu &ge;0 / đỏ nếu &lt;0 |
 | **Biên LN** | `grossProfit / revenue × 100` | Emerald / đỏ |
 
@@ -149,7 +153,7 @@ Khi `startDate === endDate` (chọn 1 ngày), bảng không hiển thị; chỉ 
     Nhấn nút **Xem chi tiết** (hoặc tiêu đề thẻ) để chuyển sang trang con: top sản phẩm, tồn kho, hoặc tài chính.
   </Step>
   <Step title="Phân tích tài chính theo kỳ">
-    Mở **Tài chính & Lợi nhuận** → mặc định xem tháng hiện tại. Nhấn **Chi tiết theo ngày** để vào trang detail và chọn kỳ tuỳ ý.
+    Mở **Tài chính & Lợi nhuận** → xem P&L toàn thời gian. Nhấn **Chi tiết theo ngày** để vào trang detail và chọn kỳ tuỳ ý.
   </Step>
   <Step title="Drill-down một ngày">
     Trong trang **Chi tiết theo ngày**, nhấn vào một dòng để mở drawer liệt kê tất cả đơn của ngày đó. Nhấn vào đơn để mở chi tiết đơn hàng.

@@ -8,8 +8,7 @@ import { apiPost } from "../helpers/api";
  * Notes on skipped TCs:
  * - TC-CUST-007/TC-CUST-008/TC-CUST-020: Customers have no email field
  *   (customerSchema: { fullName, phone, address, customerType }). No email input in UI or API.
- * - TC-CUST-019: Phone field has no format validation in customerSchema or the API layer.
- *   "abc123" is accepted by the backend (only uniqueness on non-null phones is enforced).
+ * - TC-CUST-019: Covered at the UI schema layer. The API route still does not parse customerSchema.
  */
 test.describe("Customers - Form Validation", () => {
   let runId: string;
@@ -56,7 +55,7 @@ test.describe("Customers - Form Validation", () => {
   // TC-CUST-017 | Cannot add customer without name
   test("TC-CUST-017 should show inline error when name is empty on add sheet", async ({ page }) => {
     await page.goto("/customers");
-    await page.getByRole("button", { name: /thêm khách hàng/i }).click();
+    await page.getByRole("button", { name: /thêm kh/i }).click();
 
     // Wait for sheet to open
     await expect(page.locator('[role="dialog"], [data-state="open"]').first()).toBeVisible({
@@ -64,7 +63,7 @@ test.describe("Customers - Form Validation", () => {
     });
 
     // Click submit without entering a name
-    await page.getByRole("button", { name: /tạo tài khoản/i }).click();
+    await page.getByRole("button", { name: /^Thêm$/ }).click();
 
     // Schema: fullName.min(1, "Vui lòng nhập họ tên")
     await expect(page.getByText(/vui lòng nhập họ tên/i)).toBeVisible({ timeout: 3000 });
@@ -73,10 +72,22 @@ test.describe("Customers - Form Validation", () => {
     await expect(page.locator('[data-state="open"]').first()).toBeVisible();
   });
 
-  // TC-CUST-019: Invalid phone format
-  // SKIP: customerSchema does not validate phone format (no regex). Backend also has no format check.
-  // "abc123" is accepted; only the uniqueness constraint on (role, phone) is enforced.
-  test.skip("TC-CUST-019 invalid phone format - SKIPPED: no phone format validation in schema or API", () => {});
+  // TC-CUST-019 | Invalid phone format
+  test("TC-CUST-019 should show inline error when phone format is invalid", async ({ page }) => {
+    await page.goto("/customers");
+    await page.getByRole("button", { name: /thêm kh/i }).click();
+
+    await expect(page.locator('[role="dialog"], [data-state="open"]').first()).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.fill('input[name="fullName"]', `Invalid Phone ${runId}`);
+    await page.fill('input[name="phone"]', "abc123");
+    await page.getByRole("button", { name: /^Thêm$/ }).click();
+
+    await expect(page.getByText(/số điện thoại không hợp lệ/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('[data-state="open"]').first()).toBeVisible();
+  });
 
   // TC-CUST-020: Edit - change to existing email
   // SKIP: Customers have no email field

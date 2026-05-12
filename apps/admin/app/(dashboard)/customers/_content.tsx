@@ -18,7 +18,7 @@ import {
 import { format } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { CustomerDrawer } from "@/components/admin/shared/customer-drawer";
 import {
@@ -43,6 +43,7 @@ export default function AdminCustomers() {
   const [editing, setEditing] = useState<CustomerStatsItem | null | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [hydrated, setHydrated] = useState(false);
 
   const customersQuery = useQuery({
     queryKey: queryKeys.customers.list(debouncedQuery, statusFilter, page, pageSize, "all"),
@@ -66,6 +67,10 @@ export default function AdminCustomers() {
   const list: CustomerStatsItem[] = customersQuery.data?.data ?? [];
   const total = customersQuery.data?.metadata.total ?? 0;
   const totalPages = customersQuery.data?.metadata.totalPages ?? 1;
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -128,56 +133,61 @@ export default function AdminCustomers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customersQuery.isLoading && <TableLoadingRows cols={7} rows={6} />}
+              {(!hydrated || customersQuery.isLoading) && <TableLoadingRows cols={7} rows={6} />}
               {customersQuery.error && (
                 <TableErrorRow cols={7} message={String(customersQuery.error)} />
               )}
-              {!customersQuery.isLoading && list.length === 0 && (
+              {hydrated && !customersQuery.isLoading && list.length === 0 && (
                 <TableEmptyRow cols={7} message="Chưa có khách hàng" />
               )}
-              {list.map((c) => {
-                const tier = resolveCustomerTier(c.totalSpent, c.orderCount, tierConfigQuery.data);
-                const initial = c.fullName?.charAt(0) ?? "?";
-                return (
-                  <TableRow key={c.id} className="cursor-pointer" onClick={() => setEditing(c)}>
-                    <TableCell className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        {c.avatarUrl ? (
-                          <Image
-                            src={c.avatarUrl}
-                            alt={c.fullName ?? ""}
-                            width={32}
-                            height={32}
-                            className="h-8 w-8 shrink-0 rounded-full object-cover"
-                            sizes="32px"
-                          />
-                        ) : (
-                          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">
-                            {initial}
-                          </div>
-                        )}
-                        <span className="text-sm font-semibold">{c.fullName ?? "—"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                      {c.customerCode ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 text-xs">{c.phone ?? "—"}</TableCell>
-                    <TableCell className="px-4 py-2.5 font-semibold tabular-nums">
-                      {c.orderCount}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
-                      {formatVnd(c.totalSpent)}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {fmtDate(c.createdAt)}
-                    </TableCell>
-                    <TableCell className="px-4 py-2.5">
-                      <TonePill tone={tier.tone}>{tier.label}</TonePill>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {hydrated &&
+                list.map((c) => {
+                  const tier = resolveCustomerTier(
+                    c.totalSpent,
+                    c.orderCount,
+                    tierConfigQuery.data,
+                  );
+                  const initial = c.fullName?.charAt(0) ?? "?";
+                  return (
+                    <TableRow key={c.id} className="cursor-pointer" onClick={() => setEditing(c)}>
+                      <TableCell className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          {c.avatarUrl ? (
+                            <Image
+                              src={c.avatarUrl}
+                              alt={c.fullName ?? ""}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 shrink-0 rounded-full object-cover"
+                              sizes="32px"
+                            />
+                          ) : (
+                            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">
+                              {initial}
+                            </div>
+                          )}
+                          <span className="text-sm font-semibold">{c.fullName ?? "—"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                        {c.customerCode ?? "—"}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-xs">{c.phone ?? "—"}</TableCell>
+                      <TableCell className="px-4 py-2.5 font-semibold tabular-nums">
+                        {c.orderCount}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 font-bold tabular-nums text-red-600">
+                        {formatVnd(c.totalSpent)}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+                        {fmtDate(c.createdAt)}
+                      </TableCell>
+                      <TableCell className="px-4 py-2.5">
+                        <TonePill tone={tier.tone}>{tier.label}</TonePill>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </div>
@@ -200,7 +210,9 @@ export default function AdminCustomers() {
             </Select>
             <span>
               / trang ·{" "}
-              {customersQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} khách hàng`}
+              {!hydrated || (customersQuery.isLoading && total === 0)
+                ? "Đang tải..."
+                : `Tổng ${total} khách hàng`}
             </span>
           </div>
           <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />

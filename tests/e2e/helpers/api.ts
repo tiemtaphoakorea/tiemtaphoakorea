@@ -205,7 +205,7 @@ export async function createProductWithVariants(
 ) {
   const slug = params.slug || `${params.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
 
-  const { data } = await apiPost<{ success: boolean; product: any }>(page, "/api/admin/products", {
+  const payload = {
     name: params.name,
     slug,
     description: params.description || "",
@@ -222,8 +222,36 @@ export async function createProductWithVariants(
       price: v.price || v.retailPrice || 0,
       costPrice: v.costPrice || 0,
     })),
-  });
-  return data;
+  };
+  const variantSkus = payload.variants.map((v) => v.sku).filter(Boolean);
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { data } = await apiPost<{ success: boolean; product: any }>(
+        page,
+        "/api/admin/products",
+        payload,
+      );
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isConnectionReset = message.includes("ECONNRESET");
+      if (!isConnectionReset || attempt === 3) throw error;
+
+      await page.waitForTimeout(500 * attempt);
+      const products = await getProductsWithVariants(page);
+      const match = products.find(
+        (item: any) =>
+          item.name === params.name ||
+          item.variants?.some((variant: any) => variantSkus.includes(variant.sku)),
+      );
+      if (match) {
+        return { success: true, product: match };
+      }
+    }
+  }
+
+  return { success: false, product: null };
 }
 
 export async function findVariantIdBySku(page: Page, sku: string) {

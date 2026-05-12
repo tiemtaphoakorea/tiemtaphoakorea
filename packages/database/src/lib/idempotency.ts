@@ -9,7 +9,7 @@ import { idempotencyKeys } from "../schema";
 
 interface IdempotencyKeyData {
   key: string;
-  resourceType: "order" | "payment";
+  resourceType: "order" | "payment" | "receipt" | "purchase" | "payout";
   resourceId?: string;
   requestPayload: any;
   responsePayload?: any;
@@ -21,7 +21,7 @@ interface IdempotencyKeyData {
  */
 export async function checkIdempotencyKey(
   key: string,
-  resourceType: "order" | "payment",
+  resourceType: "order" | "payment" | "receipt" | "purchase" | "payout",
 ): Promise<{
   exists: boolean;
   response?: any;

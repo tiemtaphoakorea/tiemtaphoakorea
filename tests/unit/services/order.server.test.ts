@@ -118,7 +118,7 @@ describe("createOrder", () => {
     expect(result.order.id).toBe("order-1");
   });
 
-  it("should create order when in_stock quantity insufficient (mixed: có món còn, có món hết; no supplier order)", async () => {
+  it("should create order and report shortage when available stock is insufficient", async () => {
     mockTx.for.mockResolvedValueOnce([
       {
         id: "v1",
@@ -142,7 +142,7 @@ describe("createOrder", () => {
 
     const result = await createOrder({
       customerId: "cust-1",
-      items: [{ variantId: "v1", quantity: 2 }], // Request 2, available 1 → deduct full 2 (stock -1), supplier order 1
+      items: [{ variantId: "v1", quantity: 2 }], // Request 2, available 1 → reserve full 2 and report shortage 1.
       userId: "admin-1",
     });
 
@@ -154,7 +154,7 @@ describe("createOrder", () => {
     });
   });
 
-  it("should create order for zero-stock items (deduct and report itemsNeedingStock)", async () => {
+  it("should create order for zero-stock items and report itemsNeedingStock", async () => {
     mockTx.for.mockResolvedValueOnce([
       {
         id: "v2",

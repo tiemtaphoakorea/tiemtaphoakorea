@@ -12,7 +12,13 @@ import { Button } from "@workspace/ui/components/button";
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -112,6 +118,11 @@ export function CustomerDrawer({ open, customer, onClose }: CustomerDrawerProps)
           <SheetTitle className="text-sm font-bold">
             {customer ? "Chỉnh sửa khách hàng" : "Thêm khách hàng"}
           </SheetTitle>
+          <SheetDescription>
+            {customer
+              ? "Cập nhật thông tin và trạng thái của khách hàng."
+              : "Nhập thông tin để tạo khách hàng mới."}
+          </SheetDescription>
         </SheetHeader>
 
         <form

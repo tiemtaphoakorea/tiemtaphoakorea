@@ -8,7 +8,7 @@
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type PurchasesBySupplierRow = {
   supplierId: string | null;
@@ -44,6 +44,8 @@ export async function getPurchasesBySupplierReport(params: {
   const search = params.search?.trim() ?? "";
   const page = Math.max(1, params.page ?? PAGINATION_DEFAULT.PAGE);
   const limit = Math.max(1, Math.min(200, params.limit ?? PAGINATION_DEFAULT.LIMIT));
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -59,8 +61,8 @@ export async function getPurchasesBySupplierReport(params: {
     LEFT JOIN suppliers s ON s.id = r.supplier_id
     WHERE r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND COALESCE(r.received_at, r.created_at) >= ${start}
-      AND COALESCE(r.received_at, r.created_at) <= ${end}
+      AND COALESCE(r.received_at, r.created_at) >= ${startSql}
+      AND COALESCE(r.received_at, r.created_at) <= ${endSql}
     GROUP BY s.id, s.name, s.code
     ORDER BY payable_amount DESC
   `);
@@ -84,9 +86,7 @@ export async function getPurchasesBySupplierReport(params: {
   if (search) {
     const q = search.toLowerCase();
     rows = rows.filter(
-      (r) =>
-        r.supplierName?.toLowerCase().includes(q) ||
-        r.supplierCode?.toLowerCase().includes(q),
+      (r) => r.supplierName?.toLowerCase().includes(q) || r.supplierCode?.toLowerCase().includes(q),
     );
   }
 
@@ -120,6 +120,8 @@ export async function getPurchasesSupplierReceipts(params: {
   endDate: Date;
 }): Promise<SupplierReceiptRow[]> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT id, code, created_at, payable_amount, paid_amount, debt_amount, status
@@ -127,8 +129,8 @@ export async function getPurchasesSupplierReceipts(params: {
     WHERE supplier_id = ${params.supplierId}
       AND status = 'completed'
       AND cancelled_at IS NULL
-      AND COALESCE(received_at, created_at) >= ${start}
-      AND COALESCE(received_at, created_at) <= ${end}
+      AND COALESCE(received_at, created_at) >= ${startSql}
+      AND COALESCE(received_at, created_at) <= ${endSql}
     ORDER BY COALESCE(received_at, created_at) DESC
   `);
 

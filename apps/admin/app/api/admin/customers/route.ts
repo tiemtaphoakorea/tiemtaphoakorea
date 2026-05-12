@@ -1,6 +1,6 @@
 import { getInternalUser } from "@workspace/database/lib/auth";
 import { createCustomer, getCustomers } from "@workspace/database/services/customer.server";
-import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { BusinessError, HTTP_STATUS } from "@workspace/shared/http-status";
 import { getPaginationParams } from "@workspace/shared/pagination";
 import { NextResponse } from "next/server";
 
@@ -43,8 +43,15 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Failed to create customer:", error);
     return NextResponse.json(
-      { success: false, error: "Đã có lỗi xảy ra khi tạo khách hàng." },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      {
+        success: false,
+        error:
+          error instanceof BusinessError ? error.message : "Đã có lỗi xảy ra khi tạo khách hàng.",
+      },
+      {
+        status:
+          error instanceof BusinessError ? error.statusCode : HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      },
     );
   }
 }

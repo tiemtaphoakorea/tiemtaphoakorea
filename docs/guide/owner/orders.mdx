@@ -39,7 +39,7 @@ Menu bên trái → **Đơn hàng**.
 flowchart LR
     A["Chờ xử lý<br/>pending"] --> B["Đã xuất kho<br/>stock_out"]
     B --> C["Hoàn thành<br/>completed"]
-    A & B -->|Huỷ| D["Đã huỷ<br/>cancelled"]
+    A -->|Huỷ| D["Đã huỷ<br/>cancelled"]
 
     style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
     style C fill:#dcfce7,stroke:#22c55e,color:#166534
@@ -47,7 +47,7 @@ flowchart LR
 ```
 
 <Note>
-**Tồn kho**: Số lượng tồn kho được giữ chỗ (`reserved`) ngay khi đơn được tạo, và chuyển thành xuất kho khi trạng thái sang `stock_out`. Khi đơn bị huỷ, số đã giữ chỗ được trả về kho.
+**Tồn kho**: Tạo đơn chỉ tăng số giữ chỗ (`reserved`), chưa trừ tồn vật lý (`onHand`). Khi chuyển sang `stock_out`, hệ thống mới trừ `onHand` và giải phóng `reserved`. Huỷ đơn `pending` chỉ giải phóng `reserved`.
 </Note>
 
 ## Trang danh sách

@@ -56,13 +56,23 @@ test.describe("Receipts - supplier payment after completion", () => {
     await page.getByRole("button", { name: "Chuyển khoản" }).click();
     await page.getByPlaceholder("Số giao dịch / mã CK").fill(`REF-${runId}`);
 
-    await Promise.all([
+    const [payoutResponse] = await Promise.all([
       page.waitForResponse(
         (response) =>
           response.url().includes("/api/admin/payouts") && response.request().method() === "POST",
       ),
       page.getByRole("button", { name: "Xác nhận" }).click(),
     ]);
+    expect(payoutResponse.ok()).toBeTruthy();
+
+    await expect
+      .poll(async () => {
+        const detailResponse = await page.request.get(`/api/admin/receipts/${receipt.id}`);
+        if (!detailResponse.ok()) return null;
+        const detailBody = await detailResponse.json();
+        return detailBody.receipt?.paymentStatus;
+      })
+      .toBe("paid");
 
     await expect(page.getByText("Đã thanh toán")).toBeVisible();
     await expect(page.getByText("0đ").last()).toBeVisible();

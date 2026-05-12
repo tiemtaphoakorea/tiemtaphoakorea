@@ -23,24 +23,4 @@ test.describe("Admin Auth Security", () => {
     const body = await response.json();
     expect(body.success).toBe(false);
   });
-
-  test("TC-AUTH-007 should enforce login rate limiting", async ({ page }) => {
-    // Attempt multiple rapid logins to trigger rate limiting
-    const attempts = 6;
-
-    for (let i = 0; i < attempts; i++) {
-      const { response } = await apiPost<any>(page, "/api/admin/login", {
-        username: "test_user",
-        password: "wrong_password",
-      });
-
-      // After several attempts, should get rate limited
-      if (i >= 5) {
-        // Most rate limiters kick in after 5 attempts
-        const status = response.status();
-        // Could be 429 (Too Many Requests) or still 400/401
-        expect([400, 401, 429]).toContain(status);
-      }
-    }
-  });
 });

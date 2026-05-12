@@ -24,7 +24,13 @@ export {
   getCustomerDebtsReport,
   getCustomerDebtTransactions,
 } from "./report-financial-customer-debts.server";
-
+export {
+  getProfitByOrderReport,
+  type ProfitByOrderItem,
+  type ProfitByOrderReport,
+  type ProfitByOrderRow,
+  type ProfitByOrderSort,
+} from "./report-financial-profit-by-order.server";
 export {
   getMissingCostOrdersReport,
   getProfitLossReport,

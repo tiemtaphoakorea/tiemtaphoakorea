@@ -6,7 +6,7 @@
 
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type PayoutsByMethodRow = {
   method: string;
@@ -31,6 +31,8 @@ export async function getPayoutsByMethodReport(params: {
   endDate: Date;
 }): Promise<PayoutsByMethodReport> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -38,8 +40,8 @@ export async function getPayoutsByMethodReport(params: {
       COUNT(*)::int AS tx_count,
       COALESCE(SUM(amount::numeric), 0) AS total_amount
     FROM supplier_payments
-    WHERE paid_at >= ${start}
-      AND paid_at <= ${end}
+    WHERE paid_at >= ${startSql}
+      AND paid_at <= ${endSql}
     GROUP BY COALESCE(method::text, 'unknown')
     ORDER BY total_amount DESC
   `);
@@ -89,6 +91,8 @@ export async function getPayoutTransactionsByMethod(params: {
   endDate: Date;
 }): Promise<PayoutTransactionRow[]> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -102,8 +106,8 @@ export async function getPayoutTransactionsByMethod(params: {
     FROM supplier_payments sp
     LEFT JOIN suppliers s ON s.id = sp.supplier_id
     WHERE COALESCE(sp.method::text, 'unknown') = ${params.method}
-      AND sp.paid_at >= ${start}
-      AND sp.paid_at <= ${end}
+      AND sp.paid_at >= ${startSql}
+      AND sp.paid_at <= ${endSql}
     ORDER BY sp.paid_at DESC
   `);
 

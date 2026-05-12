@@ -6,6 +6,7 @@ import {
 import type { PaymentMethodValue } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { beginIdempotency } from "@/lib/idempotency";
 
 export async function GET(request: NextRequest) {
   const user = await getInternalUser(request);
@@ -49,18 +50,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { clientToken, ...input } = body;
+
+    // Idempotency: replay returns cached response; conflict surfaces 409.
+    // Payload excludes clientToken itself so replay matches on actual intent.
+    const idem = await beginIdempotency({
+      clientToken,
+      resourceType: "payout",
+      payload: {
+        supplierId: input.supplierId,
+        receiptId: input.receiptId ?? null,
+        amount: String(input.amount),
+        method: input.method,
+        referenceCode: input.referenceCode ?? null,
+        paidAt: input.paidAt ?? null,
+        note: input.note ?? null,
+      },
+    });
+    if ("replay" in idem) return idem.replay;
+
     const payment = await createSupplierPayment({
-      supplierId: body.supplierId,
-      receiptId: body.receiptId || undefined,
-      amount: String(body.amount),
-      method: body.method as PaymentMethodValue,
-      referenceCode: body.referenceCode || undefined,
-      paidAt: body.paidAt ? new Date(body.paidAt) : undefined,
-      note: body.note || undefined,
+      supplierId: input.supplierId,
+      receiptId: input.receiptId || undefined,
+      amount: String(input.amount),
+      method: input.method as PaymentMethodValue,
+      referenceCode: input.referenceCode || undefined,
+      paidAt: input.paidAt ? new Date(input.paidAt) : undefined,
+      note: input.note || undefined,
       createdBy: user.profile.id,
     });
 
-    return NextResponse.json({ success: true, payment });
+    const response = { success: true, payment };
+    await idem.finalize(response, payment.id);
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Failed to create supplier payment:", error);
     const message = error instanceof Error ? error.message : "Đã có lỗi xảy ra";

@@ -43,3 +43,35 @@ export function csvResponse(rows: object[], filename: string): Response {
     },
   });
 }
+
+/**
+ * Build a CSV with multiple sections separated by blank lines.
+ * Each section: optional title row, then header row + data rows.
+ * Used for "chi tiết" exports that bundle multiple related tables.
+ */
+export type CsvSection = {
+  title?: string;
+  rows: object[];
+};
+
+export function toCsvSections(sections: CsvSection[]): string {
+  return sections
+    .filter((s) => s.rows.length > 0 || s.title)
+    .map((s) => {
+      const parts: string[] = [];
+      if (s.title) parts.push(s.title);
+      if (s.rows.length > 0) parts.push(toCsv(s.rows));
+      return parts.join("\r\n");
+    })
+    .join("\r\n\r\n");
+}
+
+export function csvSectionsResponse(sections: CsvSection[], filename: string): Response {
+  const csv = `${CSV_BOM}${toCsvSections(sections)}`;
+  return new Response(csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+}

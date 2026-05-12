@@ -42,7 +42,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
       iconClassName: "bg-blue-500/10 text-blue-500",
       trend: {
         icon: <ArrowUpRight className="h-3 w-3" />,
-        text: "Không phụ thuộc trạng thái thanh toán",
+        text: "Theo ngày xuất kho, loại đơn thiếu giá vốn",
         className: "text-muted-foreground",
       },
     },
@@ -52,7 +52,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
       icon: <PieChart className="h-3.5 w-3.5" />,
       iconClassName: "bg-orange-500/10 text-orange-500",
       trend: {
-        text: `${stats.orderCount || 0} đơn hàng không hủy`,
+        text: `${stats.orderCount || 0} đơn đã giao đủ giá vốn`,
         className: "text-muted-foreground",
       },
     },
@@ -91,18 +91,20 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
 
   const missingCostRate = stats.missingCostRate ?? 0;
   const missingCostItems = stats.missingCostItems ?? 0;
-  const showCostWarning = missingCostRate > 0.05;
+  const missingCostOrderCount = stats.missingCostOrderCount ?? 0;
+  const excludedRevenue = stats.excludedRevenue ?? 0;
+  const showCostWarning = missingCostItems > 0 || excludedRevenue > 0;
 
   return (
     <>
       {showCostWarning && (
         <Alert variant="destructive" className="border-amber-500/40 bg-amber-50 text-amber-900">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Báo cáo lợi nhuận có thể chưa chính xác</AlertTitle>
+          <AlertTitle>Có đơn đã giao nhưng thiếu giá vốn</AlertTitle>
           <AlertDescription>
-            {missingCostItems} mặt hàng (chiếm {(missingCostRate * 100).toFixed(1)}% tổng dòng) chưa
-            có giá vốn → COGS bị thiếu, lợi nhuận hiển thị cao hơn thực tế. Vui lòng vào phần Sản
-            phẩm và nhập giá vốn cho các biến thể còn thiếu.
+            Đã tách {missingCostOrderCount} đơn / {missingCostItems} dòng khỏi P&L chính thức.{" "}
+            {formatCurrency(excludedRevenue)} doanh thu đang nằm trong ngoại lệ cho đến khi bổ sung
+            giá vốn ({(missingCostRate * 100).toFixed(1)}% dòng đã giao).
           </AlertDescription>
         </Alert>
       )}
@@ -244,7 +246,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
                       : "bg-red-500"
                 }`}
               >
-                {showCostWarning ? "ƯỚC TÍNH" : (stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
+                {showCostWarning ? "CẦN GIÁ VỐN" : (stats.netProfit || 0) > 0 ? "GOOD" : "LOSS"}
               </div>
             </div>
 
@@ -258,7 +260,7 @@ export function FinanceStats({ date }: FinanceStatsProps = {}) {
               </div>
               <p className="text-muted-foreground mx-auto max-w-62 pt-2 text-sm leading-relaxed font-medium">
                 {showCostWarning
-                  ? "Một số mặt hàng chưa có giá vốn. Số liệu chỉ mang tính tham khảo cho đến khi cập nhật đầy đủ."
+                  ? "Một số đơn đã giao đang được tách khỏi P&L cho đến khi bổ sung giá vốn."
                   : (stats.netProfit || 0) > 0
                     ? "Tỷ suất lợi nhuận ở mức tích cực. Tiếp tục duy trì và tối ưu chi phí."
                     : "Cần xem xét lại chi phí vận hành hoặc chiến lược giá để cải thiện lợi nhuận."}

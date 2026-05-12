@@ -76,7 +76,6 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Kho vận",
     items: [
       { icon: Truck, label: "Quản lý kho", href: ADMIN_ROUTES.INVENTORY },
-      { icon: ClipboardList, label: "Tồn đầu kỳ", href: ADMIN_ROUTES.INVENTORY_OPENING_STOCK },
       { icon: ClipboardList, label: "Đặt hàng nhập", href: ADMIN_ROUTES.PURCHASES },
       { icon: PackagePlus, label: "Nhập hàng", href: ADMIN_ROUTES.RECEIPTS },
       { icon: Wallet, label: "Phiếu chi NCC", href: ADMIN_ROUTES.PAYOUTS },
@@ -111,7 +110,6 @@ function visibleForRole(href: string, role?: UserRole): boolean {
   if (!role) return false;
   if (href === ADMIN_ROUTES.USERS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.EXPENSES) return role === ROLE.OWNER;
-  if (href === ADMIN_ROUTES.INVENTORY_OPENING_STOCK) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS_CONTENT) return role === ROLE.OWNER;
   if (href === ADMIN_ROUTES.SETTINGS_WIDGETS) return role === ROLE.OWNER;

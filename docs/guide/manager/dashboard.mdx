@@ -24,13 +24,17 @@ Cụm `MetricStatBar` 4 ô.
 | **Sản phẩm sắp hết** | `COUNT(productVariants)` có `0 < onHand ≤ COALESCE(lowStockThreshold, 30)` | `M đã hết` — SKU có `onHand = 0` |
 | **Khách hàng mới** | `COUNT(profiles)` có `role = customer AND createdAt ≥ 00:00 hôm nay` | "Hôm nay" |
 
+<Note>
+Dashboard là màn hình vận hành nhanh. **Doanh thu hôm nay** dùng `orders.total` theo `completedAt`, còn biểu đồ 7 ngày dùng thống kê tài chính theo `stockOutAt`.
+</Note>
+
 ---
 
 ## Khu vực 2 — 2 biểu đồ 7 ngày
 
 ### Doanh thu 7 ngày
 
-- Bar chart 7 ngày gần nhất.
+- Bar chart 7 ngày gần nhất, lấy từ thống kê tài chính theo ngày: đơn chưa huỷ, đã `stock_out` hoặc `completed`, doanh thu = `subtotal - discount`.
 - Pill so sánh tuần trước:
   - Xanh `+x% tuần trước` khi tăng.
   - Đỏ `−x% tuần trước` khi giảm.
@@ -38,8 +42,8 @@ Cụm `MetricStatBar` 4 ô.
 
 ### Đơn hàng 7 ngày
 
-- Bar chart vàng (amber).
-- Pill xanh dương: `N hôm nay`.
+- Bar chart vàng (amber), cùng điều kiện với biểu đồ doanh thu.
+- Pill xanh dương: `N hôm nay` = số đơn được tạo trong ngày.
 
 ---
 

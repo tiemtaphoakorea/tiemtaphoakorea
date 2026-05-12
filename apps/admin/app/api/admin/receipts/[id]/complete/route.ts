@@ -4,6 +4,7 @@ import type { IdRouteParams } from "@workspace/database/types/api";
 import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { beginActionIdempotency } from "@/lib/action-idempotency";
 
 const COMPLETE_ROLES: ReadonlyArray<string> = [ROLE.OWNER, ROLE.MANAGER];
 
@@ -20,9 +21,23 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
   }
 
   try {
+    const body = await request.json().catch(() => ({}));
+    const { clientToken } = body ?? {};
     const { id } = await params;
+
+    const idem = await beginActionIdempotency({
+      clientToken,
+      resourceType: "receipt",
+      resourceId: id,
+      action: "complete",
+      payload: {},
+    });
+    if ("replay" in idem) return idem.replay;
+
     const updated = await completeGoodsReceipt(id, user.profile.id);
-    return NextResponse.json({ success: true, receipt: updated });
+    const response = { success: true, receipt: updated };
+    await idem.finalize(response);
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Failed to complete goods receipt:", error);
     const message = error instanceof Error ? error.message : "Đã có lỗi xảy ra";

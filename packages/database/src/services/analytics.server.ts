@@ -37,16 +37,20 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     }> = [];
 
     try {
+      // Group by Vietnam business month (UTC-stored timestamp → VN local).
+      const paidAtLocal = sql`((${orders.paidAt} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Ho_Chi_Minh')`;
+      const monthLabel = sql`TO_CHAR(date_trunc('month', ${paidAtLocal}), 'Tháng MM')`;
+
       const monthlyData = await db
         .select({
-          month: sql<string>`TO_CHAR(date_trunc('month', ${orders.paidAt}), 'Tháng MM')`,
+          month: sql<string>`${monthLabel}`,
           revenue: sql<number>`coalesce(SUM(${orders.total}), 0)`.mapWith(Number),
           orderCount: sql<number>`COUNT(${orders.id})`.mapWith(Number),
           minDate: sql<Date>`MIN(${orders.paidAt})`,
         })
         .from(orders)
         .where(and(isNotNull(orders.paidAt), gte(orders.paidAt, startOfYear)))
-        .groupBy(sql`TO_CHAR(date_trunc('month', ${orders.paidAt}), 'Tháng MM')`)
+        .groupBy(monthLabel)
         .orderBy(sql`MIN(${orders.paidAt})`);
 
       monthlyRevenue = monthlyData.map((row) => ({

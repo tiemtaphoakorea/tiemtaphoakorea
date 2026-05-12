@@ -12,7 +12,7 @@ import { orderStatusHistory, orders, payments } from "../schema/orders";
 import { profiles } from "../schema/profiles";
 import { supplierPayments } from "../schema/receipts";
 import { suppliers } from "../schema/suppliers";
-import { normalizeRange, rowsOf, TRUNC_FMT } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp, TRUNC_FMT } from "./report-shared.server";
 
 export type CashFlowPeriodRow = {
   period: string; // YYYY-MM-DD (day), YYYY-Www (week), YYYY-MM (month)
@@ -50,6 +50,8 @@ export async function getCashFlowReport(params: {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
   const groupBy = params.groupBy ?? "day";
   const fmt = TRUNC_FMT[groupBy];
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const tz = sql`'Asia/Ho_Chi_Minh'`;
 
@@ -58,7 +60,7 @@ export async function getCashFlowReport(params: {
            COALESCE(SUM(p.amount::numeric), 0) AS inflow
     FROM payments p
     INNER JOIN orders o ON o.id = p.order_id
-    WHERE p.created_at >= ${start} AND p.created_at <= ${end}
+    WHERE p.created_at >= ${startSql} AND p.created_at <= ${endSql}
       AND (
         o.cancelled_at IS NULL
         OR EXISTS (
@@ -75,14 +77,14 @@ export async function getCashFlowReport(params: {
       SELECT date_trunc(${fmt.trunc}, (paid_at AT TIME ZONE 'UTC') AT TIME ZONE ${tz}) AS period_dt,
              SUM(amount::numeric) AS amount
       FROM supplier_payments
-      WHERE paid_at >= ${start} AND paid_at <= ${end}
+      WHERE paid_at >= ${startSql} AND paid_at <= ${endSql}
       GROUP BY 1
     ),
     ex AS (
       SELECT date_trunc(${fmt.trunc}, (date AT TIME ZONE 'UTC') AT TIME ZONE ${tz}) AS period_dt,
              SUM(amount::numeric) AS amount
       FROM expenses
-      WHERE date >= ${start} AND date <= ${end}
+      WHERE date >= ${startSql} AND date <= ${endSql}
       GROUP BY 1
     )
     SELECT to_char(period_dt, ${fmt.format}) AS period,

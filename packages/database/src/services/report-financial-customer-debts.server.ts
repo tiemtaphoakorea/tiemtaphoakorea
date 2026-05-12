@@ -11,7 +11,7 @@ import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/paginat
 import { and, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { orders, payments } from "../schema/orders";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type CustomerDebtRow = {
   customerId: string;
@@ -49,6 +49,8 @@ export async function getCustomerDebtsReport(params: {
   const page = Math.max(1, params.page ?? PAGINATION_DEFAULT.PAGE);
   const limit = Math.max(1, Math.min(200, params.limit ?? PAGINATION_DEFAULT.LIMIT));
   const includeZero = params.includeZero ?? false;
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const aggregates = await db.execute(sql`
     WITH all_customers AS (
@@ -62,8 +64,8 @@ export async function getCustomerDebtsReport(params: {
       SELECT customer_id,
              COALESCE(SUM(total::numeric), 0) AS pre_total
       FROM orders
-      WHERE created_at < ${start}
-        AND (cancelled_at IS NULL OR cancelled_at >= ${start})
+      WHERE created_at < ${startSql}
+        AND (cancelled_at IS NULL OR cancelled_at >= ${startSql})
       GROUP BY customer_id
     ),
     pre_pay AS (
@@ -72,15 +74,15 @@ export async function getCustomerDebtsReport(params: {
              COALESCE(SUM(p.amount::numeric), 0) AS pre_paid
       FROM payments p
       INNER JOIN orders o ON o.id = p.order_id
-      WHERE p.created_at < ${start}
-        AND (o.cancelled_at IS NULL OR o.cancelled_at >= ${start})
+      WHERE p.created_at < ${startSql}
+        AND (o.cancelled_at IS NULL OR o.cancelled_at >= ${startSql})
       GROUP BY o.customer_id
     ),
     in_order AS (
       SELECT customer_id,
              COALESCE(SUM(total::numeric), 0) AS in_total
       FROM orders
-      WHERE created_at >= ${start} AND created_at <= ${end} AND cancelled_at IS NULL
+      WHERE created_at >= ${startSql} AND created_at <= ${endSql} AND cancelled_at IS NULL
       GROUP BY customer_id
     ),
     in_pay AS (
@@ -88,7 +90,7 @@ export async function getCustomerDebtsReport(params: {
              COALESCE(SUM(p.amount::numeric), 0) AS in_paid
       FROM payments p
       INNER JOIN orders o ON o.id = p.order_id
-      WHERE p.created_at >= ${start} AND p.created_at <= ${end} AND o.cancelled_at IS NULL
+      WHERE p.created_at >= ${startSql} AND p.created_at <= ${endSql} AND o.cancelled_at IS NULL
       GROUP BY o.customer_id
     )
     SELECT

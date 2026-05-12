@@ -31,7 +31,7 @@ export default function AnalyticsFinancePage() {
       />
 
       <p className="-mt-4 text-sm font-medium text-muted-foreground">
-        Tổng hợp toàn bộ shop · tính trên tất cả đơn không hủy và sản phẩm
+        P&L theo ngày xuất kho · đơn thiếu giá vốn được tách khỏi tổng chính thức
       </p>
 
       <ErrorBoundary>

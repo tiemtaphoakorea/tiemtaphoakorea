@@ -3,7 +3,6 @@ id: DS-Foundation
 type: design-system
 status: active
 project: Auth Shop Platform
-linked-to: [[Design-MOC]]
 created: 2026-01-21
 tags: [design, tokens, typography, colors]
 ---

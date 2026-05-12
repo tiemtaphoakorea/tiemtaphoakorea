@@ -382,6 +382,11 @@ export async function createOrder(data: {
  * (oversell is allowed once goods physically leave). A movement record is
  * written for each item. Requires the order to currently be
  * `fulfillment_status = 'pending'`.
+ *
+ * COGS is re-snapshotted here from the live WAC (`productVariants.costPrice`),
+ * overwriting `orderItems.cost_price_at_order_time` and order-level
+ * `total_cost`/`profit`. This is critical for pre-orders placed before the
+ * first goods receipt, where cost at creation time was 0/stale.
  */
 export async function stockOut({
   orderId,
@@ -401,7 +406,12 @@ export async function stockOut({
     }
 
     const items = await tx
-      .select({ quantity: orderItems.quantity, variantId: orderItems.variantId })
+      .select({
+        id: orderItems.id,
+        quantity: orderItems.quantity,
+        variantId: orderItems.variantId,
+        unitPrice: orderItems.unitPrice,
+      })
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
 
@@ -411,7 +421,37 @@ export async function stockOut({
     const variants = await lockVariantsForUpdate(tx, variantIds);
     const byId = new Map(variants.map((v) => [v.id, v]));
 
+    // Re-snapshot COGS at stock-out time using the live WAC (productVariants.costPrice).
+    // Cost recorded at order creation can be stale (e.g. pre-order placed before
+    // first goods receipt → WAC was 0). Matching principle requires COGS to reflect
+    // the cost basis at fulfillment, so we overwrite cost_price_at_order_time and
+    // line totals here using the WAC that exists right now.
+    //
+    // Race window with concurrent completeGoodsReceipt: both paths take a
+    // FOR UPDATE on the variant row, so they serialise. Whichever tx commits
+    // second sees the other's costPrice — meaning a stock-out that interleaves
+    // with a receipt commit may snapshot either the pre-receipt or post-receipt
+    // WAC. Both outcomes are accounting-consistent (cost matches WAC at the
+    // moment stock physically left); exact ordering is recoverable from
+    // inventory_movements + cost_price_history timestamps if needed.
+    let totalCost = 0;
     for (const item of items) {
+      const v = byId.get(item.variantId)!;
+      const costPrice = Number(v.costPrice || 0);
+      const unitPrice = Number(item.unitPrice);
+      const lineCost = costPrice * item.quantity;
+      const lineProfit = (unitPrice - costPrice) * item.quantity;
+      totalCost += lineCost;
+
+      await tx
+        .update(orderItems)
+        .set({
+          costPriceAtOrderTime: costPrice.toString(),
+          lineCost: lineCost.toString(),
+          lineProfit: lineProfit.toString(),
+        })
+        .where(eq(orderItems.id, item.id));
+
       await tx
         .update(productVariants)
         .set({
@@ -419,10 +459,7 @@ export async function stockOut({
           reserved: sql`${productVariants.reserved} - ${item.quantity}`,
         })
         .where(eq(productVariants.id, item.variantId));
-    }
 
-    for (const item of items) {
-      const v = byId.get(item.variantId)!;
       await insertInventoryMovement(tx, {
         variantId: item.variantId,
         type: "stock_out",
@@ -433,6 +470,15 @@ export async function stockOut({
       });
     }
 
+    // Order-level totals: profit = (subtotal - discount) - totalCost.
+    // lockedOrder doesn't surface subtotal/discount; read them on the now-locked row.
+    const [orderTotals] = await tx
+      .select({ subtotal: orders.subtotal, discount: orders.discount })
+      .from(orders)
+      .where(eq(orders.id, orderId));
+    const profit =
+      Number(orderTotals.subtotal ?? 0) - Number(orderTotals.discount ?? 0) - totalCost;
+
     const now = new Date();
     const [updated] = await tx
       .update(orders)
@@ -440,6 +486,8 @@ export async function stockOut({
         fulfillmentStatus: FULFILLMENT_STATUS.STOCK_OUT,
         stockOutAt: now,
         updatedAt: now,
+        totalCost: totalCost.toString(),
+        profit: profit.toString(),
       })
       .where(eq(orders.id, orderId))
       .returning();
@@ -578,6 +626,223 @@ export async function cancelOrder({
   });
 }
 
+/**
+ * Return a fully-shipped order back to inventory (full return only; no partial).
+ *
+ * Preconditions: order.fulfillmentStatus must be `stock_out` or `completed`.
+ * Cancelling a pre-stock-out order uses `cancelOrder` instead.
+ *
+ * Side effects (atomic):
+ *  - Each variant: onHand += item.quantity, insert `inventory_movements` with
+ *    type='cancellation', positive quantity, referenceId=orderId. The
+ *    `cancellation` movement type is reused for both PO/receipt cancels and
+ *    customer returns — both reverse a prior outflow.
+ *  - Order: fulfillmentStatus=cancelled, totalCost=0, profit=subtotal-discount
+ *    (no cost recognised when goods come back), cancelledAt=now.
+ *  - orderStatusHistory: a row with `[RETURNED] <reason>` so the timeline can
+ *    distinguish a post-shipment return from a pre-shipment cancel.
+ *
+ * Out of scope (manual for now): refunding `payments`, issuing customer
+ * credit, partial returns. Finance must reconcile any paid amount separately.
+ */
+export async function returnOrder({
+  orderId,
+  userId,
+  reason,
+}: {
+  orderId: string;
+  userId: string;
+  reason: string;
+}) {
+  return await db.transaction(async (tx: DbTransaction) => {
+    const locked = await lockOrderForUpdate(tx, orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+
+    if (
+      locked.fulfillmentStatus !== FULFILLMENT_STATUS.STOCK_OUT &&
+      locked.fulfillmentStatus !== FULFILLMENT_STATUS.COMPLETED
+    ) {
+      throw new Error(
+        `Invalid transition: cannot return from ${locked.fulfillmentStatus}. Order must be stock_out or completed.`,
+      );
+    }
+
+    const items = await tx
+      .select({
+        id: orderItems.id,
+        quantity: orderItems.quantity,
+        variantId: orderItems.variantId,
+      })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    if (items.length === 0) throw new Error("Order has no items");
+
+    const variantIds = items.map((i) => i.variantId);
+    const variants = await lockVariantsForUpdate(tx, variantIds);
+    const byId = new Map(variants.map((v) => [v.id, v]));
+
+    // Reverse stock: onHand += qty per item; record a `cancellation` movement
+    // so the chain audit (onHandBefore + quantity = onHandAfter) stays intact.
+    for (const item of items) {
+      const v = byId.get(item.variantId);
+      if (!v) continue;
+
+      await tx
+        .update(productVariants)
+        .set({ onHand: sql`${productVariants.onHand} + ${item.quantity}` })
+        .where(eq(productVariants.id, item.variantId));
+
+      await insertInventoryMovement(tx, {
+        variantId: item.variantId,
+        type: "cancellation",
+        quantity: item.quantity,
+        onHandBefore: v.onHand ?? 0,
+        referenceId: orderId,
+        createdBy: userId,
+      });
+    }
+
+    // Reverse COGS at order level. Returned goods produce no cost of sale.
+    // lockOrderForUpdate doesn't surface subtotal/discount; read them on the now-locked row.
+    const [orderTotals] = await tx
+      .select({ subtotal: orders.subtotal, discount: orders.discount })
+      .from(orders)
+      .where(eq(orders.id, orderId));
+    const subtotal = Number(orderTotals?.subtotal ?? 0);
+    const discount = Number(orderTotals?.discount ?? 0);
+    const reversedProfit = subtotal - discount;
+
+    const now = new Date();
+    // `stock_out_at_consistency` check constraint requires stockOutAt to be NULL
+    // when fulfillmentStatus is not in (stock_out, completed). The original
+    // stock-out + completion timestamps survive in orderStatusHistory so the
+    // timeline of "shipped at X, returned at Y" is still recoverable.
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+        cancelledAt: now,
+        stockOutAt: null,
+        completedAt: null,
+        totalCost: "0",
+        profit: reversedProfit.toString(),
+        updatedAt: now,
+      })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: FULFILLMENT_STATUS.CANCELLED,
+      note: `[RETURNED] ${reason}`,
+      createdBy: userId,
+    });
+
+    return updated;
+  });
+}
+
+export async function updateStockOutOrderItemCost({
+  orderItemId,
+  orderId,
+  unitCost,
+  userId,
+  note,
+}: {
+  orderItemId: string;
+  orderId?: string;
+  unitCost: number;
+  userId: string;
+  note?: string;
+}) {
+  if (!Number.isFinite(unitCost) || unitCost <= 0) {
+    throw new Error("Unit cost must be greater than 0");
+  }
+
+  return await db.transaction(async (tx: DbTransaction) => {
+    const [item] = await tx
+      .select({
+        id: orderItems.id,
+        orderId: orderItems.orderId,
+        sku: orderItems.sku,
+        quantity: orderItems.quantity,
+        lineTotal: orderItems.lineTotal,
+      })
+      .from(orderItems)
+      .where(eq(orderItems.id, orderItemId))
+      .for("update");
+
+    if (!item) throw new Error("Order item not found");
+    if (orderId && item.orderId !== orderId) {
+      throw new Error("Order item does not belong to order");
+    }
+
+    const locked = await lockOrderForUpdate(tx, item.orderId);
+    if (!locked) throw new Error(ERROR_MESSAGE.ORDER.NOT_FOUND);
+    if (
+      locked.fulfillmentStatus !== FULFILLMENT_STATUS.STOCK_OUT &&
+      locked.fulfillmentStatus !== FULFILLMENT_STATUS.COMPLETED
+    ) {
+      throw new Error(
+        `Invalid transition: cannot update stock-out cost from ${locked.fulfillmentStatus}`,
+      );
+    }
+
+    const lineCost = unitCost * item.quantity;
+    const lineProfit = Number(item.lineTotal ?? 0) - lineCost;
+
+    await tx
+      .update(orderItems)
+      .set({
+        costPriceAtOrderTime: unitCost.toString(),
+        lineCost: lineCost.toString(),
+        lineProfit: lineProfit.toString(),
+      })
+      .where(eq(orderItems.id, orderItemId));
+
+    const [costTotals] = await tx
+      .select({
+        totalCost: sql<number>`COALESCE(SUM(${orderItems.lineCost}::numeric), 0)`.mapWith(Number),
+      })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, item.orderId));
+
+    const [orderTotals] = await tx
+      .select({ subtotal: orders.subtotal, discount: orders.discount })
+      .from(orders)
+      .where(eq(orders.id, item.orderId));
+
+    const totalCost = costTotals?.totalCost ?? 0;
+    const profit =
+      Number(orderTotals?.subtotal ?? 0) - Number(orderTotals?.discount ?? 0) - totalCost;
+    const now = new Date();
+
+    const [updated] = await tx
+      .update(orders)
+      .set({
+        totalCost: totalCost.toString(),
+        profit: profit.toString(),
+        updatedAt: now,
+      })
+      .where(eq(orders.id, item.orderId))
+      .returning();
+
+    await tx.insert(orderStatusHistory).values({
+      orderId: item.orderId,
+      paymentStatus: updated.paymentStatus,
+      fulfillmentStatus: updated.fulfillmentStatus,
+      note:
+        note ??
+        `[COST_UPDATED] Bổ sung giá vốn cho SKU ${item.sku}: ${formatVnd(unitCost)} / sản phẩm`,
+      createdBy: userId,
+    });
+
+    return updated;
+  });
+}
+
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 
 export async function getOrders({
@@ -692,14 +957,11 @@ export async function getOrderDetails(id: string) {
   const [order] = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
   if (!order) return null;
 
-  // 2. Fetch customer
-  const [customer] = await db
+  const customerRow = await db
     .select()
     .from(profiles)
     .where(eq(profiles.id, order.customerId))
     .limit(1);
-
-  // 3. Fetch Items with Variants and Products
   const items = await db.query.orderItems.findMany({
     where: (items, { eq }) => eq(items.orderId, id),
     with: {
@@ -711,8 +973,6 @@ export async function getOrderDetails(id: string) {
       },
     },
   });
-
-  // 4. Fetch payments
   const paymentsData = await db.query.payments.findMany({
     where: (payments, { eq }) => eq(payments.orderId, id),
     orderBy: (payments, { desc }) => [desc(payments.createdAt)],
@@ -720,8 +980,6 @@ export async function getOrderDetails(id: string) {
       creator: true,
     },
   });
-
-  // 5. Fetch Status History
   const statusHistory = await db.query.orderStatusHistory.findMany({
     where: (history, { eq }) => eq(history.orderId, id),
     orderBy: (history, { desc }) => [desc(history.createdAt)],
@@ -729,8 +987,6 @@ export async function getOrderDetails(id: string) {
       creator: true,
     },
   });
-
-  // 6. Fetch sub-orders (orders whose parentOrderId points to this order)
   const subOrders = await db
     .select({
       id: orders.id,
@@ -744,9 +1000,7 @@ export async function getOrderDetails(id: string) {
     })
     .from(orders)
     .where(eq(orders.parentOrderId, order.id));
-
-  // 7. Fetch parent order if this order is a sub-order
-  const parentOrder = order.parentOrderId
+  const parentOrderRow = order.parentOrderId
     ? await db
         .select({
           id: orders.id,
@@ -760,18 +1014,16 @@ export async function getOrderDetails(id: string) {
         .from(orders)
         .where(eq(orders.id, order.parentOrderId))
         .limit(1)
-        .then((rows) => rows[0] ?? null)
-    : null;
+    : [];
 
-  // 8. Return assembled object
   return {
     ...order,
-    customer,
+    customer: customerRow[0],
     payments: paymentsData,
     items,
     statusHistory,
     subOrders,
-    parentOrder,
+    parentOrder: parentOrderRow[0] ?? null,
   };
 }
 

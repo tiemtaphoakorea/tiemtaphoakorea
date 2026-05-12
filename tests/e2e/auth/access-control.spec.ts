@@ -34,19 +34,19 @@ test.describe("Admin Access Control", () => {
     expectAdminSubdomain(page);
     await expect(page.locator("h1, h2").first()).toBeVisible();
     const { response } = await apiGet<any>(page, "/api/admin/users");
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(403);
   });
 
   test("TC-AUTH-010 should enforce role-based module restrictions", async ({ page }) => {
     await loginAsStaff(page);
     const { response } = await apiGet<any>(page, "/api/admin/finance");
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(403);
   });
 
   test("TC-AUTH-011 should restrict admin-only API access", async ({ page }) => {
     await loginAsStaff(page);
     const { response } = await apiGet<any>(page, "/api/admin/users");
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(403);
   });
 
   test("TC-AUTH-012 should restrict staff from users module", async ({ page }) => {

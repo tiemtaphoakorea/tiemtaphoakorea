@@ -1,8 +1,8 @@
-import { and, count, desc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, lte, or, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories } from "../schema/categories";
-import { inventoryMovements } from "../schema/inventory";
-import { products, productVariants } from "../schema/products";
+import { inventoryMovements, openingStockEntries } from "../schema/inventory";
+import { costPriceHistory, products, productVariants } from "../schema/products";
 import { profiles } from "../schema/profiles";
 import type { DbTransaction } from "../types/database";
 
@@ -56,8 +56,38 @@ export async function insertInventoryMovement(
  * loaded by the migration backfill) without polluting the in-period XNT
  * report with a runtime adjustment movement.
  */
-const OPENING_STOCK_NOTE = "Opening stock — historical balance";
-const OPENING_STOCK_DATE = "2026-04-18T23:59:59Z";
+const OPENING_STOCK_NOTE = "Opening stock";
+
+export type OpeningStockApplyEntry = {
+  variantId: string;
+  quantity: number;
+  unitCost: number;
+  effectiveDate: Date;
+  note?: string | null;
+};
+
+export type OpeningStockCsvRow = {
+  rowNumber: number;
+  sku: string;
+  openingQuantity: number;
+  openingUnitCost: number;
+  note: string | null;
+  variantId?: string;
+  productName?: string | null;
+  variantName?: string | null;
+  errors: string[];
+};
+
+export type OpeningStockApplyResult = {
+  oldOpening: number;
+  newOpening: number;
+  oldUnitCost: number;
+  newUnitCost: number;
+  oldOnHand: number;
+  newOnHand: number;
+  entryId: string;
+  noop: boolean;
+};
 
 /**
  * Read the current opening-stock quantity for a variant. Returns null if no
@@ -65,95 +95,193 @@ const OPENING_STOCK_DATE = "2026-04-18T23:59:59Z";
  * value the user is editing (which may differ from `product_variants.on_hand`
  * after subsequent stock-outs / receipts).
  */
-export async function getOpeningStock(variantId: string): Promise<{ quantity: number | null }> {
+export async function getOpeningStock(
+  variantId: string,
+): Promise<{ quantity: number | null; unitCost: number | null; effectiveDate: Date | null }> {
+  const [entry] = await db
+    .select({
+      quantity: openingStockEntries.quantity,
+      unitCost: openingStockEntries.unitCost,
+      effectiveDate: openingStockEntries.effectiveDate,
+    })
+    .from(openingStockEntries)
+    .where(eq(openingStockEntries.variantId, variantId))
+    .limit(1);
+
+  if (entry) {
+    return {
+      quantity: entry.quantity,
+      unitCost: Number(entry.unitCost ?? 0),
+      effectiveDate: entry.effectiveDate,
+    };
+  }
+
   const [row] = await db
-    .select({ quantity: inventoryMovements.quantity })
+    .select({ quantity: inventoryMovements.quantity, createdAt: inventoryMovements.createdAt })
     .from(inventoryMovements)
     .where(
       and(
         eq(inventoryMovements.variantId, variantId),
-        eq(inventoryMovements.note, OPENING_STOCK_NOTE),
+        ilike(inventoryMovements.note, `${OPENING_STOCK_NOTE}%`),
       ),
     )
     .orderBy(inventoryMovements.createdAt, inventoryMovements.id)
     .limit(1);
-  return { quantity: row?.quantity ?? null };
+  return { quantity: row?.quantity ?? null, unitCost: null, effectiveDate: row?.createdAt ?? null };
 }
 
 export async function updateOpeningStock({
   variantId,
   newQuantity,
+  unitCost,
+  effectiveDate,
+  note,
   userId,
 }: {
   variantId: string;
   newQuantity: number;
+  unitCost?: number;
+  effectiveDate?: Date;
+  note?: string | null;
   userId: string;
 }) {
   if (!Number.isInteger(newQuantity) || newQuantity < 0) {
     throw new Error("newQuantity must be a non-negative integer");
   }
+  const currentOpening = await getOpeningStock(variantId);
+  const [variant] = await db
+    .select({ costPrice: productVariants.costPrice })
+    .from(productVariants)
+    .where(eq(productVariants.id, variantId))
+    .limit(1);
 
-  return await db.transaction(async (tx) => {
-    const [variant] = await tx
-      .select({ id: productVariants.id, onHand: productVariants.onHand })
-      .from(productVariants)
-      .where(eq(productVariants.id, variantId))
-      .for("update");
-    if (!variant) throw new Error("Variant not found");
-
-    // 1. UPSERT opening movement
-    const [existing] = await tx
-      .select({ id: inventoryMovements.id, quantity: inventoryMovements.quantity })
-      .from(inventoryMovements)
-      .where(
-        and(
-          eq(inventoryMovements.variantId, variantId),
-          eq(inventoryMovements.note, OPENING_STOCK_NOTE),
-        ),
-      )
-      .orderBy(inventoryMovements.createdAt, inventoryMovements.id)
-      .limit(1);
-
-    const oldOpening = existing?.quantity ?? 0;
-    if (existing) {
-      if (existing.quantity === newQuantity) {
-        return {
-          oldOpening,
-          newOpening: newQuantity,
-          oldOnHand: variant.onHand,
-          newOnHand: variant.onHand,
-          noop: true,
-        };
-      }
-      await tx
-        .update(inventoryMovements)
-        .set({ quantity: newQuantity, onHandAfter: newQuantity, createdBy: userId })
-        .where(eq(inventoryMovements.id, existing.id));
-    } else {
-      await tx.insert(inventoryMovements).values({
+  const [result] = await applyOpeningStockEntries({
+    entries: [
+      {
         variantId,
-        type: "manual_adjustment",
         quantity: newQuantity,
-        onHandBefore: 0,
-        onHandAfter: newQuantity,
-        note: OPENING_STOCK_NOTE,
-        createdAt: new Date(OPENING_STOCK_DATE),
-        createdBy: userId,
-      });
-    }
+        unitCost: unitCost ?? currentOpening.unitCost ?? Number(variant?.costPrice ?? 0),
+        effectiveDate: effectiveDate ?? currentOpening.effectiveDate ?? new Date(),
+        note,
+      },
+    ],
+    userId,
+  });
+  return result;
+}
 
-    // 2. Re-chain every movement of this variant via window function.
-    // INVARIANT: the opening movement is the chronologically first row for the
-    // variant (dated OPENING_STOCK_DATE which precedes PERIOD_START). The
-    // running SUM(quantity) ORDER BY created_at, id therefore produces a chain
-    // starting at `opening_qty` and walking forward through every later
-    // stock_out / supplier_receipt / manual_adjustment row in time order.
-    await tx.execute(sql`
+async function applySingleOpeningStockEntry(
+  tx: DbTransaction,
+  entry: OpeningStockApplyEntry,
+  userId: string,
+): Promise<OpeningStockApplyResult> {
+  if (!Number.isInteger(entry.quantity) || entry.quantity < 0) {
+    throw new Error("quantity must be a non-negative integer");
+  }
+  if (!Number.isFinite(entry.unitCost) || entry.unitCost < 0) {
+    throw new Error("unitCost must be a non-negative number");
+  }
+  if (!(entry.effectiveDate instanceof Date) || Number.isNaN(entry.effectiveDate.getTime())) {
+    throw new Error("effectiveDate must be a valid date");
+  }
+
+  const now = new Date();
+  const note = entry.note?.trim() || null;
+
+  const [variant] = await tx
+    .select({
+      id: productVariants.id,
+      onHand: productVariants.onHand,
+      costPrice: productVariants.costPrice,
+    })
+    .from(productVariants)
+    .where(eq(productVariants.id, entry.variantId))
+    .for("update");
+  if (!variant) throw new Error("Variant not found");
+
+  const [existingEntry] = await tx
+    .select()
+    .from(openingStockEntries)
+    .where(eq(openingStockEntries.variantId, entry.variantId))
+    .limit(1);
+  const oldOpening = existingEntry?.quantity ?? 0;
+  const oldUnitCost = Number(existingEntry?.unitCost ?? variant.costPrice ?? 0);
+
+  const [savedEntry] = await tx
+    .insert(openingStockEntries)
+    .values({
+      variantId: entry.variantId,
+      quantity: entry.quantity,
+      unitCost: entry.unitCost.toFixed(2),
+      effectiveDate: entry.effectiveDate,
+      note,
+      status: "applied",
+      createdBy: userId,
+      updatedBy: userId,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: openingStockEntries.variantId,
+      set: {
+        quantity: entry.quantity,
+        unitCost: entry.unitCost.toFixed(2),
+        effectiveDate: entry.effectiveDate,
+        note,
+        status: "applied",
+        updatedBy: userId,
+        updatedAt: now,
+      },
+    })
+    .returning();
+
+  const movementNote = note ? `${OPENING_STOCK_NOTE}: ${note}` : OPENING_STOCK_NOTE;
+  const [existingMovement] = await tx
+    .select({ id: inventoryMovements.id, quantity: inventoryMovements.quantity })
+    .from(inventoryMovements)
+    .where(
+      or(
+        eq(inventoryMovements.referenceId, savedEntry.id),
+        and(
+          eq(inventoryMovements.variantId, entry.variantId),
+          ilike(inventoryMovements.note, `${OPENING_STOCK_NOTE}%`),
+        ),
+      ),
+    )
+    .orderBy(inventoryMovements.createdAt, inventoryMovements.id)
+    .limit(1);
+
+  if (existingMovement) {
+    await tx
+      .update(inventoryMovements)
+      .set({
+        quantity: entry.quantity,
+        onHandAfter: entry.quantity,
+        referenceId: savedEntry.id,
+        note: movementNote,
+        createdAt: entry.effectiveDate,
+        createdBy: userId,
+      })
+      .where(eq(inventoryMovements.id, existingMovement.id));
+  } else {
+    await tx.insert(inventoryMovements).values({
+      variantId: entry.variantId,
+      type: "manual_adjustment",
+      quantity: entry.quantity,
+      onHandBefore: 0,
+      onHandAfter: entry.quantity,
+      referenceId: savedEntry.id,
+      note: movementNote,
+      createdAt: entry.effectiveDate,
+      createdBy: userId,
+    });
+  }
+
+  await tx.execute(sql`
       WITH chain AS (
         SELECT id,
                SUM(quantity) OVER (ORDER BY created_at, id) AS new_after
         FROM inventory_movements
-        WHERE variant_id = ${variantId}
+        WHERE variant_id = ${entry.variantId}
       )
       UPDATE inventory_movements m
       SET on_hand_after  = c.new_after,
@@ -162,28 +290,274 @@ export async function updateOpeningStock({
       WHERE m.id = c.id
     `);
 
-    // 3. Sync product_variants.on_hand to the latest movement.
-    const [latest] = await tx
-      .select({ onHandAfter: inventoryMovements.onHandAfter })
-      .from(inventoryMovements)
-      .where(eq(inventoryMovements.variantId, variantId))
-      .orderBy(desc(inventoryMovements.createdAt), desc(inventoryMovements.id))
-      .limit(1);
+  // 3. Sync product_variants.on_hand to the latest movement.
+  const [latest] = await tx
+    .select({ onHandAfter: inventoryMovements.onHandAfter })
+    .from(inventoryMovements)
+    .where(eq(inventoryMovements.variantId, entry.variantId))
+    .orderBy(desc(inventoryMovements.createdAt), desc(inventoryMovements.id))
+    .limit(1);
 
-    const newOnHand = latest?.onHandAfter ?? newQuantity;
-    await tx
-      .update(productVariants)
-      .set({ onHand: newOnHand })
-      .where(eq(productVariants.id, variantId));
+  const newOnHand = latest?.onHandAfter ?? entry.quantity;
+  await tx
+    .update(productVariants)
+    .set({ onHand: newOnHand, costPrice: entry.unitCost.toFixed(2), updatedAt: now })
+    .where(eq(productVariants.id, entry.variantId));
 
-    return {
-      oldOpening,
-      newOpening: newQuantity,
-      oldOnHand: variant.onHand ?? 0,
-      newOnHand,
-      noop: false,
-    };
+  if (entry.unitCost > 0 && oldUnitCost !== entry.unitCost) {
+    await tx.insert(costPriceHistory).values({
+      variantId: entry.variantId,
+      costPrice: entry.unitCost.toFixed(2),
+      effectiveDate: entry.effectiveDate,
+      note: movementNote,
+      createdBy: userId,
+    });
+  }
+
+  return {
+    oldOpening,
+    newOpening: entry.quantity,
+    oldUnitCost,
+    newUnitCost: entry.unitCost,
+    oldOnHand: variant.onHand ?? 0,
+    newOnHand,
+    entryId: savedEntry.id,
+    noop:
+      oldOpening === entry.quantity &&
+      oldUnitCost === entry.unitCost &&
+      existingEntry?.effectiveDate?.getTime() === entry.effectiveDate.getTime(),
+  };
+}
+
+export async function applyOpeningStockEntries({
+  entries,
+  userId,
+}: {
+  entries: OpeningStockApplyEntry[];
+  userId: string;
+}): Promise<OpeningStockApplyResult[]> {
+  if (entries.length === 0) return [];
+
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    if (seen.has(entry.variantId)) throw new Error("Duplicate variant in opening stock entries");
+    seen.add(entry.variantId);
+  }
+
+  return await db.transaction(async (tx) => {
+    const results: OpeningStockApplyResult[] = [];
+    for (const entry of entries) {
+      results.push(await applySingleOpeningStockEntry(tx, entry, userId));
+    }
+    return results;
   });
+}
+
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      i += 1;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+function parseNumberCell(value: string): number {
+  const normalized = value.replace(/\./g, "").replace(",", ".").trim();
+  return Number(normalized || 0);
+}
+
+export async function previewOpeningStockCsv(csvText: string) {
+  const lines = csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const rows: OpeningStockCsvRow[] = [];
+  const header = lines[0] ? parseCsvLine(lines[0]).map((h) => h.trim()) : [];
+  const indexOf = (name: string) => header.indexOf(name);
+  const skuIndex = indexOf("sku");
+  const quantityIndex = indexOf("openingQuantity");
+  const unitCostIndex = indexOf("openingUnitCost");
+  const noteIndex = indexOf("note");
+
+  if (skuIndex < 0 || quantityIndex < 0 || unitCostIndex < 0) {
+    return {
+      validRows: [],
+      errorRows: [
+        {
+          rowNumber: 1,
+          sku: "",
+          openingQuantity: 0,
+          openingUnitCost: 0,
+          note: null,
+          errors: ["CSV must include sku, openingQuantity, and openingUnitCost columns"],
+        },
+      ] satisfies OpeningStockCsvRow[],
+      summary: { totalRows: 0, totalQuantity: 0, totalValue: 0 },
+    };
+  }
+
+  const seenSkus = new Set<string>();
+  for (let i = 1; i < lines.length; i++) {
+    const cells = parseCsvLine(lines[i]);
+    const sku = (cells[skuIndex] ?? "").trim();
+    const quantity = parseNumberCell(cells[quantityIndex] ?? "");
+    const unitCost = parseNumberCell(cells[unitCostIndex] ?? "");
+    const note = noteIndex >= 0 ? (cells[noteIndex] ?? "").trim() || null : null;
+    const errors: string[] = [];
+    if (!sku) errors.push("SKU is required");
+    if (seenSkus.has(sku)) errors.push("Duplicate SKU in CSV");
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      errors.push("openingQuantity must be a non-negative integer");
+    }
+    if (!Number.isFinite(unitCost) || unitCost < 0) {
+      errors.push("openingUnitCost must be a non-negative number");
+    }
+    seenSkus.add(sku);
+    rows.push({
+      rowNumber: i + 1,
+      sku,
+      openingQuantity: quantity,
+      openingUnitCost: unitCost,
+      note,
+      errors,
+    });
+  }
+
+  const skuRows = rows.filter((row) => row.sku);
+  if (skuRows.length > 0) {
+    const variants: Array<{
+      id: string;
+      sku: string;
+      variantName: string;
+      productName: string;
+    }> = await db
+      .select({
+        id: productVariants.id,
+        sku: productVariants.sku,
+        variantName: productVariants.name,
+        productName: products.name,
+      })
+      .from(productVariants)
+      .innerJoin(products, eq(productVariants.productId, products.id))
+      .where(
+        inArray(
+          productVariants.sku,
+          skuRows.map((row) => row.sku),
+        ),
+      );
+    const bySku = new Map(variants.map((variant) => [variant.sku, variant]));
+    for (const row of skuRows) {
+      const variant = bySku.get(row.sku);
+      if (!variant) {
+        row.errors.push("SKU does not exist");
+      } else {
+        row.variantId = variant.id;
+        row.variantName = variant.variantName;
+        row.productName = variant.productName;
+      }
+    }
+  }
+
+  const validRows = rows.filter((row) => row.errors.length === 0);
+  return {
+    validRows,
+    errorRows: rows.filter((row) => row.errors.length > 0),
+    summary: {
+      totalRows: validRows.length,
+      totalQuantity: validRows.reduce((sum, row) => sum + row.openingQuantity, 0),
+      totalValue: validRows.reduce(
+        (sum, row) => sum + row.openingQuantity * row.openingUnitCost,
+        0,
+      ),
+    },
+  };
+}
+
+export async function listOpeningStockEntries({
+  search,
+  page = 1,
+  limit = 100,
+}: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const offset = (Math.max(1, page) - 1) * limit;
+  const where = search
+    ? or(
+        ilike(productVariants.sku, `%${search}%`),
+        ilike(products.name, `%${search}%`),
+        ilike(productVariants.name, `%${search}%`),
+      )
+    : undefined;
+
+  const rows = await db
+    .select({
+      variantId: productVariants.id,
+      sku: productVariants.sku,
+      productName: products.name,
+      variantName: productVariants.name,
+      categoryName: categories.name,
+      currentOnHand: productVariants.onHand,
+      currentCostPrice: productVariants.costPrice,
+      openingQuantity: openingStockEntries.quantity,
+      openingUnitCost: openingStockEntries.unitCost,
+      effectiveDate: openingStockEntries.effectiveDate,
+      note: openingStockEntries.note,
+      status: openingStockEntries.status,
+    })
+    .from(productVariants)
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(openingStockEntries, eq(openingStockEntries.variantId, productVariants.id))
+    .where(where)
+    .orderBy(products.name, productVariants.sku)
+    .limit(limit)
+    .offset(offset);
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(productVariants)
+    .innerJoin(products, eq(productVariants.productId, products.id))
+    .where(where);
+
+  return {
+    data: rows.map((row) => ({
+      ...row,
+      currentCostPrice: Number(row.currentCostPrice ?? 0),
+      openingQuantity: row.openingQuantity ?? null,
+      openingUnitCost: row.openingUnitCost == null ? null : Number(row.openingUnitCost),
+      openingValue:
+        row.openingQuantity == null || row.openingUnitCost == null
+          ? null
+          : row.openingQuantity * Number(row.openingUnitCost),
+    })),
+    summary: {
+      totalVariants: total,
+      enteredVariants: rows.filter((row) => row.openingQuantity != null).length,
+      totalQuantity: rows.reduce((sum, row) => sum + (row.openingQuantity ?? 0), 0),
+      totalValue: rows.reduce(
+        (sum, row) => sum + (row.openingQuantity ?? 0) * Number(row.openingUnitCost ?? 0),
+        0,
+      ),
+    },
+    metadata: { page, limit, total },
+  };
 }
 
 export async function adjustInventory({
@@ -515,14 +889,18 @@ export async function getInventoryDailySummary({
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
+  // Group by Vietnam business day. `created_at` is `timestamp without tz` storing
+  // wall-clock UTC, so we attach UTC then convert to Asia/Ho_Chi_Minh before truncating.
+  const businessDate = sql`((${inventoryMovements.createdAt} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`;
+
   return db
     .select({
-      date: sql<string>`DATE(${inventoryMovements.createdAt})`,
+      date: sql<string>`${businessDate}`,
       totalIn: sql<number>`COALESCE(SUM(CASE WHEN ${inventoryMovements.quantity} > 0 THEN ${inventoryMovements.quantity} ELSE 0 END), 0)`,
       totalOut: sql<number>`COALESCE(SUM(CASE WHEN ${inventoryMovements.quantity} < 0 THEN ABS(${inventoryMovements.quantity}) ELSE 0 END), 0)`,
     })
     .from(inventoryMovements)
     .where(where)
-    .groupBy(sql`DATE(${inventoryMovements.createdAt})`)
-    .orderBy(sql`DATE(${inventoryMovements.createdAt}) DESC`);
+    .groupBy(businessDate)
+    .orderBy(sql`${businessDate} DESC`);
 }

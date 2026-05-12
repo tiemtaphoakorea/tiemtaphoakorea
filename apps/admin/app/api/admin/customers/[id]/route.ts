@@ -4,7 +4,7 @@ import {
   updateCustomer,
 } from "@workspace/database/services/customer.server";
 import type { IdRouteParams } from "@workspace/database/types/api";
-import { HTTP_STATUS } from "@workspace/shared/http-status";
+import { BusinessError, HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-auth";
 
@@ -50,8 +50,17 @@ export async function PUT(request: NextRequest, { params }: IdRouteParams) {
   } catch (error: any) {
     console.error("Failed to update customer:", error);
     return NextResponse.json(
-      { success: false, error: "Đã có lỗi xảy ra khi cập nhật khách hàng." },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+      {
+        success: false,
+        error:
+          error instanceof BusinessError
+            ? error.message
+            : "Đã có lỗi xảy ra khi cập nhật khách hàng.",
+      },
+      {
+        status:
+          error instanceof BusinessError ? error.statusCode : HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      },
     );
   }
 }

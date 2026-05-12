@@ -9,7 +9,7 @@
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type PurchasesByStaffRow = {
   staffId: string | null;
@@ -44,6 +44,8 @@ export async function getPurchasesByStaffReport(params: {
   const search = params.search?.trim() ?? "";
   const page = Math.max(1, params.page ?? PAGINATION_DEFAULT.PAGE);
   const limit = Math.max(1, Math.min(200, params.limit ?? PAGINATION_DEFAULT.LIMIT));
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -58,8 +60,8 @@ export async function getPurchasesByStaffReport(params: {
     LEFT JOIN profiles pr ON pr.id = r.created_by
     WHERE r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND COALESCE(r.received_at, r.created_at) >= ${start}
-      AND COALESCE(r.received_at, r.created_at) <= ${end}
+      AND COALESCE(r.received_at, r.created_at) >= ${startSql}
+      AND COALESCE(r.received_at, r.created_at) <= ${endSql}
     GROUP BY r.created_by, pr.full_name
     ORDER BY payable_amount DESC
   `);
@@ -114,6 +116,8 @@ export async function getPurchasesStaffReceipts(params: {
   endDate: Date;
 }): Promise<StaffReceiptRow[]> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -129,8 +133,8 @@ export async function getPurchasesStaffReceipts(params: {
     WHERE r.created_by = ${params.staffId}
       AND r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND r.created_at >= ${start}
-      AND r.created_at <= ${end}
+      AND r.created_at >= ${startSql}
+      AND r.created_at <= ${endSql}
     ORDER BY COALESCE(r.received_at, r.created_at) DESC
   `);
 
@@ -151,6 +155,8 @@ export async function getPurchasesUnknownStaffReceipts(params: {
   endDate: Date;
 }): Promise<StaffReceiptRow[]> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -166,8 +172,8 @@ export async function getPurchasesUnknownStaffReceipts(params: {
     WHERE r.created_by IS NULL
       AND r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND r.created_at >= ${start}
-      AND r.created_at <= ${end}
+      AND r.created_at >= ${startSql}
+      AND r.created_at <= ${endSql}
     ORDER BY COALESCE(r.received_at, r.created_at) DESC
   `);
 

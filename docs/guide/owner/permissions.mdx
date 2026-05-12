@@ -10,8 +10,8 @@ K-SMART có 3 vai trò nội bộ. Vai trò xác định menu hiển thị trên
 | Vai trò | Mã | Mô tả ngắn |
 |---------|-----|-----------|
 | **Chủ shop** | `owner` | Toàn quyền — tài chính, nhân sự, cài đặt, storefront |
-| **Quản lý** | `manager` | Toàn bộ vận hành + báo cáo — không có chi phí, nhân sự, cài đặt |
-| **Nhân viên** | `staff` | Vận hành hàng ngày — không có báo cáo, chi phí, nhân sự, cài đặt |
+| **Quản lý** | `manager` | Toàn bộ vận hành + báo cáo + trang chủ — không có chi phí, nhân sự, cửa hàng/nội dung/tiện ích |
+| **Nhân viên** | `staff` | Vận hành hàng ngày + trang chủ — không có báo cáo, chi phí, nhân sự, cửa hàng/nội dung/tiện ích |
 
 > Vai trò `customer` dành cho khách hàng đăng ký từ storefront — không phải vai trò nội bộ và không có quyền truy cập trang admin.
 
@@ -57,12 +57,12 @@ Sidebar có **5 nhóm**. Một mục bị ẩn nếu vai trò không có quyền
 
 | Mục | Owner | Manager | Staff |
 |-----|:-----:|:-------:|:-----:|
-| Trang chủ | ✅ | ❌ | ❌ |
+| Trang chủ | ✅ | ✅ | ✅ |
 | Cửa hàng | ✅ | ❌ | ❌ |
 | Nội dung website | ✅ | ❌ | ❌ |
 | Tiện ích | ✅ | ❌ | ❌ |
 
-> Khi cả nhóm bị ẩn (vd: Nhóm Cài đặt với Manager/Staff), header nhóm cũng không hiển thị.
+> Với Manager/Staff, nhóm Cài đặt chỉ còn mục **Trang chủ**.
 
 ---
 
@@ -173,7 +173,7 @@ Sidebar có **5 nhóm**. Một mục bị ẩn nếu vai trò không có quyền
 
 | Thao tác | Owner | Manager | Staff |
 |----------|:-----:|:-------:|:-----:|
-| Quản lý collections / hero / khối trang chủ | ✅ | ❌ | ❌ |
+| Quản lý collections / hero / khối trang chủ | ✅ | ✅ | ✅ |
 
 ### Cài đặt — Cửa hàng (`/settings`)
 
@@ -209,7 +209,7 @@ Sidebar có **5 nhóm**. Một mục bị ẩn nếu vai trò không có quyền
 </Note>
 
 <Warning>
-**Nhóm Cài đặt** (4 mục: Trang chủ · Cửa hàng · Nội dung website · Tiện ích), **Chi phí**, và **Nhân sự** chỉ dành cho **Chủ shop**. Sidebar của Quản lý và Nhân viên ẩn hoàn toàn các mục này; truy cập URL trực tiếp cũng bị chặn ở backend.
+**Cửa hàng**, **Nội dung website**, **Tiện ích**, **Chi phí**, và **Nhân sự** chỉ dành cho **Chủ shop** trong sidebar hiện tại. **Trang chủ** vẫn hiển thị cho toàn bộ vai trò nội bộ.
 </Warning>
 
 <Tip>

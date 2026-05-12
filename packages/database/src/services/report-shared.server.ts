@@ -6,6 +6,8 @@
  * by time-series reports.
  */
 
+import { sql } from "drizzle-orm";
+
 export function normalizeRange(startDate: Date, endDate: Date): { start: Date; end: Date } {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -39,6 +41,14 @@ export function rowsOf<T>(result: unknown): T[] {
     return (result as { rows: T[] }).rows;
   }
   return [];
+}
+
+/**
+ * postgres-js cannot encode Date values in some raw SQL contexts where Postgres
+ * infers the parameter as text. Bind ISO text and cast explicitly instead.
+ */
+export function sqlTimestamp(date: Date) {
+  return sql`${date.toISOString()}::timestamp`;
 }
 
 /** date_trunc unit + to_char format pairs for day/week/month grouping. */

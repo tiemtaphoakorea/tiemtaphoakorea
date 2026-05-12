@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, isNull, lte, type SQL, sql } from "drizzle-orm";
+import { FULFILLMENT_STATUS } from "@workspace/shared/constants";
+import { and, desc, eq, gte, inArray, isNull, lte, type SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { expenses } from "../schema/expenses";
 import { orderItems, orders } from "../schema/orders";
@@ -7,23 +8,42 @@ import { profiles } from "../schema/profiles";
 import { supplierPayments } from "../schema/receipts";
 
 // Revenue = subtotal - discount (excludes shippingFee, which is pass-through reimbursement).
-// COGS = sum of order_items.line_cost (snapshot at sale time, not the stale orders.total_cost column).
+// COGS = sum of order_items.line_cost snapshotted at stock-out.
 const revenueExpr =
   sql<number>`coalesce(sum(${orders.subtotal}::numeric - ${orders.discount}::numeric), 0)`.mapWith(
     Number,
   );
-const lineCostExpr = sql`coalesce(
-  nullif("order_items"."line_cost"::numeric, 0),
-  coalesce("product_variants"."cost_price"::numeric, 0) * "order_items"."quantity"
-)`;
+const lineCostExpr = sql`coalesce("order_items"."line_cost"::numeric, 0)`;
+
+const orderRevenueExpr = sql<number>`(${orders.subtotal}::numeric - ${orders.discount}::numeric)`;
 
 function buildReportOrderConditions(startDate: Date | null, endDate: Date | null): SQL[] {
-  const conds: SQL[] = [isNull(orders.cancelledAt)];
+  const conds: SQL[] = [
+    isNull(orders.cancelledAt),
+    inArray(orders.fulfillmentStatus, [FULFILLMENT_STATUS.STOCK_OUT, FULFILLMENT_STATUS.COMPLETED]),
+  ];
   if (startDate && endDate) {
-    conds.push(gte(orders.createdAt, startDate));
-    conds.push(lte(orders.createdAt, endDate));
+    conds.push(gte(orders.stockOutAt, startDate));
+    conds.push(lte(orders.stockOutAt, endDate));
   }
   return conds;
+}
+
+function orderHasMissingCost(): SQL {
+  return sql`EXISTS (
+    SELECT 1
+    FROM order_items oi_missing
+    WHERE oi_missing.order_id = ${orders.id}
+      AND COALESCE(oi_missing.line_cost::numeric, 0) <= 0
+  )`;
+}
+
+function orderHasNoMissingCost(): SQL {
+  return sql`NOT ${orderHasMissingCost()}`;
+}
+
+function lineHasMissingCost(): SQL {
+  return sql`COALESCE(${orderItems.lineCost}::numeric, 0) <= 0`;
 }
 
 export type CreateExpenseData = {
@@ -127,22 +147,21 @@ export async function getDailyStats(startDate: Date, endDate: Date) {
   // COGS pulled from order_items.line_cost (snapshot at sale) per-day.
   const rows = await db
     .select({
-      date: sql<string>`DATE(${orders.createdAt})`,
+      date: sql<string>`DATE(${orders.stockOutAt})`,
       revenue: revenueExpr,
       cogs: sql<number>`coalesce(sum(
         (
           SELECT sum(${lineCostExpr})
           FROM "order_items"
-          INNER JOIN "product_variants" ON "product_variants"."id" = "order_items"."variant_id"
           WHERE "order_items"."order_id" = "orders"."id"
         )
       ), 0)`.mapWith(Number),
       orderCount: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
-    .where(and(...buildReportOrderConditions(start, end)))
-    .groupBy(sql`DATE(${orders.createdAt})`)
-    .orderBy(sql`DATE(${orders.createdAt})`);
+    .where(and(...buildReportOrderConditions(start, end), orderHasNoMissingCost()))
+    .groupBy(sql`DATE(${orders.stockOutAt})`)
+    .orderBy(sql`DATE(${orders.stockOutAt})`);
 
   const dailyData: DailyStatRow[] = rows.map((r) => ({
     date: r.date,
@@ -185,6 +204,7 @@ export async function getFinancialStats(params: {
   // No date params → lifetime/shop-wide stats
 
   const orderConditions = buildReportOrderConditions(startDate, endDate);
+  const eligibleOrderConditions = [...orderConditions, orderHasNoMissingCost()];
 
   const orderStats = await db
     .select({
@@ -192,30 +212,44 @@ export async function getFinancialStats(params: {
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(orders)
-    .where(and(...orderConditions));
+    .where(and(...eligibleOrderConditions));
 
-  // Prefer sale-time line_cost; fallback to current variant cost when old/negative-stock orders have no snapshot.
-  // Also count items missing cost so the UI can warn about under-reported COGS.
+  // Official P&L uses stock-out snapshotted COGS and excludes orders with missing-cost lines.
   const cogsStats = await db
     .select({
       cogs: sql<number>`coalesce(sum(${lineCostExpr}), 0)`.mapWith(Number),
       itemCount: sql<number>`count(${orderItems.id})`.mapWith(Number),
-      missingCostItems: sql<number>`count(${orderItems.id}) FILTER (
-        WHERE (${orderItems.lineCost}::numeric = 0 OR ${orderItems.lineCost} IS NULL)
-          AND (${productVariants.costPrice}::numeric = 0 OR ${productVariants.costPrice} IS NULL)
-      )`.mapWith(Number),
     })
     .from(orderItems)
     .innerJoin(orders, eq(orderItems.orderId, orders.id))
     .innerJoin(productVariants, eq(orderItems.variantId, productVariants.id))
-    .where(and(...orderConditions));
+    .where(and(...eligibleOrderConditions));
+
+  const missingCostItemStats = await db
+    .select({
+      count: sql<number>`count(${orderItems.id})`.mapWith(Number),
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .where(and(...orderConditions, lineHasMissingCost()));
+
+  const missingCostOrders = await db
+    .select({
+      id: orders.id,
+      revenue: orderRevenueExpr.mapWith(Number),
+    })
+    .from(orders)
+    .where(and(...orderConditions, orderHasMissingCost()));
 
   const revenue = orderStats[0]?.revenue ?? 0;
   const cogs = cogsStats[0]?.cogs ?? 0;
   const grossProfit = revenue - cogs;
   const itemCount = cogsStats[0]?.itemCount ?? 0;
-  const missingCostItems = cogsStats[0]?.missingCostItems ?? 0;
-  const missingCostRate = itemCount > 0 ? missingCostItems / itemCount : 0;
+  const missingCostItems = missingCostItemStats[0]?.count ?? 0;
+  const totalReportItems = itemCount + missingCostItems;
+  const missingCostRate = totalReportItems > 0 ? missingCostItems / totalReportItems : 0;
+  const missingCostOrderCount = missingCostOrders.length;
+  const excludedRevenue = missingCostOrders.reduce((sum, row) => sum + row.revenue, 0);
 
   // 2. Expenses
   const expenseWhere =
@@ -260,6 +294,8 @@ export async function getFinancialStats(params: {
     orderCount: orderStats[0]?.count ?? 0,
     missingCostItems,
     missingCostRate,
+    missingCostOrderCount,
+    excludedRevenue,
   };
 }
 
@@ -273,6 +309,9 @@ export async function getDayOrders(date: string): Promise<DayOrderRow[]> {
       orderNumber: orders.orderNumber,
       customerName: profiles.fullName,
       total: orders.total,
+      revenue: sql<number>`(${orders.subtotal}::numeric - ${orders.discount}::numeric)`.mapWith(
+        Number,
+      ),
       cogs: sql<number>`coalesce((
         SELECT sum(${lineCostExpr})
         FROM "order_items"
@@ -286,7 +325,11 @@ export async function getDayOrders(date: string): Promise<DayOrderRow[]> {
     .orderBy(desc(orders.createdAt));
 
   return rows.map((r) => ({
-    ...r,
-    grossProfit: Number(r.total ?? 0) - r.cogs,
+    id: r.id,
+    orderNumber: r.orderNumber,
+    customerName: r.customerName,
+    total: r.total,
+    cogs: r.cogs,
+    grossProfit: r.revenue - r.cogs,
   }));
 }

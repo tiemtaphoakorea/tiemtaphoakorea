@@ -433,8 +433,12 @@ export interface FinancialStats {
   orderCount: number;
   /** Number of order line items in the window with line_cost = 0 (cost not captured at sale time). */
   missingCostItems: number;
-  /** Ratio of missingCostItems / total items in the window (0..1). UI warns when > 0.05. */
+  /** Number of delivered orders excluded from official P&L because at least one line has missing cost. */
+  missingCostOrderCount: number;
+  /** Ratio of missingCostItems / total items in the window (0..1). */
   missingCostRate: number;
+  /** Delivered revenue excluded from official P&L until cost is completed. */
+  excludedRevenue: number;
 }
 
 export interface Expense {

@@ -34,6 +34,10 @@ Grid 2 cột:
 
 3 thẻ KPI (Doanh thu · Đơn hàng · Khách hàng) + 2 biểu đồ (doanh thu theo tháng + bán theo danh mục).
 
+<Note>
+`/analytics/overview` là dashboard vận hành nhanh, không phải P&L chính thức. Khi cần đối soát lợi nhuận, dùng `/analytics/finance` hoặc `/analytics/finance/detail`.
+</Note>
+
 ### 2. `/analytics/products` — Sản phẩm bán chạy
 
 Grid card: số thứ tự, tên SP, số đơn, doanh thu, badge tăng trưởng `+x%` / `−x%`. Mô tả: *"Những sản phẩm mang lại doanh thu cao nhất trong năm."*.
@@ -49,14 +53,14 @@ Bên dưới: **Sắp hết hàng** + **Hết hàng** danh sách SKU.
 
 ### 4. `/analytics/finance` — Tài chính & Lợi nhuận
 
-Sub-line: *"Tổng hợp toàn bộ shop · tính trên tất cả đơn đã thanh toán và sản phẩm"* — trang luôn hiển thị **lifetime/toàn shop**, không có bộ chọn kỳ. Để xem một kỳ cụ thể, nhấn **Chi tiết theo ngày**.
+Trang luôn hiển thị **lifetime/toàn shop**, không có bộ chọn kỳ. Để xem một kỳ cụ thể, nhấn **Chi tiết theo ngày**.
 
-4 KPI tổng kỳ (lifetime, lọc `paymentStatus = paid`):
+4 KPI tổng kỳ dùng công thức P&L chính thức: đơn chưa huỷ, đã `stock_out` hoặc `completed`, ngày ghi nhận theo `stockOutAt`.
 
 | Chỉ số | Cách tính |
 |--------|-----------|
-| **Tổng doanh thu** | `Σ orders.total` lọc paid (toàn thời gian) |
-| **Giá vốn hàng bán** | `Σ orders.totalCost` lọc paid (toàn thời gian) |
+| **Tổng doanh thu** | `Σ (subtotal - discount)` của đơn hợp lệ |
+| **Giá vốn hàng bán** | `Σ order_items.line_cost` đã snapshot khi xuất kho |
 | **Chi phí vận hành** | `Σ expenses.amount` (toàn thời gian) |
 | **Lợi nhuận ròng** | `revenue − cogs − expenses`; **Margin %** = `netProfit / revenue × 100` |
 

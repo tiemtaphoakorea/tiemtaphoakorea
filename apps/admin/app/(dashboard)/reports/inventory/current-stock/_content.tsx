@@ -120,7 +120,7 @@ export default function CurrentStockContent() {
 
       {/* Category breakdown mini-table */}
       {catData && catData.data.length > 0 && (
-        <Card className="overflow-hidden border-none shadow-sm">
+        <Card className="gap-0 overflow-hidden border-none p-0 shadow-sm">
           <div className="px-4 pt-4 pb-2">
             <h2 className="text-sm font-black tracking-widest uppercase">Phân bổ theo danh mục</h2>
           </div>
@@ -172,7 +172,7 @@ export default function CurrentStockContent() {
         </div>
       </div>
 
-      <Card className="overflow-hidden border-none shadow-sm">
+      <Card className="gap-0 overflow-hidden border-none p-0 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>

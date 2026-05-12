@@ -4,6 +4,7 @@ import type { IdRouteParams } from "@workspace/database/types/api";
 import { ROLE } from "@workspace/shared/constants";
 import { HTTP_STATUS } from "@workspace/shared/http-status";
 import { type NextRequest, NextResponse } from "next/server";
+import { beginActionIdempotency } from "@/lib/action-idempotency";
 
 const CANCEL_ROLES: ReadonlyArray<string> = [ROLE.OWNER, ROLE.MANAGER];
 
@@ -20,9 +21,23 @@ export async function POST(request: NextRequest, { params }: IdRouteParams) {
   }
 
   try {
+    const body = await request.json().catch(() => ({}));
+    const { clientToken } = body ?? {};
     const { id } = await params;
+
+    const idem = await beginActionIdempotency({
+      clientToken,
+      resourceType: "purchase",
+      resourceId: id,
+      action: "cancel",
+      payload: {},
+    });
+    if ("replay" in idem) return idem.replay;
+
     const updated = await cancelPurchaseOrder(id);
-    return NextResponse.json({ success: true, purchaseOrder: updated });
+    const response = { success: true, purchaseOrder: updated };
+    await idem.finalize(response);
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Failed to cancel purchase order:", error);
     const message = error instanceof Error ? error.message : "Đã có lỗi xảy ra";

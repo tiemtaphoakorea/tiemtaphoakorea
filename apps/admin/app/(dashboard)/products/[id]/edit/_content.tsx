@@ -8,6 +8,7 @@ import type {
   ProductFormInitialData,
 } from "@workspace/shared/types/product";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ProductForm } from "@/components/admin/products/product-form";
 import { queryKeys } from "@/lib/query-keys";
 import { adminClient } from "@/services/admin.client";
@@ -16,6 +17,7 @@ export default function EditProductPage() {
   "use no memo";
   const params = useParams();
   const id = params.id as string;
+  const [hydrated, setHydrated] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKeys.productEdit(id),
     queryFn: async () => {
@@ -59,10 +61,15 @@ export default function EditProductPage() {
     },
     enabled: Boolean(id),
   });
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const categories = data?.categories || [];
   const initialData = data?.initialData ?? null;
 
-  if (isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
         Đang tải...

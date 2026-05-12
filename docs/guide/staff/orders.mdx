@@ -38,7 +38,7 @@ Menu bên trái → **Đơn hàng**.
 ```mermaid
 flowchart LR
     A["pending"] --> B["stock_out"] --> C["completed"]
-    A & B -->|Huỷ| D["cancelled"]
+    A -->|Huỷ| D["cancelled"]
 
     style D fill:#fee2e2,stroke:#ef4444,color:#991b1b
     style C fill:#dcfce7,stroke:#22c55e,color:#166534
@@ -104,7 +104,7 @@ Mã đơn · Khách hàng · SĐT · Số lượng · Tổng tiền · Thanh to�
     Khi khách đã nhận, nhấn **Hoàn tất đơn** (chỉ hiện khi `stock_out` + đã thanh toán đủ).
   </Step>
   <Step title="Huỷ đơn">
-    Đơn `pending` hoặc `stock_out` có thể huỷ. Nhấn **Huỷ đơn** → nhập ghi chú → xác nhận. Tồn kho được hoàn trả tự động.
+    Chỉ đơn `pending` có thể huỷ trên luồng hiện tại. Nhấn **Huỷ đơn** → nhập ghi chú → xác nhận. Hệ thống giải phóng số đang giữ chỗ (`reserved`); `onHand` không đổi vì đơn chưa xuất kho.
   </Step>
   <Step title="Sửa danh sách sản phẩm">
     Chỉ với đơn `pending` không phải đơn cha/con. Nhấn **Sửa** trong thẻ "Chi tiết sản phẩm" → đổi SL/giá/xoá → **Lưu**.

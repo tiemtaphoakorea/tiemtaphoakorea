@@ -1,7 +1,9 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { ADMIN_ROUTES } from "@workspace/shared/routes";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
+import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectOption } from "@workspace/ui/components/native-select";
@@ -15,7 +17,8 @@ import {
 } from "@workspace/ui/components/table";
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { format } from "date-fns";
-import { AlertTriangle, Package, Search } from "lucide-react";
+import { AlertTriangle, ClipboardList, Package, Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
@@ -157,6 +160,12 @@ export default function AdminInventory() {
 
         {(tab === "stock" || tab === "in") && (
           <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm" data-testid="inventory-opening-stock-link">
+              <Link href={ADMIN_ROUTES.INVENTORY_OPENING_STOCK}>
+                <ClipboardList className="h-4 w-4" />
+                Tồn đầu kỳ
+              </Link>
+            </Button>
             <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 sm:w-72">
               <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" strokeWidth={2} />
               <Input

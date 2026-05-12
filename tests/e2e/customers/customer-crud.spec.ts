@@ -40,38 +40,26 @@ test.describe("Customer Management", () => {
   }) => {
     await page.goto("/customers");
 
-    // Try to create customer
-    const addButton = page.locator('button:has-text("Thêm khách hàng")');
-    const hasButton = await addButton.isVisible().catch(() => false);
+    await page.getByRole("button", { name: /thêm kh/i }).click();
+    await expect(page.getByRole("heading", { name: /thêm khách hàng/i })).toBeVisible();
 
-    if (hasButton) {
-      await addButton.click();
-      await page.fill('input[name="fullName"]', `Test Customer ${runId}`);
+    await page.fill('input[name="fullName"]', `Test Customer ${runId}`);
+    const uniquePhone = `09${(runId.replace(/\D/g, "") || String(Date.now()))
+      .padStart(8, "0")
+      .slice(-8)}`;
+    await page.fill('input[name="phone"]', uniquePhone);
 
-      // Generate unique phone (9 digits)
-      const uniquePhone = `09${(runId.replace(/\D/g, "") || String(Date.now()))
-        .padStart(9, "0")
-        .slice(-9)}`;
-      await page.fill('input[name="phone"]', uniquePhone);
+    const createResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/admin/customers") && response.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: /^Thêm$/ }).click();
+    const createResponse = await createResponsePromise;
+    const body = await createResponse.json();
 
-      await page.click('button[type="submit"]');
-
-      // Wait for either success or error
-      await page.waitForTimeout(2000);
-
-      // Check if customer code is visible (success case)
-      const customerCode = page.locator("text=/KH-?\\d+/");
-      const hasCode = await customerCode.isVisible({ timeout: 5000 }).catch(() => false);
-
-      if (hasCode) {
-        await expect(customerCode).toBeVisible();
-      } else {
-        // May need Supabase credentials - verify we're still on customer page
-        await expect(
-          page.locator("text=Khách hàng").or(page.locator("text=Customers")),
-        ).toBeVisible();
-      }
-    }
+    expect(createResponse.ok()).toBe(true);
+    expect(body.profile.customerCode).toMatch(/^KH\d{8}(-\d{3})?$/);
+    await expect(page.getByText("Đã thêm khách hàng")).toBeVisible({ timeout: 5000 });
   });
 
   // CUST-03: Tìm kiếm khách hàng
@@ -183,23 +171,21 @@ test.describe("Customer Management", () => {
   test("TC-CUST-010 should prevent duplicate phone", async ({ page }) => {
     await page.goto("/customers");
 
-    // Get existing customer phone
-    const customers = await getCustomers(page, "");
-    const existingPhone = customers[0]?.phone;
+    await page.getByRole("button", { name: /thêm kh/i }).click();
+    await expect(page.getByRole("heading", { name: /thêm khách hàng/i })).toBeVisible();
 
-    if (existingPhone) {
-      // Try to create with duplicate phone
-      await page.click('button:has-text("Thêm khách hàng")');
-      await page.fill('input[name="fullName"]', `Duplicate Test ${Date.now()}`);
-      await page.fill('input[name="phone"]', existingPhone);
-      await page.click('button[type="submit"]');
+    await page.fill('input[name="fullName"]', `Duplicate Test ${Date.now()}`);
+    await page.fill('input[name="phone"]', TEST_CUSTOMERS.primary.phone);
 
-      // Should show error
-      const errorMsg = page.locator("text=/đã tồn tại|already exists|duplicate/i");
-      const hasError = await errorMsg.isVisible({ timeout: 3000 }).catch(() => false);
+    const duplicateResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/admin/customers") && response.request().method() === "POST",
+    );
+    await page.getByRole("button", { name: /^Thêm$/ }).click();
+    const duplicateResponse = await duplicateResponsePromise;
 
-      // Either shows error or creation succeeds (depends on backend validation)
-      expect(hasError || true).toBe(true);
-    }
+    expect(duplicateResponse.ok()).toBe(false);
+    expect(duplicateResponse.status()).toBeGreaterThanOrEqual(400);
+    await expect(page.getByRole("heading", { name: /thêm khách hàng/i })).toBeVisible();
   });
 });

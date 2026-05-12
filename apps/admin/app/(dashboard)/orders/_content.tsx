@@ -25,7 +25,7 @@ import { format } from "date-fns";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import {
   TableEmptyRow,
@@ -86,6 +86,11 @@ export default function AdminOrders() {
   const [debouncedQuery] = useDebounce(query, 300);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.orders.list(debouncedQuery, "all", filter, false, page, pageSize),
@@ -158,7 +163,7 @@ export default function AdminOrders() {
               className="h-auto w-full border-0 bg-transparent px-0 py-0 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0 sm:w-55"
             />
           </div>
-          {!ordersQuery.isLoading && tabCounts[filter] != null && (
+          {hydrated && !ordersQuery.isLoading && tabCounts[filter] != null && (
             <span className="shrink-0 text-sm text-muted-foreground">
               <span className="font-semibold text-foreground tabular-nums">
                 {tabCounts[filter]}
@@ -197,37 +202,40 @@ export default function AdminOrders() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ordersQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
-              {ordersQuery.error && <TableErrorRow cols={6} message={String(ordersQuery.error)} />}
-              {!ordersQuery.isLoading && list.length === 0 && (
+              {hydrated && ordersQuery.isLoading && <TableLoadingRows cols={6} rows={6} />}
+              {hydrated && ordersQuery.error && (
+                <TableErrorRow cols={6} message={String(ordersQuery.error)} />
+              )}
+              {hydrated && !ordersQuery.isLoading && list.length === 0 && (
                 <TableEmptyRow cols={6} message="Chưa có đơn nào" />
               )}
-              {list.map((o) => (
-                <TableRow
-                  key={o.id}
-                  className="cursor-pointer"
-                  onClick={() => router.push(`/orders/${o.id}`)}
-                >
-                  <TableCell className="font-mono text-xs font-semibold">
-                    <span className="block truncate">{o.orderNumber}</span>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {fmtDate(o.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-sm font-semibold">
-                    <span className="block truncate">{o.customer.fullName ?? "—"}</span>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge type={o.paymentStatus as StatusType} />
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge type={o.fulfillmentStatus as StatusType} />
-                  </TableCell>
-                  <TableCell className="font-bold tabular-nums text-red-600">
-                    {formatVnd(Number(o.total ?? 0))}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {hydrated &&
+                list.map((o) => (
+                  <TableRow
+                    key={o.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/orders/${o.id}`)}
+                  >
+                    <TableCell className="font-mono text-xs font-semibold">
+                      <span className="block truncate">{o.orderNumber}</span>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {fmtDate(o.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold">
+                      <span className="block truncate">{o.customer.fullName ?? "—"}</span>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge type={o.paymentStatus as StatusType} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge type={o.fulfillmentStatus as StatusType} />
+                    </TableCell>
+                    <TableCell className="font-bold tabular-nums text-red-600">
+                      {formatVnd(Number(o.total ?? 0))}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </div>
@@ -249,7 +257,10 @@ export default function AdminOrders() {
               ))}
             </Select>
             <span>
-              / trang · {ordersQuery.isLoading && total === 0 ? "Đang tải..." : `Tổng ${total} đơn`}
+              / trang ·{" "}
+              {!hydrated || (ordersQuery.isLoading && total === 0)
+                ? "Đang tải..."
+                : `Tổng ${total} đơn`}
             </span>
           </div>
           <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />

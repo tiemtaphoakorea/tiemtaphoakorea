@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/db.server";
+import { BusinessError } from "@/lib/http-status";
 import {
   createCustomer,
   deleteCustomer,
@@ -82,6 +83,13 @@ describe("Customer Service", () => {
     it("should apply search filter", async () => {
       await getCustomers({ search: "John" });
       expect(db.select).toHaveBeenCalled();
+    });
+
+    it("should accept lowercase status filters from the admin UI", async () => {
+      await getCustomers({ status: "active" });
+      await getCustomers({ status: "inactive" });
+
+      expect(db.select).toHaveBeenCalledTimes(4);
     });
 
     it("should return paginated data with metadata", async () => {
@@ -169,6 +177,23 @@ describe("Customer Service", () => {
       expect(result).not.toHaveProperty("password");
       expect(result).not.toHaveProperty("email");
     });
+
+    it("should reject duplicate customer phone numbers", async () => {
+      (db.query.profiles.findFirst as any).mockResolvedValueOnce({
+        id: "existing-customer-id",
+        phone: "0987654321",
+      });
+
+      await expect(
+        createCustomer({
+          fullName: "Duplicate Phone",
+          phone: " 0987654321 ",
+          customerType: "retail" as const,
+        }),
+      ).rejects.toThrow(BusinessError);
+
+      expect(db.insert).not.toHaveBeenCalled();
+    });
   });
 
   describe("updateCustomer", () => {
@@ -176,6 +201,22 @@ describe("Customer Service", () => {
       const result = await updateCustomer("id-123", { fullName: "New Name" });
       expect(db.update).toHaveBeenCalled();
       expect(result.id).toBe("updated-id");
+    });
+
+    it("should reject updating a customer to another customer's phone", async () => {
+      (db.query.profiles.findFirst as any).mockResolvedValueOnce({
+        id: "other-customer-id",
+        phone: "0900000001",
+      });
+
+      await expect(
+        updateCustomer("id-123", {
+          fullName: "New Name",
+          phone: "0900000001",
+        }),
+      ).rejects.toThrow(BusinessError);
+
+      expect(db.update).not.toHaveBeenCalled();
     });
   });
 

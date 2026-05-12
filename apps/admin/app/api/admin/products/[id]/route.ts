@@ -60,14 +60,17 @@ export async function PUT(request: Request, { params }: IdRouteParams) {
       basePrice: Number(data.basePrice || 0),
       isActive: data.isActive !== false,
       isFeatured: data.isFeatured === true,
-      variants: (data.variants || []).map((v: any) => ({
-        ...v,
-        price: v.price !== undefined ? Number(v.price) : undefined,
-        costPrice: v.costPrice !== undefined ? Number(v.costPrice) : undefined,
-        onHand: v.onHand !== undefined ? Number(v.onHand) : undefined,
-        lowStockThreshold:
-          v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
-      })),
+      variants: (data.variants || []).map((v: any) => {
+        const onHand = v.onHand ?? v.stockQuantity;
+        return {
+          ...v,
+          price: v.price !== undefined ? Number(v.price) : undefined,
+          costPrice: v.costPrice !== undefined ? Number(v.costPrice) : undefined,
+          onHand: onHand !== undefined ? Number(onHand) : undefined,
+          lowStockThreshold:
+            v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
+        };
+      }),
     };
 
     const product = await updateProduct(id, productData);

@@ -57,6 +57,48 @@ export type MissingCostOrdersReport = {
   metadata: { total: number; page: number; totalPages: number; limit: number };
 };
 
+export type ProfitByOrderSort = "recent" | "profit_desc" | "profit_asc" | "margin_desc";
+
+export type ProfitByOrderItem = {
+  orderItemId: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  costPriceAtOrderTime: number;
+  lineTotal: number;
+  lineCost: number;
+  lineProfit: number;
+  lineProfitPct: number;
+};
+
+export type ProfitByOrderRow = {
+  orderId: string;
+  orderNumber: string;
+  customerName: string | null;
+  stockOutAt: string | null;
+  revenue: number;
+  cost: number;
+  profit: number;
+  profitPct: number;
+  itemCount: number;
+  items: ProfitByOrderItem[];
+};
+
+export type ProfitByOrderReport = {
+  data: ProfitByOrderRow[];
+  summary: {
+    orderCount: number;
+    totalRevenue: number;
+    totalCost: number;
+    totalProfit: number;
+    avgMargin: number;
+  };
+  metadata: { total: number; page: number; totalPages: number; limit: number };
+  period: { startDate: string; endDate: string };
+};
+
 export type CustomerDebtRow = {
   customerId: string;
   customerName: string | null;
@@ -174,6 +216,19 @@ export const reportsClient = {
       `/api/admin/orders/${orderId}/items/${orderItemId}/cost`,
       { unitCost, note, clientToken },
     ) as unknown as Promise<{ success: boolean }>;
+  },
+
+  async getProfitByOrder(
+    params: ReportDateRange & {
+      search?: string;
+      sort?: ProfitByOrderSort;
+      page?: number;
+      limit?: number;
+    },
+  ) {
+    return axios.get<ProfitByOrderReport>("/api/admin/reports/profit-loss/by-order", {
+      params,
+    }) as unknown as Promise<ProfitByOrderReport>;
   },
 
   async getCustomerDebts(

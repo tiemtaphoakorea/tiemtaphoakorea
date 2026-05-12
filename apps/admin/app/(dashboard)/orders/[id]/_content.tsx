@@ -66,7 +66,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, use, useReducer, useState } from "react";
+import { Suspense, use, useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { ChangeCustomerDialog } from "@/components/admin/order-detail/change-customer-dialog";
 import { OrderAddRow } from "@/components/admin/orders/create/order-add-row";
@@ -360,6 +360,7 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [hydrated, setHydrated] = useState(false);
 
   // Data Fetching
   const { data, isLoading, error } = useQuery({
@@ -390,8 +391,12 @@ function OrderDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   // Loading State
-  if (isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />

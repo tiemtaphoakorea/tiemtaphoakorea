@@ -81,6 +81,7 @@ export const ADMIN_ROUTES = {
 
   // Reports — Tài chính (4)
   REPORTS_PROFIT_LOSS: "/reports/profit-loss",
+  REPORTS_PROFIT_LOSS_BY_ORDER: "/reports/profit-loss/by-order",
   REPORTS_PROFIT_LOSS_MISSING_COST: "/reports/profit-loss/missing-cost",
   REPORTS_CUSTOMER_DEBTS: "/reports/customer-debts",
   REPORTS_SUPPLIER_DEBTS: "/reports/supplier-debts",

@@ -5,7 +5,7 @@ description: "Tổng quan vai trò Nhân viên và phạm vi quyền hạn trong
 
 ## Mô tả
 
-Nhân viên (`staff`) là vai trò vận hành hàng ngày — xử lý đơn, cập nhật tồn kho, hỗ trợ khách qua chat. Nhân viên **không** truy cập được Báo cáo, Chi phí, Nhân sự, và toàn bộ cụm Cài đặt.
+Nhân viên (`staff`) là vai trò vận hành hàng ngày — xử lý đơn, cập nhật tồn kho, hỗ trợ khách qua chat. Nhân viên **không** truy cập được Báo cáo, Chi phí, Nhân sự, Cửa hàng, Nội dung website, và Tiện ích; vẫn truy cập được Trang chủ.
 
 Khi đăng nhập, sidebar tự động ẩn các mục bị hạn chế.
 
@@ -23,12 +23,12 @@ Khi đăng nhập, sidebar tự động ẩn các mục bị hạn chế.
 | **Tài chính** | Công nợ · ~~Chi phí~~ · ~~Báo cáo~~ |
 | **Kho vận** | Quản lý kho · Nhà cung cấp |
 | **Người dùng** | Khách hàng · ~~Nhân sự~~ · Tin nhắn |
-| ~~Cài đặt~~ | *(toàn bộ nhóm bị ẩn)* |
+| **Cài đặt** | Trang chủ · ~~Cửa hàng~~ · ~~Nội dung website~~ · ~~Tiện ích~~ |
 
 ### Mục bị ẩn (so với Quản lý)
 
 - **Báo cáo & Phân tích** — không thấy menu, không truy cập URL `/analytics`.
-- **Chi phí** · **Nhân sự** · **Cài đặt** (4 mục) — không có menu.
+- **Chi phí** · **Nhân sự** · **Cửa hàng / Nội dung website / Tiện ích** — không có menu.
 
 ### Thao tác bị giới hạn (so với Quản lý)
 
@@ -95,7 +95,7 @@ Nhân viên **không có quyền tải ảnh sản phẩm**. Bạn vẫn có th�
 </Warning>
 
 <Warning>
-Truy cập trực tiếp URL `/analytics`, `/expenses`, `/users`, `/settings`, `/homepage`, `/content`, `/widgets` đều bị chặn ở backend (trả 403). Sidebar không hiển thị các mục này.
+Sidebar không hiển thị `/analytics`, `/expenses`, `/users`, `/settings`, `/content`, `/widgets` cho Staff. Mục `/homepage` vẫn hiển thị vì Trang chủ là phần cấu hình storefront dùng chung cho vai trò nội bộ.
 </Warning>
 
 <Tip>

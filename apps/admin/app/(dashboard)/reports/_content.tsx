@@ -227,6 +227,13 @@ const REPORT_GROUPS: ReportGroup[] = [
         iconClass: "bg-rose-500/10 text-rose-500",
       },
       {
+        href: ADMIN_ROUTES.REPORTS_PROFIT_LOSS_BY_ORDER,
+        title: "Lợi nhuận theo đơn hàng",
+        description: "Chi tiết lợi nhuận từng đơn và từng dòng sản phẩm trong đơn.",
+        icon: Receipt,
+        iconClass: "bg-rose-500/10 text-rose-500",
+      },
+      {
         href: ADMIN_ROUTES.REPORTS_CUSTOMER_DEBTS,
         title: "Công nợ khách hàng",
         description: "Nợ đầu kỳ + tăng − giảm = nợ cuối kỳ. Drill-down từng khách.",
@@ -257,7 +264,7 @@ export default function ReportsHubContent() {
       <div>
         <h1 className="text-2xl font-black tracking-tight">Báo cáo</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          25 báo cáo Sapo-style phân theo 5 nhóm: bán hàng, nhập hàng, kho, khách hàng, tài chính.
+          26 báo cáo Sapo-style phân theo 5 nhóm: bán hàng, nhập hàng, kho, khách hàng, tài chính.
         </p>
       </div>
 

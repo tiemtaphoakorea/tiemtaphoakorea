@@ -19,6 +19,7 @@ const TABLES = [
   "goods_receipts",
   "purchase_order_items",
   "purchase_orders",
+  "opening_stock_entries",
   "inventory_movements",
   "order_status_history",
   "order_items",
@@ -32,7 +33,6 @@ const TABLES = [
   "banners",
   "categories",
   "expenses",
-  "daily_reports",
   "document_sequences",
   "newsletter_subscribers",
   "system_settings",
@@ -51,6 +51,10 @@ async function resetDb() {
     // Using DELETE instead of TRUNCATE to avoid ACCESS EXCLUSIVE lock contention
     // with idle app connections that can't be terminated without SUPERUSER.
     for (const table of TABLES) {
+      const [existing] = await client.unsafe<{ table_name: string | null }[]>(
+        `SELECT to_regclass('public.${table}')::text AS table_name;`,
+      );
+      if (!existing?.table_name) continue;
       await client.unsafe(`DELETE FROM "${table}";`);
     }
 

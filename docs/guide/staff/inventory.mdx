@@ -66,5 +66,5 @@ Nút **Điều chỉnh kho** ở góc tab hiện chưa có chức năng — đan
 </Warning>
 
 <Note>
-Tồn kho tự động giảm khi đơn được tạo (chuyển sang **Đã giữ chỗ**) và quay về kho khi đơn bị huỷ. Bạn không cần điều chỉnh thủ công trừ khi kiểm kê (cần Quản lý xử lý qua API).
+Tạo đơn chỉ tăng **Đã giữ chỗ** (`reserved`), chưa giảm **Tồn vật lý** (`onHand`). `onHand` chỉ giảm khi đơn được **Xuất kho**; huỷ đơn `pending` chỉ giải phóng `reserved`. Bạn không cần điều chỉnh thủ công trừ khi kiểm kê.
 </Note>

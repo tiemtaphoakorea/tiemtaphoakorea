@@ -8,7 +8,7 @@
 import { calculateMetadata, PAGINATION_DEFAULT } from "@workspace/shared/pagination";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { normalizeRange, rowsOf } from "./report-shared.server";
+import { normalizeRange, rowsOf, sqlTimestamp } from "./report-shared.server";
 
 export type PurchasesByProductRow = {
   variantId: string;
@@ -43,6 +43,8 @@ export async function getPurchasesByProductReport(params: {
   const search = params.search?.trim() ?? "";
   const page = Math.max(1, params.page ?? PAGINATION_DEFAULT.PAGE);
   const limit = Math.max(1, Math.min(200, params.limit ?? PAGINATION_DEFAULT.LIMIT));
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -60,8 +62,8 @@ export async function getPurchasesByProductReport(params: {
     INNER JOIN products p ON p.id = pv.product_id
     WHERE r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND COALESCE(r.received_at, r.created_at) >= ${start}
-      AND COALESCE(r.received_at, r.created_at) <= ${end}
+      AND COALESCE(r.received_at, r.created_at) >= ${startSql}
+      AND COALESCE(r.received_at, r.created_at) <= ${endSql}
     GROUP BY gri.variant_id, pv.sku, p.name, pv.name, pv.cost_price
     ORDER BY line_total DESC
   `);
@@ -91,9 +93,7 @@ export async function getPurchasesByProductReport(params: {
     skuCount: rows.length,
     totalQty: rows.reduce((s, r) => s + r.totalQty, 0),
     totalValue: rows.reduce((s, r) => s + r.lineTotal, 0),
-    avgCost: rows.length > 0
-      ? rows.reduce((s, r) => s + r.avgUnitCost, 0) / rows.length
-      : 0,
+    avgCost: rows.length > 0 ? rows.reduce((s, r) => s + r.avgUnitCost, 0) / rows.length : 0,
   };
 
   const total = rows.length;
@@ -118,6 +118,8 @@ export async function getPurchasesProductReceipts(params: {
   endDate: Date;
 }): Promise<ProductReceiptRow[]> {
   const { start, end } = normalizeRange(params.startDate, params.endDate);
+  const startSql = sqlTimestamp(start);
+  const endSql = sqlTimestamp(end);
 
   const result = await db.execute(sql`
     SELECT
@@ -132,8 +134,8 @@ export async function getPurchasesProductReceipts(params: {
     WHERE gri.variant_id = ${params.variantId}
       AND r.status = 'completed'
       AND r.cancelled_at IS NULL
-      AND r.created_at >= ${start}
-      AND r.created_at <= ${end}
+      AND r.created_at >= ${startSql}
+      AND r.created_at <= ${endSql}
     ORDER BY COALESCE(r.received_at, r.created_at) DESC
   `);
 

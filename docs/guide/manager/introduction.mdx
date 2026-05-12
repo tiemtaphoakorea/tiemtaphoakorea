@@ -9,7 +9,7 @@ Quản lý (`manager`) chịu trách nhiệm điều hành vận hành hàng ng�
 
 - Không truy cập **Chi phí** (`/expenses`).
 - Không truy cập **Nhân sự** (`/users`).
-- Không truy cập cụm **Cài đặt** (Trang chủ, Cửa hàng, Nội dung website, Tiện ích).
+- Không truy cập **Cửa hàng**, **Nội dung website**, **Tiện ích**; vẫn truy cập được **Trang chủ**.
 
 Khi đăng nhập, sidebar tự động ẩn các mục trên — Quản lý chỉ thấy các mục được phép.
 
@@ -27,7 +27,7 @@ Khi đăng nhập, sidebar tự động ẩn các mục trên — Quản lý ch�
 | **Tài chính** | Công nợ · ~~Chi phí~~ · **Báo cáo** |
 | **Kho vận** | Quản lý kho · Nhà cung cấp |
 | **Người dùng** | Khách hàng · ~~Nhân sự~~ · Tin nhắn |
-| ~~Cài đặt~~ | *(toàn bộ nhóm bị ẩn)* |
+| **Cài đặt** | Trang chủ · ~~Cửa hàng~~ · ~~Nội dung website~~ · ~~Tiện ích~~ |
 
 ### So sánh với Chủ shop và Nhân viên
 
@@ -38,7 +38,8 @@ Khi đăng nhập, sidebar tự động ẩn các mục trên — Quản lý ch�
 | Vô hiệu hoá khách hàng | ✅ | **✅** | ❌ |
 | Chi phí | ✅ | **❌** | ❌ |
 | Nhân sự | ✅ | **❌** | ❌ |
-| Cài đặt cửa hàng (4 mục) | ✅ | **❌** | ❌ |
+| Trang chủ storefront | ✅ | **✅** | ✅ |
+| Cửa hàng / Nội dung website / Tiện ích | ✅ | **❌** | ❌ |
 
 ---
 
@@ -72,7 +73,7 @@ Quản lý thấy đầy đủ badge thời gian thực:
     **Sản phẩm** → thêm/sửa/upload ảnh. **Quản lý kho** → điều chỉnh tồn kho và tạo đơn nhập NCC khi sắp hết hàng.
   </Step>
   <Step title="Đọc báo cáo">
-    **Báo cáo** → 4 thẻ phân tích chính. Vào trang con để xem chi tiết: Sản phẩm bán chạy, Tồn kho, Tài chính (P&L theo tháng), Chi tiết theo ngày.
+    **Báo cáo** → 4 thẻ phân tích chính. Vào trang con để xem chi tiết: Sản phẩm bán chạy, Tồn kho, Tài chính P&L, Chi tiết theo ngày.
   </Step>
   <Step title="Hỗ trợ khách qua chat">
     **Tin nhắn** → trả lời các phòng chat có badge unread. Có thể gửi ảnh đính kèm.
@@ -87,7 +88,7 @@ Quản lý thấy đầy đủ badge thời gian thực:
 |------------|---------|
 | Cần ghi/xoá khoản chi phí vận hành | Chủ shop (Owner) |
 | Cần tạo/sửa/khoá tài khoản nhân viên | Chủ shop (Owner) |
-| Cần đổi thông tin in hoá đơn, logo, banner trang chủ | Chủ shop (Owner) |
+| Cần đổi thông tin in hoá đơn, logo, footer, widget | Chủ shop (Owner) |
 | Cần đặt lại mật khẩu của chính mình | Chủ shop dùng nút **Đặt lại MK** trong trang Nhân sự |
 
 <Note>

@@ -62,66 +62,94 @@ function aggregate(items: ReceiptInputItem[], extraCost = 0, headerDiscount = 0)
   };
 }
 
+function rowsOf<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === "object" && Array.isArray((result as { rows?: unknown }).rows)) {
+    return (result as { rows: T[] }).rows;
+  }
+  return [];
+}
+
 /**
  * Continuous Weighted Average Cost (WAC) — Sapo-style.
  * Atomically recompute productVariants.costPrice for each received variant
  * and log a costPriceHistory row when the cost changes.
  */
+/**
+ * Recompute Weighted Average Cost (WAC) for every variant on a completed receipt.
+ *
+ * Runs AFTER stock-in has incremented `product_variants.on_hand`. To recover the
+ * pre-receipt qty, we back out the incoming qty from current on_hand.
+ *
+ * Formula (Sapo-style WAC):
+ *   newCost = (oldCost × oldQty + incomingCost) / (oldQty + incomingQty)
+ *     where oldQty = on_hand_now − incomingQty
+ * Fallback when oldQty ≤ 0 (zero or negative pre-stock):
+ *   newCost = incomingCost / incomingQty
+ *
+ * Math is done in PG `numeric` to avoid JS float drift; result rounded to 2 dp.
+ * Free/gift receipts (incomingCost = 0) preserve the existing costPrice.
+ */
 async function applyWeightedAverageCost(
   tx: DbTransaction,
-  items: Array<{ variantId: string; quantity: number; unitCost: string }>,
+  receiptId: string,
   effectiveDate: Date,
   createdBy?: string,
 ) {
-  // Aggregate by variant in case the same SKU appears on multiple lines.
-  const byVariant = new Map<string, { qty: number; cost: number }>();
-  for (const item of items) {
-    const acc = byVariant.get(item.variantId) ?? { qty: 0, cost: 0 };
-    acc.qty += item.quantity;
-    acc.cost += Number(item.unitCost) * item.quantity;
-    byVariant.set(item.variantId, acc);
-  }
+  // Aggregate incoming qty + cost per variant directly in SQL so the SUM is
+  // done with PG numeric (zero float drift) and dedup happens at the source.
+  const aggResult = rowsOf<{ variantId: string; qty: number; cost: string }>(
+    await tx.execute(sql`
+      SELECT
+        variant_id AS "variantId",
+        SUM(quantity)::int AS qty,
+        SUM(unit_cost::numeric * quantity)::text AS cost
+      FROM goods_receipt_items
+      WHERE receipt_id = ${receiptId}
+      GROUP BY variant_id
+    `),
+  );
 
-  for (const [variantId, agg] of byVariant) {
-    const [variant] = await tx
-      .select({
-        onHand: productVariants.onHand,
-        costPrice: productVariants.costPrice,
-      })
-      .from(productVariants)
-      .where(eq(productVariants.id, variantId))
-      .for("update");
+  for (const agg of aggResult) {
+    // R5: free/gift receipt preserves existing WAC, skip update entirely.
+    if (Number(agg.cost) <= 0) continue;
 
-    if (!variant) continue;
+    // Single round-trip: select current state, compute newCost in numeric, return both.
+    const computed = rowsOf<{ old_cost: string; new_cost: string | null }>(
+      await tx.execute(sql`
+        SELECT
+          cost_price AS old_cost,
+          ROUND(
+            CASE
+              WHEN (on_hand - ${agg.qty}::int) <= 0
+                THEN ${agg.cost}::numeric / NULLIF(${agg.qty}::numeric, 0)
+              ELSE (cost_price::numeric * (on_hand - ${agg.qty}::int) + ${agg.cost}::numeric)
+                   / NULLIF(on_hand::numeric, 0)
+            END,
+            2
+          )::text AS new_cost
+        FROM product_variants
+        WHERE id = ${agg.variantId}
+        FOR UPDATE
+      `),
+    );
 
-    const oldQty = variant.onHand ?? 0;
-    const oldCost = Number(variant.costPrice ?? 0);
-    const incomingCost = agg.cost;
-    const incomingQty = agg.qty;
+    const row = computed[0];
+    if (!row || !row.new_cost) continue;
+    if (Number(row.new_cost) === Number(row.old_cost)) continue;
 
-    let newCost: number;
-    if (oldQty <= 0) {
-      // Negative or zero on-hand: WAC undefined; fall back to incoming average.
-      newCost = incomingQty > 0 ? incomingCost / incomingQty : oldCost;
-    } else {
-      newCost = (oldCost * oldQty + incomingCost) / (oldQty + incomingQty);
-    }
+    await tx
+      .update(productVariants)
+      .set({ costPrice: row.new_cost })
+      .where(eq(productVariants.id, agg.variantId));
 
-    const newCostStr = toMoney(newCost);
-    if (newCostStr !== toMoney(oldCost)) {
-      await tx
-        .update(productVariants)
-        .set({ costPrice: newCostStr })
-        .where(eq(productVariants.id, variantId));
-
-      await tx.insert(costPriceHistory).values({
-        variantId,
-        costPrice: newCostStr,
-        effectiveDate,
-        note: `WAC update from supplier receipt (prev cost: ${toMoney(oldCost)})`,
-        createdBy,
-      });
-    }
+    await tx.insert(costPriceHistory).values({
+      variantId: agg.variantId,
+      costPrice: row.new_cost,
+      effectiveDate,
+      note: `WAC update from supplier receipt (prev cost: ${row.old_cost})`,
+      createdBy,
+    });
   }
 }
 
@@ -337,10 +365,6 @@ export async function completeGoodsReceipt(id: string, completedBy: string) {
     if (row.status !== RECEIPT_STATUS.DRAFT) {
       throw new Error(`Chỉ hoàn tất được phiếu ở trạng thái nháp (hiện: ${row.status})`);
     }
-    if (Number(row.debtAmount) > 0) {
-      throw new Error("Cần thanh toán đủ trước khi hoàn tất phiếu nhập");
-    }
-
     const items = await tx
       .select()
       .from(goodsReceiptItems)
@@ -374,13 +398,8 @@ export async function completeGoodsReceipt(id: string, completedBy: string) {
       });
     }
 
-    // 2. Apply Sapo-style WAC.
-    await applyWeightedAverageCost(
-      tx,
-      items.map((i) => ({ variantId: i.variantId, quantity: i.quantity, unitCost: i.unitCost })),
-      receivedAt,
-      completedBy,
-    );
+    // 2. Apply Sapo-style WAC (aggregate + compute in SQL with PG numeric).
+    await applyWeightedAverageCost(tx, id, receivedAt, completedBy);
 
     // 3. Sync linked PO if any.
     if (row.purchaseOrderId) {
